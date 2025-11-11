@@ -29,18 +29,14 @@ import {
     FaTimesCircle,
 } from 'react-icons/fa';
 import { formatCurrencyAmount } from '@/lib/currency-utils';
-import { useDispatch } from 'react-redux';
-
-// Custom Gradient Spinner Component
+import { useDispatch } from 'react-redux';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -72,9 +68,7 @@ const Toast = ({
       </button>
     </div>
   </div>
-);
-
-// Stats Card Component
+);
 interface StatsCardProps {
   title: string;
   value: string | number;
@@ -113,9 +107,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       </div>
     </div>
   );
-};
-
-// Instructions Panel Component
+};
 const InstructionsPanel: React.FC = () => {
   return (
     <div className="card card-padding">
@@ -169,9 +161,7 @@ const InstructionsPanel: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// Main Mass Orders Component
+};
 export default function MassOrder() {
   const { appName } = useAppNameWithFallback();
 
@@ -205,26 +195,19 @@ export default function MassOrder() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [balanceCheck, setBalanceCheck] = useState<ReturnType<typeof checkSufficientBalance> | null>(null);
-
-  // Set document title using useEffect for client-side
+  const [balanceCheck, setBalanceCheck] = useState<ReturnType<typeof checkSufficientBalance> | null>(null);
   useEffect(() => {
     setPageTitle('Mass Orders', appName);
-  }, [appName]);
-
-  // Check if mass order is enabled by trying to access the user mass-orders API
+  }, [appName]);
   useEffect(() => {
     const checkMassOrderSettings = async () => {
-      try {
-        // Try to get mass order stats which will check if massOrderEnabled internally
+      try {
         const response = await axiosInstance.get('/api/user/mass-orders?type=stats');
         if (response.data.success) {
           setMassOrderEnabled(true);
         }
       } catch (error) {
-        console.error('Error checking mass order settings:', error);
-        
-        // Check if it's a 403 error (mass order disabled)
+        console.error('Error checking mass order settings:', error);
         if (error instanceof Error && 'response' in error) {
           const axiosError = error as any;
           if (axiosError.response?.status === 403) {
@@ -233,16 +216,14 @@ export default function MassOrder() {
             setTimeout(() => {
               router.push('/dashboard');
             }, 3000);
-          } else {
-            // For other errors, assume it's enabled but show generic error
+          } else {
             setMassOrderEnabled(false);
             showToast('Unable to verify mass order settings', 'error');
             setTimeout(() => {
               router.push('/dashboard');
             }, 3000);
           }
-        } else {
-          // For non-axios errors, assume it's enabled but show generic error
+        } else {
           setMassOrderEnabled(false);
             showToast('Unable to verify mass order settings', 'error');
             setTimeout(() => {
@@ -253,40 +234,30 @@ export default function MassOrder() {
     };
 
     checkMassOrderSettings();
-  }, [router]);
-
-  // Simulate form initialization loading
+  }, [router]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsFormLoading(false);
-    }, 1500); // 1.5 seconds loading simulation
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  // User data from API or fallback with proper currency formatting
+  }, []);
   const balance = userStats?.balance || 0;
   const totalSpend = userStats?.totalSpent || 0;
-  const totalOrdersCount = userStats?.totalOrders || 0;
-
-  // Show toast notification
+  const totalOrdersCount = userStats?.totalOrders || 0;
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // Format currency using the currency context
+  };
   const formatCurrency = (amount: number) => {
     if (currentCurrencyData && currencySettings) {
       return formatCurrencyAmount(amount, currentCurrencyData.code, availableCurrencies, currencySettings);
     }
     return `$${amount.toFixed(2)}`;
-  };
-
-  // Real-time validation function
+  };
   const validateOrders = useCallback(async (input: string) => {
     if (!input.trim()) {
       setValidationResult(null);
@@ -304,13 +275,11 @@ export default function MassOrder() {
         currentCurrencyData?.code || 'USD',
         availableCurrencies as Array<{ code: string; rate: number; symbol: string; name: string }>
       );
-      
+
       setValidationResult(result);
       setValidationErrors(formatValidationErrors(result));
       setTotalOrders(result.validOrders.length);
-      setTotalPrice(result.totalCostInUserCurrency);
-      
-      // Check balance if user is available
+      setTotalPrice(result.totalCostInUserCurrency);
       if (userStats?.balance !== undefined) {
         const balanceCheckResult = checkSufficientBalance(
           result,
@@ -326,14 +295,10 @@ export default function MassOrder() {
     } finally {
       setIsValidating(false);
     }
-  }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
-
-  // Handle New Order navigation
+  }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
   const handleNewOrderClick = () => {
     router.push('/new-order');
-  };
-
-  // Parse and validate the orders text
+  };
   const parseOrders = useCallback(async (text: string) => {
     await validateOrders(text);
   }, [validateOrders]);
@@ -342,24 +307,17 @@ export default function MassOrder() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      // Validate using our enhanced validation
+    try {
       if (!validationResult || validationResult.validOrders.length === 0) {
         showToast('Please enter at least one valid order', 'error');
         return;
-      }
-
-      // Check balance
+      }
       if (balanceCheck && !balanceCheck.sufficient) {
         showToast(balanceCheck.message || 'Insufficient balance', 'error');
         return;
-      }
-
-      // Convert to API format
+      }
       const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
-      const orderArray = convertToApiFormat(validationResult);
-
-      // Submit to Mass Orders API
+      const orderArray = convertToApiFormat(validationResult);
       const response = await axiosInstance.post('/api/user/mass-orders', {
         orders: orderArray,
         batchId: batchId,
@@ -369,15 +327,9 @@ export default function MassOrder() {
         showToast(
           `Successfully created ${response.data.summary.ordersCreated} orders!`,
           'success'
-        );
-
-        // Invalidate user stats to refresh balance
-        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
-
-        // Also manually refetch user stats for immediate update
-        refetchUserStats();
-
-        // Reset form
+        );
+        dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+        refetchUserStats();
         setOrders('');
         setTotalOrders(0);
         setTotalPrice(0);
@@ -402,7 +354,7 @@ export default function MassOrder() {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -413,9 +365,9 @@ export default function MassOrder() {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
+          {}
           <div className="space-y-6">
-            {/* Tab Navigation - Updated with Services Page Gradient */}
+            {}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
@@ -435,7 +387,7 @@ export default function MassOrder() {
               </div>
             </div>
 
-            {/* Order Form with Loading State */}
+            {}
             {activeTab === 'massOrder' && (
               <div className="card card-padding">
                 {isFormLoading ? (
@@ -482,8 +434,8 @@ export default function MassOrder() {
                             </div>
                           )}
                         </div>
-                        
-                        {/* Validation Status */}
+
+                        {}
                         {validationResult && (
                           <div className="mt-2 text-xs">
                             <div className={`flex items-center ${
@@ -500,8 +452,8 @@ export default function MassOrder() {
                             </div>
                           </div>
                         )}
-                        
-                        {/* Validation Errors */}
+
+                        {}
                         {validationErrors.length > 0 && (
                           <div className="mt-2 text-xs text-red-600 dark:text-red-400">
                             {validationErrors.slice(0, 3).map((error, index) => (
@@ -519,7 +471,7 @@ export default function MassOrder() {
                         )}
                       </div>
 
-                      {/* Enhanced Order Summary */}
+                      {}
                       {validationResult && validationResult.validOrders.length > 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -540,8 +492,8 @@ export default function MassOrder() {
                               </span>
                             </div>
                           </div>
-                          
-                          {/* Balance Check */}
+
+                          {}
                           {balanceCheck && (
                             <div className={`mt-2 p-2 rounded text-xs ${
                               balanceCheck.sufficient 
@@ -567,14 +519,14 @@ export default function MassOrder() {
                               )}
                             </div>
                           )}
-                          
+
                           <div className="text-xs text-blue-600 mt-2">
                             Prices calculated in {currentCurrencyData?.code || 'USD'} based on current service rates
                           </div>
                         </div>
                       )}
 
-                      {/* Order Details Table */}
+                      {}
                       {validationResult && validationResult.validOrders.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                           <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
@@ -658,7 +610,7 @@ export default function MassOrder() {
             )}
           </div>
 
-          {/* Right Column */}
+          {}
           <div className="space-y-6">
             <InstructionsPanel />
           </div>

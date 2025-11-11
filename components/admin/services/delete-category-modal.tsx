@@ -22,20 +22,19 @@ export const DeleteCategoryModal = ({
   const [deleteAction, setDeleteAction] = useState<"delete" | "move">("delete");
   const [targetCategoryId, setTargetCategoryId] = useState<string>("");
 
-  // Filter out the current category from available options
   const availableCategories =
     categoriesData?.data?.filter((cat: any) => cat.id !== categoryId) || [];
 
   const handleConfirm = () => {
     if (deleteAction === "move" && !targetCategoryId) {
-      return; // Don't proceed if no target category selected
+      return;
     }
     onConfirm(deleteAction, targetCategoryId || undefined);
   };
 
   return (
     <div className="w-full max-w-lg">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -54,7 +53,7 @@ export const DeleteCategoryModal = ({
 
       <div className="px-6 pb-6">
         <div className="space-y-4">
-          {/* Warning Icon and Message */}
+          {}
           <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
             <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
             <div>
@@ -68,13 +67,13 @@ export const DeleteCategoryModal = ({
             </div>
           </div>
 
-          {/* Action Options */}
+          {}
           <div className="space-y-3">
             <p className="font-medium text-gray-800">
               What would you like to do with the services?
             </p>
 
-            {/* Option 1: Delete with services */}
+            {}
             <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
@@ -95,7 +94,7 @@ export const DeleteCategoryModal = ({
               </div>
             </label>
 
-            {/* Option 2: Move services */}
+            {}
             <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
@@ -120,7 +119,7 @@ export const DeleteCategoryModal = ({
                   this one
                 </div>
 
-                {/* Category Selection Dropdown */}
+                {}
                 {deleteAction === "move" && availableCategories.length > 0 && (
                   <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -144,7 +143,7 @@ export const DeleteCategoryModal = ({
             </label>
           </div>
 
-          {/* Additional Warning for Delete Action */}
+          {}
           {deleteAction === "delete" && (
             <div className="p-3 bg-red-50 rounded-lg border border-red-200">
               <p className="text-sm text-red-800">
@@ -156,7 +155,7 @@ export const DeleteCategoryModal = ({
             </div>
           )}
 
-          {/* Success info for Move Action */}
+          {}
           {deleteAction === "move" && targetCategoryId && (
             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
               <p className="text-sm text-green-800">
@@ -171,7 +170,7 @@ export const DeleteCategoryModal = ({
             </div>
           )}
 
-          {/* Action Buttons */}
+          {}
           <div className="flex gap-2 justify-end pt-2">
             <button
               onClick={onClose}

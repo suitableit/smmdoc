@@ -22,9 +22,7 @@ import {
     FaSearch,
     FaSpinner,
     FaTimes
-} from 'react-icons/fa';
-
-// Type definitions
+} from 'react-icons/fa';
 interface CancelRequest {
   id: number;
   status: string;
@@ -41,18 +39,14 @@ interface OrderWithCancelRequests {
     name?: string;
   };
   [key: string]: any;
-}
-
-// Custom Gradient Spinner Component
+}
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Cancel Modal Component
+);
 const CancelModal = ({
   isOpen,
   onClose,
@@ -109,9 +103,7 @@ const CancelModal = ({
       </div>
     </div>
   );
-};
-
-// Toast Component
+};
 const Toast = ({
   message,
   type = 'success',
@@ -143,9 +135,7 @@ const Toast = ({
       </button>
     </div>
   </div>
-);
-
-// Refill Modal Component
+);
 const RefillModal = ({
   isOpen,
   onClose,
@@ -245,49 +235,31 @@ export default function OrdersList() {
     isOpen: false,
     orderId: null,
     reason: ''
-  });
-  
-  // Track orders with pending cancel requests (for local state after submission)
+  });
   const [localPendingCancelRequests, setLocalPendingCancelRequests] = useState<Set<number>>(new Set());
-  
-  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
 
-  // Get real user orders from API
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
   const { data, isLoading, error } = useGetUserOrdersQuery({
     page,
     limit,
     status,
     search,
-  });
-
-
-
-
-
-
-
-  // Set document title using useEffect for client-side
+  });
   useEffect(() => {
     setPageTitle('My Orders', appName);
-  }, [appName]);
-
-  // Initialize status from URL parameters on mount
+  }, [appName]);
   useEffect(() => {
     const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     setStatus(newStatus);
-  }, []);
-
-  // Sync status state with URL parameters
+  }, []);
   useEffect(() => {
     const urlStatus = searchParams?.get('status');
     const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
     if (newStatus !== status) {
       setStatus(newStatus);
     }
-  }, [searchParams, status]);
-
-  // Clear local pending cancel requests when data shows declined requests
+  }, [searchParams, status]);
   useEffect(() => {
     if (data?.data) {
       const ordersWithDeclinedRequests = data.data.filter((order: any) => 
@@ -295,7 +267,7 @@ export default function OrdersList() {
         order.cancelRequests.length > 0 && 
         order.cancelRequests[0].status === 'declined'
       );
-      
+
       if (ordersWithDeclinedRequests.length > 0) {
         setLocalPendingCancelRequests(prev => {
           const newSet = new Set(prev);
@@ -306,63 +278,48 @@ export default function OrdersList() {
         });
       }
     }
-  }, [data]);
-
-  // Handle search loading state
+  }, [data]);
   useEffect(() => {
     if (search.trim()) {
       setIsSearchLoading(true);
       const timer = setTimeout(() => {
         setIsSearchLoading(false);
-      }, 500); // Simulate search delay
-      
+      }, 500);
+
       return () => clearTimeout(timer);
     } else {
       setIsSearchLoading(false);
     }
-  }, [search]);
-
-  // Show toast notification
+  }, [search]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // Handle status filter change with URL parameters
+  };
   const handleStatusChange = (statusKey: string) => {
     setStatus(statusKey);
-    setPage(1);
-    
-    // Update URL parameters - create new URLSearchParams to avoid mutation
+    setPage(1);
     const currentParams = searchParams?.toString() || '';
     const params = new URLSearchParams(currentParams);
-    
+
     if (statusKey === 'all') {
       params.delete('status');
-    } else {
-      // Convert status key to URL-friendly format
+    } else {
       const urlStatus = statusKey.replace('_', '-');
       params.set('status', urlStatus);
     }
-    
+
     const newUrl = params.toString() ? `?${params.toString()}` : '/my-orders';
     router.push(newUrl);
   };
 
   const orders = useMemo(() => {
-    let filteredOrders = data?.data || [];
-
-
-
-    // Filter by status
+    let filteredOrders = data?.data || [];
     if (status !== 'all') {
       filteredOrders = filteredOrders.filter((order: any) => order.status === status);
-    }
-
-    // Filter by search
+    }
     if (search) {
       filteredOrders = filteredOrders.filter((order: any) =>
         order.id.toString().includes(search) ||
@@ -382,23 +339,17 @@ export default function OrdersList() {
       limit: 10,
       totalPages: Math.ceil(orders.length / 10)
     };
-  }, [orders]);
-
-  // Handle refill button click
+  }, [orders]);
   const handleRefill = (orderId: number) => {
     showToast(`Refill request submitted for order #${formatID(orderId)}`, 'success');
-  };
-
-  // Handle cancel button click
+  };
   const handleCancel = (orderId: number) => {
     setCancelModal({
       isOpen: true,
       orderId,
       reason: ''
     });
-  };
-
-  // Handle cancel confirmation
+  };
   const handleCancelConfirm = async () => {
     if (!cancelModal.orderId || !cancelModal.reason.trim()) {
       setToastMessage({
@@ -421,10 +372,9 @@ export default function OrdersList() {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Add order to local pending cancel requests
+      if (result.success) {
         setLocalPendingCancelRequests(prev => new Set(prev).add(cancelModal.orderId!));
-        
+
         setToastMessage({
           message: result.data.message || 'Cancel request submitted successfully',
           type: 'success'
@@ -443,9 +393,7 @@ export default function OrdersList() {
         type: 'error'
       });
     }
-  };
-
-  // Handle cancel modal close
+  };
   const handleCancelClose = () => {
     setCancelModal({
       isOpen: false,
@@ -504,16 +452,12 @@ export default function OrdersList() {
         type: 'error'
       });
     }
-  };
-
-  // Calculate counts for each status filter
+  };
   const getStatusCount = (statusKey: string) => {
     const allOrders = data?.data || [];
     if (statusKey === 'all') return allOrders.length;
     return allOrders.filter((order: any) => order.status === statusKey).length;
-  };
-
-  // Status filter buttons configuration
+  };
   const statusFilters = [
     {
       key: 'all',
@@ -557,9 +501,7 @@ export default function OrdersList() {
       icon: FaBan,
       color: 'bg-gray-600 hover:bg-gray-700',
     },
-  ];
-
-  // Format status for display
+  ];
   const formatStatusDisplay = (status: string) => {
     switch (status) {
       case 'in_progress':
@@ -579,9 +521,7 @@ export default function OrdersList() {
       default:
         return status.charAt(0).toUpperCase() + status.slice(1);
     }
-  };
-
-  // Get badge color based on status
+  };
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -601,13 +541,11 @@ export default function OrdersList() {
       default:
         return 'bg-gray-100 dark:bg-gray-900/20 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-800';
     }
-  };
-
-  // Always show the UI structure, handle loading and error states within the table
+  };
 
   return (
     <div className="page-container">
-      {/* Cancel Modal */}
+      {}
       <CancelModal
         isOpen={cancelModal.isOpen}
         onClose={handleCancelClose}
@@ -617,7 +555,7 @@ export default function OrdersList() {
         setReason={(reason) => setCancelModal(prev => ({ ...prev, reason }))}
       />
 
-      {/* Refill Modal */}
+      {}
       <RefillModal
         isOpen={refillModal.isOpen}
         onClose={handleRefillClose}
@@ -627,7 +565,7 @@ export default function OrdersList() {
         setReason={(reason) => setRefillModal(prev => ({ ...prev, reason }))}
       />
 
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -637,9 +575,9 @@ export default function OrdersList() {
       )}
 
       <div className="page-content">
-        {/* Orders Content Card - Everything in one box */}
+        {}
         <div className="card card-padding">
-          {/* Search Bar with Spinner */}
+          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -664,7 +602,7 @@ export default function OrdersList() {
             </div>
           </div>
 
-          {/* Status Filter Buttons with Counters - Updated with Services Page Gradient */}
+          {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
               {statusFilters.map((filter) => {
@@ -690,7 +628,7 @@ export default function OrdersList() {
             </div>
           </div>
 
-          {/* Orders Table */}
+          {}
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
@@ -793,8 +731,7 @@ export default function OrdersList() {
                         </td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-gray-900">
-                            {(() => {
-                              // Order has stored prices in both USD and BDT
+                            {(() => {
                               const usdPrice = order.usdPrice || 0;
                               const bdtPrice = order.bdtPrice || 0;
 
@@ -808,8 +745,7 @@ export default function OrdersList() {
                                 displayAmount = usdPrice;
                               } else if (currentCurrencyData.code === 'BDT') {
                                 displayAmount = bdtPrice;
-                              } else {
-                                // Convert from USD to other currency
+                              } else {
                                 displayAmount = usdPrice * currentCurrencyData.rate;
                               }
 
@@ -868,13 +804,11 @@ export default function OrdersList() {
                                 Refill
                               </button>
                             )}
-                            {order.status === 'pending' && order.service?.cancel && (() => {
-                              // Check if there's a pending cancel request from database or local state
-                              // Only consider 'pending' status cancel requests, not 'declined' ones
+                            {order.status === 'pending' && order.service?.cancel && (() => {
                               const hasPendingCancelRequest = 
                                 (order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'pending')) ||
                                 localPendingCancelRequests.has(order.id);
-                              
+
                               return hasPendingCancelRequest ? (
                                 <button
                                   disabled
@@ -921,7 +855,7 @@ export default function OrdersList() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {}
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
@@ -942,7 +876,7 @@ export default function OrdersList() {
                   Previous
                 </button>
 
-                {/* Page numbers */}
+                {}
                 <div className="flex gap-1">
                   {Array.from(
                     { length: Math.min(5, pagination.totalPages) },

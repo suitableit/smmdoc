@@ -1,6 +1,4 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-unused-vars  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
@@ -23,7 +21,6 @@ import {
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -32,10 +29,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Mock components and hooks for demonstration
-
-
-// Toast/Twist Message Component using CSS classes
 const Toast = ({
   message,
   type = 'success',
@@ -107,12 +100,10 @@ const ProfilePage = () => {
   const currentUser = useCurrentUser();
   const userDetails = useSelector((state: any) => state.userDetails);
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Account Settings', appName);
   }, [appName]);
 
-  // State management
   const [apiKey, setApiKey] = useState<ApiKey | null>(null);
   const [twoFactor, setTwoFactor] = useState<boolean>(false);
   const [copied, setCopied] = useState(false);
@@ -147,7 +138,6 @@ const ProfilePage = () => {
   const [isSavingTimezone, setIsSavingTimezone] = useState(false);
   const [isSavingLanguage, setIsSavingLanguage] = useState(false);
 
-  // Form validation states
   const [validationErrors, setValidationErrors] = useState<{
     fullName?: string;
     email?: string;
@@ -167,37 +157,34 @@ const ProfilePage = () => {
     { value: 'hi', label: 'Hindi' },
   ];
 
-  // Generate dynamic timezone data
   const getTimezones = () => {
     try {
-      // Get all supported timezones
+
       const timezones = Intl.supportedValuesOf('timeZone');
-      
+
       return timezones.map(timezone => {
         const now = new Date();
         const formatter = new Intl.DateTimeFormat('en', {
           timeZone: timezone,
           timeZoneName: 'longOffset'
         });
-        
-        // Get the offset
+
         const offsetString = formatter.formatToParts(now)
           .find(part => part.type === 'timeZoneName')?.value || '';
-        
-        // Calculate offset in seconds for sorting
+
         const offsetMinutes = -now.getTimezoneOffset();
         const targetDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
         const localDate = new Date(now.toLocaleString('en-US'));
         const offsetSeconds = Math.round((targetDate.getTime() - localDate.getTime()) / 1000) + (offsetMinutes * 60);
-        
+
         return {
-          value: timezone, // Use timezone identifier as value instead of offset
+          value: timezone,
           label: `${offsetString} ${timezone.replace('_', ' ')}`,
           timezone: timezone,
-          offsetSeconds: offsetSeconds // Keep for sorting
+          offsetSeconds: offsetSeconds
         };
       }).sort((a, b) => {
-        // Sort by offset, then by timezone name
+
         if (a.offsetSeconds !== b.offsetSeconds) {
           return a.offsetSeconds - b.offsetSeconds;
         }
@@ -205,7 +192,7 @@ const ProfilePage = () => {
       });
     } catch (error) {
       console.error('Error generating timezones:', error);
-      // Fallback to original hardcoded timezones
+
       return [
         {
           value: 'Asia/Dhaka',
@@ -238,36 +225,30 @@ const ProfilePage = () => {
 
   const timezones = getTimezones();
 
-  // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
         setIsUserDataLoading(true);
 
-        // Get user details from server
         const userData = await getUserDetails();
 
         if (userData) {
-          // Dispatch to Redux store
+
           dispatch(setUserDetails(userData));
 
-          // Set component state from userData
           setTwoFactor(userData.isTwoFactorEnabled || false);
           setSelectedLanguage((userData as any).language || 'en');
-          
-          // Set default timezone to Asia/Dhaka for all users
+
           const userTimezone = (userData as any).timezone;
-          // Always default to Asia/Dhaka if no timezone is set
+
           setSelectedTimezone(userTimezone || 'Asia/Dhaka');
 
-          // Initialize profile data
           setProfileData({
             fullName: userData.name || '',
             email: userData.email || '',
             username: userData.username || '',
           });
 
-          // Set API key if exists
           if ((userData as any).apiKey) {
             setApiKey({
               key: (userData as any).apiKey,
@@ -289,7 +270,6 @@ const ProfilePage = () => {
       }
     };
 
-    // Only load if we have a current user
     if (currentUser?.id) {
       loadUserData();
     } else {
@@ -298,7 +278,6 @@ const ProfilePage = () => {
     }
   }, [currentUser?.id, dispatch]);
 
-  // Sync API key from Redux store
   useEffect(() => {
     if (userDetails?.apiKey && !apiKey) {
       setApiKey({
@@ -311,7 +290,6 @@ const ProfilePage = () => {
     }
   }, [userDetails, apiKey]);
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -330,7 +308,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle password change
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -356,7 +333,7 @@ const ProfilePage = () => {
     setIsLoading(true);
 
     try {
-      // Call API to change password
+
       const response = await fetch('/api/user/change-password', {
         method: 'POST',
         headers: {
@@ -384,7 +361,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle 2FA toggle
   const handleTwoFactorToggle = async () => {
     const nextState = !twoFactor;
 
@@ -404,7 +380,6 @@ const ProfilePage = () => {
       if (response.ok) {
         setTwoFactor(nextState);
 
-        // Update Redux store
         dispatch(
           setUserDetails({
             ...userDetails,
@@ -427,7 +402,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle API key generation
   const handleApiKeyGeneration = async () => {
     setIsGeneratingApiKey(true);
     try {
@@ -452,7 +426,6 @@ const ProfilePage = () => {
         setApiKey(newApiKey);
         setShowApiKey(true);
 
-        // Update Redux store
         dispatch(
           setUserDetails({
             ...userDetails,
@@ -475,7 +448,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle timezone save
   const handleTimezoneSave = async () => {
     setIsSavingTimezone(true);
     try {
@@ -511,7 +483,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle language save
   const handleLanguageSave = async () => {
     setIsSavingLanguage(true);
     try {
@@ -547,10 +518,9 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle profile update toggle
   const handleUpdateProfile = () => {
     if (isEditingProfile) {
-      // Cancel editing - reset to original values
+
       setProfileData({
         username: user?.username || '',
         fullName: user?.name || '',
@@ -559,22 +529,19 @@ const ProfilePage = () => {
       setIsEditingProfile(false);
       setHasProfileChanges(false);
     } else {
-      // Enable editing
+
       setIsEditingProfile(true);
     }
   };
 
-  // Handle profile data changes
   const handleProfileDataChange = (field: string, value: string) => {
     setProfileData((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Validate field in real-time
     validateProfileField(field, value);
 
-    // Check if there are changes
     const originalFullName = user?.name || '';
     const originalEmail = user?.email || '';
     const originalUsername = user?.username || '';
@@ -591,11 +558,9 @@ const ProfilePage = () => {
     setHasProfileChanges(hasChanges);
   };
 
-  // Handle save profile changes
   const handleSaveProfileChanges = async () => {
     if (!hasProfileChanges) return;
 
-    // Validate all fields before submitting
     const emailError = validateEmail(profileData.email);
     const fullNameError = validateFullName(profileData.fullName);
     const usernameError = validateUsername(profileData.username);
@@ -613,7 +578,7 @@ const ProfilePage = () => {
     setIsLoading(true);
 
     try {
-      // Check if email is being changed
+
       const originalEmail = user?.email || '';
       const isEmailChanged = profileData.email !== originalEmail;
 
@@ -632,7 +597,7 @@ const ProfilePage = () => {
       const result = await response.json();
 
       if (response.ok) {
-        // If email was changed, set up verification flow
+
         if (isEmailChanged) {
           setPendingEmailChange(profileData.email);
           setIsEmailVerificationPending(true);
@@ -641,13 +606,12 @@ const ProfilePage = () => {
           showToast('Profile updated successfully!', 'success');
         }
 
-        // Update Redux store
         dispatch(
           setUserDetails({
             ...userDetails,
             name: profileData.fullName,
             username: profileData.username,
-            // Only update email if it wasn't changed (to avoid confusion)
+
             email: isEmailChanged ? userDetails.email : profileData.email,
             emailVerified: isEmailChanged ? false : (result.data?.emailVerified || userDetails.emailVerified),
           })
@@ -656,7 +620,7 @@ const ProfilePage = () => {
         setIsEditingProfile(false);
         setHasProfileChanges(false);
       } else {
-        // Show specific error message from API
+
         const errorMessage = result.error || result.message || 'Failed to update profile';
         showToast(errorMessage, 'error');
         console.error('Profile update failed:', result);
@@ -669,7 +633,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle resend verification email
   const handleResendVerificationEmail = async () => {
     try {
       const response = await fetch('/api/user/resend-verification', {
@@ -678,7 +641,7 @@ const ProfilePage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: pendingEmailChange || user?.email, // Send to pending email if exists
+          email: pendingEmailChange || user?.email,
         }),
       });
 
@@ -699,7 +662,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Handle profile picture upload
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('🔄 Avatar upload started');
     const file = event.target.files?.[0];
@@ -714,7 +676,6 @@ const ProfilePage = () => {
       size: file.size
     });
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       console.log('❌ Invalid file type:', file.type);
@@ -722,8 +683,7 @@ const ProfilePage = () => {
       return;
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       console.log('❌ File too large:', file.size);
       showToast('File size too large. Maximum size is 5MB.', 'error');
@@ -732,7 +692,6 @@ const ProfilePage = () => {
 
     console.log('✅ File validation passed');
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => {
       console.log('📷 Preview created');
@@ -764,14 +723,13 @@ const ProfilePage = () => {
 
       if (response.ok) {
         console.log('✅ Upload successful');
-        // Update Redux store
+
         const updatedUserDetails = {
           ...userDetails,
           image: result.data.image,
         };
         dispatch(setUserDetails(updatedUserDetails));
 
-        // Update session
         try {
           await fetch('/api/auth/session', {
             method: 'POST',
@@ -788,14 +746,13 @@ const ProfilePage = () => {
 
         setAvatarPreview(null);
         showToast('Profile picture updated successfully!', 'success');
-        
-        // Refresh user data to get updated image
+
         setTimeout(async () => {
           try {
             const updatedUserData = await getUserDetails();
             if (updatedUserData) {
               dispatch(setUserDetails(updatedUserData));
-              // Dispatch custom event to notify header component
+
               window.dispatchEvent(new CustomEvent('avatarUpdated'));
             }
           } catch (error) {
@@ -817,7 +774,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Validation functions
   const validateEmail = (email: string): string | null => {
     if (!email) return 'Email is required';
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -851,7 +807,6 @@ const ProfilePage = () => {
     return null;
   };
 
-  // Real-time validation for profile data
   const validateProfileField = (field: string, value: string) => {
     let error: string | null = null;
 
@@ -871,7 +826,6 @@ const ProfilePage = () => {
     return error === null;
   };
 
-  // Real-time validation for password form
   const validatePasswordField = (field: string, value: string) => {
     let error: string | null = null;
 
@@ -888,7 +842,6 @@ const ProfilePage = () => {
       [field]: error
     }));
 
-    // Check overall form validity
     const isValid = !error &&
       !!formData.currentPass &&
       !!formData.newPass &&
@@ -936,7 +889,6 @@ const ProfilePage = () => {
                   <button className="btn btn-primary">Upload Photo</button>
                 </div>
               </div>
-              {/* Change Password Card - Loading */}
               <div className="card card-padding">
                 <div className="flex items-center justify-center min-h-[300px]">
                   <div className="text-center flex flex-col items-center">
@@ -948,10 +900,7 @@ const ProfilePage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Right Column - Static Cards */}
             <div className="space-y-6">
-              {/* Two Factor Auth Card */}
               <div className="card card-padding">
                 <div className="card-header mb-4">
                   <div className="card-icon">
@@ -964,8 +913,6 @@ const ProfilePage = () => {
                   <GradientSpinner size="w-8 h-8" />
                 </div>
               </div>
-
-              {/* API Keys Card */}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -978,8 +925,6 @@ const ProfilePage = () => {
                   <GradientSpinner size="w-8 h-8" />
                 </div>
               </div>
-
-              {/* Timezone Card */}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -999,12 +944,10 @@ const ProfilePage = () => {
     );
   }
 
-  // Use userDetails from Redux store for real-time updates
   const user = userDetails || currentUser;
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -1017,7 +960,6 @@ const ProfilePage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
           <div className="space-y-6">
             <div className="card card-padding">
               <div className="card-header">
@@ -1080,11 +1022,7 @@ const ProfilePage = () => {
                       onChange={(e) =>
                         handleProfileDataChange('email', e.target.value)
                       }
-                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${
-                        validationErrors.email
-                          ? 'border-red-500 dark:border-red-400'
-                          : 'border-gray-300 dark:border-gray-600'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
+                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border ${validationErrors.email ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200`}
                       placeholder="Enter email address"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1144,8 +1082,6 @@ const ProfilePage = () => {
                 </div>
               </div>
             </div>
-
-            {/* User Profile Picture Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1184,18 +1120,9 @@ const ProfilePage = () => {
                     className="hidden"
                   />
                 </div>
-                <label htmlFor="avatar-upload" className="btn btn-primary cursor-pointer">
-                  {isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                </label>
-                {avatarPreview && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Uploading new profile picture...
-                  </p>
-                )}
               </div>
             </div>
 
-            {/* Change Password Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1287,10 +1214,7 @@ const ProfilePage = () => {
               </form>
             </div>
           </div>
-
-          {/* Right Column */}
           <div className="space-y-6">
-            {/* Two Factor Auth Card */}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -1322,8 +1246,6 @@ const ProfilePage = () => {
                 </div>
               </div>
             </div>
-
-            {/* API Keys Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1407,8 +1329,6 @@ const ProfilePage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Timezone Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1441,8 +1361,6 @@ const ProfilePage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Change Language Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">

@@ -18,24 +18,18 @@ import {
     FaTrash,
     FaUserCheck,
     FaUsers,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import useCurrency from '@/hooks/useCurrency';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { invalidateUserSessions } from '@/lib/session-invalidation';
-
-// Custom Gradient Spinner Component
+import { invalidateUserSessions } from '@/lib/session-invalidation';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -52,9 +46,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface User {
   id: number;
   username: string;
@@ -179,9 +171,7 @@ interface ChangeRoleModalProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading: boolean;
-}
-
-// Edit User Modal interfaces - cloned from Edit Balance pattern
+}
 interface EditUserModalProps {
   isOpen: boolean;
   currentUser: User | null;
@@ -203,9 +193,7 @@ interface EditUserFormData {
   balance: string;
   emailVerified: boolean | null;
   password: string;
-}
-
-// Custom hooks for better organization
+}
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -245,17 +233,11 @@ const useClickOutside = (
 };
 
 const UsersListPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('All Users', appName);
-  }, [appName]);
-
-  // Currency hook
-  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
-
-  // State management
+  }, [appName]);
+  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats>({
     totalUsers: 0,
@@ -286,14 +268,10 @@ const UsersListPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [usersLoading, setUsersLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // Modal states
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [addDeductBalanceDialog, setAddDeductBalanceDialog] = useState<{
     open: boolean;
     userId: number;
@@ -302,9 +280,7 @@ const UsersListPage = () => {
     open: false,
     userId: 0,
     currentUser: null,
-  });
-
-  // Add/Deduct Balance form state
+  });
   const [balanceForm, setBalanceForm] = useState({
     amount: '',
     action: 'add',
@@ -341,9 +317,7 @@ const UsersListPage = () => {
     userId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
-
-  // Edit User Modal state - cloned from Edit Balance pattern
+  const [newRole, setNewRole] = useState('');
   const [editUserDialog, setEditUserDialog] = useState<{
     open: boolean;
     userId: number;
@@ -361,12 +335,8 @@ const UsersListPage = () => {
     balance: '',
     emailVerified: null,
     password: '',
-  });
-
-  // Use debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  // Memoized filter options
+  });
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const filterOptions = useMemo(
     () => [
       { key: 'all', label: 'All', count: stats.totalUsers },
@@ -376,16 +346,14 @@ const UsersListPage = () => {
       { key: 'banned', label: 'Banned', count: stats.bannedUsers },
     ],
     [stats]
-  );
-
-  // API functions
+  );
   const fetchUsers = useCallback(async () => {
     try {
       setUsersLoading(true);
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'user', // Only fetch users with 'user' role
+        role: 'user',
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -396,20 +364,16 @@ const UsersListPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Client-side filter as backup to ensure no admins slip through
+      if (result.success) {
         let filteredUsers = (result.data || []).filter(
           (user: User) => user.role === 'user'
-        );
-        
-        // Apply client-side filtering for 'pending' status based on emailVerified
+        );
         if (statusFilter === 'pending') {
           filteredUsers = filteredUsers.filter((user: User) => !user.emailVerified);
-        } else if (statusFilter === 'active') {
-          // For 'active' filter, show users with emailVerified not null AND status = 'active'
+        } else if (statusFilter === 'active') {
           filteredUsers = filteredUsers.filter((user: User) => user.emailVerified && user.status === 'active');
         }
-        
+
         setUsers(filteredUsers);
         setPagination((prev) => ({
           ...prev,
@@ -432,8 +396,7 @@ const UsersListPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
-      // Remove role parameter as the API endpoint doesn't support it
+      setStatsLoading(true);
       const response = await fetch('/api/admin/users/stats?period=all');
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -470,18 +433,14 @@ const UsersListPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
-
-  // Effects
+  }, []);
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
-
-  // Show toast notification
+  }, [fetchStats]);
   const showToast = useCallback(
     (
       message: string,
@@ -491,9 +450,7 @@ const UsersListPage = () => {
       setTimeout(() => setToast(null), 4000);
     },
     []
-  );
-
-  // Utility functions
+  );
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -501,9 +458,7 @@ const UsersListPage = () => {
       banned: <FaBan className="h-3 w-3 text-red-500" />,
     };
     return icons[status as keyof typeof icons] || icons.active;
-  };
-
-  // Use currency context formatting function
+  };
   const formatCurrency = useCallback((amount: number) => {
     return formatCurrencyFromContext(amount);
   }, [formatCurrencyFromContext]);
@@ -525,7 +480,7 @@ const UsersListPage = () => {
   const handleViewUser = useCallback(async (userId: number) => {
     try {
       setActionLoading(userId.toString());
-      
+
       const response = await fetch('/api/admin/switch-user', {
         method: 'POST',
         headers: {
@@ -537,10 +492,7 @@ const UsersListPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(result.message || 'Successfully switched to user', 'success');
-        
-        // Force a complete page reload to ensure NextAuth processes the new cookies
-        // This is necessary because the JWT callback needs to run with the new cookies
+        showToast(result.message || 'Successfully switched to user', 'success');
         setTimeout(() => {
           window.location.replace('/dashboard');
         }, 800);
@@ -558,9 +510,7 @@ const UsersListPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchUsers(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchUsers, fetchStats, showToast]);
-
-  // Generic API action handler
+  }, [fetchUsers, fetchStats, showToast]);
   const handleApiAction = useCallback(
     async (
       url: string,
@@ -583,8 +533,7 @@ const UsersListPage = () => {
           await fetchUsers();
           await fetchStats();
           return true;
-        } else {
-          // Handle specific error messages from the API
+        } else {
           const errorMessage = result.error || 'Operation failed';
           showToast(errorMessage, 'error');
           return false;
@@ -601,9 +550,7 @@ const UsersListPage = () => {
       }
     },
     [fetchUsers, fetchStats, showToast]
-  );
-
-  // Handle user deletion
+  );
   const handleDeleteUser = useCallback(
     async (userId: number) => {
       const success = await handleApiAction(
@@ -613,34 +560,27 @@ const UsersListPage = () => {
         'User deleted successfully'
       );
 
-      if (success) {
-        // Broadcast session invalidation for live logout
+      if (success) {
         await invalidateUserSessions(userId);
         setDeleteDialogOpen(false);
         setUserToDelete(null);
       }
     },
     [handleApiAction]
-  );
-
-  // Handle user status update
+  );
   const handleStatusUpdate = useCallback(
     async (userId: number, newStatus: string, duration?: string) => {
-      const requestBody: any = { status: newStatus };
-      
-      // Add suspension duration if status is suspended and duration is provided
+      const requestBody: any = { status: newStatus };
       if (newStatus === 'suspended' && duration) {
         requestBody.suspensionDuration = duration;
       }
-      
+
       const success = await handleApiAction(
         `/api/admin/users/${userId}/status`,
         'PUT',
         requestBody,
         `User status updated to ${newStatus}`
-      );
-
-      // If user is suspended or banned, broadcast session invalidation for live logout
+      );
       if (success && (newStatus === 'suspended' || newStatus === 'banned')) {
         await invalidateUserSessions(userId);
       }
@@ -648,9 +588,7 @@ const UsersListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
-
-  // Handle add/deduct balance
+  );
   const handleBalanceSubmit = useCallback(async () => {
     if (!balanceForm.amount || !addDeductBalanceDialog.currentUser) {
       showToast('Please fill in all required fields', 'error');
@@ -674,7 +612,7 @@ const UsersListPage = () => {
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
-          adminCurrency: currency, // Pass admin's current currency
+          adminCurrency: currency,
         }),
       });
 
@@ -688,8 +626,7 @@ const UsersListPage = () => {
           'success'
         );
         setAddDeductBalanceDialog({ open: false, userId: 0, currentUser: null });
-        setBalanceForm({ amount: '', action: 'add', notes: '' });
-        // Refresh users list
+        setBalanceForm({ amount: '', action: 'add', notes: '' });
         fetchUsers();
       } else {
         showToast(result.error || 'Failed to update user balance', 'error');
@@ -700,9 +637,7 @@ const UsersListPage = () => {
     } finally {
       setBalanceSubmitting(false);
     }
-  }, [balanceForm, addDeductBalanceDialog.currentUser, fetchUsers]);
-
-  // Handle edit discount
+  }, [balanceForm, addDeductBalanceDialog.currentUser, fetchUsers]);
   const handleEditDiscount = useCallback(
     async (userId: number, discount: number) => {
       const success = await handleApiAction(
@@ -718,9 +653,7 @@ const UsersListPage = () => {
       }
     },
     [handleApiAction]
-  );
-
-  // Handle change role
+  );
   const handleChangeRole = useCallback(
     async (userId: number, role: string) => {
       const success = await handleApiAction(
@@ -737,9 +670,7 @@ const UsersListPage = () => {
       return success;
     },
     [handleApiAction]
-  );
-
-  // Handle reset special pricing
+  );
   const handleResetSpecialPricing = useCallback(
     async (userId: number) => {
       return handleApiAction(
@@ -750,9 +681,7 @@ const UsersListPage = () => {
       );
     },
     [handleApiAction]
-  );
-
-  // Handle set new API key
+  );
   const handleSetNewApiKey = useCallback(
     async (userId: number) => {
       return handleApiAction(
@@ -763,9 +692,7 @@ const UsersListPage = () => {
       );
     },
     [handleApiAction]
-  );
-
-  // Edit User functions - cloned from Edit Balance pattern
+  );
   const openEditUserDialog = useCallback(
     (userId: number, currentUser: User) => {
       setEditUserDialog({ open: true, userId, currentUser });
@@ -811,8 +738,7 @@ const UsersListPage = () => {
       name: editUserFormData.name,
       email: editUserFormData.email,
       balance: parseFloat(editUserFormData.balance) || 0,
-      emailVerified: editUserFormData.emailVerified,
-      // Automatically set status to 'active' when email is verified
+      emailVerified: editUserFormData.emailVerified,
       status: editUserFormData.emailVerified ? 'active' : 'pending',
       ...(editUserFormData.password && { password: editUserFormData.password }),
     };
@@ -845,9 +771,7 @@ const UsersListPage = () => {
       }
     },
     [users, openEditUserDialog]
-  );
-
-  // Modal handlers
+  );
   const openAddDeductBalanceDialog = useCallback(
     (userId: number) => {
       const user = users.find((u) => u.id === userId);
@@ -857,21 +781,17 @@ const UsersListPage = () => {
       }
     },
     [users]
-  );
-
-  // Helper function to calculate suspension duration from suspendedUntil
+  );
   const calculateSuspensionDuration = (suspendedUntil: string): string => {
     const suspendedDate = new Date(suspendedUntil);
     const now = new Date();
     const diffMs = suspendedDate.getTime() - now.getTime();
-    
-    if (diffMs <= 0) return ''; // Suspension has expired
-    
+
+    if (diffMs <= 0) return '';
+
     const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
-    
-    // Match the closest suspension option
+    const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30));
     if (diffHours <= 24) return '24 hours';
     if (diffHours <= 48) return '48 hours';
     if (diffHours <= 72) return '72 hours';
@@ -886,9 +806,7 @@ const UsersListPage = () => {
     (userId: number, currentStatus: string) => {
       const user = users.find((u) => u.id === userId);
       setUpdateStatusDialog({ open: true, userId, currentStatus });
-      setNewStatus(currentStatus);
-      
-      // If user is suspended and has suspendedUntil, calculate current duration
+      setNewStatus(currentStatus);
       if (currentStatus === 'suspended' && user?.suspendedUntil) {
         const currentDuration = calculateSuspensionDuration(user.suspendedUntil);
         setSuspensionDuration(currentDuration);
@@ -913,16 +831,14 @@ const UsersListPage = () => {
       setNewRole(currentRole);
     },
     []
-  );
-
-  // Pagination handlers
+  );
   const handlePageChange = useCallback((newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -934,7 +850,7 @@ const UsersListPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Stats Cards */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
             <div className="card-content">
@@ -1021,12 +937,12 @@ const UsersListPage = () => {
           </div>
         </div>
 
-        {/* Controls Section - After stats cards */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -1056,7 +972,7 @@ const UsersListPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls Only */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -1083,10 +999,10 @@ const UsersListPage = () => {
           </div>
         </div>
 
-        {/* Users Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -1220,7 +1136,7 @@ const UsersListPage = () => {
               </div>
             ) : (
               <>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1468,7 +1384,7 @@ const UsersListPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
+                {}
                 <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {users.map((user) => (
@@ -1495,7 +1411,7 @@ const UsersListPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
@@ -1506,7 +1422,7 @@ const UsersListPage = () => {
           </div>
         </div>
 
-        {/* Modals */}
+        {}
         <DeleteConfirmationModal
           isOpen={deleteDialogOpen}
           onClose={() => {
@@ -1631,7 +1547,7 @@ const UsersListPage = () => {
           }
         />
 
-        {/* Edit User Modal - cloned from Edit Balance pattern */}
+        {}
         <EditUserModal
           isOpen={editUserDialog.open}
           currentUser={editUserDialog.currentUser}
@@ -1657,9 +1573,7 @@ const UsersListPage = () => {
       </div>
     </div>
   );
-};
-
-// Extracted Components for better organization
+};
 const UserActions: React.FC<UserActionsProps> = ({
   user,
   onView,
@@ -1712,8 +1626,8 @@ const UserActions: React.FC<UserActionsProps> = ({
                 <FaEdit className="h-3 w-3" />
                 Edit User
               </button>
-              
-              {/* Show Update User Status for suspended and banned users */}
+
+              {}
               {(user.status === 'suspended' || user.status === 'banned') && (
                 <button
                   onClick={() => {
@@ -1726,8 +1640,8 @@ const UserActions: React.FC<UserActionsProps> = ({
                   Update User Status
                 </button>
               )}
-              
-              {/* Show delete option for pending users */}
+
+              {}
               {!user.emailVerified && (
                 <>
                   <hr className="my-1" />
@@ -1743,8 +1657,8 @@ const UserActions: React.FC<UserActionsProps> = ({
                   </button>
                 </>
               )}
-              
-              {/* Show all options for verified users */}
+
+              {}
               {user.emailVerified && user.status !== 'suspended' && user.status !== 'banned' && (
                 <>
                   <button
@@ -2109,9 +2023,7 @@ const Pagination: React.FC<PaginationProps> = ({
       </button>
     </div>
   </div>
-);
-
-// Modal Components
+);
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen,
   onClose,
@@ -2163,8 +2075,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   onClose,
   isLoading,
   onBalanceUpdate,
-}) => {
-  // Get currency from context
+}) => {
   const { currency, currentCurrencyData, availableCurrencies, convertAmount } = useCurrency();
 
   const [balanceForm, setBalanceForm] = useState({
@@ -2173,9 +2084,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     notes: '',
     username: '',
   });
-  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
-
-  // Reset form when modal opens/closes
+  const [balanceSubmitting, setBalanceSubmitting] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setBalanceForm({
@@ -2185,29 +2094,22 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
         username: currentUser?.username || '',
       });
     }
-  }, [isOpen, currentUser]);
-
-  // Function to convert user balance to admin's currency for display
+  }, [isOpen, currentUser]);
   const getDisplayBalance = () => {
     if (!currentUser) return '0.00';
-    
+
     const userBalance = currentUser.balance || 0;
     const userRate = currentUser.dollarRate || 121.45;
     const isAdminUSD = currency === 'USD' || currency === 'USDT';
-    
-    if (isAdminUSD) {
-      // Convert BDT to USD for display
+
+    if (isAdminUSD) {
       const convertedBalance = userBalance / userRate;
       return convertedBalance.toFixed(2);
-    } else {
-      // Show BDT directly
+    } else {
       return userBalance.toFixed(2);
     }
-  };
-
-  // Simple toast function for this modal
-  const showModalToast = (message: string, type: 'success' | 'error') => {
-    // Create a simple toast notification
+  };
+  const showModalToast = (message: string, type: 'success' | 'error') => {
     const toast = document.createElement('div');
     toast.className = `fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-white font-medium ${
       type === 'success' ? 'bg-green-500' : 'bg-red-500'
@@ -2245,7 +2147,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           amount: parseFloat(balanceForm.amount),
           action: balanceForm.action,
           notes: balanceForm.notes,
-          adminCurrency: currency, // Pass admin's current currency
+          adminCurrency: currency,
         }),
       });
 
@@ -2342,7 +2244,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
             />
           </div>
 
-          {/* Conversion Preview */}
+          {}
           {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="text-sm text-blue-800">
@@ -2352,8 +2254,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
                   const amount = parseFloat(balanceForm.amount);
                   if (currency === 'BDT') {
                     return amount.toFixed(2);
-                  }
-                  // Use the convertAmount function from context
+                  }
                   const convertedAmount = convertAmount(amount, currency, 'BDT');
                   return convertedAmount.toFixed(2);
                 })()} (BDT)</div>
@@ -2435,7 +2336,7 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
             <option value="banned">Banned</option>
           </select>
         </div>
-        
+
         {(newStatus === 'suspended' || (currentStatus === 'suspended' && newStatus === currentStatus)) && (
           <div className="mb-4">
             <label className="form-label mb-2">
@@ -2468,7 +2369,7 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
             </select>
           </div>
         )}
-        
+
         <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
@@ -2594,9 +2495,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
       </div>
     </div>
   );
-};
-
-// Edit User Modal Component - cloned from Edit Balance pattern
+};
 const EditUserModal: React.FC<EditUserModalProps> = ({
   isOpen,
   currentUser,
@@ -2615,7 +2514,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         <h3 className="text-lg font-semibold mb-4">Edit User</h3>
 
         <div className="space-y-4">
-          {/* Username */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Username</label>
             <input
@@ -2628,7 +2527,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
 
-          {/* Full Name */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Full Name</label>
             <input
@@ -2641,7 +2540,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
 
-          {/* User Email */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">User Email</label>
             <input
@@ -2654,7 +2553,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
 
-          {/* Balance */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Balance Amount (in USD)</label>
             <input
@@ -2668,7 +2567,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
 
-          {/* Email Confirmation */}
+          {}
           <div className="mb-4">
             <label
               className={`flex items-center gap-3 ${
@@ -2705,7 +2604,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             </p>
           </div>
 
-          {/* Password */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Password</label>
             <div className="relative">

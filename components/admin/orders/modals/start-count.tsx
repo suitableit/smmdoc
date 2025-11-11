@@ -5,8 +5,8 @@ interface StartCountModalProps {
   onClose: () => void;
   orderId: string | number;
   currentCount: number;
-  onSuccess?: () => void; // Callback for successful update
-  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
+  onSuccess?: () => void;
+  showToast?: (message: string, type: 'success' | 'error') => void;
 }
 
 const StartCountModal: React.FC<StartCountModalProps> = ({
@@ -18,18 +18,14 @@ const StartCountModal: React.FC<StartCountModalProps> = ({
   showToast,
 }) => {
   const [newStartCount, setNewStartCount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Set initial value when modal opens - MUST be before early return
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setNewStartCount(currentCount.toString());
     }
   }, [isOpen, currentCount]);
 
-  if (!isOpen) return null;
-
-  // Handle edit start count API call
+  if (!isOpen) return null;
   const handleEditStartCount = async (orderId: string, startCount: number) => {
     try {
       setIsLoading(true);
@@ -45,7 +41,7 @@ const StartCountModal: React.FC<StartCountModalProps> = ({
 
       if (result.success) {
         showToast?.('Start count updated successfully', 'success');
-        onSuccess?.(); // Refresh orders data
+        onSuccess?.();
         handleClose();
       } else {
         showToast?.(result.error || 'Failed to update start count', 'error');

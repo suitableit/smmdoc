@@ -10,7 +10,7 @@ const NotFoundPage = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#0d0712] transition-colors duration-200 px-4 py-[120px]">
         <div className="text-center max-w-2xl mx-auto">
-          {/* Content */}
+          {}
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
             Error 404!
           </h4>

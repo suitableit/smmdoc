@@ -12,9 +12,7 @@ import {
     FaSearch,
     FaShoppingCart,
     FaUserTie,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -35,23 +33,17 @@ const FAQPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [openItems, setOpenItems] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Set document title using useEffect for client-side
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     setPageTitle('FAQs', appName);
-  }, [appName]);
-
-  // Simulate initial loading
+  }, [appName]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  // Mock FAQ data
+  }, []);
   const faqItems: FAQItem[] = [
     {
       id: 1,
@@ -137,25 +129,19 @@ const FAQPage = () => {
         "Once an order is placed, it cannot be canceled as our system starts processing it immediately. However, if the order hasn't started yet, you can contact support for assistance.",
       category: 'orders',
     },
-  ];
-
-  // Filter FAQ items based on search term
+  ];
   const filteredFAQs = faqItems.filter(
     (item) =>
       item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.answer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Group FAQ items by category
+  );
   const groupedFAQs = filteredFAQs.reduce((acc, item) => {
     if (!acc[item.category]) {
       acc[item.category] = [];
     }
     acc[item.category].push(item);
     return acc;
-  }, {} as Record<string, FAQItem[]>);
-
-  // Category display names and icons
+  }, {} as Record<string, FAQItem[]>);
   const categoryNames: Record<string, { name: string; icon: React.ReactNode }> =
     {
       general: {
@@ -187,7 +173,7 @@ const FAQPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          {/* Main FAQ Card - Loading State */}
+          {}
           <div className="card card-padding">
             <div className="text-center py-8 flex flex-col items-center">
               <GradientSpinner size="w-14 h-14" className="mb-4" />
@@ -202,9 +188,9 @@ const FAQPage = () => {
   return (
     <div className="page-container">
       <div className="page-content">
-        {/* Main FAQ Card */}
+        {}
         <div className="card card-padding">
-          {/* Search Section */}
+          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -221,7 +207,7 @@ const FAQPage = () => {
             </div>
           </div>
 
-          {/* FAQ Content */}
+          {}
           {Object.keys(groupedFAQs).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FaQuestionCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -236,7 +222,7 @@ const FAQPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {Object.entries(groupedFAQs).map(([category, items]) => (
                 <div key={category}>
-                  {/* Category Header */}
+                  {}
                   <div className="card-header mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className="card-icon">
@@ -252,7 +238,7 @@ const FAQPage = () => {
                     </span>
                   </div>
 
-                  {/* FAQ Items */}
+                  {}
                   <div className="space-y-2">
                     {items.map((item) => (
                       <div key={item.id} className="card">

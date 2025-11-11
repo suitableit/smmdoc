@@ -1,5 +1,3 @@
-// API Email Templates
-// These templates are used for API-related notifications to users
 
 import { createEmailTemplate, emailContentSections, EmailLayoutData } from '../shared/email-layout';
 
@@ -18,8 +16,7 @@ export interface ApiEmailData {
   ipAddress?: string;
 }
 
-export const apiTemplates = {
-  // User notification for new API key generation
+export const apiTemplates = {
   userApiKeyGenerated: (data: ApiEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'API Key Generated Successfully',
@@ -27,14 +24,13 @@ export const apiTemplates = {
       footerMessage: 'This is an automated message. Please do not reply to this email.',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         Your new API key has been successfully generated and is ready to use. Please store it securely as it won't be displayed again.
       </p>
-            
-      <!-- API Key Details -->
+
       <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #22c55e; padding-bottom: 10px;">API Key Details</h3>
         ${emailContentSections.infoTable([
@@ -45,8 +41,7 @@ export const apiTemplates = {
           ...(data.rateLimitInfo ? [{label: 'Rate Limit', value: data.rateLimitInfo}] : [])
         ])}
       </div>
-            
-      
+
       ${emailContentSections.alertBox(`
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Security Best Practices:</h3>
         <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -56,8 +51,7 @@ export const apiTemplates = {
           <li style="margin-bottom: 8px;">Monitor your API usage regularly for unusual activity</li>
         </ul>
       `)}
-      
-      <!-- API Documentation -->
+
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Getting Started:</h3>
         <p style="color: #4b5563; margin: 0 0 15px 0;">Include your API key in the request headers:</p>
@@ -65,21 +59,19 @@ export const apiTemplates = {
           Authorization: Bearer YOUR_API_KEY
         </div>
       </div>
-      
+
       ${emailContentSections.actionButtons([
         {text: 'View API Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`},
         {text: 'Manage API Keys', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-keys`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         If you have any questions about using our API, please don't hesitate to contact our support team.
       </p>
     `;
-    
-    return createEmailTemplate(layoutData, content);
-  },
 
-  // User notification for API rate limit exceeded
+    return createEmailTemplate(layoutData, content);
+  },
   userApiRateLimitExceeded: (data: ApiEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'API Rate Limit Exceeded',
@@ -87,14 +79,13 @@ export const apiTemplates = {
       footerMessage: 'This is an automated message. Please do not reply to this email.',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         Your API usage has exceeded the allowed rate limit. Some of your recent API requests may have been throttled or rejected.
       </p>
-            
-      <!-- Usage Details -->
+
       <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #f59e0b;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Usage Information</h3>
         ${emailContentSections.infoTable([
@@ -105,8 +96,7 @@ export const apiTemplates = {
           ...(data.ipAddress ? [{label: 'IP Address', value: data.ipAddress}] : [])
         ])}
       </div>
-            
-      
+
       ${emailContentSections.alertBox(`
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What you can do:</h3>
         <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -116,8 +106,7 @@ export const apiTemplates = {
           <li style="margin-bottom: 8px;">Optimize your API usage to reduce unnecessary requests</li>
         </ul>
       `)}
-      
-      <!-- Rate Limit Guidelines -->
+
       <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Rate Limit Guidelines:</h3>
         <div style="background-color: #ffffff; border-radius: 8px; padding: 15px; border: 1px solid #e5e7eb;">
@@ -130,21 +119,19 @@ export const apiTemplates = {
           </ul>
         </div>
       </div>
-      
+
       ${emailContentSections.actionButtons([
         {text: 'View API Usage', url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/api-usage`},
         {text: 'Upgrade Plan', url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         If you need assistance with optimizing your API usage or have questions about rate limits, please contact our support team.
       </p>
     `;
-    
-    return createEmailTemplate(layoutData, content);
-  },
 
-  // User notification for API error/failure
+    return createEmailTemplate(layoutData, content);
+  },
   userApiError: (data: ApiEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'API Error Alert',
@@ -152,14 +139,13 @@ export const apiTemplates = {
       footerMessage: 'This is an automated message. Please do not reply to this email.',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         We've detected an error with your API requests. Please review the details below and take appropriate action.
       </p>
-            
-      <!-- Error Details -->
+
       <div style="background-color: #fef2f2; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #ef4444;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Error Details</h3>
         ${emailContentSections.infoTable([
@@ -170,8 +156,7 @@ export const apiTemplates = {
           ...(data.ipAddress ? [{label: 'IP Address', value: data.ipAddress}] : [])
         ])}
       </div>
-            
-      
+
       ${emailContentSections.alertBox(`
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Troubleshooting Steps:</h3>
         <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -182,8 +167,7 @@ export const apiTemplates = {
           <li style="margin-bottom: 8px;">Ensure your account has sufficient permissions</li>
         </ul>
       `)}
-      
-      <!-- Common Error Codes -->
+
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Common Error Codes:</h3>
         <div style="background-color: #ffffff; border-radius: 8px; padding: 15px; border: 1px solid #e5e7eb;">
@@ -196,17 +180,17 @@ export const apiTemplates = {
           </ul>
         </div>
       </div>
-      
+
       ${emailContentSections.actionButtons([
         {text: 'View Documentation', url: `${process.env.NEXT_PUBLIC_APP_URL}/api/documentation`},
         {text: 'Contact Support', url: `${process.env.NEXT_PUBLIC_APP_URL}/support`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         If you continue to experience issues, please don't hesitate to contact our technical support team for assistance.
       </p>
     `;
-    
+
     return createEmailTemplate(layoutData, content);
   },
 };

@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -13,21 +9,15 @@ import {
   FaEnvelope,
   FaEnvelopeOpen,
   FaTimes,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock components for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
-
-// Toast Message Component
+);
+const ButtonLoader = () => <div className="loading-spinner"></div>;
 const Toast = ({
   message,
   type = 'success',
@@ -58,22 +48,16 @@ interface EmailSMTPSettings {
 const EmailSettingsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
-
-  // Set document title
+  const currentUser = useCurrentUser();
   useEffect(() => {
     setPageTitle('Email Settings', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Email SMTP settings state
+  } | null>(null);
   const [emailSettings, setEmailSettings] = useState<EmailSMTPSettings>({
     email: '',
     smtpUsername: '',
@@ -81,17 +65,13 @@ const EmailSettingsPage = () => {
     smtpHostServer: '',
     port: 587,
     protocol: 'none',
-  });
-
-  // Test mail state
+  });
   const [testMailData, setTestMailData] = useState({
     recipientEmail: '',
     subject: `Test Email from ${appName}`,
     message: 'This is a test email to verify SMTP configuration is working correctly.',
   });
-  const [isTestingMail, setIsTestingMail] = useState(false);
-
-  // Load settings on component mount
+  const [isTestingMail, setIsTestingMail] = useState(false);
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -100,7 +80,7 @@ const EmailSettingsPage = () => {
         const response = await fetch('/api/admin/email-settings');
         if (response.ok) {
           const data = await response.json();
-          
+
           if (data.success && data.data) {
             const settings = data.data;
             setEmailSettings({
@@ -124,18 +104,14 @@ const EmailSettingsPage = () => {
     };
 
     loadSettings();
-  }, []);
-
-  // Show toast notification
+  }, []);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Save function
+  };
   const saveEmailSettings = async () => {
     setIsLoading(true);
     try {
@@ -164,9 +140,7 @@ const EmailSettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Test mail function
+  };
   const sendTestMail = async () => {
     if (!testMailData.recipientEmail) {
       showToast('Please enter recipient email address', 'error');
@@ -198,9 +172,7 @@ const EmailSettingsPage = () => {
     } finally {
       setIsTestingMail(false);
     }
-  };
-
-  // Show loading state
+  };
   if (isPageLoading) {
     return (
       <div className="page-container">
@@ -208,7 +180,7 @@ const EmailSettingsPage = () => {
           <div className="flex justify-center">
             <div className="w-full max-w-6xl">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* SMTP Settings Loading Box */}
+                {}
                 <div className="card card-padding">
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center flex flex-col items-center">
@@ -217,8 +189,8 @@ const EmailSettingsPage = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Test Mail Loading Box */}
+
+                {}
                 <div className="card card-padding">
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center flex flex-col items-center">
@@ -243,7 +215,7 @@ const EmailSettingsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -257,9 +229,9 @@ const EmailSettingsPage = () => {
       <div className="page-content">
         <div className="flex justify-center">
           <div className="page-content">
-            {/* Two Column Layout */}
+            {}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* First Column - Setup Email SMTP Card */}
+              {}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">
@@ -372,7 +344,7 @@ const EmailSettingsPage = () => {
                 </div>
               </div>
 
-              {/* Second Column - Test Mail Card */}
+              {}
               <div className="card card-padding">
                 <div className="card-header">
                   <div className="card-icon">

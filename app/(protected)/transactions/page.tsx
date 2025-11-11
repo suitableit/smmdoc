@@ -12,21 +12,15 @@ import {
     FaSearch,
     FaTimes,
 } from 'react-icons/fa';
-import { TransactionsList } from './components/TransactionsList';
-
-// Custom Gradient Spinner Component
+import { TransactionsList } from './components/TransactionsList';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock components matching profile page style
-const ButtonLoader = () => <div className="loading-spinner"></div>;
-
-// Toast Component matching the profile page style
+);
+const ButtonLoader = () => <div className="loading-spinner"></div>;
 const Toast = ({
   message,
   type = 'success',
@@ -58,9 +52,7 @@ type Transaction = {
   sender_number?: string;
   phone?: string;
   currency?: string;
-};
-
-// Helper function for formatting amount - will be replaced with dynamic currency
+};
 function formatAmount(amount: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -126,36 +118,26 @@ export default function TransactionsPage() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
-
-  // Set document title using useEffect for client-side
+  const [searchLoading, setSearchLoading] = useState(false);
   useEffect(() => {
     setPageTitle('Transactions', appName);
-  }, [appName]);
-
-  // Debounce search term and track search activity
+  }, [appName]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       setSearchLoading(false);
-    }, 500);
-
-    // Set search loading when user is typing
+    }, 500);
     if (searchTerm !== debouncedSearchTerm) {
       setSearchLoading(true);
     }
 
     return () => clearTimeout(timer);
-  }, [searchTerm, debouncedSearchTerm]);
-
-  // Track if user is actively searching
+  }, [searchTerm, debouncedSearchTerm]);
   useEffect(() => {
     const hasSearchTerm = searchTerm.trim() !== '';
     const hasDateFilter = dateFilter.startDate !== '' || dateFilter.endDate !== '';
     setIsSearching(hasSearchTerm || hasDateFilter);
-  }, [searchTerm, dateFilter]);
-
-  // Mock data for demonstration
+  }, [searchTerm, dateFilter]);
   const mockTransactions = [
     {
       id: 1,
@@ -222,9 +204,7 @@ export default function TransactionsPage() {
       sender_number: '01756789012',
       phone: '01756789012',
     },
-  ];
-
-  // Show toast notification
+  ];
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -236,18 +216,14 @@ export default function TransactionsPage() {
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        setLoading(true);
-
-        // Build query parameters - only include tab status, not search term
+        setLoading(true);
         const params = new URLSearchParams({
           limit: '50',
         });
 
         if (activeTab !== 'all') {
           params.append('status', activeTab);
-        }
-
-        // Fetch real transactions from API
+        }
         const response = await fetch(`/api/user/transactions?${params.toString()}`);
 
         if (!response.ok) {
@@ -256,17 +232,13 @@ export default function TransactionsPage() {
 
         const data = await response.json();
         console.log('API Response:', data);
-        const transactionsToShow = data.transactions || [];
-
-        // Check if there's a transaction from URL parameters (for new transactions)
+        const transactionsToShow = data.transactions || [];
         const urlParams = new URLSearchParams(window.location.search);
         const invoiceId = urlParams.get('invoice_id');
         const amount = urlParams.get('amount');
         const transactionId = urlParams.get('transaction_id');
         const status = urlParams.get('status');
-        const phone = urlParams.get('phone');
-
-        // Add URL transaction if it doesn't exist in database yet
+        const phone = urlParams.get('phone');
         if (invoiceId && amount && transactionId) {
           const existingTransaction = transactionsToShow.find(
             (tx: Transaction) =>
@@ -290,9 +262,7 @@ export default function TransactionsPage() {
               transaction_type: 'deposit' as const,
               sender_number: phone || 'N/A',
               phone: phone || 'N/A',
-            };
-
-            // Add to beginning of array to show as most recent
+            };
             transactionsToShow.unshift(newTransaction);
 
             if (status === 'success') {
@@ -313,9 +283,7 @@ export default function TransactionsPage() {
         }
       } catch (err) {
         console.error('Error fetching transactions:', err);
-        setError('Failed to load transactions');
-
-        // Fallback to mock data with URL transaction if available
+        setError('Failed to load transactions');
         const fallbackTransactions = [...mockTransactions];
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -354,19 +322,15 @@ export default function TransactionsPage() {
     };
 
     fetchTransactions();
-  }, [activeTab]); // Removed debouncedSearchTerm and dateFilter from dependencies
+  }, [activeTab]);
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');
-  };
-
-  // Filter transactions
+  };
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
       tx.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
-
-    // Date filtering
+      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
     const txDate = new Date(tx.createdAt);
     const matchesDate =
       (!dateFilter.startDate || txDate >= new Date(dateFilter.startDate)) &&
@@ -399,7 +363,7 @@ export default function TransactionsPage() {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -426,7 +390,7 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <>
-              {/* Search Bar - Always visible */}
+              {}
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -445,7 +409,7 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-              {/* Date Filter - Always visible */}
+              {}
               <div className="mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -481,7 +445,7 @@ export default function TransactionsPage() {
                 )}
               </div>
 
-              {/* Status Filter Buttons - Always visible */}
+              {}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -534,9 +498,7 @@ export default function TransactionsPage() {
                 </div>
               </div>
 
-
-
-              {/* Transactions List with Search Loading */}
+              {}
               {searchLoading ? (
                 <div className="text-center py-8 flex flex-col items-center">
                   <GradientSpinner size="w-8 h-8" className="mb-3" />

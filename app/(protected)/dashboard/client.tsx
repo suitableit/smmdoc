@@ -1,8 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-
-// Client component 
+import dynamic from 'next/dynamic';
 const UserDashboard = dynamic(() => import('@/components/dashboard/userDashboard'), { 
   ssr: false,
   loading: () => (

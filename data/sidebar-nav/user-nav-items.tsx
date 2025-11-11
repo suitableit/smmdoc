@@ -1,84 +1,79 @@
-// data/user-nav-items.tsx
-export const userNavItems = [
-  // Core item
+
+export const userNavItems = [
   {
     title: 'Dashboard',
     href: '/dashboard',
-    icon: 'FaTachometerAlt', // Changed from FaHome to dashboard-specific icon
+    icon: 'FaTachometerAlt',
     label: 'Dashboard',
     roles: ['user'],
-  },
-  // Orders items
+  },
   {
     title: 'New Order',
     href: '/new-order',
-    icon: 'FaPlus', // Changed from FaShoppingCart to plus icon for "new"
+    icon: 'FaPlus',
     label: 'New Order',
     roles: ['user'],
   },
   {
     title: 'Mass Orders',
     href: '/mass-orders',
-    icon: 'FaLayerGroup', // Changed from FaShoppingBasket to layer group for "mass"
+    icon: 'FaLayerGroup',
     label: 'Mass Orders',
     roles: ['user'],
   },
   {
     title: 'My Orders',
     href: '/my-orders',
-    icon: 'FaClipboardList', // Changed from FaCog to clipboard list for orders
+    icon: 'FaClipboardList',
     label: 'My Orders',
     roles: ['user'],
-  },
-  // Services items
+  },
   {
     title: 'All Services',
     href: '/services',
-    icon: 'FaBriefcase', // Briefcase icon for services
+    icon: 'FaBriefcase',
     label: 'All Services',
     roles: ['user'],
   },
   {
     title: 'Favorite Services',
     href: '/services/favorite-services',
-    icon: 'FaStar', // Changed from FaStar to heart for favorites
+    icon: 'FaStar',
     label: 'Favorite Services',
     roles: ['user'],
   },
   {
     title: 'Service Updates',
     href: '/services/updates',
-    icon: 'FaBell', // Changed from FaStar to bell for updates/notifications
+    icon: 'FaBell',
     label: 'Service Updates',
     roles: ['user'],
-  },
-  // Funds items
+  },
   {
     title: 'Add Funds',
     href: '/add-funds',
-    icon: 'FaCreditCard', // Changed from FaDollarSign to credit card for adding funds
+    icon: 'FaCreditCard',
     label: 'Add Funds',
     roles: ['user'],
   },
   {
     title: 'Transfer Funds',
     href: '/transfer-funds',
-    icon: 'FaArrowsAltH', // Changed from FaDollarSign to horizontal arrows for transfer
+    icon: 'FaArrowsAltH',
     label: 'Transfer Funds',
     roles: ['user'],
   },
   {
     title: 'Transactions',
     href: '/transactions',
-    icon: 'FaHistory', // Changed from FaExchangeAlt to history for transaction history
+    icon: 'FaHistory',
     label: 'Transactions',
     roles: ['user'],
-  },
-  // Support items
+  },
   {
     title: 'Support Tickets',
     href: '/support-tickets',
-    icon: 'FaLifeRing', // Changed from FaTicketAlt to life ring for support
+    icon: 'FaLifeRing',
     label: 'Support Tickets',
     statusColor: 'green',
     roles: ['user'],
@@ -86,68 +81,65 @@ export const userNavItems = [
   {
     title: 'Tickets History',
     href: '/support-tickets/history',
-    icon: 'FaClipboardCheck', // Changed from FaListAlt to clipboard check for ticket history
+    icon: 'FaClipboardCheck',
     label: 'Tickets History',
     roles: ['user'],
   },
   {
     title: 'Contact Support',
     href: '/contact-support',
-    icon: 'FaEnvelope', // Changed from FaHeadset to envelope for contact
+    icon: 'FaEnvelope',
     label: 'Contact Support',
     roles: ['user'],
   },
   {
     title: 'FAQs',
     href: '/faqs',
-    icon: 'FaQuestionCircle', // This one was already appropriate
+    icon: 'FaQuestionCircle',
     label: 'FAQs',
     roles: ['user'],
-  },
-  // Integrations items
+  },
   {
     title: 'API Integration',
     href: '/api',
-    icon: 'FaPlug', // Changed from FaCode to plug for integration
+    icon: 'FaPlug',
     label: 'API Integration',
     roles: ['user'],
   },
   {
     title: 'Child Panel',
     href: '/child-panel',
-    icon: 'FaSitemap', // Changed from FaUserFriends to sitemap for panel hierarchy
+    icon: 'FaSitemap',
     label: 'Child Panel',
     roles: ['user'],
-  },
-  // More items
+  },
   {
     title: 'Affiliate Program',
     href: '/affiliate',
-    icon: 'FaNetworkWired', // Changed from FaUsers to handshake for partnership/affiliate
+    icon: 'FaNetworkWired',
     label: 'Affiliate Program',
     roles: ['user'],
   },
   {
     title: 'Terms',
     href: '/terms',
-    icon: 'FaGavel', // Changed from FaFileAlt to gavel for legal terms
+    icon: 'FaGavel',
     label: 'Terms',
     roles: ['user'],
-  },
-  // Account items
+  },
   {
     title: 'Account Settings',
     href: '/account-settings',
-    icon: 'FaUserCog', // Changed from FaUserCog to simple cog for settings
+    icon: 'FaUserCog',
     label: 'Account Settings',
     roles: ['user'],
   },
   {
     title: 'Logout',
     href: '#',
-    icon: 'FaSignOutAlt', // This one was already appropriate
+    icon: 'FaSignOutAlt',
     label: 'Logout',
     roles: ['user'],
-    isLogout: true, // Mark as logout action
+    isLogout: true,
   },
 ];

@@ -30,12 +30,11 @@ import {
 } from 'react-icons/fa';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
-const Hero: React.FC = () => {
-  // Get session data using NextAuth
+const Hero: React.FC = () => {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const [urlError, setUrlError] = useState(
     searchParams?.get('error') === 'OAuthAccountNotLinked'
       ? 'Email already in use with different provider!'
@@ -46,42 +45,30 @@ const Hero: React.FC = () => {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  // ReCAPTCHA state
+  const [showPassword, setShowPassword] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
-
-  // Check if user is authenticated and get user role
+  };
   const isAuthenticated = status === 'authenticated' && session?.user;
   const isLoading = status === 'loading';
-  const userRole = session?.user?.role || 'user'; // Default to 'user' if role is not set
-  const isAdmin = userRole === 'admin';
-
-  // Dynamic homepage stats
+  const userRole = session?.user?.role || 'user';
+  const isAdmin = userRole === 'admin';
   const [usersCount, setUsersCount] = useState<number | null>(null);
   const [completedOrdersCount, setCompletedOrdersCount] = useState<number | null>(null);
   const [totalOrdersCount, setTotalOrdersCount] = useState<number | null>(null);
   const [activeUsersCount, setActiveUsersCount] = useState<number | null>(null);
-  const [statsError, setStatsError] = useState<string | null>(null);
-
-  // Add user-specific stats for non-admin authenticated users
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [userBalance, setUserBalance] = useState<number | null>(null);
   const [activeOrdersCountUser, setActiveOrdersCountUser] = useState<number | null>(null);
   const [userStatsLoading, setUserStatsLoading] = useState<boolean>(false);
-  const [userStatsError, setUserStatsError] = useState<string | null>(null);
-
-  // Guard to avoid state updates on unmounted component
+  const [userStatsError, setUserStatsError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   useEffect(() => {
     return () => { isMountedRef.current = false; };
-  }, []);
-
-  // Fetch homepage stats once
+  }, []);
   useEffect(() => {
     const fetchHomepageStats = async () => {
       try {
@@ -103,9 +90,7 @@ const Hero: React.FC = () => {
       }
     };
     fetchHomepageStats();
-  }, []);
-
-  // Fetch user dashboard stats for non-admin authenticated users
+  }, []);
   useEffect(() => {
     if (!isAuthenticated || isAdmin) return;
     let cancelled = false;
@@ -134,9 +119,7 @@ const Hero: React.FC = () => {
     };
     fetchUserStats();
     return () => { cancelled = true; };
-  }, [isAuthenticated, isAdmin]);
-
-  // Dev-only: warn on excessive renders
+  }, [isAuthenticated, isAdmin]);
   const renderCountRef = useRef(0);
   useEffect(() => {
     renderCountRef.current += 1;
@@ -154,20 +137,17 @@ const Hero: React.FC = () => {
   const onSubmit: SubmitHandler<SignInSchema> = async (values) => {
     setError('');
     setSuccess('');
-    setUrlError('');
-
-    // Check if ReCAPTCHA is enabled for sign-in form and validate token
+    setUrlError('');
     if (isEnabledForForm('signIn') && !recaptchaToken) {
       setError('Please complete the ReCAPTCHA verification.');
       return;
     }
 
-    startTransition(() => {
-      // Add recaptcha token to values if available
+    startTransition(() => {
       const submitData = recaptchaToken 
         ? { ...values, recaptchaToken }
         : values;
-        
+
       login(submitData)
         .then((data) => {
           if (data?.error) {
@@ -180,19 +160,14 @@ const Hero: React.FC = () => {
             return;
           }
 
-          if (data?.success) {
-            // Get redirect URL
+          if (data?.success) {
             const redirectUrl = data.redirectTo || '/dashboard';
-            const isAdmin = data.isAdmin === true;
-
-            // Set appropriate success message
+            const isAdmin = data.isAdmin === true;
             setSuccess(isAdmin
               ? 'Login successful! Redirecting to admin dashboard...'
               : 'Login successful! Redirecting to dashboard...');
 
-            console.log('Redirect URL:', redirectUrl);
-
-            // Force a hard reload to ensure the session is updated properly
+            console.log('Redirect URL:', redirectUrl);
             setTimeout(() => {
               window.location.href = redirectUrl;
             }, 1000);
@@ -207,9 +182,7 @@ const Hero: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     await signIn('google', { callbackUrl: DEFAULT_SIGN_IN_REDIRECT });
-  };
-
-  // Component to render when user is authenticated
+  };
   const AuthenticatedUserContent = () => (
     <div
       className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full -mt-[30px] lg:-mt-[0px] pt-[30px] p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
@@ -236,7 +209,7 @@ const Hero: React.FC = () => {
             ? 'Ready to manage the platform?' 
             : 'Ready to boost your social media presence?'}
         </p>
-        
+
         <div className="space-y-4">
           {isAdmin ? (
             <Link
@@ -255,7 +228,7 @@ const Hero: React.FC = () => {
               Go to Dashboard
             </Link>
           )}
-          
+
           {!isAdmin && (
             <Link
               href="/services"
@@ -267,12 +240,12 @@ const Hero: React.FC = () => {
           )}
         </div>
 
-        {/* Quick Stats for Authenticated User */}
+        {}
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {/* You can replace these with actual user stats */}
+                {}
                 {isAdmin ? (totalOrdersCount !== null ? totalOrdersCount.toLocaleString() : '0') : (activeOrdersCountUser !== null ? activeOrdersCountUser.toLocaleString() : (userStatsLoading ? '0' : '0'))}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -291,9 +264,7 @@ const Hero: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-
-  // Loading state component
+  );
   const LoadingContent = () => (
     <div
       className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200"
@@ -314,7 +285,7 @@ const Hero: React.FC = () => {
     <section className="flex justify-center items-center pt-[60px] pb-[30px] lg:pt-[120px] lg:pb-[60px] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className={`${isAuthenticated ? 'flex flex-col-reverse' : 'grid grid-cols-1'} lg:grid lg:grid-cols-2 gap-8 2xl:gap-x-20 items-center`}>
-          {/* Left side */}
+          {}
           <div>
             <div className="text-left">
               <h1
@@ -338,8 +309,8 @@ const Hero: React.FC = () => {
                 SMM Panel with more then 3 years on the market and 1,000+
                 Orders processed successfully until now!
               </p>
-              
-              {/* Conditional CTA button based on authentication */}
+
+              {}
               {!isAuthenticated && !isLoading && (
                 <Link
                   href="/sign-up"
@@ -372,7 +343,7 @@ const Hero: React.FC = () => {
                 </Link>
               )}
 
-              {/* Users count section */}
+              {}
               <div
                 className="flex items-center gap-3 justify-start mt-4"
                 data-aos="fade-up"
@@ -395,7 +366,7 @@ const Hero: React.FC = () => {
             </div>
           </div>
 
-          {/* Right side - Conditional Content */}
+          {}
           <div className="flex justify-center">
             {isLoading && <LoadingContent />}
             {!isLoading && isAuthenticated && <AuthenticatedUserContent />}
@@ -520,7 +491,7 @@ const Hero: React.FC = () => {
                         )}
                       </div>
 
-                      {/* ReCAPTCHA */}
+                      {}
                       {isEnabledForForm('signIn') && (
                         <ErrorBoundary fallback={
                           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
@@ -582,7 +553,7 @@ const Hero: React.FC = () => {
                   </button>
                 </form>
 
-                {/* Google Sign-in Button */}
+                {}
                 {!showTwoFactor && (
                   <div className="mt-4">
                     <div className="relative mb-4">

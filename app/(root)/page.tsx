@@ -9,9 +9,7 @@ const Platforms = dynamic(() => import('@/components/frontend/homepage/platforms
 const WhyChooseUs = dynamic(() => import('@/components/frontend/homepage/why-choose-us'));
 const HowItWorks = dynamic(() => import('@/components/frontend/homepage/how-it-works'));
 const Testimonials = dynamic(() => import('@/components/frontend/homepage/testimonials'));
-const FAQs = dynamic(() => import('@/components/frontend/homepage/faqs'));
-
-// Generate dynamic metadata from Meta Settings
+const FAQs = dynamic(() => import('@/components/frontend/homepage/faqs'));
 export async function generateMetadata(): Promise<Metadata> {
   const metaSettings = await getMetaSettings();
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';

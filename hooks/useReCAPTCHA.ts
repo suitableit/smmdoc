@@ -34,21 +34,21 @@ const useReCAPTCHA = (): UseReCAPTCHAReturn => {
       try {
         setIsLoading(true);
         const response = await fetch('/api/public/recaptcha-settings');
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch integration settings');
         }
 
         const data = await response.json();
-        
+
         if (data.success && data.recaptchaSettings) {
           const settings = data.recaptchaSettings;
-          
+
           const recaptchaConfig: ReCAPTCHASettings = {
             enabled: settings.enabled || false,
             version: settings.version || 'v3',
             siteKey: settings.siteKey || '',
-            secretKey: '', // Not included in public API for security
+            secretKey: '',
             threshold: settings.threshold || 0.5,
             enabledForms: {
               signUp: settings.enabledForms?.signUp || false,
@@ -58,7 +58,7 @@ const useReCAPTCHA = (): UseReCAPTCHAReturn => {
               contactSupport: settings.enabledForms?.contactSupport || false,
             },
           };
-          
+
           setRecaptchaSettings(recaptchaConfig);
         }
       } catch (err) {

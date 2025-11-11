@@ -13,7 +13,6 @@ import {
   CreateCategorySchema,
 } from '@/lib/validators/admin/categories/categories.validator';
 
-// Custom Form Components
 const FormItem = ({
   className = '',
   children,
@@ -85,7 +84,6 @@ export const EditCategoryForm = ({
     },
   });
 
-  // Pre-populate form with existing category data
   useEffect(() => {
     if (categoriesData?.data && categoryId) {
       const category = categoriesData.data.find(
@@ -104,7 +102,7 @@ export const EditCategoryForm = ({
   const onSubmit: SubmitHandler<CreateCategorySchema> = async (values) => {
     startTransition(async () => {
       try {
-        // handle form submission for updating
+
         const res = await axiosInstance.put(
           `/api/admin/categories/${categoryId}`,
           values
@@ -115,12 +113,10 @@ export const EditCategoryForm = ({
             'success'
           );
 
-          // Refresh all category-related data for live updates
           mutate('/api/admin/categories');
           mutate('/api/admin/categories/get-categories');
-          mutate('/api/admin/services'); // Refresh services to show updated category names
+          mutate('/api/admin/services');
 
-          // Call refreshAllData for live action updates
           if (refreshAllData) {
             await refreshAllData();
           }
@@ -144,7 +140,7 @@ export const EditCategoryForm = ({
 
   return (
     <div className="w-full max-w-md">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3 className="text-lg font-semibold">Edit Category</h3>
         <button
@@ -158,7 +154,7 @@ export const EditCategoryForm = ({
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Category Name */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Category Name</FormLabel>
             <FormControl>
@@ -174,7 +170,7 @@ export const EditCategoryForm = ({
             <FormMessage>{errors.category_name?.message}</FormMessage>
           </FormItem>
 
-          {/* Hide Category */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Hide Category</FormLabel>
             <FormControl>
@@ -192,7 +188,7 @@ export const EditCategoryForm = ({
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
           </FormItem>
 
-          {/* Position */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Position</FormLabel>
             <FormControl>
@@ -208,7 +204,7 @@ export const EditCategoryForm = ({
             <FormMessage>{errors.position?.message}</FormMessage>
           </FormItem>
 
-          {/* Submit Buttons */}
+          {}
           <div className="flex gap-2 justify-end">
             <button
               type="button"

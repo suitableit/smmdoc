@@ -19,7 +19,6 @@ import {
 } from 'react-icons/fa';
 import TicketSystemGuard from '@/components/TicketSystemGuard';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -44,7 +43,6 @@ type Ticket = {
   type: 'ai' | 'human';
 };
 
-// Toast Component
 const Toast = ({
   message,
   type = 'success',
@@ -91,7 +89,7 @@ const dummyTickets: Ticket[] = [
     subject: 'Payment Issue',
     status: 'closed',
     createdAt: '2024-03-19T09:15:00',
-    priority: undefined, // AI tickets don't have priority
+    priority: undefined,
     lastUpdated: '2024-03-19T16:30:00',
     type: 'ai',
   },
@@ -109,7 +107,7 @@ const dummyTickets: Ticket[] = [
     subject: 'Refund Request',
     status: 'closed',
     createdAt: '2024-03-17T11:45:00',
-    priority: undefined, // AI tickets don't have priority
+    priority: undefined,
     lastUpdated: '2024-03-18T09:30:00',
     type: 'ai',
   },
@@ -127,7 +125,7 @@ const dummyTickets: Ticket[] = [
     subject: 'Billing Inquiry',
     status: 'closed',
     createdAt: '2024-03-15T13:20:00',
-    priority: undefined, // AI tickets don't have priority
+    priority: undefined,
     lastUpdated: '2024-03-16T15:45:00',
     type: 'ai',
   },
@@ -155,36 +153,36 @@ export default function TicketsHistory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Tickets History', appName);
   }, [appName]);
 
-  // Fetch tickets from API
   const fetchTickets = async () => {
     try {
       setIsLoading(true);
       setError(false);
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
-      
+
       if (status !== 'all') {
         params.append('status', status);
       }
-      
+
       const response = await fetch(`/api/support-tickets?${params}`);
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch tickets');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to fetch tickets (${response.status})`;
+        throw new Error(errorMessage);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        // Map API response to frontend format
+
         const mappedTickets: Ticket[] = data.tickets.map((ticket: any) => ({
            id: ticket.id,
            subject: ticket.subject,
@@ -194,13 +192,12 @@ export default function TicketsHistory() {
            priority: ticket.priority,
            type: ticket.ticketType === 'Human' ? 'human' : 'ai'
          }));
-         
-         // Filter by tab type if needed (since API doesn't handle this filter)
+
          let finalTickets = mappedTickets;
          if (activeTab !== 'all') {
            finalTickets = mappedTickets.filter((ticket) => ticket.type === activeTab);
          }
-        
+
         setTickets(finalTickets);
          setTotalPages(data.pagination.totalPages);
          setTotalCount(data.pagination.totalCount || 0);
@@ -208,15 +205,25 @@ export default function TicketsHistory() {
         throw new Error(data.error || 'Failed to fetch tickets');
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load tickets';
+   
+      if (errorMessage.includes('Ticket system is currently disabled')) {
+        console.log('Ticket system is disabled');
+        setError(false);
+        setTickets([]);
+        setTotalPages(0);
+        setTotalCount(0);
+        return;
+      }
+      
       console.error('Error fetching tickets:', error);
       setError(true);
-      showToast('Failed to load tickets', 'error');
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Map API status to frontend status
+
   const mapApiStatusToFrontend = (apiStatus: string) => {
     const statusMap: { [key: string]: string } = {
       'pending': 'open',
@@ -230,26 +237,23 @@ export default function TicketsHistory() {
     };
     return statusMap[apiStatus] || apiStatus.toLowerCase();
   };
-  
-  // Load tickets on component mount and when filters change
+
   useEffect(() => {
     fetchTickets();
   }, [page, status, activeTab]);
-  
-  // Handle search with debounce
+
   useEffect(() => {
     if (search) {
-      // For search, we'll use client-side filtering of already loaded tickets
-      // In a production app, you might want to implement server-side search
+
+
       return;
     }
-    // If search is cleared, refetch tickets
+
     if (!search && searchInput === '') {
       fetchTickets();
     }
   }, [search]);
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' = 'success'
@@ -258,11 +262,10 @@ export default function TicketsHistory() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Live search functionality
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput.trim()) {
-        // Filter tickets based on search input
+
         const results = tickets.filter(
           (ticket) =>
             ticket.subject.toLowerCase().includes(searchInput.toLowerCase()) ||
@@ -278,7 +281,6 @@ export default function TicketsHistory() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -295,16 +297,13 @@ export default function TicketsHistory() {
     };
   }, []);
 
-  // Filter tickets based on tab and search (status filtering is handled by API)
   const filteredTickets = useMemo(() => {
     let filteredTickets = [...tickets];
 
-    // Filter by tab type
     if (activeTab !== 'all') {
       filteredTickets = filteredTickets.filter((ticket) => ticket.type === activeTab);
     }
 
-    // Client-side search filtering (for real-time search)
     if (search) {
       filteredTickets = filteredTickets.filter(
         (ticket) =>
@@ -323,18 +322,15 @@ export default function TicketsHistory() {
     totalPages: totalPages,
   };
 
-  // Handle search submit
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
     setPage(1);
   };
 
-  // Calculate counts for each status filter
   const getStatusCount = (statusKey: string) => {
     let filteredTickets = [...tickets];
 
-    // Filter by current tab first
     if (activeTab !== 'all') {
       filteredTickets = filteredTickets.filter((ticket) => ticket.type === activeTab);
     }
@@ -343,7 +339,6 @@ export default function TicketsHistory() {
     return filteredTickets.filter((ticket) => ticket.status === statusKey).length;
   };
 
-  // Status filter buttons configuration
   const statusFilters = [
     {
       key: 'all',
@@ -389,7 +384,6 @@ export default function TicketsHistory() {
     },
   ];
 
-  // Get badge color based on status - matching admin tickets page styling
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Open':
@@ -434,15 +428,12 @@ export default function TicketsHistory() {
     }
   };
 
-
-
-  // Handle search selection from dropdown
   const handleSearchSelect = (ticket: Ticket) => {
     setSearch(ticket.subject);
     setSearchInput(ticket.subject);
     setShowDropdown(false);
     setSearchResults([]);
-    // Optionally filter to show only this ticket
+
     setPage(1);
   };
 
@@ -467,12 +458,11 @@ export default function TicketsHistory() {
     );
   }
 
-  // Remove the full-page loading return - we'll handle loading in the table area
 
   return (
     <TicketSystemGuard>
       <div className="page-container">
-        {/* Toast Container */}
+        {}
         {toastMessage && (
           <Toast
             message={toastMessage.message}
@@ -483,7 +473,7 @@ export default function TicketsHistory() {
 
         <div className="page-content">
         <div className="card card-padding">
-          {/* Tab Navigation */}
+          {}
           <div className="card mb-6" style={{ padding: '8px' }}>
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <button
@@ -534,9 +524,9 @@ export default function TicketsHistory() {
           </div>
         </div>
 
-        {/* Tickets Content Card - Everything in one box */}
+        {}
         <div className="card card-padding">
-          {/* Search Bar with Live Search */}
+          {}
           <div className="mb-6">
             <div className="relative w-full" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
@@ -560,7 +550,7 @@ export default function TicketsHistory() {
                 style={{ width: '100%', minWidth: '0' }}
               />
 
-              {/* Search Dropdown */}
+              {}
               {showDropdown && searchResults.length > 0 && (
                 <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                   {searchResults.map((ticket) => (
@@ -609,7 +599,7 @@ export default function TicketsHistory() {
             </div>
           </div>
 
-          {/* Status Filter Buttons - Updated with Services Page Gradient */}
+          {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
               {statusFilters.map((filter) => {
@@ -638,7 +628,7 @@ export default function TicketsHistory() {
             </div>
           </div>
 
-          {/* Tickets Table */}
+          {}
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
@@ -789,7 +779,7 @@ export default function TicketsHistory() {
             </table>
           </div>
 
-          {/* Pagination */}
+          {}
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
@@ -810,7 +800,7 @@ export default function TicketsHistory() {
                   Previous
                 </button>
 
-                {/* Page numbers */}
+                {}
                 <div className="flex gap-1">
                   {Array.from(
                     { length: Math.min(5, pagination.totalPages) },

@@ -21,9 +21,7 @@ const createServiceSchema = z.object({
   orderLink: z.enum(['username', 'link']).optional().default('link'),
   providerId: z.string().optional(),
   providerServiceId: z.string().optional(),
-});
-
-// Edit service schema with optional fields
+});
 const editServiceSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
@@ -56,7 +54,7 @@ const createServiceDefaultValues: CreateServiceSchema = {
   rate: '',
   min_order: '',
   max_order: '',
-  perqty: '1000',  // Default value 1000 for per quantity
+  perqty: '1000',
   avg_time: '',
   categoryId: '',
   serviceTypeId: '',
@@ -80,4 +78,3 @@ export {
   type CreateServiceSchema,
   type EditServiceSchema
 };
-

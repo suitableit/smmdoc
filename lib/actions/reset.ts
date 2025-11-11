@@ -7,8 +7,7 @@ import { sendMail } from "../nodemailer";
 import { generatePasswordResetToken } from "../tokens";
 import { resetSchema } from "../validators/auth.validator";
 
-export const resetPassword = async (values: z.infer<typeof resetSchema>) => {
-  // Check if password reset is enabled
+export const resetPassword = async (values: z.infer<typeof resetSchema>) => {
   const userSettings = await db.userSettings.findFirst();
   const resetPasswordEnabled = userSettings?.resetPasswordEnabled ?? true;
 
@@ -26,8 +25,7 @@ export const resetPassword = async (values: z.infer<typeof resetSchema>) => {
     return { success: false, error: "Email does not exist!" };
   }
 
-  try {
-    // Generate token and send email
+  try {
     const resetPasswordToken = await generatePasswordResetToken(email);
     await sendMail({
       sendTo: email,
@@ -39,8 +37,7 @@ export const resetPassword = async (values: z.infer<typeof resetSchema>) => {
     error: "",
     message: "Reset password link email sent",
   };
-  } catch (error) {
-    // Handle reset limit exceeded error
+  } catch (error) {
     if (error instanceof Error && error.message.includes('maximum number of password reset attempts')) {
       return { success: false, error: error.message };
     }

@@ -16,18 +16,14 @@ import {
   FaCheckCircle,
 } from 'react-icons/fa';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { formatID } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// ServiceActionsDropdown component
+);
 const ServiceActionsDropdown = React.memo(({
   service,
   statusFilter,
@@ -67,10 +63,10 @@ const ServiceActionsDropdown = React.memo(({
       >
         <FaEllipsisH className="h-3 w-3" />
       </button>
-      
+
       {isOpen && (
         <>
-          {/* Backdrop to close dropdown */}
+          {}
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
@@ -113,9 +109,7 @@ const ServiceActionsDropdown = React.memo(({
   );
 });
 
-ServiceActionsDropdown.displayName = 'ServiceActionsDropdown';
-
-// Helper function to get status icon
+ServiceActionsDropdown.displayName = 'ServiceActionsDropdown';
 const getStatusIcon = (status: string, deletedAt?: string | null) => {
   if (deletedAt) {
     return <FaTrash className="h-3 w-3 text-red-500" />;
@@ -124,9 +118,7 @@ const getStatusIcon = (status: string, deletedAt?: string | null) => {
     return <FaTimesCircle className="h-3 w-3 text-red-500" />;
   }
   return <FaCheckCircle className="h-3 w-3 text-green-500" />;
-};
-
-// Helper function to extract actual category name from display name
+};
 const getActualCategoryName = (displayCategoryName: string) => {
   return displayCategoryName.includes(' (ID: ')
     ? displayCategoryName.split(' (ID: ')[0]
@@ -288,7 +280,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
             >
               Cancel
             </th>
-            {/* Only show Status column when not in Trash filter */}
+            {}
             {statusFilter !== 'trash' && (
               <th
                 className="text-left p-3 font-semibold"
@@ -302,7 +294,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
               style={{ color: 'var(--text-primary)' }}
             >
               Actions
-              {/* Collapse/Expand All Toggle */}
+              {}
               <button
                 onClick={toggleAllCategories}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
@@ -323,36 +315,24 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
         </thead>
         <tbody>
           {(Object.entries(groupedServices) as [string, any[]][])
-            .filter(([categoryName, services]) => {
-              // If inactive filter is active, only show categories that:
-              // 1. Are inactive themselves, OR
-              // 2. Have at least one inactive service
+            .filter(([categoryName, services]) => {
               if (statusFilter === 'inactive') {
                 const actualCategoryName = getActualCategoryName(categoryName);
                 const categoryData = categoriesData?.data?.find(
                   (cat: any) => cat.category_name === actualCategoryName
-                );
-                
-                // Check if category is inactive
-                const isCategoryInactive = !activeCategoryToggles[categoryName];
-                
-                // Check if category has any inactive services
+                );
+                const isCategoryInactive = !activeCategoryToggles[categoryName];
                 const hasInactiveServices = services.some((service: any) => service.status === 'inactive');
-                
+
                 return isCategoryInactive || hasInactiveServices;
-              }
-              
-              // For other filters, show all categories
+              }
               return true;
             })
-            .sort(([categoryNameA], [categoryNameB]) => {
-              // Extract actual category names and find category data
+            .sort(([categoryNameA], [categoryNameB]) => {
               const actualCategoryNameA =
                 getActualCategoryName(categoryNameA);
               const actualCategoryNameB =
-                getActualCategoryName(categoryNameB);
-
-              // Sort categories by position: top categories first, then bottom
+                getActualCategoryName(categoryNameB);
               const categoryA = categoriesData?.data?.find(
                 (cat: any) =>
                   cat.category_name === actualCategoryNameA
@@ -373,7 +353,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
             })
             .map(([categoryName, services], categoryIndex) => (
               <Fragment key={categoryName}>
-                {/* Drop zone before category */}
+                {}
                 {draggedCategory &&
                   draggedCategory !== categoryName && (
                     <tr
@@ -400,7 +380,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                     </tr>
                   )}
 
-                {/* Category Header Row */}
+                {}
                 <tr
                   className={`bg-gray-50 border-t-2 border-gray-200 ${
                     draggedCategory === categoryName
@@ -420,7 +400,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                   <td colSpan={11} className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {/* Category Checkbox */}
+                        {}
                         <input
                           type="checkbox"
                           checked={selectedCategories.includes(categoryName)}
@@ -458,7 +438,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           )}
                         </button>
 
-                        {/* Category Toggle Button */}
+                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -502,7 +482,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           {services.length !== 1 ? 's' : ''}
                         </span>
 
-                        {/* Category Edit Icon */}
+                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -528,7 +508,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           <FaEdit className="h-3 w-3" />
                         </button>
 
-                        {/* Category Delete Icon */}
+                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -575,12 +555,12 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                   </td>
                 </tr>
 
-                {/* Services Rows */}
+                {}
                 {!collapsedCategories.includes(categoryName) &&
                   (services.length > 0 ? (
                     services.map((service: any, i: number) => (
                       <Fragment key={service.id}>
-                        {/* Drop zone before service */}
+                        {}
                         {draggedService &&
                           draggedService !== service.id && (
                             <tr
@@ -799,7 +779,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 )}
                               </button>
 
-                              {/* Show Refill Details when refill is enabled */}
+                              {}
                               {service.refill && (
                                 <div className="text-xs text-gray-600 space-y-1">
                                   {service.refillDays && (
@@ -832,7 +812,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                               )}
                             </button>
                           </td>
-                          {/* Only show Status column when not in Trash filter */}
+                          {}
                           {statusFilter !== 'trash' && (
                             <td className="p-3">
                               <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
@@ -859,7 +839,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           </td>
                         </tr>
 
-                        {/* Drop zone after service */}
+                        {}
                         {draggedService &&
                           draggedService !== service.id && (
                             <tr
@@ -907,8 +887,8 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       </td>
                     </tr>
                   ))}
-                
-                {/* Drop zone after category */}
+
+                {}
                 {draggedCategory &&
                   draggedCategory !== categoryName && (
                     <tr

@@ -12,12 +12,9 @@ export const metadata: Metadata = {
   description: 'Explore our comprehensive social media marketing services.',
 };
 
-export default async function OurServicesPage() {
-  // Check module settings for services list access control
+export default async function OurServicesPage() {
   const moduleSettings = await db.moduleSettings.findFirst();
-  const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
-
-  // If services list is private, require authentication
+  const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
   if (!servicesListPublic) {
     const session = await auth();
     if (!session?.user) {

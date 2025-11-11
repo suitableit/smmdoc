@@ -12,9 +12,7 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa';
 import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
-import { useCurrency } from '@/contexts/CurrencyContext';
-
-// Interfaces
+import { useCurrency } from '@/contexts/CurrencyContext';
 interface Order {
   id: number;
   user: {
@@ -102,9 +100,7 @@ interface OrderTableProps {
   formatPrice: (price: number, decimals?: number) => string;
   getStatusIcon: (status: string) => JSX.Element;
   calculateProgress: (qty: number, remains: number) => number;
-}
-
-// Helper functions are now passed as props
+}
 
 const OrderTable: React.FC<OrderTableProps> = ({
   orders,
@@ -124,9 +120,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
   getStatusIcon: getStatusIconProp,
   calculateProgress: calculateProgressProp,
 }) => {
-  const { availableCurrencies } = useCurrency();
-
-  // Function to format currency based on order currency
+  const { availableCurrencies } = useCurrency();
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'USD') {
       return `$${formatPriceProp(amount, 2)}`;
@@ -134,8 +128,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
       return `৳${formatPriceProp(amount, 2)}`;
     } else if (currency === 'XCD') {
       return `$${formatPriceProp(amount, 2)}`;
-    } else {
-      // For other currencies, try to find the symbol from available currencies
+    } else {
       const currencyData = availableCurrencies?.find(c => c.code === currency);
       const symbol = currencyData?.symbol || '$';
       return `${symbol}${formatPriceProp(amount, 2)}`;
@@ -144,7 +137,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
 
   return (
     <React.Fragment>
-      {/* Table View - Visible on all screen sizes */}
+      {}
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
           <thead className="sticky top-0 bg-white border-b z-10">
@@ -211,7 +204,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
               >
                 Service
               </th>
-              
+
               <th
                 className="text-left p-3 font-semibold"
                 style={{ color: 'var(--text-primary)' }}
@@ -367,7 +360,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       className="font-mono text-xs"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      {/* Use direct service ID parameter */}
+                      {}
                       {order.service?.id
                         ? formatIDProp(order.service.id)
                         : 'null'}
@@ -376,20 +369,20 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       className="font-medium text-sm truncate max-w-44"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {/* Use direct service name parameter */}
+                      {}
                       {order.service?.name || 'null'}
                     </div>
                     <div
                       className="text-xs truncate max-w-44"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      {/* Use direct category name parameter */}
+                      {}
                       {order.category?.category_name || 'null'}
                     </div>
                   </div>
                 </td>
 
-                {/* Status cell inserted after Service */}
+                {}
                 <td className="p-3">
                   <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                     {getStatusIconProp(order.status)}
@@ -398,7 +391,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     </span>
                   </div>
                 </td>
-                
+
                 <td className="p-3">
                   <div className="space-y-1">
                     <div
@@ -469,7 +462,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </td>
                 <td className="p-3">
                   <div className="flex items-center">
-                    {/* 3 Dot Menu */}
+                    {}
                     <div className="relative">
                       <button
                         className="btn btn-secondary p-2"
@@ -484,7 +477,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                         <FaEllipsisH className="h-3 w-3" />
                       </button>
 
-                      {/* Dropdown Menu */}
+                      {}
                       <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                         <div className="py-1">
                           {(order.status === 'failed' || order.status === 'pending') && (
@@ -558,7 +551,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
         </table>
       </div>
 
-      {/* Mobile Card View - Hidden (using table view instead) */}
+      {}
       <div className="hidden">
         <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
           {orders.map((order) => (
@@ -566,7 +559,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
               key={order.id}
               className="card card-padding border-l-4 border-blue-500 mb-4"
             >
-              {/* Header with ID and Actions */}
+              {}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <input
@@ -588,7 +581,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center">
-                  {/* 3 Dot Menu for Mobile */}
+                  {}
                   <div className="relative">
                     <button
                       className="btn btn-secondary p-2"
@@ -603,7 +596,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       <FaEllipsisH className="h-3 w-3" />
                     </button>
 
-                    {/* Dropdown Menu */}
+                    {}
                     <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                       <div className="py-1">
                         {(order.status === 'failed' || order.status === 'pending') && (
@@ -672,7 +665,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </div>
               </div>
 
-              {/* User Info */}
+              {}
               <div className="flex items-center justify-between mb-4 pb-4 border-b">
                 <div>
                   <div
@@ -704,13 +697,13 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </div>
               </div>
 
-              {/* Service Info */}
+              {}
               <div className="mb-4">
                 <div
                   className="font-mono text-xs mb-1"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {/* Use direct service ID parameter */}
+                  {}
                   {order.service?.id
                     ? formatIDProp(order.service.id)
                     : 'null'}
@@ -719,18 +712,18 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   className="font-medium text-sm mb-1"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  {/* Use direct service name parameter */}
+                  {}
                   {order.service?.name || 'null'}
                 </div>
                 <div
                   className="text-xs"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {/* Use direct category name parameter */}
+                  {}
                   {order.category?.category_name || 'null'} •
                   Provider: {order.seller || 'null'}
                 </div>
-                {/* Provider Order Status */}
+                {}
                 {order.isProviderService && (
                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
                     <div className="text-xs font-medium text-gray-600 mb-1">
@@ -789,7 +782,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 )}
               </div>
 
-              {/* Financial Info */}
+              {}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
                   <div
@@ -832,7 +825,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </div>
               </div>
 
-              {/* Quantity and Progress Info */}
+              {}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <div
@@ -872,7 +865,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </div>
               </div>
 
-              {/* Progress Bar */}
+              {}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span
@@ -914,7 +907,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </div>
               </div>
 
-              {/* Date */}
+              {}
               <div>
                 <div
                   className="text-xs"
@@ -940,7 +933,7 @@ const OrderTable: React.FC<OrderTableProps> = ({
         </div>
       </div>
 
-      {/* Pagination */}
+      {}
       <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
         <div
           className="text-sm"

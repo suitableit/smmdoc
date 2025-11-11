@@ -20,7 +20,6 @@ import {
     FaUsers
 } from 'react-icons/fa';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -29,7 +28,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Image Skeleton/Wireframe Component
 const ImageSkeleton = ({ width, height, className = '' }: { width: number; height: number; className?: string }) => (
   <div 
     className={`${className} bg-gray-200 dark:bg-gray-700 animate-pulse rounded flex items-center justify-center`}
@@ -39,7 +37,6 @@ const ImageSkeleton = ({ width, height, className = '' }: { width: number; heigh
   </div>
 );
 
-// Keyword Tag Component
 const KeywordTag = ({ keyword, onRemove }: { keyword: string; onRemove: () => void }) => (
   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-full border border-blue-200 dark:border-blue-700">
     {keyword}
@@ -53,7 +50,6 @@ const KeywordTag = ({ keyword, onRemove }: { keyword: string; onRemove: () => vo
   </span>
 );
 
-// Keywords Input Component
 const KeywordsInput = ({ 
   keywords, 
   onChange 
@@ -72,7 +68,7 @@ const KeywordsInput = ({
         setInputValue('');
       }
     } else if (e.key === 'Backspace' && inputValue === '' && keywords.length > 0) {
-      // Remove last keyword when backspace is pressed on empty input
+
       onChange(keywords.slice(0, -1));
     }
   };
@@ -110,10 +106,8 @@ const KeywordsInput = ({
   );
 };
 
-// Mock components for demonstration
 const ButtonLoader = () => <div className="loading-spinner"></div>;
 
-// Toast Message Component
 const Toast = ({
   message,
   type = 'success',
@@ -132,7 +126,6 @@ const Toast = ({
   </div>
 );
 
-// Custom Switch Component with original UI
 const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => (
   <button
     onClick={() => onCheckedChange(!checked)}
@@ -148,7 +141,6 @@ const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChang
   </button>
 );
 
-// Dynamic List Item Component
 const DynamicListItem = ({
   item,
   onEdit,
@@ -269,14 +261,14 @@ interface ContactSettings {
 }
 
 interface ModuleSettings {
-  // Affiliate
+
   affiliateSystemEnabled: boolean;
   commissionRate: number;
   minimumPayout: number;
-  // Child Panel
+
   childPanelSellingEnabled: boolean;
   childPanelPrice: number;
-  // Others
+
   serviceUpdateLogsEnabled: boolean;
   massOrderEnabled: boolean;
   servicesListPublic: boolean;
@@ -287,19 +279,16 @@ const GeneralSettingsPage = () => {
 
   const { appName } = useAppNameWithFallback();
 
-  // Set document title
   useEffect(() => {
     setPageTitle('General Settings', appName);
   }, [appName]);
 
-  // State management
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  // Separate loading states for each settings section
   const [loadingStates, setLoadingStates] = useState({
     general: false,
     meta: false,
@@ -309,14 +298,12 @@ const GeneralSettingsPage = () => {
     module: false,
   });
 
-  // Image loading states
   const [imageLoadingStates, setImageLoadingStates] = useState({
     siteIcon: false,
     siteLogo: false,
     siteDarkLogo: false,
   });
 
-  // Settings state
   const [generalSettings, setGeneralSettings] = useState<GeneralSettings>({
     siteTitle: '',
     tagline: '',
@@ -370,30 +357,27 @@ const GeneralSettingsPage = () => {
   });
 
   const [moduleSettings, setModuleSettings] = useState<ModuleSettings>({
-    // Affiliate
+
     affiliateSystemEnabled: false,
     commissionRate: 5,
     minimumPayout: 10,
-    // Child Panel
+
     childPanelSellingEnabled: false,
     childPanelPrice: 10,
-    // Others
+
     serviceUpdateLogsEnabled: true,
     massOrderEnabled: false,
     servicesListPublic: true,
   });
 
-  // New item inputs
   const [newSubject, setNewSubject] = useState('');
   const [newCategory, setNewCategory] = useState('');
 
-  // Load settings on component mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
         setIsPageLoading(true);
 
-        // Load all settings in parallel
         const [
           generalResponse,
           metaResponse,
@@ -410,13 +394,11 @@ const GeneralSettingsPage = () => {
           fetch('/api/admin/module-settings')
         ]);
 
-        // Process general settings
         if (generalResponse.ok) {
           const data = await generalResponse.json();
           if (data.generalSettings) setGeneralSettings(data.generalSettings);
         }
 
-        // Process meta settings
         if (metaResponse.ok) {
           const data = await metaResponse.json();
           if (data.metaSettings) {
@@ -432,13 +414,11 @@ const GeneralSettingsPage = () => {
           }
         }
 
-        // Process user settings
         if (userResponse.ok) {
           const data = await userResponse.json();
           if (data.userSettings) setUserSettings(data.userSettings);
         }
 
-        // Process ticket settings
         if (ticketResponse.ok) {
           const data = await ticketResponse.json();
           if (data.ticketSettings) {
@@ -447,7 +427,6 @@ const GeneralSettingsPage = () => {
           }
         }
 
-        // Process contact settings
         if (contactResponse.ok) {
           const data = await contactResponse.json();
           console.log('🔍 Frontend - Contact settings response:', data);
@@ -461,7 +440,6 @@ const GeneralSettingsPage = () => {
           console.error('🔍 Frontend - Contact settings API failed:', contactResponse.status);
         }
 
-        // Process module settings
         if (moduleResponse.ok) {
           const data = await moduleResponse.json();
           if (data.moduleSettings) setModuleSettings(data.moduleSettings);
@@ -479,7 +457,6 @@ const GeneralSettingsPage = () => {
     loadSettings();
   }, []);
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -488,7 +465,6 @@ const GeneralSettingsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Save functions
   const saveGeneralSettings = async () => {
     setLoadingStates(prev => ({ ...prev, general: true }));
     try {
@@ -500,7 +476,7 @@ const GeneralSettingsPage = () => {
 
       if (response.ok) {
         showToast('General settings saved successfully!', 'success');
-        // Update the global app name context with the new site title
+
         updateGlobalAppName(generalSettings.siteTitle);
       } else {
         showToast('Failed to save general settings', 'error');
@@ -516,7 +492,7 @@ const GeneralSettingsPage = () => {
   const saveMetaSettings = async () => {
     setLoadingStates(prev => ({ ...prev, meta: true }));
     try {
-      // Convert keywords array to comma-separated string for API
+
       const metaSettingsForAPI = {
         ...metaSettings,
         keywords: metaSettings.keywords.join(', ')
@@ -564,22 +540,20 @@ const GeneralSettingsPage = () => {
   };
 
   const hasTicketSettingsChanged = () => {
-    // Compare basic settings
+
     if (ticketSettings.ticketSystemEnabled !== originalTicketSettings.ticketSystemEnabled ||
         ticketSettings.maxPendingTickets !== originalTicketSettings.maxPendingTickets) {
       return true;
     }
 
-    // Compare subjects
     if (ticketSettings.subjects.length !== originalTicketSettings.subjects.length) {
       return true;
     }
 
-    // Check if any subject has changed
     for (let i = 0; i < ticketSettings.subjects.length; i++) {
       const current = ticketSettings.subjects[i];
       const original = originalTicketSettings.subjects.find(s => s.id === current.id);
-      
+
       if (!original || current.name !== original.name) {
         return true;
       }
@@ -589,7 +563,7 @@ const GeneralSettingsPage = () => {
   };
 
   const saveTicketSettings = async () => {
-    // Check if there are any changes
+
     if (!hasTicketSettingsChanged()) {
       showToast('No unsaved changes to save', 'info');
       return;
@@ -605,7 +579,7 @@ const GeneralSettingsPage = () => {
 
       if (response.ok) {
         showToast('Ticket settings saved successfully!', 'success');
-        // Update the original settings to reflect the saved state
+
         setOriginalTicketSettings(ticketSettings);
       } else {
         showToast('Failed to save ticket settings', 'error');
@@ -666,33 +640,29 @@ const GeneralSettingsPage = () => {
     }
   };
 
-  // File upload handlers
-  // Delete uploaded image
+
   const handleDeleteImage = async (field: 'siteIcon' | 'siteLogo' | 'siteDarkLogo') => {
     const imageType = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
-    
-    // Show confirmation dialog
+
     const confirmed = window.confirm(`Are you sure you want to delete the ${imageType}? This action cannot be undone.`);
-    
+
     if (!confirmed) {
       return;
     }
-    
+
     try {
       setLoadingStates(prev => ({ ...prev, general: true }));
       showToast('Removing image...', 'pending');
 
-      // Update local state
       setGeneralSettings(prev => ({ ...prev, [field]: '' }));
-      
-      // Auto-save to database to persist the change
+
       const updatedSettings = { ...generalSettings, [field]: '' };
       const saveResponse = await fetch('/api/admin/general-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ generalSettings: updatedSettings }),
       });
-      
+
       if (saveResponse.ok) {
         showToast(`${imageType} removed successfully!`, 'success');
       } else {
@@ -708,14 +678,14 @@ const GeneralSettingsPage = () => {
 
   const handleFileUpload = async (field: 'siteIcon' | 'siteLogo' | 'siteDarkLogo' | 'thumbnail', file: File) => {
     try {
-      // Validate PNG format for site icon, site logo, and site dark logo
+
       if ((field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo') && file.type !== 'image/png') {
         showToast('Only PNG format is allowed for site icon, site logo, and site dark logo', 'error');
         return;
       }
 
       setLoadingStates(prev => ({ ...prev, general: true }));
-      // Set image loading state for the specific field
+
       if (field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo') {
         setImageLoadingStates(prev => ({ ...prev, [field]: true }));
       }
@@ -723,8 +693,7 @@ const GeneralSettingsPage = () => {
 
       const formData = new FormData();
       formData.append('file', file);
-      
-      // Set upload type based on field
+
       if (field === 'siteIcon' || field === 'siteLogo' || field === 'siteDarkLogo' || field === 'thumbnail') {
         formData.append('type', 'general');
       }
@@ -742,10 +711,9 @@ const GeneralSettingsPage = () => {
           setMetaSettings(prev => ({ ...prev, [field]: fileUrl }));
           showToast('Thumbnail uploaded successfully!', 'success');
         } else {
-          // Update local state
+
           setGeneralSettings(prev => ({ ...prev, [field]: fileUrl }));
-          
-          // Auto-save to database to persist the change
+
           try {
             const updatedSettings = { ...generalSettings, [field]: fileUrl };
             const saveResponse = await fetch('/api/admin/general-settings', {
@@ -753,7 +721,7 @@ const GeneralSettingsPage = () => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ generalSettings: updatedSettings }),
             });
-            
+
             if (saveResponse.ok) {
               const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
               showToast(`${fieldName} uploaded and saved successfully!`, 'success');
@@ -779,7 +747,6 @@ const GeneralSettingsPage = () => {
     }
   };
 
-  // Dynamic list handlers
   const addSubject = () => {
     if (newSubject.trim()) {
       const newId = Math.max(...ticketSettings.subjects.map(s => s.id), 0) + 1;
@@ -807,7 +774,7 @@ const GeneralSettingsPage = () => {
 
   const addCategory = () => {
     if (newCategory.trim()) {
-      // Use null for new categories - backend will assign proper ID
+
       setContactSettings(prev => ({
         ...prev,
         categories: [...prev.categories, { id: null, name: newCategory.trim() }]
@@ -830,13 +797,11 @@ const GeneralSettingsPage = () => {
     }));
   };
 
-  // Show loading state
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Loading cards */}
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="card card-padding">
                 <div className="flex items-center justify-center min-h-[200px]">
@@ -864,7 +829,6 @@ const GeneralSettingsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -877,9 +841,7 @@ const GeneralSettingsPage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
           <div className="space-y-6">
-            {/* General Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -959,7 +921,6 @@ const GeneralSettingsPage = () => {
 
                 <div className="form-group">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Site Logo Column */}
                     <div>
                       <label className="form-label text-sm mb-2 block">Site Logo</label>
                       <div className="flex items-center gap-3">
@@ -1001,8 +962,6 @@ const GeneralSettingsPage = () => {
                         </label>
                       </div>
                     </div>
-
-                    {/* Site Dark Logo Column */}
                     <div>
                       <label className="form-label text-sm mb-2 block">Site Dark Logo</label>
                       <div className="flex items-center gap-3">
@@ -1069,8 +1028,6 @@ const GeneralSettingsPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Meta (SEO) Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1108,9 +1065,9 @@ const GeneralSettingsPage = () => {
 
                 <div className="form-group">
                   <label className="form-label">
-                    Site Description 
+                    Site Description
                     <span className="text-sm text-gray-500 ml-2">
-                      ({metaSettings.siteDescription.length}/160 characters)
+                      ({metaSettings.siteDescription.length} / 160 characters)
                     </span>
                   </label>
                   <textarea
@@ -1170,22 +1127,10 @@ const GeneralSettingsPage = () => {
                       />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Recommended size: 1200x630px for optimal social media sharing
-                  </p>
                 </div>
-
-                <button
-                  onClick={saveMetaSettings}
-                  disabled={loadingStates.meta}
-                  className="btn btn-primary w-full"
-                >
-                  {loadingStates.meta ? 'Updating...' : 'Save Meta (SEO) Settings'}
-                </button>
               </div>
             </div>
 
-            {/* User Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1383,10 +1328,7 @@ const GeneralSettingsPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Right Column */}
           <div className="space-y-6">
-            {/* Ticket Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1475,8 +1417,6 @@ const GeneralSettingsPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Contact Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1565,8 +1505,6 @@ const GeneralSettingsPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Module Settings Card */}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1576,12 +1514,11 @@ const GeneralSettingsPage = () => {
               </div>
 
               <div className="space-y-6">
-                {/* Affiliate Section */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2">
                     Affiliate
                   </h4>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="form-label mb-1">Affiliate System</label>
@@ -1635,13 +1572,11 @@ const GeneralSettingsPage = () => {
                     />
                   </div>
                 </div>
-
-                {/* Child Panel Section */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2">
                     Child Panel
                   </h4>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="form-label mb-1">Child Panel Selling</label>
@@ -1677,13 +1612,11 @@ const GeneralSettingsPage = () => {
                     />
                   </div>
                 </div>
-
-                {/* Others Section */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2">
                     Others
                   </h4>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <label className="form-label mb-1">Service Update Logs</label>

@@ -1,5 +1,3 @@
-// Service Type System Implementation
-// Based on the old SMM panel servicePackageType function
 
 export enum ServiceType {
   DEFAULT = 1,
@@ -600,7 +598,6 @@ export const SERVICE_TYPE_CONFIGS: Record<number, ServiceTypeConfig> = {
   }
 };
 
-// Helper functions
 export function getServiceTypeConfig(type: ServiceType | number): ServiceTypeConfig | null {
   const typeId = typeof type === 'number' ? type : type;
   return SERVICE_TYPE_CONFIGS[typeId] || null;
@@ -635,7 +632,6 @@ export function isFixedQuantity(type: ServiceType | number): boolean {
   return config?.fixedQuantity || false;
 }
 
-// Validation function
 export function validateOrderByType(
   type: ServiceType | number,
   data: {
@@ -655,13 +651,12 @@ export function validateOrderByType(
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   const config = getServiceTypeConfig(type);
-  
+
   if (!config) {
     errors.general = 'Invalid service type';
     return errors;
   }
 
-  // Validate required fields based on service type
   if (config.requiresLink && !data.link) {
     errors.link = 'Link is required for this service type';
   }
@@ -682,7 +677,6 @@ export function validateOrderByType(
     errors.posts = 'Number of posts is required for this service type';
   }
 
-  // Validate drip-feed settings
   if (data.isDripfeed) {
     if (!data.dripfeedRuns || data.dripfeedRuns <= 0) {
       errors.dripfeedRuns = 'Drip-feed runs is required when drip-feed is enabled';
@@ -692,7 +686,6 @@ export function validateOrderByType(
     }
   }
 
-  // Validate limited types
   if (config.isLimited) {
     if (!data.minQty || data.minQty <= 0) {
       errors.minQty = 'Minimum quantity is required for limited services';

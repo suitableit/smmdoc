@@ -1,16 +1,12 @@
-// data/admin-nav-items.tsx
 
-export const adminNavItems = [
-  // Dashboard Section
+export const adminNavItems = [
   {
     title: 'Dashboard',
     href: '/admin',
     icon: 'FaHome',
     label: 'Dashboard',
     roles: ['admin'],
-  },
-
-  // Orders Section
+  },
   {
     title: 'All Orders',
     href: '/admin/orders',
@@ -31,9 +27,7 @@ export const adminNavItems = [
     icon: 'FaTimes',
     label: 'Cancel Requests',
     roles: ['admin'],
-  },
-
-  // Services Section
+  },
   {
     title: 'All Services',
     href: '/admin/services',
@@ -68,9 +62,7 @@ export const adminNavItems = [
     icon: 'FaSync',
     label: 'API Sync Logs',
     roles: ['admin'],
-  },
-
-  // Users Section
+  },
   {
     title: 'Users',
     href: '/admin/users',
@@ -98,18 +90,14 @@ export const adminNavItems = [
     icon: 'FaChartLine',
     label: 'User Activity Logs',
     roles: ['admin'],
-  },
-
-  // Funds Section
+  },
   {
     title: 'All Transactions',
     href: '/admin/transactions',
     icon: 'FaExchangeAlt',
     label: 'All Transactions',
     roles: ['admin'],
-  },
-
-  // Support Section
+  },
   {
     title: 'Support Tickets',
     href: '/admin/tickets',
@@ -123,9 +111,7 @@ export const adminNavItems = [
     icon: 'FaEnvelope',
     label: 'Human Ticket',
     roles: ['admin'],
-  },
-
-  // Posts Section
+  },
   {
     title: 'Blogs',
     href: '/admin/blogs',
@@ -139,9 +125,7 @@ export const adminNavItems = [
     icon: 'FaBullhorn',
     label: 'Announcements',
     roles: ['admin'],
-  },
-
-  // Additionals Section
+  },
 
   {
     title: 'Affiliates',
@@ -156,18 +140,14 @@ export const adminNavItems = [
     icon: 'FaChartBar',
     label: 'Analytics & Reports',
     roles: ['admin'],
-  },
-
-  // Reseller Panel Section
+  },
   {
     title: 'Child Panels',
     href: '/admin/child-panels',
     icon: 'FaUserFriends',
     label: 'Child Panels',
     roles: ['admin'],
-  },
-
-  // Settings Section
+  },
   {
     title: 'General Settings',
     href: '/admin/settings',
@@ -223,9 +203,7 @@ export const adminNavItems = [
     icon: 'FaCode',
     label: 'Custom Codes',
     roles: ['admin'],
-  },
-
-  // Account Section
+  },
   {
     title: 'Account Settings',
     href: '/account-settings',

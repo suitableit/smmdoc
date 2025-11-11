@@ -5,8 +5,8 @@ interface UpdateOrderStatusModalProps {
   onClose: () => void;
   orderId: string | number;
   currentStatus: string;
-  onSuccess?: () => void; // Callback for successful update
-  showToast?: (message: string, type: 'success' | 'error') => void; // Toast function
+  onSuccess?: () => void;
+  showToast?: (message: string, type: 'success' | 'error') => void;
 }
 
 const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
@@ -18,18 +18,14 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
   showToast,
 }) => {
   const [newStatus, setNewStatus] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Set initial status when modal opens
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setNewStatus(currentStatus);
     }
   }, [isOpen, currentStatus]);
 
-  if (!isOpen) return null;
-
-  // Handle order status update API call
+  if (!isOpen) return null;
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       setIsLoading(true);
@@ -50,7 +46,7 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
 
       if (result.success) {
         showToast?.(`Order status updated to ${newStatus}`, 'success');
-        onSuccess?.(); // Refresh orders data
+        onSuccess?.();
         handleClose();
       } else {
         console.error('Update failed:', result);

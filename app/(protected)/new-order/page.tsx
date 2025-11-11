@@ -1,4 +1,4 @@
-// hi from jasmin
+
 'use client';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -125,7 +125,7 @@ const ServiceDetailsCard = ({
 
   return (
     <div className="space-y-6">
-      {/* Service Header */}
+      {}
       <div
         className="card"
         style={{
@@ -147,10 +147,10 @@ const ServiceDetailsCard = ({
         </div>
       </div>
 
-      {/* Service Details */}
+      {}
       <div className="card card-padding">
         <div className="grid grid-cols-2 gap-4">
-          {/* Example Link */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Example Link</h4>
             <div className="flex items-center text-gray-600">
@@ -177,7 +177,7 @@ const ServiceDetailsCard = ({
             </div>
           </div>
 
-          {/* Speed */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Speed</h4>
             <div className="flex items-center text-gray-600">
@@ -207,24 +207,22 @@ const ServiceDetailsCard = ({
                 'text-gray-600'
               }`}>
                 {(() => {
-                  if (!selected.serviceSpeed) return '-';
-                  
-                  // Map database values to display titles
+                  if (!selected.serviceSpeed) return '-';
                   const speedMapping: { [key: string]: string } = {
                     'slow': 'Slow',
                     'sometimes_slow': 'Sometimes Slow',
                     'normal': 'Normal',
-                    'medium': 'Normal', // Legacy mapping
+                    'medium': 'Normal',
                     'fast': 'Fast'
                   };
-                  
+
                   return speedMapping[selected.serviceSpeed] || '-';
                 })()}
               </span>
             </div>
           </div>
 
-          {/* Start Time */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Start Time</h4>
             <div className="flex items-center text-gray-600">
@@ -235,7 +233,7 @@ const ServiceDetailsCard = ({
             </div>
           </div>
 
-          {/* Refill Status */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Refill</h4>
             <div className="flex items-center text-gray-600">
@@ -254,7 +252,7 @@ const ServiceDetailsCard = ({
             </div>
           </div>
 
-          {/* Cancel Status */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Cancel</h4>
             <div className="flex items-center text-gray-600">
@@ -273,7 +271,7 @@ const ServiceDetailsCard = ({
             </div>
           </div>
 
-          {/* Average Time */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Average Time</h4>
             <div className="flex items-center text-gray-600">
@@ -286,7 +284,7 @@ const ServiceDetailsCard = ({
             </div>
           </div>
 
-          {/* Guarantee */}
+          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Guarantee</h4>
             <div className="flex items-center text-gray-600">
@@ -311,7 +309,7 @@ const ServiceDetailsCard = ({
           </div>
         </div>
 
-        {/* More Details */}
+        {}
         <div className="mt-6">
           <h4 className="font-medium text-gray-900 mb-2">More Details</h4>
           <div className="bg-gray-50 rounded-lg p-4">
@@ -326,7 +324,7 @@ const ServiceDetailsCard = ({
           </div>
         </div>
 
-        {/* Service Stats */}
+        {}
         <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div className="text-center">
             <div className="text-lg font-bold text-gray-900">
@@ -391,9 +389,7 @@ function NewOrder() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFormLoading, setIsFormLoading] = useState(true);
-  const [isServiceDetailsLoading, setIsServiceDetailsLoading] = useState(false);
-
-  // Service type specific fields
+  const [isServiceDetailsLoading, setIsServiceDetailsLoading] = useState(false);
   const [serviceTypeFields, setServiceTypeFields] = useState({
     comments: '',
     username: '',
@@ -406,25 +402,19 @@ function NewOrder() {
     dripfeedInterval: undefined as number | undefined,
     isSubscription: false,
   });
-  const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
-
-  // Show toast notification
+  const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToastMessage({ message, type });
     setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // Handle service type field changes
+  };
   const handleServiceTypeFieldChange = (field: string, value: any) => {
     setServiceTypeFields(prev => ({
       ...prev,
       [field]: value
-    }));
-    
-    // Clear error for this field
+    }));
     if (serviceTypeErrors[field]) {
       setServiceTypeErrors(prev => {
         const newErrors = { ...prev };
@@ -432,9 +422,7 @@ function NewOrder() {
         return newErrors;
       });
     }
-  };
-
-  // Reset service type fields when service changes
+  };
   const resetServiceTypeFields = () => {
     setServiceTypeFields({
       comments: '',
@@ -453,23 +441,18 @@ function NewOrder() {
 
   const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
   const perQty = Number(selected?.perqty) || 1;
-  const price = Number(selected?.rate) || 0;
-  // Get currency data
-  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
-
-  // Calculate price properly based on user's selected currency
+  const price = Number(selected?.rate) || 0;
+  const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
   let totalPrice = 0;
-  const baseUsdPrice = (price * qty) / 1000; // Service rate is in USD per 1000
+  const baseUsdPrice = (price * qty) / 1000;
 
   if (currency === 'USD') {
     totalPrice = baseUsdPrice;
-  } else if (currency === 'BDT') {
-    // Convert USD to BDT using admin set rate
+  } else if (currency === 'BDT') {
     const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
-    const usdToBdtRate = bdtCurrency?.rate || 121; // Use admin set rate
+    const usdToBdtRate = bdtCurrency?.rate || 121;
     totalPrice = baseUsdPrice * usdToBdtRate;
-  } else {
-    // For other currencies, convert USD to that currency
+  } else {
     const targetCurrency = availableCurrencies?.find(c => c.code === currency);
     const conversionRate = targetCurrency?.rate || 1;
     totalPrice = baseUsdPrice * conversionRate;
@@ -643,9 +626,7 @@ function NewOrder() {
     console.log('Selected category changed:', selectedCategory);
     setIsServiceDetailsLoading(true);
     setServices([]);
-    setSelectedService('');
-
-    // Always fetch services by categoryId (not favorite logic)
+    setSelectedService('');
     axios
       .post('/api/admin/services/catId-by-services', {
         categoryId: parseInt(selectedCategory),
@@ -657,11 +638,11 @@ function NewOrder() {
         if (fetchedServices?.length > 0) {
           setSelectedService(fetchedServices[0]?.id);
           console.log('Auto-selected service:', fetchedServices[0]?.id);
-          resetServiceTypeFields(); // Reset service type fields when service changes
+          resetServiceTypeFields();
         } else {
           setSelectedService('');
           console.log('No services found for category:', selectedCategory);
-          resetServiceTypeFields(); // Reset service type fields when no service
+          resetServiceTypeFields();
         }
       })
       .catch((error) => {
@@ -674,8 +655,6 @@ function NewOrder() {
         setIsServiceDetailsLoading(false);
       });
   }, [selectedCategory]);
-
-
 
   useEffect(() => {
     if (
@@ -815,9 +794,7 @@ function NewOrder() {
     if (!selectedService) {
       showToast('Please select a service', 'error');
       return;
-    }
-
-    // Dynamic validation based on orderLink field
+    }
     if (selected?.orderLink === 'username') {
       if (!link || link.trim().length === 0) {
         showToast('Please enter a valid username', 'error');
@@ -866,9 +843,7 @@ function NewOrder() {
         'error'
       );
       return;
-    }
-
-    // Service type validation
+    }
     const serviceTypeId = selected?.packageType || 1;
     const typeConfig = getServiceTypeConfig(serviceTypeId);
     const validationData = {
@@ -881,20 +856,17 @@ function NewOrder() {
       ? validateOrderByType(typeConfig, validationData) 
       : ['Unsupported or unknown service type'];
 
-    if (errors && errors.length > 0) {
-      // Set field-specific errors
+    if (errors && errors.length > 0) {
       const fieldErrors: Record<string, string> = {};
-      errors.forEach(error => {
-        // Try to extract field name from error message
+      errors.forEach(error => {
         const fieldMatch = error.match(/^(\w+):/);
         if (fieldMatch) {
           fieldErrors[fieldMatch[1]] = error.substring(fieldMatch[1].length + 2);
-        } else {
-          // Generic error
+        } else {
           showToast(`Service type validation failed: ${error}`, 'error');
         }
       });
-      
+
       if (Object.keys(fieldErrors).length > 0) {
         setServiceTypeErrors(fieldErrors);
         showToast('Please fix the highlighted fields', 'error');
@@ -903,19 +875,14 @@ function NewOrder() {
     }
 
     try {
-    setIsSubmitting(true);
-
-    // ... existing code ...
+    setIsSubmitting(true);
     const currentUserResponse = await axiosInstance.get('/api/user/current');
     const currentUser = currentUserResponse.data;
 
-    const usdPrice = (price * qty) / 1000;
-    // Use admin set BDT rate for conversion
+    const usdPrice = (price * qty) / 1000;
     const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
     const usdToBdtRate = bdtCurrency?.rate || 121;
-    const bdtPrice = usdPrice * usdToBdtRate;
-
-    // Debug log to verify price calculation
+    const bdtPrice = usdPrice * usdToBdtRate;
     console.log('Price Calculation Debug:', {
       serviceRate: price,
       quantity: qty,
@@ -937,8 +904,7 @@ function NewOrder() {
         serviceId: parseInt(selectedService),
         categoryId: parseInt(selectedCategory),
         userId: user?.id,
-        avg_time: selected?.avg_time || '',
-        // Service type specific fields
+        avg_time: selected?.avg_time || '',
         comments: serviceTypeFields.comments || undefined,
         username: serviceTypeFields.username || undefined,
         posts: serviceTypeFields.posts || undefined,
@@ -962,9 +928,7 @@ function NewOrder() {
 
       dispatch(dashboardApi.util.invalidateTags(['UserStats']));
 
-      refetchUserStats();
-
-      // Reset form
+      refetchUserStats();
       setLink('');
       setQty(0);
       setSelectedService('');
@@ -999,10 +963,10 @@ function NewOrder() {
       setSelectedCategory(categoryId);
       setSelectedService(serviceId);
       setQty(0);
-      setLink(''); // Clear link when service changes
+      setLink('');
       setSearch(selected.name);
       setShowDropdown(false);
-      resetServiceTypeFields(); // Reset service type fields when service changes
+      resetServiceTypeFields();
     }
   };
 
@@ -1091,7 +1055,7 @@ function NewOrder() {
                         style={{ width: '100%', minWidth: '0' }}
                       />
 
-                      {/* Search Dropdown */}
+                      {}
                       {showDropdown && (
                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                           {isSearchLoading && (
@@ -1130,7 +1094,7 @@ function NewOrder() {
                     </div>
                   </div>
 
-                  {/* Combined Category Dropdown */}
+                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="category">
                       Category
@@ -1143,7 +1107,7 @@ function NewOrder() {
                         setSelectedCategory(e.target.value);
                         setSelectedService('');
                         setQty(0);
-                        setLink(''); // Clear link when category changes
+                        setLink('');
                       }}
                     >
                       <option value="" disabled>
@@ -1188,8 +1152,8 @@ function NewOrder() {
                       onChange={(e) => {
                         setSelectedService(e.target.value);
                         setQty(0);
-                        setLink(''); // Clear link when service changes
-                        resetServiceTypeFields(); // Reset service type fields
+                        setLink('');
+                        resetServiceTypeFields();
                       }}
                       disabled={!selectedCategory || services.length === 0}
                       required
@@ -1205,7 +1169,7 @@ function NewOrder() {
                     </select>
                   </div>
 
-                  {/* Dynamic Link/Username Field */}
+                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="link">
                       {selected?.orderLink === 'username' ? 'Username' : 'Link'}
@@ -1226,7 +1190,7 @@ function NewOrder() {
                     />
                   </div>
 
-                  {/* Quantity */}
+                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="qty">
                       Quantity
@@ -1271,7 +1235,7 @@ function NewOrder() {
                     )}
                   </div>
 
-                  {/* Service Type Specific Fields */}
+                  {}
                   {selectedService && selected?.type && (
                     <ServiceTypeFields
                       serviceType={selected.type as ServiceType}
@@ -1281,7 +1245,7 @@ function NewOrder() {
                     />
                   )}
 
-                  {/* Price */}
+                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="price">
                       Charge (per 1000 = ${price.toFixed(2)})
@@ -1350,7 +1314,7 @@ function NewOrder() {
     </div>
   );
 }
- 
+
 export default function NewOrderPage() {
   const { appName } = useAppNameWithFallback();
 
@@ -1470,11 +1434,10 @@ export default function NewOrderPage() {
           </div>
 
           <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {platforms.map((platform, index) => {
-              // Create responsive class string
+            {platforms.map((platform, index) => {
               const mobileClass = platform.solidColor;
               const desktopClass = platform.color.replace('bg-gradient-to-r', 'sm:bg-gradient-to-r');
-              
+
               return (
                 <button
                      key={platform.name}

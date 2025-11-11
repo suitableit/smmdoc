@@ -27,8 +27,7 @@ export type LoginResult = {
 
 export const login = async (
   values: z.infer<typeof signInSchema> & { recaptchaToken?: string }
-): Promise<LoginResult> => {
-  // Verify reCAPTCHA if enabled and token provided
+): Promise<LoginResult> => {
   const recaptchaSettings = await getReCAPTCHASettings();
   if (recaptchaSettings && recaptchaSettings.enabledForms?.signIn) {
     if (!values.recaptchaToken) {
@@ -51,9 +50,7 @@ export const login = async (
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };
   }
-  const { email, password, code } = validedFields.data;
-
-  // Check if input is email or username
+  const { email, password, code } = validedFields.data;
   const isEmail = email.includes('@');
 
   const existingUser = isEmail
@@ -61,23 +58,17 @@ export const login = async (
     : await getUserByUsername(email);
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
-  }
-
-  // check password
+  }
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);
   if (!passwordsMatch) {
     return { success: false, error: 'Invalid Credentials!' };
-  }
-
-  // Check user status
+  }
   if (existingUser.status === 'banned') {
     return { success: false, error: "You're banned from our platform! Please contact support." };
   }
 
-  if (existingUser.status === 'suspended') {
-    // Check if suspension has expired
-    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
-      // Suspension has expired, automatically reactivate the user
+  if (existingUser.status === 'suspended') {
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
       await db.user.update({
         where: { id: existingUser.id },
         data: {
@@ -85,20 +76,19 @@ export const login = async (
           suspendedUntil: null
         }
       });
-    } else {
-      // User is still suspended, calculate remaining time and show detailed message
+    } else {
       let suspensionMessage = "You're suspended from our platform!";
-      
+
       if (existingUser.suspendedUntil) {
         const now = new Date();
         const suspendedUntil = new Date(existingUser.suspendedUntil);
         const diffMs = suspendedUntil.getTime() - now.getTime();
-        
+
         if (diffMs > 0) {
           const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
           const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
           const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          
+
           if (diffDays > 0) {
             suspensionMessage += ` Your suspension will be lifted in ${diffDays} day${diffDays > 1 ? 's' : ''} and ${diffHours} hour${diffHours > 1 ? 's' : ''}.`;
           } else if (diffHours > 0) {
@@ -108,7 +98,7 @@ export const login = async (
           }
         }
       }
-      
+
       suspensionMessage += " Please contact support if you have any questions.";
       return { success: false, error: suspensionMessage };
     }
@@ -117,105 +107,52 @@ export const login = async (
   if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
       existingUser.email
-    );
-    // Todo send verification email token
+    );
     await sendMail({
       sendTo: existingUser.email,
       subject: 'Email Verification',
       html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
     });
     return { success: true, message: 'Confirmation email sent!' };
-  }
+  }
 
-  // Todo: Add 2FA check here - COMMENTED OUT FOR DEVELOPMENT
-  // if (existingUser.isTwoFactorEnabled && existingUser.email) {
-  //   if (code) {
-  //     const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email);
-  //     if (!twoFactorToken) {
-  //       return { success: false, error: 'Invalid 2FA Code!' };
-  //     }
-  //     if (twoFactorToken.token !== code) {
-  //       return { success: false, error: 'Invalid 2FA Code!' };
-  //     }
-  //     const hasExpired = new Date(twoFactorToken.expires) < new Date();
-  //     if (hasExpired) {
-  //       return { success: false, error: '2FA Code has expired!' };
-  //     }
-  //     // delete two factor token after use
-  //     await db.twoFactorToken.delete({
-  //       where: { id: twoFactorToken.id },
-  //     });
-  //     const existingConfirmationToken = await getTwoFactorConfirmationByUserId(
-  //       existingUser.id.toString()
-  //     );
-  //     if (existingConfirmationToken) {
-  //       await db.twoFactorConfirmation.delete({
-  //         where: { id: existingConfirmationToken.id },
-  //       });
-  //     }
-  //     await db.twoFactorConfirmation.create({
-  //       data: {
-  //         userId: existingUser.id,
-  //       },
-  //     });
-  //   } else {
-  //     const twoFactorToken = await generateTwoFactorToken(existingUser.email);
-  //     await sendMail({
-  //       sendTo: existingUser.email,
-  //       subject: '2FA Code',
-  //       html: `<p>2FA Code: ${twoFactorToken?.token}</p>`,
-  //     });
-  //     return { twoFactor: true };
-  //   }
-  // }
-
-  try {
-    // Check if user is admin
-    const isAdmin = existingUser.role === 'admin';
-    
-    // Determine the redirect URL based on user role
+  try {
+    const isAdmin = existingUser.role === 'admin';
     const redirectUrl = isAdmin ? '/admin' : DEFAULT_SIGN_IN_REDIRECT;
-      
+
     console.log('User role:', existingUser.role);
     console.log('Is admin:', isAdmin);
-    console.log('Redirect URL:', redirectUrl);
-    
-    // Don't redirect here, instead return auth result and redirect URL
+    console.log('Redirect URL:', redirectUrl);
     const signInResult = await signIn('credentials', {
       email,
       password,
       redirect: false
     });
-    
-    console.log('SignIn result:', JSON.stringify(signInResult, null, 2));
-    
-    // After successful sign-in, check if user is admin again
+
+    console.log('SignIn result:', JSON.stringify(signInResult, null, 2));
     const session = await auth();
     console.log('Session after sign-in:', JSON.stringify({
       id: session?.user?.id,
       name: session?.user?.name,
       email: session?.user?.email,
       role: session?.user?.role
-    }, null, 2));
-
-    // Log successful login activity with IP address
+    }, null, 2));
     try {
       const headersList = await headers();
       const clientIP = headersList.get('x-client-ip') ||
                       headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
                       headersList.get('x-real-ip') ||
                       'unknown';
-      
+
       const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
-      
+
       if (isAdmin) {
         await ActivityLogger.adminLogin(existingUser.id, username, clientIP);
       } else {
         await ActivityLogger.login(existingUser.id, username, clientIP);
       }
     } catch (logError) {
-      console.error('Failed to log login activity:', logError);
-      // Don't fail the login if activity logging fails
+      console.error('Failed to log login activity:', logError);
     }
 
     return {
@@ -242,9 +179,7 @@ export const login = async (
     console.error('Non-AuthError during login:', error);
     return { success: false, error: 'An unexpected error occurred. Please try again.' };
   }
-};
-
-// two factor on off
+};
 export const toggleTwoFactor = async (toggle: boolean) => {
   const session = await auth();
   if (!session?.user.id) {
@@ -253,61 +188,40 @@ export const toggleTwoFactor = async (toggle: boolean) => {
   const user = await getUserByEmail(session.user.email as string);
   if (!user) {
     return { success: false, error: 'User not found!' };
-  }
-  // toggle true or false
+  }
   await db.user.update({
     where: { id: user.id },
     data: {
       isTwoFactorEnabled: toggle,
     },
-  });
-  // this is use in future
-  // if (toggle === true) {
-  //   // send email with 2fa code
-  //   const twoFactorToken = await generateTwoFactorToken(user.email as string);
-  //   await sendMail({
-  //     sendTo: user.email as string,
-  //     subject: '2FA Code',
-  //     html: `<p>2FA Code: ${twoFactorToken?.token}</p>`,
-  //   });
-  // }
+  });
   return { success: true, message: 'Two factor authentication updated!' };
-};
-
-// Admin login specific function 
+};
 export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
   const validedFields = signInSchema.safeParse(values);
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };
   }
-  
+
   const { email, password } = validedFields.data;
   const existingUser = await getUserByEmail(email);
-  
+
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
-  }
-  
-  // Check if user is admin
+  }
   if (existingUser.role !== 'admin') {
     return { success: false, error: 'Access denied. Admin login only.' };
-  }
-
-  // Check password
+  }
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);
   if (!passwordsMatch) {
     return { success: false, error: 'Invalid Credentials!' };
-  }
-
-  // Check user status (even for admins)
+  }
   if (existingUser.status === 'banned') {
     return { success: false, error: "You're banned from our platform! Please contact support." };
   }
 
-  if (existingUser.status === 'suspended') {
-    // Check if suspension has expired
-    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
-      // Suspension has expired, automatically reactivate the user
+  if (existingUser.status === 'suspended') {
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
       await db.user.update({
         where: { id: existingUser.id },
         data: {
@@ -315,20 +229,19 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
           suspendedUntil: null
         }
       });
-    } else {
-      // User is still suspended, calculate remaining time and show detailed message
+    } else {
       let suspensionMessage = "You're suspended from our platform!";
-      
+
       if (existingUser.suspendedUntil) {
         const now = new Date();
         const suspendedUntil = new Date(existingUser.suspendedUntil);
         const diffMs = suspendedUntil.getTime() - now.getTime();
-        
+
         if (diffMs > 0) {
           const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
           const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
           const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-          
+
           if (diffDays > 0) {
             suspensionMessage += ` Your suspension will be lifted in ${diffDays} day${diffDays > 1 ? 's' : ''} and ${diffHours} hour${diffHours > 1 ? 's' : ''}.`;
           } else if (diffHours > 0) {
@@ -338,48 +251,41 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
           }
         }
       }
-      
+
       suspensionMessage += " Please contact support if you have any questions.";
       return { success: false, error: suspensionMessage };
     }
   }
 
   try {
-    console.log('Admin login attempt for user:', email);
-    
-    // Sign in without redirect
+    console.log('Admin login attempt for user:', email);
     const signInResult = await signIn('credentials', {
       email,
       password,
       redirect: false
     });
-    
-    console.log('Admin login result:', JSON.stringify(signInResult, null, 2));
-    
-    // Verify session has admin role
+
+    console.log('Admin login result:', JSON.stringify(signInResult, null, 2));
     const session = await auth();
     console.log('Admin session after sign-in:', JSON.stringify({
       id: session?.user?.id,
       name: session?.user?.name,
       email: session?.user?.email,
       role: session?.user?.role
-    }, null, 2));
-    
-    // Log admin login activity with IP address
+    }, null, 2));
     try {
       const headersList = await headers();
       const clientIP = headersList.get('x-client-ip') ||
                       headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
                       headersList.get('x-real-ip') ||
                       'unknown';
-      
+
       const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
       await ActivityLogger.adminLogin(existingUser.id, username, clientIP);
     } catch (logError) {
-      console.error('Failed to log admin login activity:', logError);
-      // Don't fail the login if activity logging fails
+      console.error('Failed to log admin login activity:', logError);
     }
-    
+
     return { 
       success: true, 
       message: 'Admin logged in successfully!', 

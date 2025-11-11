@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { PriceDisplay } from '@/components/PriceDisplay';
@@ -37,9 +36,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger
 } from '../ui/dropdown-menu';
-import MobileSidebar from './mobile-siderbar';
-
-// Enhanced Avatar Components with proper responsiveness
+import MobileSidebar from './mobile-siderbar';
 const Avatar = ({
   className,
   children,
@@ -56,11 +53,11 @@ const Avatar = ({
 
 const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
   const [hasError, setHasError] = useState(false);
-  
+
   if (!src || hasError) {
     return null;
   }
-  
+
   return (
     <img
       src={src}
@@ -77,9 +74,7 @@ const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-sm">
     {children}
   </div>
-);
-
-// Enhanced Theme Toggle Component
+);
 const ThemeToggle = ({ 
   isMobile = false, 
   openDropdowns, 
@@ -123,8 +118,7 @@ const ThemeToggle = ({
     themeOptions.find((option) => option.key === theme) || themeOptions[0];
   const CurrentIcon = currentTheme.icon;
 
-  if (isMobile) {
-    // Mobile version - inline theme options
+  if (isMobile) {
     return (
       <div
         className="p-2.5 rounded-lg"
@@ -170,9 +164,7 @@ const ThemeToggle = ({
         </div>
       </div>
     );
-  }
-
-  // Desktop version - dropdown
+  }
   return (
     <DropdownMenu 
       open={openDropdowns?.theme}
@@ -229,15 +221,12 @@ const ThemeToggle = ({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-// Mobile Currency Toggle Component
+};
 const MobileCurrencyToggle = () => {
   const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
 
   const handleCurrencyChange = async (newCurrency: string) => {
-    await setCurrency(newCurrency);
-    // Live update - no page reload needed
+    await setCurrency(newCurrency);
   };
 
   return (
@@ -298,9 +287,7 @@ const MobileCurrencyToggle = () => {
       </div>
     </div>
   );
-};
-
-// Enhanced Mobile Menu Toggle Button (3-dot menu)
+};
 const MobileMenuToggle = ({
   isMenuOpen,
   toggleMenu,
@@ -343,9 +330,7 @@ const MobileMenuToggle = ({
       <MobileSidebar />
     </DropdownMenuContent>
   </DropdownMenu>
-);
-
-// Enhanced Menu Component with updated styling
+);
 const Menu = ({ 
   user, 
   openDropdowns, 
@@ -358,24 +343,18 @@ const Menu = ({
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
-  // Use managed dropdown state or fallback to local state
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isOpen = openDropdowns?.profile || false;
   const setIsOpen = (open: boolean) => handleDropdownChange?.('profile', open);
   const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
 
   const closeMenu = () => setIsOpen(false);
-  const enableAuth = true;
-
-  // Check if user is admin
+  const enableAuth = true;
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' ||
     user?.userType?.toLowerCase() === 'admin' ||
-    user?.isAdmin === true;
-
-  // Load user data into Redux store if not already loaded
+    user?.isAdmin === true;
   useEffect(() => {
     const loadUserData = async () => {
       if ((currentUser?.id || user?.id) && !userData?.id) {
@@ -389,16 +368,12 @@ const Menu = ({
         }
       }
     };
-    
-    loadUserData();
-  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
 
-  // Get balance from API for real-time data
+    loadUserData();
+  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
   const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
-
-
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -444,8 +419,7 @@ const Menu = ({
       if (enableAuth) {
         const { signOut } = await import('next-auth/react');
         await signOut({ callbackUrl: '/', redirect: true });
-      } else {
-        // Custom logout logic
+      } else {
         window.location.href = '/';
       }
     } catch (error) {
@@ -566,7 +540,7 @@ const Menu = ({
               )}
             </div>
 
-            {/* Mobile Controls Section - Currency and Theme */}
+            {}
             <div className="sm:hidden p-2 space-y-2">
               <MobileCurrencyToggle />
               <ThemeToggle isMobile={true} />
@@ -625,15 +599,11 @@ const Header = () => {
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
   const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
-  const userData = useSelector((state: any) => state.userDetails);
-  
-  // Use Redux store data primarily, fallback to currentUser
+  const userData = useSelector((state: any) => state.userDetails);
   const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
-  
-  // Dropdown state management
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   const [openDropdowns, setOpenDropdowns] = useState({
     notifications: false,
     currency: false,
@@ -641,20 +611,14 @@ const Header = () => {
     plus: false,
     profile: false,
     mobile: false
-  });
-  
-  // Handle dropdown state changes
+  });
   const handleDropdownChange = (dropdownName: string, isOpen: boolean) => {
     setOpenDropdowns(prev => ({
       ...prev,
       [dropdownName]: isOpen
     }));
-  };
-  
-  // Check if any dropdown is open
-  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
-
-  // Fetch contact system settings
+  };
+  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
   useEffect(() => {
     const fetchContactSettings = async () => {
       try {
@@ -664,8 +628,7 @@ const Header = () => {
           setContactSystemEnabled(data.contactSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching contact settings:', error);
-        // Default to enabled on error
+        console.error('Error fetching contact settings:', error);
         setContactSystemEnabled(true);
       }
     };
@@ -685,28 +648,20 @@ const Header = () => {
   const formatCurrency = (amount: number) => {
     if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
       return `$${amount.toFixed(2)}`;
-    }
-
-    // Database balance is stored in user's preferred currency (from user.currency field)
-    // We need to get user's stored currency and convert to display currency
+    }
     let convertedAmount = amount;
 
-    if (currentCurrencyData.code === userStoredCurrency) {
-      // If display currency matches stored currency, use amount as is
+    if (currentCurrencyData.code === userStoredCurrency) {
       convertedAmount = amount;
-    } else {
-      // Convert between currencies using rates
+    } else {
       const storedCurrencyData = availableCurrencies.find(c => c.code === userStoredCurrency);
 
       if (storedCurrencyData && currentCurrencyData) {
-        if (userStoredCurrency === 'USD') {
-          // Convert from USD to target currency
+        if (userStoredCurrency === 'USD') {
           convertedAmount = amount * currentCurrencyData.rate;
-        } else if (currentCurrencyData.code === 'USD') {
-          // Convert from stored currency to USD
+        } else if (currentCurrencyData.code === 'USD') {
           convertedAmount = amount / storedCurrencyData.rate;
-        } else {
-          // Convert between two non-USD currencies (via USD)
+        } else {
           const usdAmount = amount / storedCurrencyData.rate;
           convertedAmount = usdAmount * currentCurrencyData.rate;
         }
@@ -739,17 +694,12 @@ const Header = () => {
 
     const intervalId = setInterval(() => {
       fetchUser();
-    }, 30000);
-
-    // Listen for currency updates
-    const handleCurrencyUpdate = () => {
-      // Force refresh currency data when currencies are updated
+    }, 30000);
+    const handleCurrencyUpdate = () => {
       setTimeout(() => {
         window.location.reload();
       }, 100);
-    };
-
-    // Listen for avatar updates
+    };
     const handleAvatarUpdate = () => {
       fetchUser();
     };
@@ -762,35 +712,27 @@ const Header = () => {
       window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
       window.removeEventListener('avatarUpdated', handleAvatarUpdate);
     };
-  }, []);
-
-  // Manage body overflow to ensure scrollbar remains visible
-  useEffect(() => {
-    // Ensure body scrollbar is always visible and not affected by dropdowns
-    if (typeof document !== 'undefined') {
-      // Store original overflow style
-      const originalOverflow = document.body.style.overflow;
-      
-      // Ensure scrollbar is always visible
+  }, []);
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflowY = 'scroll';
-      
-      return () => {
-        // Restore original overflow on cleanup
+
+      return () => {
         document.body.style.overflow = originalOverflow;
       };
     }
   }, []);
 
   const handleCurrencyChange = async (newCurrency: string) => {
-    await setCurrency(newCurrency);
-    // Live update - no page reload needed
+    await setCurrency(newCurrency);
   };
 
   return (
     <nav
       className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 header-theme-transition"
       style={{
-        height: '4.5rem', // 72px for mobile
+        height: '4.5rem',
         backgroundColor: 'var(--header-bg)',
         borderBottom: `1px solid var(--header-border)`,
         color: 'var(--header-text)',
@@ -805,12 +747,12 @@ const Header = () => {
           }
         `
       }} />
-      {/* Mobile Logo - Visible only on mobile */}
+      {}
       <Link href="/" className="flex lg:hidden items-center">
         <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
       </Link>
 
-      {/* Desktop Search - Hidden on mobile */}
+      {}
       <div className="hidden lg:flex items-center gap-3 flex-grow max-w-md">
         <div className="relative w-full h-10 flex items-center">
           <div className="absolute inset-y-0 left-0 flex items-center pl-4">
@@ -826,7 +768,7 @@ const Header = () => {
           />
         </div>
 
-        {/* Admin Settings Icon OR User Plus Icon */}
+        {}
         {isAdmin ? (
           <Link
             href="/admin/settings"
@@ -1015,9 +957,9 @@ const Header = () => {
         )}
       </div>
 
-      {/* Right side controls */}
+      {}
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-        {/* Currency Selector - Hidden on mobile, visible on desktop */}
+        {}
         <div className="hidden sm:flex items-center gap-3">
           <DropdownMenu 
             open={openDropdowns.currency}
@@ -1109,7 +1051,7 @@ const Header = () => {
           </DropdownMenu>
         </div>
 
-        {/* Balance Button - Hidden for admin users and on mobile */}
+        {}
         {!isAdmin && (
           <Link
             href="/add-funds"
@@ -1131,7 +1073,7 @@ const Header = () => {
           </Link>
         )}
 
-        {/* Notifications */}
+        {}
         <DropdownMenu 
           open={openDropdowns.notifications}
           onOpenChange={(isOpen) => handleDropdownChange('notifications', isOpen)}
@@ -1148,7 +1090,7 @@ const Header = () => {
                 className="h-4 w-4 sm:h-4 sm:w-4"
                 style={{ color: 'var(--header-text)' }}
               />
-              {/* Notification Badge */}
+              {}
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                 3
               </span>
@@ -1174,22 +1116,20 @@ const Header = () => {
               </h3>
               <button 
                 className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                onClick={() => {
-                  // Mark all notifications as read functionality
-                  console.log('Marking all notifications as read...');
-                  // TODO: Implement API call to mark all notifications as read
+                onClick={() => {
+                  console.log('Marking all notifications as read...');
                 }}
               >
                 Mark all as read
               </button>
             </div>
             <div className="max-h-96 overflow-y-auto">
-              {/* Notification Items */}
+              {}
               <div className="p-2">
-                {/* Admin Notifications */}
+                {}
                 {isAdmin ? (
                   <>
-                    {/* New User Registration */}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1220,7 +1160,7 @@ const Header = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
                     </div>
 
-                    {/* System Alert */}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1251,7 +1191,7 @@ const Header = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
                     </div>
 
-                    {/* Revenue Report */}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1283,8 +1223,8 @@ const Header = () => {
                   </>
                 ) : (
                   <>
-                    {/* User Notifications */}
-                    {/* Order Completed Notification */}
+                    {}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1315,7 +1255,7 @@ const Header = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
                     </div>
 
-                    {/* Support Ticket Response */}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1346,7 +1286,7 @@ const Header = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
                     </div>
 
-                    {/* Payment Successful */}
+                    {}
                     <div
                       className="flex items-start gap-3 p-3 rounded-lg mb-2 hover:opacity-80 transition-all duration-200 cursor-pointer"
                       style={{ backgroundColor: 'var(--dropdown-hover)' }}
@@ -1379,18 +1319,16 @@ const Header = () => {
                 )}
               </div>
             </div>
-            
-            {/* See More Footer */}
+
+            {}
             <div
               className="p-3 text-center border-t"
               style={{ borderTop: `1px solid var(--header-border)` }}
             >
               <button
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                onClick={() => {
-                  // See more notifications functionality
-                  console.log('Loading more notifications...');
-                  // TODO: Implement functionality to load more notifications
+                onClick={() => {
+                  console.log('Loading more notifications...');
                 }}
               >
                 See more
@@ -1399,7 +1337,7 @@ const Header = () => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Theme Toggle - Hidden on mobile, visible on desktop */}
+        {}
         <div className="hidden sm:flex items-center">
           <ThemeToggle 
             openDropdowns={openDropdowns}
@@ -1407,7 +1345,7 @@ const Header = () => {
           />
         </div>
 
-        {/* User Menu */}
+        {}
         <div className="flex items-center justify-center">
           {user && <Menu 
             user={user} 
@@ -1416,7 +1354,7 @@ const Header = () => {
           />}
         </div>
 
-        {/* Mobile Menu Toggle (3-dot menu) - Hidden on desktop */}
+        {}
         <div className="flex items-center lg:hidden">
           <MobileSidebar />
         </div>

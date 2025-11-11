@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -22,18 +21,14 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatNumber } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -105,21 +100,17 @@ const FavoriteServicesTable: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [limit, setLimit] = useState('10'); // Load 10 categories per page
+  const [limit, setLimit] = useState('10');
   const [hasMoreData, setHasMoreData] = useState(true);
   const [favoriteServices, setFavoriteServices] = useState<Service[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [isSearchLoading, setIsSearchLoading] = useState(false);
 
   const [totalServices, setTotalServices] = useState(0);
-  const [displayLimit] = useState(50); // Services to show in favorites section
-
-  // Set document title using useEffect for client-side
+  const [displayLimit] = useState(50);
   useEffect(() => {
     setPageTitle('Favorite Services', appName);
-  }, [appName]);
-
-  // Show toast notification
+  }, [appName]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -132,9 +123,7 @@ const FavoriteServicesTable: React.FC = () => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 500);
-
-    // Set loading state when search changes
+    }, 500);
     if (search.trim()) {
       setIsSearchLoading(true);
     } else {
@@ -142,11 +131,8 @@ const FavoriteServicesTable: React.FC = () => {
     }
 
     return () => clearTimeout(timer);
-  }, [search]);
-
-  // Optimized fetch function with pagination for better performance
-  const fetchServices = React.useCallback(async () => {
-    // Only show full loading on initial load, not during search
+  }, [search]);
+  const fetchServices = React.useCallback(async () => {
     if (!debouncedSearch && page === 1) {
       setLoading(true);
     }
@@ -161,7 +147,7 @@ const FavoriteServicesTable: React.FC = () => {
         return;
       }
 
-      const currentLimit = limit === 'all' ? '500' : limit; // Limit to 500 instead of 'all' to prevent memory issues
+      const currentLimit = limit === 'all' ? '500' : limit;
 
       const searchParams = new URLSearchParams({
         userId: user.id,
@@ -185,23 +171,17 @@ const FavoriteServicesTable: React.FC = () => {
         throw new Error(`Failed to fetch favorite services: ${response.statusText}`);
       }
 
-      const data = await response.json();
-
-      // Update pagination info
+      const data = await response.json();
       setTotalPages(data.totalPages || 1);
       setTotalServices(data.total || 0);
-      setHasMoreData(page < (data.totalPages || 1));
-
-      // All services from favorites endpoint are already marked as favorites
+      setHasMoreData(page < (data.totalPages || 1));
       const favoriteServicesData =
         data?.data?.map((service: Service) => ({
           ...service,
           isFavorite: true,
         })) || [];
 
-      setServices(favoriteServicesData);
-
-      // Process services data for grouping
+      setServices(favoriteServicesData);
       processServicesData(favoriteServicesData, data.allCategories || []);
     } catch (error) {
       console.error('Error fetching favorite services:', error);
@@ -212,30 +192,20 @@ const FavoriteServicesTable: React.FC = () => {
       setLoading(false);
       setIsSearchLoading(false);
     }
-  }, [debouncedSearch, user?.id, page, limit]);
-
-  // Process services data for grouping and favorites
-  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
-    // Separate favorite services
+  }, [debouncedSearch, user?.id, page, limit]);
+  const processServicesData = React.useCallback((servicesData: Service[], categoriesData: any[]) => {
     const favorites = servicesData.filter(service => service.isFavorite);
-    setFavoriteServices(favorites);
-
-    // Group services by category
-    const groupedById: Record<string, { category: any; services: Service[] }> = {};
-
-    // Initialize all active categories (including duplicates by name)
+    setFavoriteServices(favorites);
+    const groupedById: Record<string, { category: any; services: Service[] }> = {};
     categoriesData
       .filter((category: any) => category.hideCategory !== 'yes')
-      .forEach((category: any) => {
-        // Use unique key with ID to handle duplicate names
+      .forEach((category: any) => {
         const categoryKey = `${category.category_name}_${category.id}`;
         groupedById[categoryKey] = {
           category: category,
           services: []
         };
-      });
-
-    // Add services to their respective categories
+      });
     servicesData.forEach((service: Service) => {
       const categoryId = service.category?.id;
       const categoryName = service.category?.category_name || 'Uncategorized';
@@ -248,67 +218,51 @@ const FavoriteServicesTable: React.FC = () => {
         };
       }
       groupedById[categoryKey].services.push(service);
-    });
-
-    // Convert to the format expected by the UI and sort by ID first, then position
+    });
     const grouped: Record<string, Service[]> = {};
     Object.values(groupedById)
-      .sort((a, b) => {
-        // Sort by ID first (1, 2, 3...)
+      .sort((a, b) => {
         const idDiff = (a.category.id || 999) - (b.category.id || 999);
-        if (idDiff !== 0) return idDiff;
-        // Then by position if IDs are same
+        if (idDiff !== 0) return idDiff;
         return (a.category.position || 999) - (b.category.position || 999);
       })
-      .forEach(({ category, services }) => {
-        // Use category name with ID to handle duplicates
+      .forEach(({ category, services }) => {
         const displayName = `${category.category_name} (ID: ${category.id})`;
         grouped[displayName] = services;
       });
 
-    setGroupedServices(grouped);
-
-    // Auto-expand categories with services
+    setGroupedServices(grouped);
     const initialExpanded: Record<string, boolean> = {};
     Object.keys(grouped).forEach(categoryName => {
-      initialExpanded[categoryName] = true; // Expand all categories by default
+      initialExpanded[categoryName] = true;
     });
 
     setExpandedCategories(initialExpanded);
-  }, []);
-
-  // Toggle category expansion
+  }, []);
   const toggleCategory = (categoryName: string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryName]: !prev[categoryName]
     }));
-  };
-
-  // Initial load and search changes
+  };
   useEffect(() => {
     fetchServices();
-  }, [fetchServices, debouncedSearch, page, limit]);
-
-  // Handle limit change
+  }, [fetchServices, debouncedSearch, page, limit]);
   const handleLimitChange = (newLimit: string) => {
     setLimit(newLimit);
     setPage(1);
     setServices([]);
     setGroupedServices({});
-    setHasMoreData(true);
-    // Trigger immediate fetch with new limit
+    setHasMoreData(true);
     setTimeout(() => {
       fetchServices();
     }, 100);
-  };
-
-  // Handle pagination
+  };
   const handlePrevious = () => {
     if (page > 1) {
       setPage(page - 1);
-      setServices([]); // Clear current services
-      setGroupedServices({}); // Clear grouped services
+      setServices([]);
+      setGroupedServices({});
       setHasMoreData(true);
     }
   };
@@ -316,8 +270,8 @@ const FavoriteServicesTable: React.FC = () => {
   const handleNext = () => {
     if (page < totalPages) {
       setPage(page + 1);
-      setServices([]); // Clear current services
-      setGroupedServices({}); // Clear grouped services
+      setServices([]);
+      setGroupedServices({});
     }
   };
 
@@ -332,8 +286,7 @@ const FavoriteServicesTable: React.FC = () => {
       return;
     }
 
-    try {
-      // Find the current service to get the current favorite status
+    try {
       const currentService = services.find(
         (service) => service.id === serviceId
       );
@@ -349,34 +302,28 @@ const FavoriteServicesTable: React.FC = () => {
         body: JSON.stringify({
           serviceId,
           userId: user.id,
-          action: 'remove', // Always remove since we're in favorites page
+          action: 'remove',
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Remove the service from the list
+      if (response.ok) {
         setServices((prevServices) =>
           prevServices.filter((service) => service.id !== serviceId)
-        );
-
-        // Remove from grouped services as well
+        );
         setGroupedServices((prevGrouped) => {
           const newGrouped = { ...prevGrouped };
           Object.keys(newGrouped).forEach((categoryName) => {
             newGrouped[categoryName] = newGrouped[categoryName].filter(
               (service) => service.id !== serviceId
-            );
-            // Remove empty categories
+            );
             if (newGrouped[categoryName].length === 0) {
               delete newGrouped[categoryName];
             }
           });
           return newGrouped;
-        });
-
-        // Update favorite services list
+        });
         setFavoriteServices((prevFavorites) => {
           return prevFavorites.filter(service => service.id !== serviceId);
         });
@@ -410,7 +357,7 @@ const FavoriteServicesTable: React.FC = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -420,12 +367,12 @@ const FavoriteServicesTable: React.FC = () => {
       )}
 
       <div className="page-content">
-        {/* Favorite Services Content Card - Everything in one box */}
+        {}
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-          {/* Search Bar and Controls */}
+          {}
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              {/* Show Per Page Dropdown - Left side */}
+              {}
               <div className="flex items-center gap-2 h-12">
                 <div className="relative">
                   <select
@@ -451,7 +398,7 @@ const FavoriteServicesTable: React.FC = () => {
                 </div>
               </div>
 
-              {/* Search Input - Right side with reduced width */}
+              {}
               <div className="w-full md:w-100 h-12 items-center">
                 <div className="form-group mb-0 w-full">
                   <div className="relative flex items-center h-12">
@@ -477,9 +424,9 @@ const FavoriteServicesTable: React.FC = () => {
             </div>
           </div>
 
-          {/* Services by Category */}
+          {}
           <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-            {/* Table Headers - Always visible at top */}
+            {}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
@@ -532,7 +479,7 @@ const FavoriteServicesTable: React.FC = () => {
                   ) : Object.keys(groupedServices).length > 0 ? (
                     Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
                       <React.Fragment key={categoryName}>
-                        {/* Category Header Row */}
+                        {}
                         <tr>
                           <td colSpan={11} className="p-0">
                             <div
@@ -555,7 +502,7 @@ const FavoriteServicesTable: React.FC = () => {
                           </td>
                         </tr>
 
-                        {/* Services for this Category */}
+                        {}
                         {expandedCategories[categoryName] && categoryServices.length > 0 && (
                             categoryServices.map((service) => (
                               <tr
@@ -625,7 +572,7 @@ const FavoriteServicesTable: React.FC = () => {
                                       )}
                                     </div>
 
-                                    {/* Show Refill Details when refill is enabled */}
+                                    {}
                                     {service.refill && (
                                       <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
                                         {service.refillDays && (
@@ -697,7 +644,7 @@ const FavoriteServicesTable: React.FC = () => {
               </div>
             </div>
 
-          {/* Pagination Controls - Hide when showing all */}
+          {}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -724,7 +671,7 @@ const FavoriteServicesTable: React.FC = () => {
             </div>
           )}
 
-          {/* Performance indicator */}
+          {}
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
             <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
               <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -760,7 +707,7 @@ const FavoriteServicesTable: React.FC = () => {
         </div>
       </div>
 
-      {/* Service Details Modal */}
+      {}
       {isOpen && selected && (
         <ServiceViewModal
           isOpen={isOpen}

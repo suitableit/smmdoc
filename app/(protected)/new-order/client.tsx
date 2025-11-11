@@ -1,8 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-// Dynamic import of client component
+import dynamic from "next/dynamic";
 const NewOrderComponent = dynamic(() => import('./page'), {
   ssr: false,
   loading: () => <div className="h-60 flex items-center justify-center">Loading...</div>

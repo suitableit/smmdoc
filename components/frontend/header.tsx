@@ -3,9 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
-
-// Custom hook to safely use NextAuth session
+import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
 const useSafeSession = () => {
   const [sessionData, setSessionData] = useState({
     data: null,
@@ -13,11 +11,8 @@ const useSafeSession = () => {
   });
 
   useEffect(() => {
-    try {
-      // Dynamically import and use NextAuth
-      import('next-auth/react').then(({ useSession }) => {
-        // This won't work as intended, we need a different approach
-        // Let's just set a timeout and assume no auth for now
+    try {
+      import('next-auth/react').then(({ useSession }) => {
         setTimeout(() => {
           setSessionData({
             data: null,
@@ -35,9 +30,7 @@ const useSafeSession = () => {
   }, []);
 
   return sessionData;
-};
-
-// Alternative: Create a version that accepts session as props
+};
 interface HeaderProps {
   session?: any;
   status?: 'loading' | 'authenticated' | 'unauthenticated';
@@ -51,12 +44,10 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
-  // Use props if provided, otherwise try to get session safely
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   let session = propSession;
   let status = propStatus;
-  
+
   if (enableAuth && !propSession) {
     try {
       const { useSession } = require('next-auth/react');
@@ -67,13 +58,9 @@ const Header: React.FC<HeaderProps> = ({
       console.warn('NextAuth not available, using fallback');
       status = 'unauthenticated';
     }
-  }
-  
-  // Check if user is authenticated
+  }
   const isAuthenticated = status === 'authenticated' && session?.user;
-  const isLoading = status === 'loading';
-  
-  // Determine dashboard route based on user role
+  const isLoading = status === 'loading';
   const userRole = session?.user?.role?.toUpperCase() || '';
   const isAdmin = userRole === 'ADMIN';
   const dashboardRoute = isAdmin ? '/admin' : '/dashboard';
@@ -88,8 +75,7 @@ const Header: React.FC<HeaderProps> = ({
       if (enableAuth) {
         const { signOut } = await import('next-auth/react');
         await signOut({ callbackUrl: '/', redirect: true });
-      } else {
-        // Custom logout logic
+      } else {
         window.location.href = '/';
       }
     } catch (error) {
@@ -97,9 +83,7 @@ const Header: React.FC<HeaderProps> = ({
       setIsLoggingOut(false);
       window.location.href = '/';
     }
-  };
-
-  // Enhanced Avatar Components
+  };
   const Avatar = ({
     className,
     children,
@@ -114,11 +98,11 @@ const Header: React.FC<HeaderProps> = ({
 
   const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
     const [hasError, setHasError] = useState(false);
-    
+
     if (!src || hasError) {
       return null;
     }
-    
+
     return (
       <img
         src={src}
@@ -135,9 +119,7 @@ const Header: React.FC<HeaderProps> = ({
     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-lg">
       {children}
     </div>
-  );
-
-  // Theme Toggle Component
+  );
   const ThemeToggle = ({ inMenu = false }: { inMenu?: boolean }) => {
     const [theme, setTheme] = useState('system');
     const [mounted, setMounted] = useState(false);
@@ -251,15 +233,13 @@ const Header: React.FC<HeaderProps> = ({
         )}
       </div>
     );
-  };
-
-  // Enhanced User Menu (only if authenticated)
+  };
   const UserMenu = ({ user }: { user: any }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    
+
     const username = user?.username || user?.email?.split('@')[0] || user?.name || 'User';
-    const balance = 0; // Replace with actual balance
+    const balance = 0;
 
     useEffect(() => {
       const timer = setTimeout(() => setLoading(false), 1000);
@@ -429,12 +409,12 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {}
       <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {/* Overlay */}
+        {}
         <div className="absolute inset-0 bg-black/20 dark:bg-black/40" onClick={closeMenu}></div>
-        
-        {/* Menu Content */}
+
+        {}
         <div className={`relative w-[80%] h-full bg-white dark:bg-[var(--header-bg)] shadow-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Link href="/" className="flex items-center">

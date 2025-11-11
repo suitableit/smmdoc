@@ -14,22 +14,16 @@ import {
     FaTrash,
     FaUserCheck,
     FaUserShield,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -46,9 +40,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface Moderator {
   id: number;
   username: string;
@@ -139,9 +131,7 @@ interface EditModeratorModalProps {
   onClose: () => void;
   onSave: (moderatorData: Partial<Moderator>) => void;
   isLoading: boolean;
-}
-
-// Custom hooks for better organization
+}
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -178,17 +168,10 @@ const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () =
 };
 
 const ModeratorsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('All Moderators', appName);
-  }, [appName]);
-
-  // Note: Currently using dummy data for demonstration purposes
-  // Real API integration is commented out in fetchModerators and fetchStats functions
-
-  // State management
+  }, [appName]);
   const [moderators, setModerators] = useState<Moderator[]>([]);
   const [stats, setStats] = useState<ModeratorStats>({
     totalModerators: 0,
@@ -216,14 +199,10 @@ const ModeratorsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [moderatorsLoading, setModeratorsLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // New state for action modals
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [updateStatusDialog, setUpdateStatusDialog] = useState<{
     open: boolean;
     moderatorId: number;
@@ -243,9 +222,7 @@ const ModeratorsPage = () => {
     moderatorId: 0,
     currentRole: '',
   });
-  const [newRole, setNewRole] = useState('');
-
-  // Edit modal state
+  const [newRole, setNewRole] = useState('');
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
     moderator: Moderator | null;
@@ -253,28 +230,20 @@ const ModeratorsPage = () => {
     open: false,
     moderator: null,
   });
-  const [editFormData, setEditFormData] = useState<Partial<Moderator>>({});
-
-  // Use debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  // Memoized filter options
+  const [editFormData, setEditFormData] = useState<Partial<Moderator>>({});
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const filterOptions = useMemo(() => [
     { key: 'all', label: 'All', count: stats.totalModerators },
     { key: 'active', label: 'Active', count: stats.activeModerators },
     { key: 'inactive', label: 'Inactive', count: stats.inactiveModerators },
-  ], [stats]);
-
-  // API functions
+  ], [stats]);
   const fetchModerators = useCallback(async () => {
     try {
-      setModeratorsLoading(true);
-
-      // Real API call
+      setModeratorsLoading(true);
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
-        role: 'moderator', // Filter for moderator role only
+        role: 'moderator',
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(debouncedSearchTerm && { search: debouncedSearchTerm }),
       });
@@ -284,8 +253,7 @@ const ModeratorsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Filter data to only include moderator roles on client side as backup
+      if (result.success) {
         const moderatorData = (result.data || []).filter((user: Moderator) =>
           user.role === 'moderator'
         );
@@ -298,156 +266,6 @@ const ModeratorsPage = () => {
         throw new Error(result.error || 'Failed to fetch moderators');
       }
 
-      /*
-      // Dummy data (commented out for now)
-      const dummyModerators: Moderator[] = [
-        {
-          id: "mod_001_abcd1234",
-          username: "sarah_mod",
-          email: "sarah.wilson@company.com",
-          name: "Sarah Wilson",
-          balance: 50.00,
-          spent: 125.75,
-          totalOrders: 8,
-          servicesDiscount: 5,
-          specialPricing: false,
-          status: "active",
-          currency: "USD",
-          createdAt: "2024-01-15T10:30:00Z",
-          updatedAt: "2025-06-20T14:22:00Z",
-          lastLoginAt: "2025-06-25T09:15:00Z",
-          emailVerified: true,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content", "manage_tickets"]
-        },
-        {
-          id: "mod_002_efgh5678",
-          username: "alex_moderator",
-          email: "alex.chen@company.com",
-          name: "Alex Chen",
-          balance: 0.00,
-          spent: 89.50,
-          totalOrders: 12,
-          servicesDiscount: 10,
-          specialPricing: true,
-          status: "active",
-          currency: "USD",
-          createdAt: "2024-03-22T16:45:00Z",
-          updatedAt: "2025-06-18T11:30:00Z",
-          lastLoginAt: "2025-06-26T08:45:00Z",
-          emailVerified: true,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content"]
-        },
-        {
-          id: "mod_003_ijkl9012",
-          username: "mike_support",
-          email: "mike.rodriguez@company.com",
-          name: "Mike Rodriguez",
-          balance: 25.50,
-          spent: 234.80,
-          totalOrders: 15,
-          servicesDiscount: 0,
-          specialPricing: false,
-          status: "inactive",
-          currency: "USD",
-          createdAt: "2023-11-08T12:20:00Z",
-          updatedAt: "2025-05-30T16:10:00Z",
-          lastLoginAt: "2025-05-28T14:20:00Z",
-          emailVerified: true,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content", "manage_tickets", "handle_disputes"]
-        },
-        {
-          id: "mod_004_mnop3456",
-          username: "emma_mod",
-          email: "emma.thompson@company.com",
-          name: "Emma Thompson",
-          balance: 100.00,
-          spent: 67.25,
-          totalOrders: 5,
-          servicesDiscount: 15,
-          specialPricing: false,
-          status: "active",
-          currency: "USD",
-          createdAt: "2024-05-10T09:15:00Z",
-          updatedAt: "2025-06-22T13:45:00Z",
-          lastLoginAt: undefined, // Never logged in
-          emailVerified: false,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content"]
-        },
-        {
-          id: "mod_005_qrst7890",
-          username: "david_moderator",
-          email: "david.kim@company.com",
-          name: "David Kim",
-          balance: 75.25,
-          spent: 156.90,
-          totalOrders: 22,
-          servicesDiscount: 8,
-          specialPricing: true,
-          status: "active",
-          currency: "USD",
-          createdAt: "2024-02-28T14:30:00Z",
-          updatedAt: "2025-06-24T10:20:00Z",
-          lastLoginAt: "2025-06-24T15:30:00Z",
-          emailVerified: true,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content", "manage_tickets"]
-        },
-        {
-          id: "mod_006_uvwx1234",
-          username: "lisa_support",
-          email: "lisa.garcia@company.com",
-          name: "Lisa Garcia",
-          balance: 15.00,
-          spent: 298.45,
-          totalOrders: 28,
-          servicesDiscount: 12,
-          specialPricing: false,
-          status: "inactive",
-          currency: "USD",
-          createdAt: "2023-09-14T11:45:00Z",
-          updatedAt: "2025-04-15T09:30:00Z",
-          lastLoginAt: "2025-04-12T16:45:00Z",
-          emailVerified: true,
-          role: "moderator",
-          permissions: ["view_users", "moderate_content", "handle_disputes"]
-        }
-      ];
-
-      // Filter by status if not 'all'
-      let filteredModerators = dummyModerators;
-      if (statusFilter !== 'all') {
-        filteredModerators = dummyModerators.filter(mod => mod.status === statusFilter);
-      }
-
-      // Filter by search term if provided
-      if (debouncedSearchTerm) {
-        const searchLower = debouncedSearchTerm.toLowerCase();
-        filteredModerators = filteredModerators.filter(mod =>
-          mod.username.toLowerCase().includes(searchLower) ||
-          mod.email.toLowerCase().includes(searchLower) ||
-          mod.id.toLowerCase().includes(searchLower) ||
-          (mod.name && mod.name.toLowerCase().includes(searchLower))
-        );
-      }
-
-      // Simulate pagination
-      const startIndex = (pagination.page - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedModerators = filteredModerators.slice(startIndex, endIndex);
-
-      setModerators(paginatedModerators);
-      setPagination(prev => ({
-        ...prev,
-        total: filteredModerators.length,
-        totalPages: Math.ceil(filteredModerators.length / pagination.limit),
-        hasNext: endIndex < filteredModerators.length,
-        hasPrev: pagination.page > 1,
-      }));
-      */
     } catch (error) {
       console.error('Error fetching moderators:', error);
       showToast(error instanceof Error ? error.message : 'Error fetching moderators', 'error');
@@ -459,9 +277,7 @@ const ModeratorsPage = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      setStatsLoading(true);
-
-      // Real API call for moderator stats
+      setStatsLoading(true);
       const response = await fetch('/api/admin/users/stats?period=all&role=moderator');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
@@ -490,50 +306,27 @@ const ModeratorsPage = () => {
         throw new Error(result.error || 'Failed to fetch stats');
       }
 
-      /*
-      // Dummy stats (commented out for now)
-      const dummyStats = {
-        totalModerators: 6,
-        activeModerators: 4, // sarah_mod, alex_moderator, emma_mod, david_moderator
-        inactiveModerators: 2, // mike_support, lisa_support
-        totalBalance: 265.75, // Sum of all balances
-        totalSpent: 972.65, // Sum of all spent amounts
-        todayRegistrations: 2,
-        statusBreakdown: {
-          active: 4,
-          inactive: 2
-        }
-      };
-
-      setStats(dummyStats);
-      */
     } catch (error) {
       console.error('Error fetching stats:', error);
       showToast('Error loading statistics', 'error');
     } finally {
       setStatsLoading(false);
     }
-  }, []);
-
-  // Effects
+  }, []);
   useEffect(() => {
     fetchModerators();
   }, [fetchModerators]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
-
-  // Show toast notification
+  }, [fetchStats]);
   const showToast = useCallback((
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  }, []);
-
-  // Utility functions
+  }, []);
   const getStatusIcon = (status: string) => {
     const icons = {
       active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
@@ -545,13 +338,11 @@ const ModeratorsPage = () => {
   const getRoleIcon = (role: string) => {
     const icons = {
       super_admin: <FaCrown className="h-3 w-3 text-yellow-500" />,
-      admin: null, // No icon for admin
+      admin: null,
       moderator: <FaUserShield className="h-3 w-3 text-purple-500" />,
     };
     return icons[role as keyof typeof icons] || null;
-  };
-
-  // Updated formatCurrency function to only show USD with comma separators
+  };
   const formatCurrency = useCallback((amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }, []);
@@ -575,9 +366,7 @@ const ModeratorsPage = () => {
   const handleRefresh = useCallback(async () => {
     await Promise.all([fetchModerators(), fetchStats()]);
     showToast('Data refreshed successfully!', 'success');
-  }, [fetchModerators, fetchStats, showToast]);
-
-  // Generic API action handler
+  }, [fetchModerators, fetchStats, showToast]);
   const handleApiAction = useCallback(async (
     url: string,
     method: string,
@@ -585,9 +374,7 @@ const ModeratorsPage = () => {
     successMessage?: string
   ) => {
     try {
-      setActionLoading(url);
-
-      // Real API call
+      setActionLoading(url);
       const response = await fetch(url, {
         method,
         headers: body ? { 'Content-Type': 'application/json' } : undefined,
@@ -607,15 +394,6 @@ const ModeratorsPage = () => {
         throw new Error(result.error || 'Operation failed');
       }
 
-      /*
-      // Simulate successful operations (commented out for now)
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-
-      if (successMessage) showToast(successMessage, 'success');
-      await fetchModerators();
-      await fetchStats();
-      return true;
-      */
     } catch (error) {
       console.error('API action error:', error);
       showToast(error instanceof Error ? error.message : 'Operation failed', 'error');
@@ -623,9 +401,7 @@ const ModeratorsPage = () => {
     } finally {
       setActionLoading(null);
     }
-  }, [fetchModerators, fetchStats, showToast]);
-
-  // Handle moderator deletion
+  }, [fetchModerators, fetchStats, showToast]);
   const handleDeleteModerator = useCallback(async (moderatorId: number) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}`,
@@ -638,9 +414,7 @@ const ModeratorsPage = () => {
       setDeleteDialogOpen(false);
       setModeratorToDelete(null);
     }
-  }, [handleApiAction]);
-
-  // Handle moderator status update
+  }, [handleApiAction]);
   const handleStatusUpdate = useCallback(async (moderatorId: number, newStatus: string) => {
     return handleApiAction(
       `/api/admin/users/${moderatorId}/status`,
@@ -648,9 +422,7 @@ const ModeratorsPage = () => {
       { status: newStatus },
       `Moderator status updated to ${newStatus}`
     );
-  }, [handleApiAction]);
-
-  // Handle change role
+  }, [handleApiAction]);
   const handleChangeRole = useCallback(async (moderatorId: number, role: string) => {
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}/role`,
@@ -664,26 +436,22 @@ const ModeratorsPage = () => {
       setNewRole('');
     }
     return success;
-  }, [handleApiAction]);
-
-  // Handle edit moderator save
+  }, [handleApiAction]);
   const handleEditSave = useCallback(async (moderatorData: Partial<Moderator>) => {
     if (!editDialog.moderator) return;
-    
+
     const success = await handleApiAction(
       `/api/admin/users/${editDialog.moderator.id}`,
       'PATCH',
       moderatorData,
       'Moderator updated successfully'
     );
-    
+
     if (success) {
       setEditDialog({ open: false, moderator: null });
       setEditFormData({});
     }
-  }, [editDialog.moderator, handleApiAction]);
-
-  // Modal handlers
+  }, [editDialog.moderator, handleApiAction]);
   const openUpdateStatusDialog = useCallback((moderatorId: number, currentStatus: string) => {
     setUpdateStatusDialog({ open: true, moderatorId, currentStatus });
     setNewStatus(currentStatus);
@@ -692,16 +460,14 @@ const ModeratorsPage = () => {
   const openChangeRoleDialog = useCallback((moderatorId: number, currentRole: string) => {
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
-  }, []);
-
-  // Pagination handlers
+  }, []);
   const handlePageChange = useCallback((newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
   }, []);
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -713,12 +479,12 @@ const ModeratorsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -751,7 +517,7 @@ const ModeratorsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls Only */}
+            {}
             <div className="flex flex-row items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -778,10 +544,10 @@ const ModeratorsPage = () => {
           </div>
         </div>
 
-        {/* Moderators Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons - Inside table header */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -877,7 +643,7 @@ const ModeratorsPage = () => {
               </div>
             ) : (
               <>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -987,7 +753,7 @@ const ModeratorsPage = () => {
                   </table>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
@@ -998,7 +764,7 @@ const ModeratorsPage = () => {
           </div>
         </div>
 
-        {/* Modals */}
+        {}
         <DeleteConfirmationModal
           isOpen={deleteDialogOpen}
           onClose={() => {
@@ -1073,9 +839,7 @@ const ModeratorsPage = () => {
       </div>
     </div>
   );
-};
-
-// Extracted Components for better organization
+};
 const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, onChangeRole, onDelete, isLoading }) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -1173,9 +937,7 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
       </button>
     </div>
   </div>
-);
-
-// Modal Components
+);
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpen, onClose, onConfirm, isLoading }) => {
   if (!isOpen) return null;
 
@@ -1279,9 +1041,7 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
 };
 
 const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderator, onClose, onSave, isLoading }) => {
-  const [formData, setFormData] = useState<Partial<Moderator>>({});
-
-  // Initialize form data when modal opens
+  const [formData, setFormData] = useState<Partial<Moderator>>({});
   React.useEffect(() => {
     if (moderator) {
       setFormData({
@@ -1308,9 +1068,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     setFormData(prev => ({ ...prev, password: password }));
-  };
-
-  // Available permissions
+  };
   const availablePermissions = [
     { id: 'view_users', label: 'View Users' },
     { id: 'moderate_content', label: 'Moderate Content' },
@@ -1349,9 +1107,9 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">Edit Moderator</h3>
-        
+
         <div className="space-y-4">
-          {/* Username */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Username</label>
             <input
@@ -1365,7 +1123,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
 
-          {/* Email */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Email</label>
             <input
@@ -1379,7 +1137,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
 
-          {/* Full Name */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Full Name</label>
             <input
@@ -1392,7 +1150,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
 
-          {/* Password */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Password</label>
             <div className="relative">
@@ -1419,7 +1177,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             </p>
           </div>
 
-          {/* Status */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Status</label>
             <select
@@ -1433,7 +1191,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             </select>
           </div>
 
-          {/* Role */}
+          {}
           <div className="mb-4">
             <label className="form-label mb-2">Role</label>
             <select
@@ -1448,12 +1206,12 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             </select>
           </div>
 
-          {/* Permissions - Only show for Moderator role */}
+          {}
           {formData.role === 'moderator' && (
             <div className="mb-4">
               <label className="form-label mb-2">Permissions</label>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                {/* Select All Option */}
+                {}
                 <div className="mb-3 pb-3 border-b border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -1469,8 +1227,8 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                     <span className="text-sm font-medium text-gray-900">Select All Permissions</span>
                   </label>
                 </div>
-                
-                {/* Individual Permissions */}
+
+                {}
                 <div className="grid grid-cols-2 gap-3">
                   {availablePermissions.map((permission) => (
                     <label
@@ -1488,8 +1246,8 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                     </label>
                   ))}
                 </div>
-                
-                {/* Status Message */}
+
+                {}
                 {formData.permissions && formData.permissions.length === 0 ? (
                   <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
                     No permissions selected. Moderator will have limited access.

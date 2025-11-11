@@ -4,30 +4,22 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
-import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock currency context hook (replace with your actual import)
+);
 const useCurrency = () => ({
   currency: 'BDT' as 'USD' | 'BDT',
   rate: 110,
-});
-
-// Mock user settings hook
+});
 const useUserSettings = () => ({
   settings: { currency: 'BDT', transferFundsPercentage: 3 },
   loading: false,
-});
-
-// Toast Component
+});
 const Toast = ({
   message,
   type = 'success',
@@ -67,23 +59,17 @@ export default function TransferFund() {
   const [isUserValid, setIsUserValid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const rate = globalRate;
-
-  // Set document title using useEffect for client-side
+  const rate = globalRate;
   useEffect(() => {
     setPageTitle('Transfer Funds', appName);
-  }, [appName]);
-
-  // Simulate initial loading
+  }, [appName]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  // Debounced username validation
+  }, []);
   const validateUsername = useCallback(async (usernameValue: string) => {
     if (!usernameValue.trim()) {
       setUserValidationError('');
@@ -122,9 +108,7 @@ export default function TransferFund() {
     } finally {
       setIsValidatingUser(false);
     }
-  }, []);
-
-  // Debounce username validation
+  }, []);
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       validateUsername(username);
@@ -135,9 +119,7 @@ export default function TransferFund() {
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setUsername(value);
-
-    // Reset validation states when user types
+    setUsername(value);
     if (value !== username) {
       setIsUserValid(false);
       setUserValidationError('');
@@ -168,9 +150,7 @@ export default function TransferFund() {
 
     setAmountBDT(e.target.value);
     setAmountUSD(usdValue.toFixed(2));
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -211,12 +191,8 @@ export default function TransferFund() {
 
     startTransition(async () => {
       try {
-        showToast('Processing transfer...', 'pending');
-
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Calculate fee based on admin settings (use same calculation as display)
+        showToast('Processing transfer...', 'pending');
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         const calculatedFee = (transferAmount * feePercentage) / 100;
         const calculatedTotal = transferAmount + calculatedFee;
 
@@ -239,9 +215,7 @@ export default function TransferFund() {
   const currentAmount =
     activeCurrency === 'USD'
       ? parseFloat(amountUSD) || 0
-      : parseFloat(amountBDT) || 0;
-
-  // Get fee percentage from admin settings
+      : parseFloat(amountBDT) || 0;
   const feePercentage = userSettings?.transferFundsPercentage || 3;
   const fee = (currentAmount * feePercentage) / 100;
   const totalAmount = currentAmount + fee;
@@ -251,7 +225,7 @@ export default function TransferFund() {
       <div className={`page-container ${className}`}>
         <div className="page-content">
           <div className="max-w-2xl mx-auto">
-            {/* Transfer Form Card - Loading State */}
+            {}
             <div className="card card-padding">
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center flex flex-col items-center">
@@ -270,7 +244,7 @@ export default function TransferFund() {
 
   return (
     <div className={`page-container ${className}`}>
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toastMessage && (
           <Toast
@@ -283,7 +257,7 @@ export default function TransferFund() {
 
       <div className="page-content">
         <div className="max-w-2xl mx-auto">
-          {/* Transfer Form Card */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -296,7 +270,7 @@ export default function TransferFund() {
             </p>
 
             <form onSubmit={handleTransfer} className="space-y-6">
-              {/* Username Field */}
+              {}
               <div className="form-group">
                 <label className="form-label">Username</label>
                 <div className="relative">
@@ -315,47 +289,47 @@ export default function TransferFund() {
                     disabled={isPending}
                   />
 
-                  {/* Loading spinner */}
+                  {}
                   {isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaSpinner className="animate-spin text-gray-400 w-4 h-4" />
                     </div>
                   )}
 
-                  {/* Success check */}
+                  {}
                   {isUserValid && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaCheckCircle className="text-green-500 w-4 h-4" />
                     </div>
                   )}
 
-                  {/* Error indicator */}
+                  {}
                   {userValidationError && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaTimesCircle className="w-4 h-4 text-red-500" />
                     </div>
                   )}
                 </div>
-                
-                {/* Username validation messages */}
+
+                {}
                 {username.length > 0 && username.length < 3 && (
                   <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
                     Username must be at least 3 characters
                   </p>
                 )}
-                
+
                 {userValidationError && (
                   <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
                     {userValidationError}
                   </p>
                 )}
-                
+
                 {isUserValid && !isValidatingUser && (
                   <p className="text-green-500 dark:text-green-400 text-sm mt-1 transition-colors duration-200">
                     Username is valid.
                   </p>
                 )}
-                
+
                 {isValidatingUser && (
                   <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 transition-colors duration-200">
                     Validating username...
@@ -363,7 +337,7 @@ export default function TransferFund() {
                 )}
               </div>
 
-              {/* Amount Section */}
+              {}
               <div
                 className="card"
                 style={{
@@ -420,7 +394,7 @@ export default function TransferFund() {
                     </div>
                   )}
 
-                  {/* Currency Toggle */}
+                  {}
                   <div className="flex justify-center">
                     <button
                       type="button"
@@ -439,7 +413,7 @@ export default function TransferFund() {
                   </div>
                 </div>
 
-                {/* Converted Amount Display */}
+                {}
                 <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
                   <div className="text-sm text-gray-600 mb-2 font-medium">
                     Converted Amount
@@ -474,7 +448,7 @@ export default function TransferFund() {
                 </div>
               </div>
 
-              {/* Fee Breakdown */}
+              {}
               {currentAmount > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
                   <div className="space-y-3">
@@ -520,7 +494,7 @@ export default function TransferFund() {
                 </div>
               )}
 
-              {/* Submit Button */}
+              {}
               <button
                 type="submit"
                 disabled={

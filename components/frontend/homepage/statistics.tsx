@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { FaShoppingCart, FaServer, FaUsers, FaShareAlt } from 'react-icons/fa';
-// Define local types and static structure instead of importing
+
 interface CounterItem {
   iconName: string;
   title: string;
@@ -14,7 +14,6 @@ const counterData: CounterItem[] = [
   { iconName: 'FaShareAlt', title: 'Affiliate Users', count: '100+' },
 ];
 
-// Icon mapping
 const iconMap = {
   FaShoppingCart: FaShoppingCart,
   FaServer: FaServer,

@@ -39,7 +39,7 @@ export async function verifyReCAPTCHA(
     if (!data.success) {
       const errorCodes = data['error-codes'] || [];
       let errorMessage = 'reCAPTCHA verification failed';
-      
+
       if (errorCodes.includes('timeout-or-duplicate')) {
         errorMessage = 'reCAPTCHA token has expired or been used already';
       } else if (errorCodes.includes('invalid-input-response')) {
@@ -47,16 +47,15 @@ export async function verifyReCAPTCHA(
       } else if (errorCodes.includes('invalid-input-secret')) {
         errorMessage = 'Invalid reCAPTCHA secret key configuration';
       }
-      
+
       return {
         success: false,
         error: errorMessage,
       };
     }
 
-    // For reCAPTCHA v3, check the score and action
     if (data.score !== undefined) {
-      // This is v3
+
       if (expectedAction && data.action !== expectedAction) {
         return {
           success: false,
@@ -78,7 +77,6 @@ export async function verifyReCAPTCHA(
       };
     }
 
-    // For reCAPTCHA v2, just return success
     return {
       success: true,
     };
@@ -95,12 +93,11 @@ export async function getReCAPTCHASettings() {
   try {
     const { db } = await import('./db');
     const integrationSettings = await db.integrationSettings.findFirst();
-    
+
     if (!integrationSettings?.recaptchaEnabled) {
       return null;
     }
 
-    // Get the correct secret key based on version
     const secretKey = integrationSettings.recaptchaVersion === 'v2' 
       ? integrationSettings.recaptchaV2SecretKey 
       : integrationSettings.recaptchaV3SecretKey;
@@ -108,7 +105,7 @@ export async function getReCAPTCHASettings() {
     return {
       enabled: integrationSettings.recaptchaEnabled,
       version: integrationSettings.recaptchaVersion || 'v3',
-      secretKey: secretKey || integrationSettings.recaptchaSecretKey, // Fallback to legacy field
+      secretKey: secretKey || integrationSettings.recaptchaSecretKey,
       threshold: integrationSettings.recaptchaThreshold || 0.5,
       enabledForms: {
         signUp: integrationSettings.recaptchaSignUp || false,

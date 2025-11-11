@@ -6,37 +6,28 @@ interface MailOptions {
   sendTo: string;
   subject: string;
   html: string;
-}
-
-// Send mail function with type safety and better error handling
+}
 export const sendMail = async ({
   sendTo,
   subject,
   html,
 }: MailOptions): Promise<boolean> => {
-  try {
-    // Create transporter using database settings
+  try {
     const transporter = await createEmailTransporter();
-    
+
     if (!transporter) {
       console.error("❌ Email transporter not available. Please configure email settings in admin panel.");
       return false;
-    }
-
-    // Get from email address from database
+    }
     const fromEmail = await getFromEmailAddress();
-    
+
     if (!fromEmail) {
       console.error("❌ From email address not configured. Please configure email settings in admin panel.");
       return false;
-    }
-    
-    // Get app name from general settings
-    const appName = await getAppName();
-    
-    // Generate unique Message-ID for better deliverability
+    }
+    const appName = await getAppName();
     const messageId = `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@${fromEmail.split('@')[1]}>`;
-    
+
     await transporter.sendMail({
       from: `"${appName}" <${fromEmail}>`,
       to: sendTo,
@@ -53,33 +44,28 @@ export const sendMail = async ({
         'Return-Path': fromEmail,
       },
     });
-    
+
     console.log(`✅ Email sent successfully to: ${sendTo}`);
     return true;
-  } catch (error) {
-    // Type assertion for error handling
+  } catch (error) {
     const emailError = error as any;
-    
+
     console.error("❌ Error in sending mail:", {
       code: emailError.code || 'UNKNOWN',
       message: emailError.message || 'Unknown error occurred',
       to: sendTo,
       subject: subject
-    });
-    
-    // Log specific authentication errors
+    });
     if (emailError.code === 'EAUTH') {
       console.error("🔐 Authentication failed. Please check:");
       console.error("- SMTP username is correct in admin email settings");
       console.error("- SMTP password is valid in admin email settings");
       console.error("- SMTP settings are correct for your email provider");
     }
-    
+
     return false;
   }
-};
-
-// Send verification email function
+};
 export const sendVerificationEmail = async (
   email: string,
   token: string,
@@ -109,9 +95,7 @@ export const sendVerificationEmail = async (
     subject: `Verify Your Email - ${appName}`,
     html: html,
   });
-};
-
-// Send password reset email function
+};
 export const sendPasswordResetEmail = async (
   email: string,
   token: string,

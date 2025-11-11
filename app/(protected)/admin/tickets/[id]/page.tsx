@@ -24,24 +24,18 @@ import {
     FaUser,
     FaUserShield,
     FaVideo
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import useTicketPolling from '@/hooks/useTicketPolling';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
-
-// Custom Gradient Spinner Component
+import TicketSystemGuard from '@/components/TicketSystemGuard';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -58,12 +52,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Mock ButtonLoader component
-const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
-
-// Interfaces
+);
+const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
 interface TicketMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
@@ -114,7 +104,7 @@ interface SupportTicketDetails {
   messages: TicketMessage[];
   notes: TicketNote[];
   assignedTo?: string;
-  timeSpent: number; // in minutes
+  timeSpent: number;
   ticketType?: 'Human' | 'AI';
   aiSubcategory?: 'Refill' | 'Cancel' | 'Speed Up' | 'Restart' | 'Fake Complete';
   systemMessage?: string;
@@ -136,9 +126,7 @@ interface SupportTicketDetails {
 const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const [ticketId, setTicketId] = useState<string | null>(null);
-
-  // Safely resolve params
+  const [ticketId, setTicketId] = useState<string | null>(null);
   useEffect(() => {
     const resolveParams = async () => {
       try {
@@ -149,18 +137,12 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       }
     };
     resolveParams();
-  }, [params]);
-
-  // Set document title using useEffect for client-side
+  }, [params]);
   useEffect(() => {
     if (ticketId) {
       setPageTitle(`Ticket #${ticketId}`, appName);
     }
-  }, [appName, ticketId]);
-
-
-
-  // State management
+  }, [appName, ticketId]);
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -174,20 +156,16 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Real-time polling for message updates
+  } | null>(null);
   const { hasNewMessages, markMessagesAsRead, isPolling } = useTicketPolling(
     ticketId,
     ticketDetails,
     setTicketDetails,
-    3000 // Poll every 3 seconds
-  );
-
-  // Fetch ticket details
+    3000
+  );
   useEffect(() => {
     if (!ticketId) return;
-    
+
     const fetchTicketDetails = async () => {
       try {
         setLoading(true);
@@ -196,24 +174,20 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
           throw new Error('Failed to fetch ticket details');
         }
         const result = await response.json();
-        const data = result.ticket;
-        
-        // Use the userInfo data from the API response
+        const data = result.ticket;
         const enhancedData = {
           ...data,
           userInfo: {
             ...data.userInfo,
             fullName: data.userInfo?.name || 'N/A',
-            phone: 'N/A', // Not available in current schema
-            company: 'N/A', // Not available in current schema
-            address: 'N/A', // Not available in current schema
-            registeredAt: 'N/A', // Would need user creation date
+            phone: 'N/A',
+            company: 'N/A',
+            address: 'N/A',
+            registeredAt: 'N/A',
           }
         };
-        
-        setTicketDetails(enhancedData);
-        
-        // Automatically mark ticket as read when admin opens it
+
+        setTicketDetails(enhancedData);
         if (!data.isRead) {
           try {
             await fetch(`/api/admin/tickets/${ticketId}/read`, {
@@ -237,27 +211,22 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     };
 
     fetchTicketDetails();
-  }, [ticketId]);
-
-  // Utility functions
+  }, [ticketId]);
   const formatTicketID = (id: string | number) => {
     return String(id || '0');
   };
 
   const calculateTimeSpent = (createdAt: string, status: string, lastUpdated?: string) => {
     const created = new Date(createdAt);
-    let endTime: Date;
-    
-    // If ticket is closed, use lastUpdated as end time, otherwise use current time
+    let endTime: Date;
     if (status === 'Closed' && lastUpdated) {
       endTime = new Date(lastUpdated);
-    } else if (status === 'Closed') {
-      // If no lastUpdated, assume it was closed at creation time
+    } else if (status === 'Closed') {
       endTime = created;
     } else {
       endTime = new Date();
     }
-    
+
     const diffMs = endTime.getTime() - created.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -302,18 +271,14 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
     if (mimetype.includes('zip') || mimetype.includes('rar')) return <FaFileArchive className="h-4 w-4" />;
     return <FaFileAlt className="h-4 w-4" />;
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Handle status change
+  };
   const handleStatusChange = async (newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
@@ -330,15 +295,13 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
       const responseData = await response.json();
       setTicketDetails(responseData);
-      
+
       showToast(`Ticket status updated to ${newStatus}`, 'success');
     } catch (error) {
       console.error('Error updating ticket status:', error);
       showToast('Error updating ticket status', 'error');
     }
-  };
-
-  // Handle ticket closing
+  };
   const handleCloseTicket = async () => {
     const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
     if (!confirmed) return;
@@ -359,7 +322,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
       const updatedTicket = await response.json();
       setTicketDetails(updatedTicket);
-      
+
       showToast('Ticket has been closed successfully', 'success');
     } catch (error) {
       console.error('Error closing ticket:', error);
@@ -367,39 +330,33 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsClosingTicket(false);
     }
-  };
-
-  // Handle reply submission
+  };
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
-    
+
     setIsReplying(true);
-    
+
     try {
-      let attachmentPaths: string[] = [];
-      
-      // Upload files first if any
+      let attachmentPaths: string[] = [];
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           const fileFormData = new FormData();
           fileFormData.append('file', file);
           fileFormData.append('uploadType', 'admin_uploads');
-          
+
           const uploadResponse = await fetch('/api/upload', {
             method: 'POST',
             body: fileFormData,
           });
-          
+
           if (!uploadResponse.ok) {
             throw new Error(`Failed to upload file: ${file.name}`);
           }
-          
+
           const uploadResult = await uploadResponse.json();
           attachmentPaths.push(uploadResult.filePath);
         }
-      }
-      
-      // Send reply with attachment paths
+      }
       const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
         method: 'POST',
         headers: {
@@ -417,7 +374,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
       const responseData = await response.json();
       setTicketDetails(responseData);
-      
+
       setReplyContent('');
       setSelectedFiles([]);
       showToast('Reply sent successfully', 'success');
@@ -427,14 +384,12 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsReplying(false);
     }
-  };
-
-  // Handle add note
+  };
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-    
+
     setIsAddingNote(true);
-    
+
     try {
       const response = await fetch(`/api/support-tickets/${ticketId}/notes`, {
         method: 'POST',
@@ -450,7 +405,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
       const updatedTicket = await response.json();
       setTicketDetails(updatedTicket);
-      
+
       setNewNote('');
       showToast('Note added successfully', 'success');
     } catch (error) {
@@ -459,15 +414,12 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsAddingNote(false);
     }
-  };
-
-  // Handle file selection
+  };
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const validFiles: File[] = [];
-    
-    for (const file of files) {
-      // Validate file type (only images and PDFs)
+
+    for (const file of files) {
       const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
         'application/pdf'
@@ -475,33 +427,25 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       if (!allowedTypes.includes(file.type)) {
         showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
         continue;
-      }
-      
-      // Validate file size (10MB max for admin)
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      }
+      const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast(`File "${file.name}" is too large. Maximum 10MB allowed for admin uploads.`, 'error');
         continue;
       }
-      
+
       validFiles.push(file);
     }
-    
+
     if (validFiles.length > 0) {
       setSelectedFiles(prev => [...prev, ...validFiles]);
       showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
-    }
-    
-    // Reset the input value to allow uploading the same file again
+    }
     event.target.value = '';
-  };
-
-  // Remove selected file
+  };
   const removeSelectedFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // Show loading state
+  };
   if (loading || !ticketId) {
     return (
       <div className="page-container">
@@ -523,9 +467,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         </div>
       </div>
     );
-  }
-
-  // Show error state if no ticket data
+  }
   if (!ticketDetails) {
     return (
       <div className="page-container">
@@ -548,7 +490,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -560,10 +502,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       </div>
 
       <div className="page-content">
-        {/* Header */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            {/* 1st line: Back to Tickets button, Status dropdown */}
+            {}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button 
@@ -574,7 +516,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 Back to Tickets
               </button>
 
-              {/* Status Controls - Only show if ticket is not closed */}
+              {}
               {ticketDetails.status !== 'closed' && (
                 <select 
                   value={ticketDetails.status}
@@ -597,7 +539,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </button>
               )}
             </div>
-            
+
             <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Ticket #{formatTicketID(ticketDetails.id)}
@@ -608,9 +550,9 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Ticket Info Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -664,7 +606,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               </div>
             </div>
 
-            {/* AI Ticket System Message */}
+            {}
             {ticketDetails.ticketType === 'AI' && ticketDetails.systemMessage && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -673,7 +615,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   </div>
                   <h3 className="card-title">System Processing Result</h3>
                 </div>
-                
+
                 <div className={`p-4 rounded-lg border-l-4 ${
                   ticketDetails.ticketStatus === 'Processed' 
                     ? 'bg-green-50 border-green-400 text-green-800' 
@@ -703,7 +645,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               </div>
             )}
 
-            {/* Messages Thread */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -713,7 +655,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   <h3 className="card-title">Conversation ({ticketDetails.messages?.length || 0})</h3>
                 </div>
               </div>
-              
+
               <div className="space-y-6" onClick={() => hasNewMessages && markMessagesAsRead()}>
                 {ticketDetails.messages && ticketDetails.messages.length > 0 ? (
                   ticketDetails.messages.map((message) => (
@@ -741,7 +683,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                         </div>
                       )}
                     </div>
-                    
+
                     <div className={`flex-1 min-w-0 p-4 rounded-lg ${
                       (message.authorRole === 'admin' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
@@ -767,17 +709,16 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>(edited)</span>
                         )}
                       </div>
-                      
+
                       <div className="prose prose-sm max-w-none">
                         <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
-                      
-                      {/* Attachments */}
+
+                      {}
                       {message.attachments && Array.isArray(message.attachments) && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment, index) => {
-                            // Handle both string paths and object attachments
+                          {message.attachments.map((attachment, index) => {
                             const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
                             const filename = typeof attachment === 'string' 
                               ? attachment.split('/').pop() || 'Unknown file'
@@ -785,7 +726,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                             const mimetype = typeof attachment === 'string'
                               ? ''
                               : attachment.mimetype;
-                            
+
                             return (
                               <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
@@ -822,7 +763,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               </div>
             </div>
 
-            {/* Reply Section - Only show if ticket is not closed */}
+            {}
             {ticketDetails.status !== 'closed' && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -831,7 +772,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   </div>
                   <h3 className="card-title">Reply to Ticket</h3>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="form-group">
                     <textarea
@@ -845,8 +786,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       This reply will be visible to the customer and will update the ticket status.
                     </small>
                   </div>
-                  
-                  {/* File Upload */}
+
+                  {}
                   <div className="form-group">
                     <label className="form-label mb-2">
                       Attachments
@@ -860,8 +801,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                     <small className="text-xs text-gray-500 mt-1">
                       You can upload screenshots or other relevant files (max 10MB each).
                     </small>
-                    
-                    {/* Selected Files */}
+
+                    {}
                     {selectedFiles.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {selectedFiles.map((file, index) => (
@@ -880,7 +821,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleReplySubmit}
@@ -895,9 +836,9 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
             )}
           </div>
 
-          {/* Sidebar */}
+          {}
           <div className="space-y-6">
-            {/* User Information */}
+            {}
             <div className="card card-padding">
               <div 
                 className="card-header cursor-pointer flex items-center justify-between"
@@ -911,7 +852,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </div>
                 {showUserInfo ? <FaChevronUp /> : <FaChevronDown />}
               </div>
-              
+
               {showUserInfo && (
                 <div className="space-y-4">
                   <div>
@@ -940,7 +881,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               )}
             </div>
 
-            {/* Internal Notes */}
+            {}
             <div className="card card-padding">
               <div 
                 className="card-header cursor-pointer flex items-center justify-between"
@@ -954,10 +895,10 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </div>
                 {showNotes ? <FaChevronUp /> : <FaChevronDown />}
               </div>
-              
+
               {showNotes && (
                 <div>
-                  {/* Add Note Form */}
+                  {}
                   <div className="mb-4">
                     <textarea
                       value={newNote}
@@ -984,8 +925,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       )}
                     </button>
                   </div>
-                  
-                  {/* Notes List */}
+
+                  {}
                   <div className="space-y-3">
                     {ticketDetails.notes?.map((note) => (
                       <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1000,7 +941,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               )}
             </div>
 
-            {/* Close Ticket Button */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1008,7 +949,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 </div>
                 <h3 className="card-title">Close Ticket</h3>
               </div>
-              
+
               <div className="space-y-4">
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Closing this ticket will mark it as resolved and prevent further customer replies.

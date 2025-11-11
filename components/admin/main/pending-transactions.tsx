@@ -8,18 +8,14 @@ import {
   FaClock,
   FaEye,
   FaTimesCircle,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Interface for PendingTransaction
+);
 interface PendingTransaction {
   id: number;
   invoice_id: number;
@@ -39,9 +35,7 @@ interface PendingTransaction {
     name?: string;
     email?: string;
   };
-}
-
-// Props interface for the component
+}
 interface PendingTransactionsProps {
   pendingTransactions: PendingTransaction[];
   transactionsLoading: boolean;
@@ -55,7 +49,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
   onTransactionUpdate,
   showToast,
 }: PendingTransactionsProps) {
-  
+
   const handleApprove = React.useCallback(async (transactionId: string | number) => {
     try {
       const response = await axiosInstance.patch(
@@ -142,7 +136,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
             </div>
           ) : (
             <>
-              {/* Desktop Table View */}
+              {}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-white border-b z-10">
@@ -313,7 +307,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                 </table>
               </div>
 
-              {/* Mobile Card View */}
+              {}
               <div className="lg:hidden">
                 <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                   {pendingTransactions.map((transaction) => (
@@ -321,7 +315,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                       key={transaction.id}
                       className="card card-padding border-l-4 border-yellow-500 mb-4"
                     >
-                      {/* Header */}
+                      {}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -344,7 +338,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                         </div>
                       </div>
 
-                      {/* Transaction ID */}
+                      {}
                       <div className="mb-4 pb-4 border-b">
                         <div
                           className="text-xs font-medium mb-1"
@@ -360,7 +354,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                         </div>
                       </div>
 
-                      {/* Financial Info */}
+                      {}
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <div
@@ -395,7 +389,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                         </div>
                       </div>
 
-                      {/* Method */}
+                      {}
                       <div className="mb-4">
                         <div
                           className="text-xs font-medium mb-1"
@@ -413,7 +407,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                         </div>
                       </div>
 
-                      {/* Date */}
+                      {}
                       <div className="mb-4">
                         <div
                           className="text-xs"
@@ -435,7 +429,7 @@ const PendingTransactions = React.memo(function PendingTransactions({
                         </div>
                       </div>
 
-                      {/* Actions */}
+                      {}
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleApprove(transaction.id)}

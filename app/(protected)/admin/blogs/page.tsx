@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation'; // Add router import
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import parse from 'html-react-parser';
 import {
@@ -18,23 +18,17 @@ import {
     FaSync,
     FaTimes,
     FaTrash
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatID, formatNumber } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatID, formatNumber } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -51,9 +45,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interfaces for type safety
+);
 interface BlogPost {
   id: number;
   title: string;
@@ -75,7 +67,7 @@ interface BlogPost {
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
-  readTime: number; // in minutes
+  readTime: number;
   seoTitle?: string;
   seoDescription?: string;
 }
@@ -100,24 +92,15 @@ interface PaginationInfo {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-// Dummy data for blog posts
-
-
-
+}
 
 const BlogsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const router = useRouter(); // Add router hook
-
-  // Set document title using useEffect for client-side
+  const router = useRouter();
   useEffect(() => {
     setPageTitle('Blogs', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [stats, setStats] = useState<BlogStats>({
     totalBlogs: 0,
@@ -147,14 +130,10 @@ const BlogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [blogsLoading, setBlogsLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // New state for action modals
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     blogId: number;
@@ -176,13 +155,8 @@ const BlogsPage = () => {
   });
   const [newStatus, setNewStatus] = useState('');
 
-
-
-
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-
-  // Calculate status counts from current blogs data
+  const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
   const calculateStatusCounts = (blogsData: BlogPost[] | undefined | null) => {
     const counts = {
       published: 0,
@@ -200,14 +174,12 @@ const BlogsPage = () => {
     });
 
     return counts;
-  };
-
-  // Fetch all blogs to calculate real status counts
+  };
   const fetchAllBlogsForCounts = async () => {
     try {
       console.log('Fetching all blogs for status counts from API...');
-      
-      const response = await fetch('/api/blogs?limit=1000'); // Get all blogs for counting
+
+      const response = await fetch('/api/blogs?limit=1000');
       const result = await response.json();
 
       if (!response.ok) {
@@ -226,9 +198,7 @@ const BlogsPage = () => {
         totalBlogs: allBlogs.length,
       }));
     } catch (error) {
-      console.error('Error fetching blogs for counts:', error);
-      
-      // Set empty state on error
+      console.error('Error fetching blogs for counts:', error);
       setStats((prev) => ({
         ...prev,
         publishedBlogs: 0,
@@ -240,9 +210,7 @@ const BlogsPage = () => {
 
   const fetchBlogs = async () => {
     try {
-      setBlogsLoading(true);
-
-      // Build query parameters
+      setBlogsLoading(true);
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -275,9 +243,7 @@ const BlogsPage = () => {
       }));
     } catch (error) {
       console.error('Error fetching blogs:', error);
-      showToast('Error fetching blogs. Please try again.', 'error');
-      
-      // Set empty state on error
+      showToast('Error fetching blogs. Please try again.', 'error');
       setBlogs([]);
       setPagination(prev => ({
         ...prev,
@@ -306,9 +272,7 @@ const BlogsPage = () => {
 
       setStats(result.data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      
-      // Set empty stats on error
+      console.error('Error fetching stats:', error);
       setStats({
         totalBlogs: 0,
         publishedBlogs: 0,
@@ -323,18 +287,14 @@ const BlogsPage = () => {
       });
       showToast('Error fetching statistics. Please try again.', 'error');
     }
-  };
-
-  // Handle search with debouncing
+  };
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchBlogs();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Load data on component mount and when filters change
+  }, [searchTerm]);
   useEffect(() => {
     fetchBlogs();
   }, [pagination.page, pagination.limit, statusFilter]);
@@ -348,9 +308,7 @@ const BlogsPage = () => {
     };
 
     loadData();
-  }, []);
-
-  // Close dropdown when clicking outside
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownOpen !== null) {
@@ -365,9 +323,7 @@ const BlogsPage = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownOpen]);
-
-  // Update stats when pagination data changes
+  }, [dropdownOpen]);
   useEffect(() => {
     if (pagination.total > 0) {
       setStats((prev) => ({
@@ -375,23 +331,17 @@ const BlogsPage = () => {
         totalBlogs: pagination.total,
       }));
     }
-  }, [pagination.total]);
-
-  // Show toast notification
+  }, [pagination.total]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Navigation handler for new blog post
+  };
   const handleNewBlogPost = () => {
     router.push('blogs/new-post');
-  };
-
-  // Utility functions
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'published':
@@ -471,9 +421,7 @@ const BlogsPage = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
-
-  // Handle blog deletion
+  };
   const handleDeleteBlog = async (blogId: number) => {
     setDeleteLoading(true);
     try {
@@ -503,9 +451,7 @@ const BlogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  // Handle status change
+  };
   const handleStatusChange = async (
     blogId: number,
     status: string
@@ -543,14 +489,10 @@ const BlogsPage = () => {
         'error'
       );
     }
-  };
-
-  // Open delete dialog
+  };
   const openDeleteDialog = (blogId: number, blogTitle: string) => {
     setDeleteDialog({ open: true, blogId, blogTitle });
-  };
-
-  // Open status dialog
+  };
   const openStatusDialog = (blogId: number, currentStatus: string) => {
     setStatusDialog({ open: true, blogId, currentStatus });
     setNewStatus(currentStatus);
@@ -559,7 +501,7 @@ const BlogsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -571,10 +513,10 @@ const BlogsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex flex-wrap w-full md:w-auto items-center gap-2">
               <select
                 value={pagination.limit}
@@ -618,7 +560,7 @@ const BlogsPage = () => {
               </button>
             </div>
 
-            {/* Right: Search Controls */}
+            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative">
                 <FaSearch
@@ -645,10 +587,10 @@ const BlogsPage = () => {
           </div>
         </div>
 
-        {/* Blogs Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {/* Filter Buttons */}
+            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -713,7 +655,7 @@ const BlogsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {/* Bulk Action Section */}
+            {}
             {selectedBlogs.length > 0 && (
               <div className="flex flex-wrap md:flex-nowrap items-start gap-2">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -759,8 +701,8 @@ const BlogsPage = () => {
 
                           if (response.ok && data.success) {
                             showToast(data.message, 'success');
-                            await fetchBlogs(); // Refresh the blogs list
-                            await fetchStats(); // Refresh stats
+                            await fetchBlogs();
+                            await fetchStats();
                           } else {
                             showToast(data.error || 'Failed to publish blogs', 'error');
                           }
@@ -785,8 +727,8 @@ const BlogsPage = () => {
 
                           if (response.ok && data.success) {
                             showToast(data.message, 'success');
-                            await fetchBlogs(); // Refresh the blogs list
-                            await fetchStats(); // Refresh stats
+                            await fetchBlogs();
+                            await fetchStats();
                           } else {
                             showToast(data.error || 'Failed to move blogs to draft', 'error');
                           }
@@ -794,12 +736,11 @@ const BlogsPage = () => {
                           console.error('Error moving blogs to draft:', error);
                           showToast('Failed to move blogs to draft', 'error');
                         }
-                      } else if (selectedBulkAction === 'delete') {
-                        // Show confirmation dialog for delete
+                      } else if (selectedBulkAction === 'delete') {
                         const confirmed = window.confirm(
                           `Are you sure you want to delete ${selectedBlogs.length} selected blog(s)? This action cannot be undone.`
                         );
-                        
+
                         if (confirmed) {
                           try {
                             const response = await fetch('/api/blogs/bulk', {
@@ -817,8 +758,8 @@ const BlogsPage = () => {
 
                             if (response.ok && data.success) {
                               showToast(data.message, 'success');
-                              await fetchBlogs(); // Refresh the blogs list
-                              await fetchStats(); // Refresh stats
+                              await fetchBlogs();
+                              await fetchStats();
                             } else {
                               showToast(data.error || 'Failed to delete blogs', 'error');
                             }
@@ -827,8 +768,7 @@ const BlogsPage = () => {
                             showToast('Failed to delete blogs', 'error');
                           }
                         }
-                      }
-                      // Reset after action
+                      }
                       setSelectedBulkAction('');
                       setSelectedBlogs([]);
                     }}
@@ -867,7 +807,7 @@ const BlogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -904,7 +844,6 @@ const BlogsPage = () => {
                         >
                           Author
                         </th>
-
 
                         <th
                           className="text-left p-3 font-semibold"
@@ -977,7 +916,6 @@ const BlogsPage = () => {
                               </div>
                             </div>
                           </td>
-
 
                           <td className="p-3">
                             <div>
@@ -1092,9 +1030,7 @@ const BlogsPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1155,7 +1091,7 @@ const BlogsPage = () => {
                   </div>
                 </div>
 
-                {/* Delete Dialog */}
+                {}
                 {deleteDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1203,7 +1139,7 @@ const BlogsPage = () => {
                   </div>
                 )}
 
-                {/* Status Dialog */}
+                {}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1253,7 +1189,6 @@ const BlogsPage = () => {
                     </div>
                   </div>
                 )}
-
 
               </React.Fragment>
             )}

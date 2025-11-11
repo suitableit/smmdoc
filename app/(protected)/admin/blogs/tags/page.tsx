@@ -11,23 +11,17 @@ import {
     FaSync,
     FaTimes,
     FaTrash,
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
-
-// Custom Gradient Spinner Component
+import { formatNumber } from '@/lib/utils';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -44,9 +38,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interface for PostTag with Post Count
+);
 interface PostTag {
   id: number;
   name: string;
@@ -64,28 +56,21 @@ interface PaginationInfo {
 }
 
 const PostTagsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Post Tags', appName);
-  }, [appName]);
-
-  // API data state
+  }, [appName]);
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch tags from API
+  const [error, setError] = useState(null);
   const fetchTags = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await fetch('/api/blogs/tags?includePostCount=true');
       const data = await response.json();
-      
-      if (data.success) {
-        // Transform API data to match PostTag interface
+
+      if (data.success) {
         const transformedTags = data.data.map(tag => ({
           id: tag.id,
           name: tag.name,
@@ -102,14 +87,10 @@ const PostTagsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Load tags on component mount
+  };
   useEffect(() => {
     fetchTags();
-  }, []);
-
-  // Dummy data for post tags with post counts (fallback data)
+  }, []);
   const dummyPostTags: PostTag[] = [
     {
       id: 1,
@@ -231,9 +212,7 @@ const PostTagsPage = () => {
       postCount: 12,
       createdAt: '2023-12-27T09:45:00Z',
     },
-  ];
-
-  // State management
+  ];
   const [postTags, setPostTags] =
     useState<PostTag[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -243,9 +222,7 @@ const PostTagsPage = () => {
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
-  });
-
-  // Update postTags when tags data changes
+  });
   useEffect(() => {
     if (tags.length > 0) {
       setPostTags(tags);
@@ -265,35 +242,22 @@ const PostTagsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states (using the loading state from API fetch)
-  // const [postTagsLoading, setPostTagsLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Edit dialog state
+  } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPostTag, setEditingPostTag] =
     useState<PostTag | null>(null);
-  const [editName, setEditName] = useState('');
-
-  // Add dialog state
+  const [editName, setEditName] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newPostTagName, setNewPostTagName] = useState('');
-
-  // Utility functions
+  const [newPostTagName, setNewPostTagName] = useState('');
   const formatID = (id: number) => {
     return `PT_${String(id).padStart(3, '0')}`;
-  };
-
-  // Filter post tags based on search term
+  };
   const filteredPostTags = postTags.filter(
     (postTag) =>
       postTag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       postTag.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Update pagination when filtered data changes
+  );
   useEffect(() => {
     const total = filteredPostTags.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -304,16 +268,12 @@ const PostTagsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredPostTags.length, pagination.limit]);
-
-  // Get paginated data
+  }, [filteredPostTags.length, pagination.limit]);
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredPostTags.slice(startIndex, endIndex);
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -325,9 +285,7 @@ const PostTagsPage = () => {
   const handleRefresh = async () => {
     await fetchTags();
     showToast('Post tags refreshed successfully!', 'success');
-  };
-
-  // Handle post tag deletion
+  };
   const handleDeletePostTag = async (postTagId: number) => {
     setDeleteLoading(true);
     try {
@@ -338,7 +296,7 @@ const PostTagsPage = () => {
 
       if (data.success) {
         showToast('Post tag deleted successfully', 'success');
-        fetchTags(); // Refresh the list
+        fetchTags();
       } else {
         showToast(data.error || 'Error deleting post tag', 'error');
       }
@@ -350,9 +308,7 @@ const PostTagsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  // Handle post tag editing
+  };
   const handleEditPostTag = async () => {
     if (!editingPostTag || !editName.trim()) return;
 
@@ -370,7 +326,7 @@ const PostTagsPage = () => {
 
       if (data.success) {
         showToast('Post tag updated successfully', 'success');
-        fetchTags(); // Refresh the list
+        fetchTags();
       } else {
         showToast(data.error || 'Error updating post tag', 'error');
       }
@@ -382,9 +338,7 @@ const PostTagsPage = () => {
       setEditingPostTag(null);
       setEditName('');
     }
-  };
-
-  // Handle adding new post tag
+  };
   const handleAddPostTag = async () => {
     if (!newPostTagName.trim()) return;
 
@@ -402,7 +356,7 @@ const PostTagsPage = () => {
 
       if (data.success) {
         showToast('Post tag added successfully', 'success');
-        fetchTags(); // Refresh the list
+        fetchTags();
       } else {
         showToast(data.error || 'Error adding post tag', 'error');
       }
@@ -413,9 +367,7 @@ const PostTagsPage = () => {
       setAddDialogOpen(false);
       setNewPostTagName('');
     }
-  };
-
-  // Open edit dialog
+  };
   const openEditDialog = (postTag: PostTag) => {
     setEditingPostTag(postTag);
     setEditName(postTag.name);
@@ -424,7 +376,7 @@ const PostTagsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -436,12 +388,12 @@ const PostTagsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -471,7 +423,7 @@ const PostTagsPage = () => {
                 Refresh
               </button>
 
-              {/* Add Post Tag Button */}
+              {}
               <button
                 onClick={() => setAddDialogOpen(true)}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full sm:w-auto"
@@ -481,7 +433,7 @@ const PostTagsPage = () => {
               </button>
             </div>
 
-            {/* Third line: Search Controls */}
+            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1">
                 <FaSearch
@@ -500,7 +452,7 @@ const PostTagsPage = () => {
           </div>
         </div>
 
-        {/* Post Tags Table */}
+        {}
         <div className="card">
           <div style={{ padding: '24px 24px 0px 24px' }}>
             {loading ? (
@@ -546,7 +498,7 @@ const PostTagsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View - Hidden on mobile */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -625,7 +577,7 @@ const PostTagsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            {/* 3 Dot Menu */}
+                            {}
                             <div className="relative">
                               <button
                                 className="btn btn-secondary p-2"
@@ -633,8 +585,7 @@ const PostTagsPage = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const dropdown = e.currentTarget
-                                    .nextElementSibling as HTMLElement;
-                                  // Close other dropdowns
+                                    .nextElementSibling as HTMLElement;
                                   document
                                     .querySelectorAll('.dropdown-menu')
                                     .forEach((menu) => {
@@ -647,7 +598,7 @@ const PostTagsPage = () => {
                                 <FaEllipsisH className="h-3 w-3" />
                               </button>
 
-                              {/* Dropdown Menu */}
+                              {}
                               <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                 <div className="py-1">
                                   <button
@@ -689,9 +640,7 @@ const PostTagsPage = () => {
                   </table>
                 </div>
 
-                
-
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -756,7 +705,7 @@ const PostTagsPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -800,7 +749,7 @@ const PostTagsPage = () => {
           </div>
         )}
 
-        {/* Edit Post Tag Dialog */}
+        {}
         {editDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -837,7 +786,7 @@ const PostTagsPage = () => {
           </div>
         )}
 
-        {/* Add Post Tag Dialog */}
+        {}
         {addDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

@@ -1,3 +1,2 @@
-// Re-export nodemailer functions for compatibility
-export * from './nodemailer';
 
+export * from './nodemailer';

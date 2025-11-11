@@ -12,34 +12,26 @@ import { FaDollarSign, FaShoppingCart, FaWallet } from 'react-icons/fa';
 
 export default function UserDashboard() {
   const { data: response, error, isLoading } = useGetUserStatsQuery(undefined);
-  const { currency, rate } = useCurrency();
-
-  // Format currency values consistently
-  const formatCurrency = (amount: number) => {
-    // Database balance is now stored in USD (base currency)
+  const { currency, rate } = useCurrency();
+  const formatCurrency = (amount: number) => {
     let convertedAmount = amount;
     let symbol = '$';
 
-    if (currency === 'USD') {
-      // If showing USD, use the amount as is (already in USD)
+    if (currency === 'USD') {
       convertedAmount = amount;
       symbol = '$';
-    } else if (currency === 'BDT') {
-      // If showing BDT, convert from USD to BDT
-      const usdToBdtRate = 110; // USD to BDT rate
+    } else if (currency === 'BDT') {
+      const usdToBdtRate = 110;
       convertedAmount = amount * usdToBdtRate;
       symbol = '৳';
-    } else {
-      // For other currencies, convert from USD using rate
+    } else {
       convertedAmount = amount * (rate || 1);
-      symbol = '$'; // Default symbol for other currencies
+      symbol = '$';
     }
 
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  const stats = response?.data;
-
-  // Loading skeletons
+  const stats = response?.data;
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -68,9 +60,9 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-purple-900 dark:to-indigo-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-4">
-        {/* Cards at top of dashboard */}
+        {}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Balance Card */}
+          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-purple-500/20 hover:shadow-2xl dark:hover:shadow-purple-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-purple-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-purple-500/5 dark:to-blue-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -90,7 +82,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          {/* Total Orders Card */}
+          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-blue-500/20 hover:shadow-2xl dark:hover:shadow-blue-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-blue-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-500/5 dark:to-purple-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -115,7 +107,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          {/* Total Spent Card */}
+          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-green-500/20 hover:shadow-2xl dark:hover:shadow-green-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-green-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-green-500/5 dark:to-emerald-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -135,7 +127,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          {/* Pending Orders Card */}
+          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-orange-500/20 hover:shadow-2xl dark:hover:shadow-orange-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-orange-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-orange-500/5 dark:to-yellow-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -156,7 +148,7 @@ export default function UserDashboard() {
           </Card>
         </div>
 
-        {/* Recent Orders Section */}
+        {}
         <div className="grid gap-4 md:grid-cols-2 mt-6">
           <Card className="col-span-1 relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-indigo-500/20 hover:shadow-2xl dark:hover:shadow-indigo-500/30 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-indigo-500/10 dark:to-transparent opacity-50" />
@@ -226,7 +218,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          {/* Favorite Categories */}
+          {}
           <Card className="col-span-1 relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-pink-500/20 hover:shadow-2xl dark:hover:shadow-pink-500/30 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-pink-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-pink-500/5 dark:to-purple-500/5 opacity-0 dark:opacity-100 rounded-2xl" />

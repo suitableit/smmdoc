@@ -24,22 +24,16 @@ import {
     FaTimes,
     FaUser,
     FaVideo
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -69,9 +63,7 @@ const getFileIcon = (mimetype: string) => {
   if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
   if (mimetype.includes('zip') || mimetype.includes('rar') || mimetype.includes('archive')) return <FaFileArchive className="h-4 w-4" />;
   return <FaFileAlt className="h-4 w-4" />;
-};
-
-// Interfaces
+};
 interface ContactMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
@@ -119,7 +111,7 @@ interface ContactMessageDetails {
   status: 'Unread' | 'Read' | 'Replied';
   messages: ContactMessage[];
   notes: ContactNote[];
-  timeSpent: number; // in minutes
+  timeSpent: number;
   userInfo: {
     fullName: string;
     email: string;
@@ -135,21 +127,13 @@ interface ContactMessageDetails {
 const ContactDetailsPage = () => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const currentUser = useCurrentUser();
-
-  // Get message ID from URL
+  const currentUser = useCurrentUser();
   const messageId: string = typeof window !== 'undefined'
     ? (window.location.pathname.split('/').pop() ?? '1')
-    : '1';
-
-  // Set document title using useEffect for client-side
+    : '1';
   useEffect(() => {
     setPageTitle(`Message Details ${formatMessageID(messageId)}`, appName);
-  }, [messageId]);
-
-
-
-  // State management
+  }, [messageId]);
   const [contactDetails, setContactDetails] = useState<ContactMessageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -163,19 +147,11 @@ const ContactDetailsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // File input ref for resetting
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-
-
-  // Utility functions
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const formatMessageID = (id: string) => {
     return `#${parseInt(id.toString()).toString()}`;
   };
-
-
 
   const getFileIcon = (mimetype: string) => {
     if (mimetype.startsWith('image/')) return <FaImage className="h-4 w-4" />;
@@ -185,21 +161,15 @@ const ContactDetailsPage = () => {
     if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
     if (mimetype.includes('zip') || mimetype.includes('rar')) return <FaFileArchive className="h-4 w-4" />;
     return <FaFileAlt className="h-4 w-4" />;
-  };
-
-  // Fetch contact details from API
+  };
   const fetchContactDetails = async () => {
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}?include_notes=true`);
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        // Create messages array with customer message and admin reply if exists
-        const messages: ContactMessage[] = [];
-        
-        // Add customer's original message
-        if (data.message.message) {
-          // Parse attachments from the new format
+      if (response.ok && data.success) {
+        const messages: ContactMessage[] = [];
+        if (data.message.message) {
           let parsedAttachments: ContactAttachment[] = [];
           if (data.message.attachments) {
             try {
@@ -221,7 +191,7 @@ const ContactDetailsPage = () => {
               console.error('Error parsing attachments:', error);
             }
           }
-          
+
           messages.push({
             id: `customer_${data.message.id}`,
             type: 'customer',
@@ -230,25 +200,18 @@ const ContactDetailsPage = () => {
             createdAt: data.message.createdAt,
             attachments: parsedAttachments
           });
-        }
-        
-        // Add admin replies if they exist
+        }
         if (data.message.adminReply) {
-          try {
-            // Try to parse as JSON array (new format with multiple replies)
+          try {
             const replies = JSON.parse(data.message.adminReply);
-            if (Array.isArray(replies)) {
-              // New format: multiple replies
-              replies.forEach((reply, index) => {
-                // Parse reply attachments if they exist
+            if (Array.isArray(replies)) {
+              replies.forEach((reply, index) => {
                 let replyAttachments: ContactAttachment[] = [];
                 if (reply.attachments && Array.isArray(reply.attachments)) {
-                  replyAttachments = reply.attachments.map((attachment: any, attachIndex: number) => {
-                    // Handle both old format (string paths) and new format (objects)
+                  replyAttachments = reply.attachments.map((attachment: any, attachIndex: number) => {
                     let filename, fileUrl, filesize = '0 KB', mimetype = 'application/octet-stream';
-                    
-                    if (typeof attachment === 'string') {
-                      // Old format - encrypted path only
+
+                    if (typeof attachment === 'string') {
                       filename = attachment.split('/').pop() || 'attachment';
                       fileUrl = attachment;
                       const extension = filename.split('.').pop()?.toLowerCase() || '';
@@ -261,14 +224,13 @@ const ContactDetailsPage = () => {
                       } else if (['xls', 'xlsx'].includes(extension)) {
                         mimetype = 'application/vnd.ms-excel';
                       }
-                    } else {
-                      // New format - has original name
+                    } else {
                       filename = attachment.encryptedName || attachment.filename || 'attachment';
                       fileUrl = attachment.encryptedPath || attachment.fileUrl;
                       filesize = attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : 'Unknown size';
                       mimetype = attachment.mimeType || 'application/octet-stream';
                     }
-                    
+
                     return {
                       id: `admin_reply_${data.message.id}_${index}_${attachIndex}`,
                       filename: filename,
@@ -280,7 +242,7 @@ const ContactDetailsPage = () => {
                     };
                   });
                 }
-                
+
                 messages.push({
                   id: `admin_${data.message.id}_${index}`,
                   type: 'staff',
@@ -290,15 +252,14 @@ const ContactDetailsPage = () => {
                   attachments: replyAttachments
                 });
               });
-            } else {
-              // Fallback: single reply
+            } else {
               let singleReplyAttachments: ContactAttachment[] = [];
               if (data.message.attachments) {
                 try {
                   const attachmentData = JSON.parse(data.message.attachments);
                   singleReplyAttachments = attachmentData.map((attachment: any, index: number) => {
                     let filename, fileUrl, fileSize = 0, mimeType = 'application/octet-stream';
-                    
+
                     if (typeof attachment === 'string') {
                       filename = attachment.split('/').pop() || 'attachment';
                       fileUrl = attachment;
@@ -308,15 +269,14 @@ const ContactDetailsPage = () => {
                       } else if (extension === 'pdf') {
                         mimeType = 'application/pdf';
                       }
-                    } else {
-                      // Handle both encryptedName and encryptedPath properties
+                    } else {
                       const encryptedName = attachment.encryptedName || (attachment.encryptedPath ? attachment.encryptedPath.split('/').pop() : null);
                       filename = encryptedName || attachment.filename || 'attachment';
                       fileUrl = attachment.encryptedPath || attachment.fileUrl;
                       fileSize = attachment.fileSize || 0;
                       mimeType = attachment.mimeType || 'application/octet-stream';
                     }
-                    
+
                     return {
                       id: `single-admin-reply-${index}`,
                       filename: filename,
@@ -330,7 +290,7 @@ const ContactDetailsPage = () => {
                   console.error('Error parsing single reply attachments:', e);
                 }
               }
-              
+
               messages.push({
                 id: `admin_${data.message.id}`,
                 type: 'staff',
@@ -340,8 +300,7 @@ const ContactDetailsPage = () => {
                 attachments: singleReplyAttachments
               });
             }
-          } catch {
-            // Old format: single reply string
+          } catch {
             messages.push({
               id: `admin_${data.message.id}`,
               type: 'staff',
@@ -350,9 +309,7 @@ const ContactDetailsPage = () => {
               createdAt: data.message.repliedAt || data.message.updatedAt
             });
           }
-        }
-
-        // Transform API data to match the expected format
+        }
         const transformedData: ContactMessageDetails = {
           id: data.message.id.toString(),
           userId: data.message.userId.toString(),
@@ -362,8 +319,8 @@ const ContactDetailsPage = () => {
           subject: data.message.subject,
           createdAt: data.message.createdAt,
           lastUpdated: data.message.updatedAt,
-          status: data.message.status || 'Read', // Use actual status from database
-          messages: messages, // Now populated with actual conversation
+          status: data.message.status || 'Read',
+          messages: messages,
           notes: (data.message.notes || []).map((note: any) => ({
             id: note.id,
             content: note.content,
@@ -384,9 +341,7 @@ const ContactDetailsPage = () => {
           }
         };
 
-        setContactDetails(transformedData);
-        
-        // Auto-mark message as read if it wasn't already
+        setContactDetails(transformedData);
         if (data.message.status !== 'Read') {
           markAsRead();
         }
@@ -399,9 +354,7 @@ const ContactDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Mark message as read
+  };
   const markAsRead = async () => {
     try {
       await fetch(`/api/admin/contact-messages/${messageId}`, {
@@ -416,55 +369,39 @@ const ContactDetailsPage = () => {
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
-  };
-
-  // Load contact details on component mount
+  };
   useEffect(() => {
     if (messageId) {
       fetchContactDetails();
     }
-  }, [messageId]);
-
-  // Show toast notification
+  }, [messageId]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Remove selected file
+  };
   const removeSelectedFile = (index: number) => {
     const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newSelectedFiles);
-    
-    if (newSelectedFiles.length === 0) {
-      // Clear the file input when no files are selected
+
+    if (newSelectedFiles.length === 0) {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  };
-
-
-
-  // Handle file selection
+  };
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(prev => [...prev, ...files]);
-  };
-
-
-
-  // Handle reply submission
+  };
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
-    
+
     setIsReplying(true);
-    
-    try {
-      // Upload files if any are selected
+
+    try {
       let attachmentData: Array<{
         originalName: string;
         encryptedPath: string;
@@ -477,29 +414,25 @@ const ContactDetailsPage = () => {
           formData.append('files', file);
         });
         formData.append('uploadType', 'admin_uploads');
-        
+
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
-        
+
         const uploadData = await uploadResponse.json();
-        
+
         if (!uploadData.success) {
           throw new Error(uploadData.error || 'Failed to upload files');
-        }
-        
-        // Handle both single and multiple file responses
-        if (uploadData.files) {
-          // Multiple files
+        }
+        if (uploadData.files) {
           attachmentData = uploadData.files.map((file: any) => ({
             originalName: file.originalName,
             encryptedPath: file.fileUrl,
             fileSize: file.fileSize,
             mimeType: file.mimeType
           }));
-        } else if (uploadData.originalName) {
-          // Single file
+        } else if (uploadData.originalName) {
           attachmentData = [{
             originalName: uploadData.originalName,
             encryptedPath: uploadData.fileUrl,
@@ -508,7 +441,7 @@ const ContactDetailsPage = () => {
           }];
         }
       }
-      
+
       const response = await fetch(`/api/admin/contact-messages/${messageId}`, {
         method: 'PUT',
         headers: {
@@ -523,8 +456,7 @@ const ContactDetailsPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        // Update the contact details with the reply
+      if (response.ok && data.success) {
         setContactDetails(prev => prev ? ({
           ...prev,
           adminReply: replyContent.trim(),
@@ -534,14 +466,11 @@ const ContactDetailsPage = () => {
         }) : null);
 
         setReplyContent('');
-        setSelectedFiles([]);
-        // Reset file input
+        setSelectedFiles([]);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        showToast(data.message || 'Reply sent successfully', 'success');
-
-        // Refresh the data to get updated information
+        showToast(data.message || 'Reply sent successfully', 'success');
         fetchContactDetails();
       } else {
         showToast(data.error || 'Error sending reply', 'error');
@@ -551,14 +480,12 @@ const ContactDetailsPage = () => {
     } finally {
       setIsReplying(false);
     }
-  };
-
-  // Handle add note
+  };
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-    
+
     setIsAddingNote(true);
-    
+
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}/notes`, {
         method: 'POST',
@@ -572,9 +499,7 @@ const ContactDetailsPage = () => {
         throw new Error('Failed to add note');
       }
 
-      const updatedMessage = await response.json();
-      
-      // Update contact details with the new notes
+      const updatedMessage = await response.json();
       setContactDetails(prev => prev ? ({
         ...prev,
         notes: updatedMessage.notes.map((note: any) => ({
@@ -585,7 +510,7 @@ const ContactDetailsPage = () => {
           isPrivate: note.isPrivate
         }))
       }) : null);
-      
+
       setNewNote('');
       showToast('Note added successfully', 'success');
     } catch (error) {
@@ -594,13 +519,7 @@ const ContactDetailsPage = () => {
     } finally {
       setIsAddingNote(false);
     }
-  };
-
-
-
-
-
-  // Show loading state
+  };
   if (loading) {
     return (
       <div className="page-container">
@@ -615,9 +534,7 @@ const ContactDetailsPage = () => {
         </div>
       </div>
     );
-  }
-
-  // Show error state if no contact details
+  }
   if (!contactDetails) {
     return (
       <div className="page-container">
@@ -643,7 +560,7 @@ const ContactDetailsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -655,10 +572,10 @@ const ContactDetailsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Header */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            {/* 1st line: Back to Messages button, Status dropdown */}
+            {}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-4">
               <button 
@@ -669,9 +586,8 @@ const ContactDetailsPage = () => {
                 Back to Messages
               </button>
 
-
             </div>
-            
+
             <div className="flex flex-row items-center gap-1 md:gap-2">
               <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                 Message {formatMessageID(contactDetails?.id || '1')}
@@ -683,9 +599,9 @@ const ContactDetailsPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Message Info Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -723,7 +639,7 @@ const ContactDetailsPage = () => {
               </div>
             </div>
 
-            {/* Messages Thread */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -731,7 +647,7 @@ const ContactDetailsPage = () => {
                 </div>
                 <h3 className="card-title">Customer Message</h3>
               </div>
-              
+
               <div className="space-y-6">
                 {(contactDetails?.messages || [])
                   .filter(message => message.type === 'customer')
@@ -740,18 +656,17 @@ const ContactDetailsPage = () => {
                     <div className="prose prose-sm max-w-none">
                       <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                     </div>
-                    
-                    {/* Attachments */}
+
+                    {}
                     {message.attachments && message.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
                         <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                        {message.attachments.map((attachment, index) => {
-                          // Handle the new attachment format
+                        {message.attachments.map((attachment, index) => {
                           const attachmentUrl = attachment.url || attachment.fileUrl;
                           const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
                           const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';
                           const filesize = attachment.filesize || (attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : '');
-                          
+
                           return (
                             <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                               {getFileIcon(mimetype)}
@@ -780,7 +695,7 @@ const ContactDetailsPage = () => {
               </div>
             </div>
 
-            {/* Reply Box */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -788,7 +703,7 @@ const ContactDetailsPage = () => {
                 </div>
                 <h3 className="card-title">Reply</h3>
               </div>
-              
+
               <div className="space-y-6">
                 {(contactDetails?.messages || []).filter(message => message.type === 'staff').length > 0 ? (
                   (contactDetails?.messages || [])
@@ -801,22 +716,21 @@ const ContactDetailsPage = () => {
                           {message.author} • {new Date(message.createdAt).toLocaleDateString()} at {new Date(message.createdAt).toLocaleTimeString()}
                         </span>
                       </div>
-                      
+
                       <div className="prose prose-sm max-w-none">
                         <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
                       </div>
-                      
-                      {/* Attachments */}
+
+                      {}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment, index) => {
-                            // Handle the new attachment format
+                          {message.attachments.map((attachment, index) => {
                             const attachmentUrl = attachment.url || attachment.fileUrl;
                             const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
                             const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';
                             const filesize = attachment.filesize || (attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : '');
-                            
+
                             return (
                               <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
@@ -851,7 +765,7 @@ const ContactDetailsPage = () => {
               </div>
             </div>
 
-            {/* Reply Section - Only show if no reply exists */}
+            {}
             {(contactDetails?.messages || []).filter(message => message.type === 'staff').length === 0 && (
               <div className="card card-padding overflow-hidden">
                 <div className="card-header">
@@ -860,7 +774,7 @@ const ContactDetailsPage = () => {
                   </div>
                   <h3 className="card-title">Send Reply</h3>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="form-group">
                     <textarea
@@ -874,8 +788,8 @@ const ContactDetailsPage = () => {
                       This reply will be sent to the customer and will update the message status to "Replied". You can only reply once.
                     </small>
                   </div>
-                  
-                  {/* File Upload */}
+
+                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="attachments">
                       Attachments (Optional)
@@ -894,7 +808,7 @@ const ContactDetailsPage = () => {
                     </small>
                   </div>
 
-                  {/* Selected Files */}
+                  {}
                   {selectedFiles.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -925,7 +839,7 @@ const ContactDetailsPage = () => {
                       ))}
                     </div>
                   )}
-                  
+
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleReplySubmit}
@@ -939,8 +853,8 @@ const ContactDetailsPage = () => {
                 </div>
               </div>
             )}
-            
-            {/* Replied button when reply already sent */}
+
+            {}
             {(contactDetails?.messages || []).filter(message => message.type === 'staff').length > 0 && (
               <div className="flex justify-left mt-4">
                 <button
@@ -953,9 +867,9 @@ const ContactDetailsPage = () => {
             )}
           </div>
 
-          {/* Sidebar */}
+          {}
           <div className="space-y-6">
-            {/* User Information */}
+            {}
             <div className="card card-padding">
               <div 
                 className="card-header cursor-pointer flex items-center justify-between"
@@ -969,7 +883,7 @@ const ContactDetailsPage = () => {
                 </div>
                 {showUserInfo ? <FaChevronUp /> : <FaChevronDown />}
               </div>
-              
+
               {showUserInfo && (
                 <div className="space-y-4">
                   <div>
@@ -998,7 +912,7 @@ const ContactDetailsPage = () => {
               )}
             </div>
 
-            {/* Internal Notes */}
+            {}
             <div className="card card-padding overflow-hidden">
               <div 
                 className="card-header cursor-pointer flex items-center justify-between"
@@ -1012,10 +926,10 @@ const ContactDetailsPage = () => {
                 </div>
                 {showNotes ? <FaChevronUp /> : <FaChevronDown />}
               </div>
-              
+
               {showNotes && (
                 <div>
-                  {/* Add Note Form */}
+                  {}
                   <div className="mb-4">
                     <textarea
                       value={newNote}
@@ -1036,8 +950,8 @@ const ContactDetailsPage = () => {
                       {isAddingNote ? 'Adding...' : 'Add Note'}
                     </button>
                   </div>
-                  
-                  {/* Notes List */}
+
+                  {}
                   <div className="space-y-3">
                     {(contactDetails?.notes || []).map((note) => (
                        <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

@@ -8,7 +8,7 @@ async function checkSignUpEnabled() {
     return userSettings?.signUpPageEnabled ?? true;
   } catch (error) {
     console.error('Error checking sign up settings:', error);
-    return true; // Default to enabled if error
+    return true;
   }
 }
 

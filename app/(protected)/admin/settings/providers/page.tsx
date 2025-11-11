@@ -1,8 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useEffect, useState } from 'react';
 import {
   FaChartBar,
@@ -27,21 +24,15 @@ import {
   FaUndo
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-
-// Custom Gradient Spinner Component
+import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock components and hooks for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
-
-// Toast/Twist Message Component using CSS classes
+);
+const ButtonLoader = () => <div className="loading-spinner"></div>;
 const Toast = ({
   message,
   type = 'success',
@@ -114,16 +105,14 @@ interface Provider {
   orders: number;
   importedServices: number;
   activeServices: number;
-  inactiveServices: number; // Add inactive services count
+  inactiveServices: number;
   currentBalance: number;
   successRate: number;
   avgResponseTime: number;
   createdAt: Date;
   lastSync: Date;
   description?: string;
-  connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
-  
-  // API Specification Fields
+  connectionStatus?: 'connected' | 'disconnected' | 'testing' | 'unknown';
   apiKeyParam?: string;
   actionParam?: string;
   servicesAction?: string;
@@ -156,21 +145,15 @@ interface Provider {
 }
 
 const APIProvidersPage = () => {
-  console.log('🚀 APIProvidersPage component loaded');
-  
-  // Test if component is loading
+  console.log('🚀 APIProvidersPage component loaded');
   if (typeof window !== 'undefined') {
     console.log('🌐 Window object available, component is in browser');
   }
-  
-  const { appName } = useAppNameWithFallback();
-  
-  // Set document title using useEffect for client-side
+
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     document.title = `API Providers — ${appName}`;
-  }, [appName]);
-
-  // Real providers data from API
+  }, [appName]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
   const [connectionStatuses, setConnectionStatuses] = useState<{[key: number]: 'connected' | 'disconnected' | 'testing' | 'unknown'}>({});
@@ -189,9 +172,7 @@ const APIProvidersPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  
-  // Delete confirmation popup state
+  } | null>(null);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<Provider | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -202,8 +183,7 @@ const APIProvidersPage = () => {
     apiKey: '',
     apiUrl: '',
     httpMethod: 'POST',
-    syncEnabled: true,
-    // API Specification Fields with defaults
+    syncEnabled: true,
     apiKeyParam: 'key',
     actionParam: 'action',
     servicesAction: 'services',
@@ -240,8 +220,7 @@ const APIProvidersPage = () => {
     apiUrl: '',
     apiKey: '',
     httpMethod: 'POST',
-    syncEnabled: true,
-    // API Specification Fields with defaults
+    syncEnabled: true,
     apiKeyParam: 'key',
     actionParam: 'action',
     servicesAction: 'services',
@@ -271,9 +250,7 @@ const APIProvidersPage = () => {
     responseFormat: 'json',
     rateLimitPerMin: '',
     timeoutSeconds: 30,
-  });
-
-  // Fetch providers data
+  });
   const fetchProviders = async (filter: string = 'all') => {
     try {
       console.log('🔄 fetchProviders called with filter:', filter);
@@ -283,23 +260,20 @@ const APIProvidersPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('Fetched providers:', result.data.providers);
-        // Set all available providers for dropdown
-        setAvailableProviders(result.data.providers);
-
-        // Convert all providers to Provider format for UI
+        console.log('Fetched providers:', result.data.providers);
+        setAvailableProviders(result.data.providers);
         const uiProviders = result.data.providers
           .map((p: any) => ({
             id: p.id,
             name: p.label,
             apiUrl: p.apiUrl,
             apiKey: p.apiKey || '',
-            status: p.deletedAt ? 'trash' : p.status, // Set status to 'trash' if deletedAt exists
+            status: p.deletedAt ? 'trash' : p.status,
             services: p.services || 0,
             orders: p.orders || 0,
             importedServices: p.importedServices || 0,
             activeServices: p.activeServices || 0,
-            inactiveServices: p.inactiveServices || 0, // Add inactive services count
+            inactiveServices: p.inactiveServices || 0,
             currentBalance: 0,
             successRate: 0,
             avgResponseTime: 0,
@@ -308,18 +282,14 @@ const APIProvidersPage = () => {
             deletedAt: p.deletedAt || null,
             description: p.description
           }));
-        setProviders(uiProviders);
-        
-        // Test connections for all providers (except trash)
+        setProviders(uiProviders);
         if (filter !== 'trash') {
-          testAllConnections();
-          
-          // Also fetch balances immediately for active providers
+          testAllConnections();
           setTimeout(() => {
             fetchAllProviderBalances();
           }, 2000);
         }
-        
+
         console.log('Available providers for dropdown:', result.data.providers);
       } else {
         console.error('Failed to fetch providers:', result.error);
@@ -329,16 +299,13 @@ const APIProvidersPage = () => {
       console.error('Error fetching providers:', error);
       showToast('Failed to fetch providers', 'error');
     }
-  };
-
-  // Fetch balance for a single provider
+  };
   const fetchProviderBalance = async (providerId: number) => {
     try {
       const response = await fetch(`/api/admin/providers/balance?providerId=${providerId}`);
       if (response.ok) {
         const result = await response.json();
-        if (result.success && result.data) {
-          // Update the provider's balance in state
+        if (result.success && result.data) {
           setProviders(prev => prev.map(p => 
             p.id === providerId 
               ? { ...p, currentBalance: result.data.balance || 0 }
@@ -349,31 +316,26 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error(`Error fetching balance for provider ${providerId}:`, error);
     }
-  };
-
-  // Fetch balance for all active providers
+  };
   const fetchAllProviderBalances = async () => {
     try {
       console.log('🔍 Fetching balances for all active providers...');
       console.log('📋 Total providers in state:', providers.length);
-      console.log('📋 All providers:', providers.map(p => ({ id: p.id, name: p.name, status: p.status })));
-      
-      // Get active providers only
+      console.log('📋 All providers:', providers.map(p => ({ id: p.id, name: p.name, status: p.status })));
       const activeProviders = providers.filter(p => p.status === 'active');
       console.log('Active providers to check balance:', activeProviders.map(p => ({ id: p.id, name: p.name })));
-      
+
       for (const provider of activeProviders) {
         try {
           console.log(`📊 Fetching balance for provider ${provider.id} (${provider.name})...`);
           const response = await fetch(`/api/admin/providers/balance?providerId=${provider.id}`);
           console.log(`Response status for provider ${provider.id}:`, response.status);
-          
+
           if (response.ok) {
             const result = await response.json();
             console.log(`Balance result for provider ${provider.id}:`, result);
-            
-            if (result.success && result.data) {
-              // Update the provider's balance in state
+
+            if (result.success && result.data) {
               setProviders(prev => prev.map(p => 
                 p.id === provider.id 
                   ? { ...p, currentBalance: result.data.balance || 0 }
@@ -392,9 +354,7 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error('❌ Error fetching provider balances:', error);
     }
-  };
-
-  // Test all provider connections
+  };
   const testAllConnections = async () => {
     try {
       const response = await fetch('/api/admin/providers/test-all-connections', {
@@ -407,9 +367,7 @@ const APIProvidersPage = () => {
         result.results.forEach((r: any) => {
           newStatuses[r.id] = r.connected ? 'connected' : 'disconnected';
         });
-        setConnectionStatuses(newStatuses);
-        
-        // After testing connections, fetch balances for connected providers
+        setConnectionStatuses(newStatuses);
         setTimeout(() => {
           fetchAllProviderBalances();
         }, 1000);
@@ -417,12 +375,10 @@ const APIProvidersPage = () => {
     } catch (error) {
       console.error('Error testing connections:', error);
     }
-  };
-
-  // Test single provider connection
+  };
   const testProviderConnection = async (providerId: number) => {
     setConnectionStatuses(prev => ({ ...prev, [providerId]: 'testing' }));
-    
+
     try {
       const response = await fetch(`/api/admin/providers/${providerId}/test-connection`, {
         method: 'POST'
@@ -433,16 +389,14 @@ const APIProvidersPage = () => {
         ...prev, 
         [providerId]: result.connected ? 'connected' : 'disconnected' 
       }));
-      
+
       return result.connected;
     } catch (error) {
       console.error('Error testing connection:', error);
       setConnectionStatuses(prev => ({ ...prev, [providerId]: 'disconnected' }));
       return false;
     }
-  };
-
-  // Initial loading
+  };
   useEffect(() => {
     const loadData = async () => {
       console.log('🔄 loadData called in useEffect');
@@ -452,9 +406,7 @@ const APIProvidersPage = () => {
 
     console.log('🚀 useEffect triggered for initial loading');
     loadData();
-  }, []);
-
-  // Show toast notification
+  }, []);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -481,9 +433,7 @@ const APIProvidersPage = () => {
 
   const handleAddProvider = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Validation for custom provider name
+    setIsLoading(true);
     if (!formData.customProviderName.trim()) {
       showToast('Please enter a provider name', 'error');
       setIsLoading(false);
@@ -500,8 +450,7 @@ const APIProvidersPage = () => {
           customProviderName: formData.customProviderName,
           apiKey: formData.apiKey,
           apiUrl: formData.apiUrl,
-          httpMethod: formData.httpMethod,
-          // API Specification Fields
+          httpMethod: formData.httpMethod,
           apiKeyParam: formData.apiKeyParam,
           actionParam: formData.actionParam,
           servicesAction: formData.servicesAction,
@@ -536,8 +485,7 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Refresh providers list
+      if (result.success) {
         await fetchProviders(statusFilter);
 
         setFormData({
@@ -545,8 +493,7 @@ const APIProvidersPage = () => {
           apiKey: '',
           apiUrl: '',
           httpMethod: 'POST',
-          syncEnabled: true,
-          // API Specification Fields with defaults
+          syncEnabled: true,
           apiKeyParam: 'key',
           actionParam: 'action',
           servicesAction: 'services',
@@ -597,8 +544,7 @@ const APIProvidersPage = () => {
       apiUrl: provider.apiUrl || '',
       apiKey: provider.apiKey || '',
       httpMethod: provider.httpMethod || 'POST',
-      syncEnabled: true, // Default or derive from provider data
-      // API Specification Fields
+      syncEnabled: true,
       apiKeyParam: provider.apiKeyParam || 'key',
       actionParam: provider.actionParam || 'action',
       servicesAction: provider.servicesAction || 'services',
@@ -655,8 +601,7 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Update local state
+      if (result.success) {
         setProviders(prev => prev.map(provider =>
           provider.id === editingProvider.id
             ? {
@@ -677,24 +622,19 @@ const APIProvidersPage = () => {
           syncEnabled: true,
         });
         setShowEditForm(false);
-        setEditingProvider(null);
-        
-        // Invalidate SWR cache for providers to ensure other pages get updated data
-        if (typeof window !== 'undefined' && window.localStorage) {
-          // Clear SWR cache for providers endpoint
+        setEditingProvider(null);
+        if (typeof window !== 'undefined' && window.localStorage) {
           const cacheKey = '/api/admin/providers';
           const swrCache = JSON.parse(localStorage.getItem('swr-cache') || '{}');
           if (swrCache[cacheKey]) {
             delete swrCache[cacheKey];
             localStorage.setItem('swr-cache', JSON.stringify(swrCache));
           }
-        }
-        
-        // Also trigger a custom event that other pages can listen to
+        }
         window.dispatchEvent(new CustomEvent('providerUpdated', { 
           detail: { providerId: editingProvider.id, providerName: editFormData.name } 
         }));
-        
+
         showToast('Provider updated successfully!', 'success');
       } else {
         showToast(result.error || 'Failed to update provider', 'error');
@@ -725,8 +665,7 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Update local state
+      if (result.success) {
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, status: newStatus as 'active' | 'inactive' }
@@ -742,8 +681,7 @@ const APIProvidersPage = () => {
     }
   };
 
-  const handleDeleteProvider = async (providerId: number, deleteType: 'trash' | 'permanent') => {
-    // Check if providerId is valid
+  const handleDeleteProvider = async (providerId: number, deleteType: 'trash' | 'permanent') => {
     if (!providerId || providerId === null || providerId === undefined) {
       showToast('Cannot delete unconfigured provider', 'error');
       return;
@@ -757,10 +695,8 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Update local state based on delete type
-        if (deleteType === 'trash') {
-          // For trash, update the provider status to 'trash' and set deletedAt
+      if (result.success) {
+        if (deleteType === 'trash') {
           setProviders(prev => prev.map(provider => 
             provider.id === providerId 
               ? { 
@@ -769,17 +705,14 @@ const APIProvidersPage = () => {
                   deletedAt: new Date().toISOString()
                 }
               : provider
-          ));
-          
-          // If currently viewing trash filter, refresh the data to show the newly trashed item
+          ));
           if (statusFilter === 'trash') {
             setTimeout(() => fetchProviders('trash'), 500);
           }
-        } else {
-          // For permanent delete, remove from list
+        } else {
           setProviders(prev => prev.filter(provider => provider.id !== providerId));
         }
-        
+
         const message = deleteType === 'trash' 
           ? 'Provider and associated imported services are moved to trash successfully!' 
           : 'Provider permanently deleted successfully!';
@@ -799,7 +732,7 @@ const APIProvidersPage = () => {
 
   const openDeletePopup = (provider: Provider) => {
     setProviderToDelete(provider);
-    setSelectedDeleteOption('trash'); // Reset to default option
+    setSelectedDeleteOption('trash');
     setShowDeletePopup(true);
   };
 
@@ -812,16 +745,13 @@ const APIProvidersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Update local state - remove from trash and set status to active
+      if (result.success) {
         setProviders(prevProviders =>
           prevProviders.map(p =>
             p.id === provider.id ? { ...p, status: 'active', deletedAt: null } : p
           )
         );
-        showToast(result.message || 'Provider restored successfully!', 'success');
-        
-        // Refresh the providers list to get updated data
+        showToast(result.message || 'Provider restored successfully!', 'success');
         await fetchProviders(statusFilter);
       } else {
         showToast(result.error || 'Failed to restore provider', 'error');
@@ -837,21 +767,16 @@ const APIProvidersPage = () => {
     let timeoutId: NodeJS.Timeout | null = null;
     let controller: AbortController | null = null;
 
-    try {
-      // Test all connections first
-      await testAllConnections();
-      
-      // Add timeout to sync all request
+    try {
+      await testAllConnections();
       controller = new AbortController();
       timeoutId = setTimeout(() => {
         if (controller) {
           controller.abort();
         }
-      }, 120000); // Increased to 120 seconds for bulk operations
-      
-      // Show progress toast
+      }, 120000);
       showToast('Starting sync for all providers (updating existing services only)...', 'pending');
-      
+
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -876,21 +801,17 @@ const APIProvidersPage = () => {
       if (result.success) {
         const totals = result.data.totals;
         const providersCount = result.data.providersProcessed;
-        
+
         showToast(
           `All ${providersCount} providers synchronized successfully! ` +
           `Updated: ${totals.updated} existing services, ` +
           `Price changes: ${totals.priceChanges}, Status changes: ${totals.statusChanges}`,
           'success'
-        );
-
-        // Update last sync time for all providers
+        );
         setProviders(prev => prev.map(provider => ({
           ...provider,
           lastSync: new Date()
-        })));
-        
-        // Refresh provider data to show updated names
+        })));
         await fetchProviders(statusFilter);
       } else {
         showToast(`Bulk sync failed: ${result.error}`, 'error');
@@ -906,15 +827,13 @@ const APIProvidersPage = () => {
       } else {
         showToast('Failed to sync all providers', 'error');
       }
-    } finally {
-      // Ensure cleanup happens in all cases
+    } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       if (controller) {
         controller.abort();
-      }
-      // Always reset the syncing state, even if there were errors
+      }
       setSyncingAll(false);
     }
   };
@@ -925,42 +844,36 @@ const APIProvidersPage = () => {
     let timeoutId: NodeJS.Timeout | null = null;
     let controller: AbortController | null = null;
 
-    try {
-      // Check if provider is already marked as connected in UI
+    try {
       const currentStatus = connectionStatuses[providerId];
-      
+
       if (currentStatus === 'disconnected') {
         showToast('Cannot sync: Provider is not connected. Please test the connection first.', 'error');
         return;
       }
-      
-      if (currentStatus === 'unknown' || !currentStatus) {
-        // Test connection first if status is unknown
+
+      if (currentStatus === 'unknown' || !currentStatus) {
         const { testProviderConnection: validateConnection } = await import('@/lib/utils/providerValidator');
         const connectionPromise = validateConnection(providerId);
         const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
           setTimeout(() => reject(new Error('Connection test timeout')), 15000)
         );
-        
+
         const isConnected = await Promise.race([connectionPromise, timeoutPromise]);
-        
+
         if (!isConnected.success) {
           showToast(`Cannot sync: ${isConnected.error || 'Provider API is not connected'}. Please check your API configuration.`, 'error');
           return;
-        }
-        
-        // Update connection status
+        }
         setConnectionStatuses(prev => ({ ...prev, [providerId]: 'connected' }));
-      }
-      
-      // Add timeout to sync request
+      }
       controller = new AbortController();
       timeoutId = setTimeout(() => {
         if (controller) {
           controller.abort();
         }
-      }, 30000); // 30 second timeout
-      
+      }, 30000);
+
       const response = await fetch('/api/admin/providers/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -994,19 +907,13 @@ const APIProvidersPage = () => {
           );
         } else {
           showToast('Provider synchronized successfully!', 'success');
-        }
-
-        // Update provider last sync time
+        }
         setProviders(prev => prev.map(provider =>
           provider.id === providerId
             ? { ...provider, lastSync: new Date() }
             : provider
-        ));
-        
-        // Refresh provider data to show updated names
-        await fetchProviders(statusFilter);
-        
-        // Fetch updated balance after sync
+        ));
+        await fetchProviders(statusFilter);
         setTimeout(() => {
           fetchProviderBalance(providerId);
         }, 1000);
@@ -1026,19 +933,16 @@ const APIProvidersPage = () => {
       } else {
         showToast('Failed to sync provider', 'error');
       }
-    } finally {
-      // Ensure cleanup happens in all cases
+    } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
       if (controller) {
         controller.abort();
-      }
-      
-      // Ensure minimum spinning duration for visual feedback
+      }
       const elapsedTime = Date.now() - startTime;
-      const minSpinTime = 1000; // 1 second minimum
-      
+      const minSpinTime = 1000;
+
       if (elapsedTime < minSpinTime) {
         setTimeout(() => {
           setSyncingProvider(null);
@@ -1063,15 +967,13 @@ const APIProvidersPage = () => {
       case 'inactive': return <FaTimes className="w-4 h-4" />;
       default: return <FaExclamationTriangle className="w-4 h-4" />;
     }
-  };
-
-  // ProviderActions component
+  };
   const ProviderActions = ({ provider }: { provider: Provider }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
       <div className="flex items-center gap-2 justify-center">
-        {/* Sync Button - Hide for trash providers */}
+        {}
         {provider.status !== 'trash' && (
           <button
             onClick={() => handleSyncProvider(provider.id)}
@@ -1083,7 +985,7 @@ const APIProvidersPage = () => {
           </button>
         )}
 
-        {/* Actions Dropdown */}
+        {}
         <div className="relative">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -1095,13 +997,13 @@ const APIProvidersPage = () => {
 
           {isOpen && (
             <>
-              {/* Backdrop */}
+              {}
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setIsOpen(false)}
               />
-              
-              {/* Dropdown Menu */}
+
+              {}
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
                 <div className="py-1">
                   {provider.status === 'trash' ? (
@@ -1116,7 +1018,7 @@ const APIProvidersPage = () => {
                         <FaUndo className="w-3 h-3" />
                         Restore
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           openDeletePopup(provider);
@@ -1140,7 +1042,7 @@ const APIProvidersPage = () => {
                         <FaEdit className="w-3 h-3" />
                         Edit
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           openDeletePopup(provider);
@@ -1186,7 +1088,7 @@ const APIProvidersPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -1198,7 +1100,7 @@ const APIProvidersPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Add Provider Modal/Overlay */}
+        {}
         {showAddForm && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -1223,7 +1125,7 @@ const APIProvidersPage = () => {
                 </div>
 
                 <form onSubmit={handleAddProvider} className="space-y-6">
-                  {/* Provider Name */}
+                  {}
                   <div className="form-group">
                     <label className="form-label">Provider Name</label>
                     <input
@@ -1237,10 +1139,10 @@ const APIProvidersPage = () => {
                     />
                   </div>
 
-                  {/* API Configuration */}
+                  {}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">API Configuration</h4>
-                    
+
                     <div className="form-group">
                       <label className="form-label">API Key</label>
                       <PasswordInput
@@ -1302,8 +1204,6 @@ const APIProvidersPage = () => {
                     </div>
                   </div>
 
-
-
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 justify-end">
                     <button
                       type="button"
@@ -1336,7 +1236,7 @@ const APIProvidersPage = () => {
           </div>
         )}
 
-        {/* Edit Provider Modal/Overlay */}
+        {}
         {showEditForm && editingProvider && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -1360,7 +1260,7 @@ const APIProvidersPage = () => {
                 </div>
 
                 <form onSubmit={handleEditProvider} className="space-y-6">
-                  {/* Provider Name */}
+                  {}
                   <div className="form-group">
                     <label className="form-label">Provider Name</label>
                     <input
@@ -1374,7 +1274,7 @@ const APIProvidersPage = () => {
                     />
                   </div>
 
-                  {/* API Configuration */}
+                  {}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">API Configuration</h4>
 
@@ -1389,7 +1289,7 @@ const APIProvidersPage = () => {
                         required
                       />
                     </div>
-                    
+
                     <div className="form-group">
                       <label className="form-label">API URL</label>
                       <input
@@ -1414,7 +1314,6 @@ const APIProvidersPage = () => {
                         <option value="GET">GET</option>
                       </select>
                     </div>
-
 
                     <div className="form-group">
                       <div className="flex items-center justify-between">
@@ -1468,7 +1367,7 @@ const APIProvidersPage = () => {
         )}
 
         <div className="space-y-6">
-          {/* Header Card with Action Buttons and Search */}
+          {}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -1487,7 +1386,7 @@ const APIProvidersPage = () => {
                 Add Provider
               </button>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <div className="relative w-full">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
@@ -1502,11 +1401,11 @@ const APIProvidersPage = () => {
             </div>
           </div>
 
-          {/* Add Provider Form */}
+          {}
 
-          {/* API Providers Table */}
+          {}
           <div className="card card-padding relative">
-            {/* Loading Overlay */}
+            {}
             {isRefreshing && (
               <div className="absolute inset-0 bg-white dark:bg-gray-800 flex items-center justify-center z-10 rounded-lg">
                 <div className="text-center">
@@ -1517,7 +1416,7 @@ const APIProvidersPage = () => {
                 </div>
               </div>
             )}
-            {/* Filter Buttons */}
+            {}
             <div className="mb-6">
               <div className="flex flex-wrap gap-2">
                 <button
@@ -1611,20 +1510,17 @@ const APIProvidersPage = () => {
               </div>
             </div>
 
-            {/* Desktop Table View */}
+            {}
             <div className="hidden md:block">
               {(() => {
-                const filteredProviders = providers.filter(provider => {
-                  // Search filter
+                const filteredProviders = providers.filter(provider => {
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
-                  
-                  // Status filter
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
                   const matchesStatus = statusFilter === 'all' 
-                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    ? provider.status !== 'trash'
                     : provider.status === statusFilter;
-                  
+
                   return matchesSearch && matchesStatus;
                 });
 
@@ -1675,19 +1571,19 @@ const APIProvidersPage = () => {
                       {filteredProviders
                     .map((provider, index) => (
                     <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t hover:bg-gray-50 transition-colors duration-200">
-                      {/* ID Column */}
+                      {}
                       <td className="p-3">
                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                           {provider.id}
                         </div>
                       </td>
-                      
-                      {/* Provider Column */}
+
+                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.name}</div>
                       </td>
-                      
-                      {/* Services Column */}
+
+                      {}
                       <td className="p-3">
                         <div className="text-sm">
                           <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -1701,20 +1597,20 @@ const APIProvidersPage = () => {
                           </div>
                         </div>
                       </td>
-                      
-                      {/* Orders Column */}
+
+                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.orders.toLocaleString()}</div>
                       </td>
-                      
-                      {/* Current Balance Column */}
+
+                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                           ${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
-                      
-                      {/* Last Sync Column */}
+
+                      {}
                       {statusFilter !== 'trash' && (
                         <td className="p-3">
                           <div>
@@ -1737,8 +1633,8 @@ const APIProvidersPage = () => {
                           </div>
                         </td>
                       )}
-                      
-                      {/* Status Column */}
+
+                      {}
                       {statusFilter !== 'trash' && (
                         <td className="p-3">
                           <button
@@ -1762,8 +1658,8 @@ const APIProvidersPage = () => {
                           </button>
                         </td>
                       )}
-                      
-                      {/* API Status Column */}
+
+                      {}
                       <td className="p-3">
                         {connectionStatuses[provider.id] === 'testing' ? (
                           <span className="px-3 py-1 rounded-full text-xs font-medium w-fit bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
@@ -1785,8 +1681,8 @@ const APIProvidersPage = () => {
                           </span>
                         )}
                       </td>
-                      
-                      {/* Actions Column */}
+
+                      {}
                       <td className="p-3 text-right">
                         <ProviderActions provider={provider} />
                       </td>
@@ -1798,20 +1694,17 @@ const APIProvidersPage = () => {
               })()}
             </div>
 
-            {/* Mobile Card View */}
+            {}
             <div className="md:hidden space-y-4">
               {providers
-                .filter(provider => {
-                  // Search filter
+                .filter(provider => {
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
-                  
-                  // Status filter
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
                   const matchesStatus = statusFilter === 'all' 
-                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    ? provider.status !== 'trash'
                     : provider.status === statusFilter;
-                  
+
                   return matchesSearch && matchesStatus;
                 }).length === 0 ? (
                 <div className="text-center py-12">
@@ -1837,22 +1730,19 @@ const APIProvidersPage = () => {
                 </div>
               ) : (
                 providers
-                .filter(provider => {
-                  // Search filter
+                .filter(provider => {
                   const matchesSearch = searchQuery === '' ||
                     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
-                  
-                  // Status filter
+                    provider.status.toLowerCase().includes(searchQuery.toLowerCase());
                   const matchesStatus = statusFilter === 'all' 
-                    ? provider.status !== 'trash' // Exclude trash items from All filter
+                    ? provider.status !== 'trash'
                     : provider.status === statusFilter;
-                  
+
                   return matchesSearch && matchesStatus;
                 })
                 .map((provider, index) => (
                 <div key={provider.id || `provider-${provider.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  {/* Header with ID, Provider Name and Status */}
+                  {}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-gray-400">#{provider.id}</span>
@@ -1878,8 +1768,8 @@ const APIProvidersPage = () => {
                       )}
                     </button>
                   </div>
-                  
-                  {/* API Status */}
+
+                  {}
                   <div className="mb-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
                       provider.apiUrl && provider.apiUrl.trim() !== '' 
@@ -1889,8 +1779,8 @@ const APIProvidersPage = () => {
                       {provider.apiUrl && provider.apiUrl.trim() !== '' ? 'API Connected' : 'API Not Connected'}
                     </span>
                   </div>
-                  
-                  {/* Details Grid */}
+
+                  {}
                   <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                     <div>
                       <div className="text-gray-500 dark:text-gray-400">Services</div>
@@ -1930,8 +1820,8 @@ const APIProvidersPage = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Actions */}
+
+                  {}
                   <ProviderActions provider={provider} />
                 </div>
               ))
@@ -1939,9 +1829,9 @@ const APIProvidersPage = () => {
             </div>
           </div>
 
-          {/* Statistics Section - Moved after API Providers */}
+          {}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Quick Actions */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -1974,7 +1864,7 @@ const APIProvidersPage = () => {
               </div>
             </div>
 
-            {/* Overview Stats */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -2027,7 +1917,7 @@ const APIProvidersPage = () => {
               </div>
             </div>
 
-            {/* Top Performing Provider */}
+            {}
             {providers.length > 0 && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -2069,8 +1959,8 @@ const APIProvidersPage = () => {
           </div>
         </div>
       </div>
-      
-      {/* Delete Confirmation Popup */}
+
+      {}
       {showDeletePopup && providerToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div
@@ -2078,7 +1968,7 @@ const APIProvidersPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full max-w-lg">
-              {/* Modal Header */}
+              {}
               <div className="flex items-center justify-between p-6">
                 <h3
                   className="text-lg font-semibold"
@@ -2100,7 +1990,7 @@ const APIProvidersPage = () => {
 
               <div className="px-6 pb-6">
                 <div className="space-y-4">
-                  {/* Warning Icon and Message */}
+                  {}
                   <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
                     <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
                     <div>
@@ -2113,7 +2003,7 @@ const APIProvidersPage = () => {
                     </div>
                   </div>
 
-                  {/* Action Options */}
+                  {}
                   <div className="space-y-3">
                     <p className="font-medium text-gray-800">
                       {providerToDelete.status === 'trash' 
@@ -2122,8 +2012,7 @@ const APIProvidersPage = () => {
                       }
                     </p>
 
-                    {providerToDelete.status === 'trash' ? (
-                      // For trash items, only show permanent delete option
+                    {providerToDelete.status === 'trash' ? (
                       <div className="p-3 border rounded-lg bg-red-50 border-red-200">
                         <div className="font-medium text-red-800">
                           Permanently Delete
@@ -2132,10 +2021,9 @@ const APIProvidersPage = () => {
                           This will permanently remove the provider and all imported services. This action cannot be undone.
                         </div>
                       </div>
-                    ) : (
-                      // For active/inactive items, show both options
+                    ) : (
                       <>
-                        {/* Option 1: Move to Trash */}
+                        {}
                         <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                           <input
                             type="radio"
@@ -2155,7 +2043,7 @@ const APIProvidersPage = () => {
                           </div>
                         </label>
 
-                        {/* Option 2: Permanently Delete */}
+                        {}
                         <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                           <input
                             type="radio"
@@ -2178,21 +2066,21 @@ const APIProvidersPage = () => {
                     )}
                   </div>
 
-                  {/* Additional Warning for Permanent Delete */}
+                  {}
                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                      <p className="text-sm text-red-800">
                        <strong>Warning:</strong> The action will be scheduled until the completion of any orders/refill/cancel request operation.
                      </p>
                    </div>
 
-                   {/* Operation Note */}
+                   {}
                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                      <p className="text-sm text-blue-800">
                        <strong>Note:</strong> After being scheduled, users are not able to see the associated services of the scheduled deletion or trash of the provider.
                      </p>
                    </div>
 
-                  {/* Action Buttons */}
+                  {}
                   <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => setShowDeletePopup(false)}

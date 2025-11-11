@@ -24,18 +24,14 @@ interface FormData {
 interface FAQ {
   question: string;
   answer: string;
-}
-
-// Custom Gradient Spinner Component (Large version for loading state)
+}
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast/Twist Message Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -70,14 +66,10 @@ const ChildPanel: React.FC = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Set document title using useEffect for client-side
+  } | null>(null);
   useEffect(() => {
     setPageTitle('Child Panel', appName);
-  }, [appName]);
-
-  // Simulate initial loading
+  }, [appName]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsPageLoading(false);
@@ -158,9 +150,7 @@ const ChildPanel: React.FC = () => {
       answer:
         'No, your customer will never know about SMMDOC.com. They will place order on your website and your order will automatically place to SMMDOC.com under your user account.',
     },
-  ];
-
-  // Show toast notification
+  ];
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -176,8 +166,7 @@ const ChildPanel: React.FC = () => {
 
     let processedValue = value;
 
-    if (name === 'username') {
-      // Allow only letters, numbers, underscore, hyphen, and dot
+    if (name === 'username') {
       processedValue = value.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
     }
 
@@ -189,9 +178,7 @@ const ChildPanel: React.FC = () => {
 
   const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate API call
+    setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
       showToast('Child panel order submitted successfully!', 'success');
@@ -207,7 +194,7 @@ const ChildPanel: React.FC = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          {/* Page Title Section - Static */}
+          {}
           <div className="mb-6">
             <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
@@ -236,7 +223,7 @@ const ChildPanel: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Loading State */}
+            {}
             <div className="space-y-6">
               <div id="childPanelOrder">
                 <div className="card card-padding">
@@ -252,7 +239,7 @@ const ChildPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Column - Static FAQ */}
+            {}
             <div className="space-y-6">
               <div className="card card-padding">
                 <div className="card-header">
@@ -285,7 +272,7 @@ const ChildPanel: React.FC = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -297,7 +284,7 @@ const ChildPanel: React.FC = () => {
       </div>
 
       <div className="page-content">
-        {/* Page Title Section */}
+        {}
         <div className="mb-6">
           <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
@@ -329,12 +316,12 @@ const ChildPanel: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Form */}
+          {}
           <div className="space-y-6">
-            {/* Form Section */}
+            {}
             <div id="childPanelOrder">
               <div className="card card-padding">
-                {/* Tab Header */}
+                {}
                 <div className="card-header mb-6">
                   <div className="card-icon">
                     <FaShoppingCart />
@@ -342,7 +329,7 @@ const ChildPanel: React.FC = () => {
                   <h3 className="card-title">Create Child Panel</h3>
                 </div>
 
-                {/* Form */}
+                {}
                 <div className="space-y-6">
                   <div className="form-group">
                     <label htmlFor="domain" className="form-label">
@@ -479,7 +466,7 @@ const ChildPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column - FAQ */}
+          {}
           <div className="space-y-6">
             <div className="card card-padding">
               <div className="card-header">

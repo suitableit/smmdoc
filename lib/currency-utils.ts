@@ -1,4 +1,3 @@
-// lib/currency-utils.ts
 
 export interface Currency {
   id: number;
@@ -16,23 +15,18 @@ export interface CurrencySettings {
   currencyPosition: 'left' | 'right' | 'left_space' | 'right_space';
   thousandsSeparator: string;
   decimalSeparator: string;
-}
-
-// Cache for currency data
+}
 let currencyCache: {
   currencies: Currency[];
   settings: CurrencySettings;
   lastFetch: number;
 } | null = null;
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Fetch currency data from admin settings
+const CACHE_DURATION = 5 * 60 * 1000;
 export async function fetchCurrencyData(): Promise<{
   currencies: Currency[];
   settings: CurrencySettings;
-}> {
-  // Check cache first
+}> {
   if (currencyCache && Date.now() - currencyCache.lastFetch < CACHE_DURATION) {
     return {
       currencies: currencyCache.currencies,
@@ -40,22 +34,19 @@ export async function fetchCurrencyData(): Promise<{
     };
   }
 
-  try {
-    // Fetch enabled currencies using relative URL
+  try {
     const currenciesResponse = await fetch('/api/currencies/enabled', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!currenciesResponse.ok) {
       throw new Error(`Failed to fetch currencies: ${currenciesResponse.status}`);
     }
-    
-    const currenciesData = await currenciesResponse.json();
 
-    // Fetch currency settings using relative URL (admin only)
+    const currenciesData = await currenciesResponse.json();
     let settingsData = { success: false, currencySettings: null };
 
     try {
@@ -68,8 +59,7 @@ export async function fetchCurrencyData(): Promise<{
 
       if (settingsResponse.ok) {
         settingsData = await settingsResponse.json();
-      } else if (settingsResponse.status === 401) {
-        // User is not admin, use fallback settings
+      } else if (settingsResponse.status === 401) {
         console.log('Currency settings: Using fallback for non-admin user');
       } else {
         throw new Error(`Failed to fetch currency settings: ${settingsResponse.status}`);
@@ -86,9 +76,7 @@ export async function fetchCurrencyData(): Promise<{
       currencyPosition: 'left' as const,
       thousandsSeparator: ',',
       decimalSeparator: '.',
-    };
-
-    // Update cache
+    };
     currencyCache = {
       currencies,
       settings,
@@ -97,18 +85,14 @@ export async function fetchCurrencyData(): Promise<{
 
     return { currencies, settings };
   } catch (error) {
-    console.error('Error fetching currency data:', error);
-    
-    // Log detailed error information for debugging
+    console.error('Error fetching currency data:', error);
     if (error instanceof Error) {
       console.error('Error details:', {
         message: error.message,
         name: error.name,
         stack: error.stack
       });
-    }
-    
-    // Return comprehensive fallback data
+    }
     const fallbackCurrencies: Currency[] = [
       { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
       { id: 2, code: 'EUR', name: 'Euro', symbol: '€', rate: 0.85, enabled: true },
@@ -125,9 +109,7 @@ export async function fetchCurrencyData(): Promise<{
       currencyPosition: 'left',
       thousandsSeparator: ',',
       decimalSeparator: '.',
-    };
-
-    // Cache fallback data to prevent repeated API calls
+    };
     currencyCache = {
       currencies: fallbackCurrencies,
       settings: fallbackSettings,
@@ -139,9 +121,7 @@ export async function fetchCurrencyData(): Promise<{
       settings: fallbackSettings,
     };
   }
-}
-
-// Format currency amount using admin settings
+}
 export function formatCurrencyAmount(
   amount: number,
   currencyCode: string,
@@ -154,14 +134,10 @@ export function formatCurrencyAmount(
   }
 
   const { symbol } = currency;
-  const { displayDecimals, currencyPosition, thousandsSeparator, decimalSeparator } = settings;
-
-  // Format number with separators
+  const { displayDecimals, currencyPosition, thousandsSeparator, decimalSeparator } = settings;
   const parts = amount.toFixed(displayDecimals).split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-  const formattedAmount = parts.join(decimalSeparator);
-
-  // Apply currency position
+  const formattedAmount = parts.join(decimalSeparator);
   switch (currencyPosition) {
     case 'left':
       return `${symbol}${formattedAmount}`;
@@ -174,9 +150,7 @@ export function formatCurrencyAmount(
     default:
       return `${symbol}${formattedAmount}`;
   }
-}
-
-// Convert amount between currencies
+}
 export function convertCurrency(
   amount: number,
   fromCurrency: string,
@@ -201,42 +175,28 @@ export function convertCurrency(
   if (!fromCurrencyData || !toCurrencyData) {
     console.warn('Currency not found, returning original amount');
     return amount;
-  }
-
-  // Convert using rates (USD is base currency with rate 1.0000)
+  }
   let convertedAmount: number;
 
-  if (fromCurrency === 'USD') {
-    // From USD to other currency
+  if (fromCurrency === 'USD') {
     convertedAmount = amount * Number(toCurrencyData.rate);
-  } else if (toCurrency === 'USD') {
-    // From other currency to USD
+  } else if (toCurrency === 'USD') {
     convertedAmount = amount / Number(fromCurrencyData.rate);
-  } else {
-    // Between two non-USD currencies (via USD)
+  } else {
     const usdAmount = amount / Number(fromCurrencyData.rate);
     convertedAmount = usdAmount * Number(toCurrencyData.rate);
   }
 
   console.log('Conversion result:', { original: amount, converted: convertedAmount });
   return convertedAmount;
-}
-
-// Get currency by code
+}
 export function getCurrencyByCode(code: string, currencies: Currency[]): Currency | null {
   return currencies.find(c => c.code === code) || null;
-}
-
-// Clear currency cache (useful when admin updates settings)
+}
 export function clearCurrencyCache(): void {
   currencyCache = null;
-}
+}
 
-// ===== MULTI-CURRENCY STORAGE FUNCTIONS =====
-
-/**
- * Convert amount from any currency to USD (base currency)
- */
 export function convertToUSD(
   amount: number,
   fromCurrency: string,
@@ -250,15 +210,10 @@ export function convertToUSD(
   if (!fromCurrencyData) {
     console.warn(`Currency ${fromCurrency} not found, treating as USD`);
     return amount;
-  }
-
-  // Convert to USD by dividing by the rate
+  }
   return amount / Number(fromCurrencyData.rate);
 }
 
-/**
- * Convert amount from USD to target currency
- */
 export function convertFromUSD(
   amountUSD: number,
   toCurrency: string,
@@ -272,27 +227,18 @@ export function convertFromUSD(
   if (!toCurrencyData) {
     console.warn(`Currency ${toCurrency} not found, returning USD amount`);
     return amountUSD;
-  }
-
-  // Convert from USD by multiplying by the rate
+  }
   return amountUSD * Number(toCurrencyData.rate);
 }
 
-/**
- * Format currency with proper conversion and display
- */
 export async function formatCurrencyWithConversion(
   amountUSD: number,
   displayCurrency: string,
   showOriginalUSD: boolean = false
 ): Promise<string> {
   try {
-    const { currencies, settings } = await fetchCurrencyData();
-
-    // Convert USD amount to display currency
-    const convertedAmount = convertFromUSD(amountUSD, displayCurrency, currencies);
-
-    // Format the converted amount
+    const { currencies, settings } = await fetchCurrencyData();
+    const convertedAmount = convertFromUSD(amountUSD, displayCurrency, currencies);
     const formattedAmount = formatCurrencyAmount(convertedAmount, displayCurrency, currencies, settings);
 
     if (showOriginalUSD && displayCurrency !== 'USD') {
@@ -307,9 +253,6 @@ export async function formatCurrencyWithConversion(
   }
 }
 
-/**
- * Get exchange rate between two currencies
- */
 export function getExchangeRate(
   fromCurrency: string,
   toCurrency: string,
@@ -330,8 +273,7 @@ export function getExchangeRate(
     return Number(toCurrencyData.rate);
   } else if (toCurrency === 'USD') {
     return 1 / Number(fromCurrencyData.rate);
-  } else {
-    // Cross rate via USD
+  } else {
     return Number(toCurrencyData.rate) / Number(fromCurrencyData.rate);
   }
 }

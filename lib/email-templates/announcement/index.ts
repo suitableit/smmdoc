@@ -1,5 +1,3 @@
-// Announcement Email Templates
-// These templates are used for sending announcements to users
 
 import { createEmailTemplate, emailContentSections, EmailLayoutData } from '../shared/email-layout';
 
@@ -16,8 +14,7 @@ export interface AnnouncementEmailData {
   priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
-export const announcementTemplates = {
-  // General announcement to users
+export const announcementTemplates = {
   userAnnouncement: (data: AnnouncementEmailData) => {
     const layoutData: EmailLayoutData = {
       title: data.announcementTitle,
@@ -25,12 +22,12 @@ export const announcementTemplates = {
       footerMessage: 'This is an automated announcement. Please do not reply to this email.',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
-      
+
       ${data.priority === 'urgent' || data.announcementType === 'security' ? `
-      <!-- Urgent Notice -->
+
       <div style="background-color: #fef2f2; border-radius: 12px; padding: 20px; margin: 0 0 30px 0; border-left: 4px solid #ef4444;">
         <div style="display: flex; align-items: center; margin-bottom: 10px;">
           <h3 style="color: #ef4444; margin: 0; font-size: 18px; font-weight: bold;">Important Notice</h3>
@@ -38,13 +35,11 @@ export const announcementTemplates = {
         <p style="color: #7f1d1d; margin: 0; font-weight: 600;">This announcement requires your immediate attention.</p>
       </div>
       ` : ''}
-      
-      <!-- Announcement Content -->
+
       <div style="background-color: #f9fafb; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <div style="color: #4b5563; font-size: 16px; line-height: 1.6; white-space: pre-wrap;">${data.announcementContent}</div>
       </div>
-            
-            <!-- Announcement Details -->
+
             <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 18px; border-bottom: 2px solid ${
                 data.announcementType === 'maintenance' ? '#f59e0b' :
@@ -80,9 +75,9 @@ export const announcementTemplates = {
                 ` : ''}
               </table>
             </div>
-            
+
             ${data.announcementType === 'maintenance' ? `
-            <!-- Maintenance Notice -->
+
             <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #f59e0b;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What to Expect:</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -93,7 +88,7 @@ export const announcementTemplates = {
               </ul>
             </div>
             ` : data.announcementType === 'feature' ? `
-            <!-- New Feature Notice -->
+
             <div style="background-color: #f3e8ff; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #8b5cf6;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What's New:</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -104,7 +99,7 @@ export const announcementTemplates = {
               </ul>
             </div>
             ` : data.announcementType === 'promotion' ? `
-            <!-- Promotion Notice -->
+
             <div style="background-color: #ecfdf5; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #22c55e;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Special Offer Details:</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -115,7 +110,7 @@ export const announcementTemplates = {
               </ul>
             </div>
             ` : data.announcementType === 'security' ? `
-            <!-- Security Notice -->
+
             <div style="background-color: #fef2f2; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #ef4444;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Security Recommendations:</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -126,13 +121,12 @@ export const announcementTemplates = {
               </ul>
             </div>
             ` : ''}
-            
-      
+
       ${data.actionUrl && data.actionText ? emailContentSections.actionButtons([{
         text: data.actionText,
         url: data.actionUrl
       }]) : ''}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         ${data.announcementType === 'maintenance' ? 'We apologize for any inconvenience and appreciate your patience during this maintenance period.' :
           data.announcementType === 'security' ? 'Your account security is our top priority. Please take the recommended actions to keep your account safe.' :
@@ -142,11 +136,9 @@ export const announcementTemplates = {
           'Thank you for your attention to this announcement. We appreciate your continued support.'}
       </p>
     `;
-    
-    return createEmailTemplate(layoutData, content);
-  },
 
-  // Newsletter-style announcement
+    return createEmailTemplate(layoutData, content);
+  },
   userNewsletter: (data: AnnouncementEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Newsletter',
@@ -154,23 +146,22 @@ export const announcementTemplates = {
       footerMessage: 'You\'re receiving this newsletter because you\'re a valued member of our community.',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">${data.announcementTitle}</h2>
-      
-      <!-- Newsletter Content -->
+
       <div style="color: #4b5563; font-size: 16px; line-height: 1.8; margin: 30px 0; white-space: pre-wrap;">${data.announcementContent}</div>
-      
+
       ${data.actionUrl && data.actionText ? emailContentSections.actionButtons([{
         text: data.actionText,
         url: data.actionUrl
       }]) : ''}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Thank you for being part of our community. We appreciate your continued support and engagement!
       </p>
     `;
-    
+
     return createEmailTemplate(layoutData, content);
   },
 };

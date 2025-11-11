@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -13,20 +9,14 @@ import {
   FaCheck,
   FaTimes,
   FaInfoCircle,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// ButtonLoader removed - using text instead
-
-// Toast Message Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -53,28 +43,20 @@ interface CustomCodesSettings {
 const CustomCodesPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
-
-  // Set document title
+  const currentUser = useCurrentUser();
   useEffect(() => {
     setPageTitle('Custom Codes', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Custom codes settings state
+  } | null>(null);
   const [customCodesSettings, setCustomCodesSettings] = useState<CustomCodesSettings>({
     headerCodes: '',
     footerCodes: '',
-  });
-
-  // Load settings on component mount
+  });
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -83,7 +65,7 @@ const CustomCodesPage = () => {
         const response = await fetch('/api/admin/custom-codes-settings');
         if (response.ok) {
           const data = await response.json();
-          
+
           if (data.customCodesSettings) setCustomCodesSettings(data.customCodesSettings);
         } else {
           showToast('Failed to load custom codes settings', 'error');
@@ -97,18 +79,14 @@ const CustomCodesPage = () => {
     };
 
     loadSettings();
-  }, []);
-
-  // Show toast notification
+  }, []);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Save function
+  };
   const saveCustomCodesSettings = async () => {
     setIsLoading(true);
     try {
@@ -121,8 +99,7 @@ const CustomCodesPage = () => {
       });
 
       if (response.ok) {
-        showToast('Custom codes settings saved successfully!', 'success');
-        // Dispatch custom event to refresh custom codes on the frontend
+        showToast('Custom codes settings saved successfully!', 'success');
         window.dispatchEvent(new CustomEvent('customCodesUpdated'));
       } else {
         showToast('Failed to save custom codes settings', 'error');
@@ -133,15 +110,13 @@ const CustomCodesPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Show loading state
+  };
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Loading cards */}
+            {}
             {[1, 2].map((i) => (
               <div key={i} className="card card-padding h-fit">
                 <div className="flex items-center justify-center min-h-[200px]">
@@ -160,7 +135,7 @@ const CustomCodesPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -173,7 +148,7 @@ const CustomCodesPage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Header Codes */}
+          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">
@@ -198,16 +173,14 @@ const CustomCodesPage = () => {
                   }
                   rows={15}
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
-                  placeholder={`<!-- Example: Analytics tracking code -->
-<script>
-  // Your custom JavaScript code here
+                  placeholder={`
+<script>
 </script>
 
 <style>
-  /* Your custom CSS code here */
+
 </style>
 
-<!-- Custom meta tags -->
 <meta name="custom-tag" content="value">`}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -217,7 +190,7 @@ const CustomCodesPage = () => {
             </div>
           </div>
 
-          {/* Footer Codes */}
+          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">
@@ -242,15 +215,12 @@ const CustomCodesPage = () => {
                   }
                   rows={15}
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none font-mono text-sm"
-                  placeholder={`<!-- Example: Chat widget or tracking scripts -->
-<script>
-  // Your custom JavaScript code here
-  // This runs after the page content loads
+                  placeholder={`
+<script>
 </script>
 
-<!-- Custom HTML elements -->
 <div id="custom-footer-content">
-  <!-- Your custom HTML here -->
+
 </div>`}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -261,7 +231,7 @@ const CustomCodesPage = () => {
           </div>
         </div>
 
-        {/* Important Notes Section */}
+        {}
         <div className="mt-8">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
@@ -279,7 +249,7 @@ const CustomCodesPage = () => {
           </div>
         </div>
 
-        {/* Save Button */}
+        {}
         <div className="mt-8 flex justify-center">
           <button
             onClick={saveCustomCodesSettings}

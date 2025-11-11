@@ -31,7 +31,7 @@ export const ServiceIconsExample: React.FC = () => {
         badge="জনপ্রিয়"
         href="/services/instagram"
       />
-      
+
       <ServiceTile
         id={2}
         title="ফেসবুক লাইক"

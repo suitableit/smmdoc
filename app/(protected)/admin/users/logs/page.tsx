@@ -9,22 +9,16 @@ import {
   FaSync,
   FaTimes,
   FaTrash
-} from 'react-icons/fa';
-
-// Import APP_NAME constant
+} from 'react-icons/fa';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
-
-// Custom Gradient Spinner Component
+import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -41,9 +35,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Define interface for UserActivityLog
+);
 interface UserActivityLog {
   id: string;
   username: string;
@@ -62,14 +54,10 @@ interface PaginationInfo {
 }
 
 const UserActivityLogsPage = () => {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('User Activity Logs', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [activityLogs, setActivityLogs] = useState<UserActivityLog[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -80,7 +68,6 @@ const UserActivityLogsPage = () => {
     hasPrev: false,
   });
 
-
   const [searchTerm, setSearchTerm] = useState('');
   const [searchBy, setSearchBy] = useState('all');
   const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
@@ -90,13 +77,9 @@ const UserActivityLogsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Loading states
+  } | null>(null);
   const [logsLoading, setLogsLoading] = useState(true);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  // Fetch activity logs from API
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const fetchActivityLogs = async (page = 1, search = '', searchBy = 'all') => {
     try {
       setLogsLoading(true);
@@ -132,40 +115,26 @@ const UserActivityLogsPage = () => {
     } finally {
       setLogsLoading(false);
     }
-  };
-
-  // Load activity logs on component mount and when search changes
+  };
   useEffect(() => {
     fetchActivityLogs(pagination.page, searchTerm, searchBy);
-  }, [pagination.page, searchTerm, searchBy]);
-
-  // Initial load
+  }, [pagination.page, searchTerm, searchBy]);
   useEffect(() => {
     fetchActivityLogs();
-  }, []);
-
-  // Utility functions
+  }, []);
   const formatID = (id: string) => {
     return id.toUpperCase();
-  };
-
-  // Generate IP tracker URL
+  };
   const getIpTrackerUrl = (ipAddress: string) => {
     return `https://www.ip-tracker.org/locator/ip-lookup.php?ip=${ipAddress}`;
-  };
-
-  // Get current page data (server-side pagination)
+  };
   const getPaginatedData = () => {
     return activityLogs;
-  };
-
-  // Handle page change
+  };
   const handlePageChange = (newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
     fetchActivityLogs(newPage, searchTerm, searchBy);
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -194,9 +163,7 @@ const UserActivityLogsPage = () => {
   const handleRefresh = () => {
     fetchActivityLogs(pagination.page, searchTerm, searchBy);
     showToast('User activity logs refreshed successfully!', 'success');
-  };
-
-  // Handle log deletion
+  };
   const handleDeleteLog = async (logId: string) => {
     setDeleteLoading(true);
     try {
@@ -206,13 +173,11 @@ const UserActivityLogsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Remove from local state for immediate UI update
+      if (result.success) {
         setActivityLogs(prev => prev.filter(log => log.id !== logId));
         showToast('Activity log deleted successfully', 'success');
         setDeleteDialogOpen(false);
-        setLogToDelete(null);
-        // Refresh data to ensure consistency
+        setLogToDelete(null);
         fetchActivityLogs(pagination.page, searchTerm, searchBy);
       } else {
         showToast(result.error || 'Failed to delete activity log', 'error');
@@ -223,9 +188,7 @@ const UserActivityLogsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  // Handle bulk delete
+  };
   const handleBulkDelete = async () => {
     try {
       const response = await fetch('/api/admin/activity-logs', {
@@ -238,13 +201,11 @@ const UserActivityLogsPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Remove from local state for immediate UI update
+      if (result.success) {
         setActivityLogs(prev => prev.filter(log => !selectedLogs.includes(log.id)));
         showToast(`${selectedLogs.length} activity logs deleted successfully`, 'success');
         setSelectedLogs([]);
-        setBulkDeleteDialogOpen(false);
-        // Refresh data to ensure consistency
+        setBulkDeleteDialogOpen(false);
         fetchActivityLogs(pagination.page, searchTerm, searchBy);
       } else {
         showToast(result.error || 'Failed to delete activity logs', 'error');
@@ -257,7 +218,7 @@ const UserActivityLogsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -269,12 +230,12 @@ const UserActivityLogsPage = () => {
       </div>
 
       <div className="page-content">
-        {/* Controls Section */}
+        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Left: Action Buttons */}
+            {}
             <div className="flex items-center gap-2">
-              {/* Page View Dropdown */}
+              {}
               <select
                 value={pagination.limit}
                 onChange={(e) => {
@@ -293,7 +254,7 @@ const UserActivityLogsPage = () => {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-              
+
               <button
                 onClick={handleRefresh}
                 disabled={logsLoading}
@@ -303,8 +264,8 @@ const UserActivityLogsPage = () => {
                 Refresh
               </button>
             </div>
-            
-            {/* Right: Search Controls */}
+
+            {}
             <div className="flex items-center gap-3">
               <div className="relative">
                 <FaSearch
@@ -319,7 +280,7 @@ const UserActivityLogsPage = () => {
                   className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-              
+
               <select 
                 value={searchBy}
                 onChange={(e) => setSearchBy(e.target.value)}
@@ -332,7 +293,7 @@ const UserActivityLogsPage = () => {
           </div>
         </div>
 
-        {/* Activity Logs Table */}
+        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             {selectedLogs.length > 0 && (
@@ -380,7 +341,7 @@ const UserActivityLogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {/* Desktop Table View */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -511,7 +472,7 @@ const UserActivityLogsPage = () => {
                   </table>
                 </div>
 
-                {/* Mobile Card View - Visible on tablet and mobile */}
+                {}
                 <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {getPaginatedData().map((log) => (
@@ -519,7 +480,7 @@ const UserActivityLogsPage = () => {
                         key={log.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {/* Header with Checkbox, Sl No and Actions */}
+                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -533,8 +494,8 @@ const UserActivityLogsPage = () => {
                               {log.username}
                             </div>
                           </div>
-                          
-                          {/* Actions for Mobile */}
+
+                          {}
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => {
@@ -549,7 +510,7 @@ const UserActivityLogsPage = () => {
                           </div>
                         </div>
 
-                        {/* Details */}
+                        {}
                         <div className="mb-4">
                           <div
                             className="text-xs font-medium mb-1"
@@ -565,7 +526,7 @@ const UserActivityLogsPage = () => {
                           </div>
                         </div>
 
-                        {/* IP Address and History */}
+                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -611,7 +572,7 @@ const UserActivityLogsPage = () => {
                   </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div
                   className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t"
                 >
@@ -662,7 +623,7 @@ const UserActivityLogsPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Dialog */}
+        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -706,7 +667,7 @@ const UserActivityLogsPage = () => {
           </div>
         )}
 
-        {/* Bulk Delete Confirmation Dialog */}
+        {}
         {bulkDeleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

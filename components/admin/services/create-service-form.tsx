@@ -14,12 +14,8 @@ import axiosInstance from '@/lib/axiosInstance';
 import {
   createServiceDefaultValues,
   CreateServiceSchema,
-} from '@/lib/validators/admin/services/services.validator';
-
-// Fetcher function for useSWR
-const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
-
-// Custom Form Components
+} from '@/lib/validators/admin/services/services.validator';
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 const FormItem = ({
   className = '',
   children,
@@ -55,18 +51,14 @@ const FormMessage = ({
 }) =>
   children ? (
     <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
-  ) : null;
-
-// Custom Gradient Spinner Component
+  ) : null;
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Create Service Form Component
+);
 export const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (
@@ -85,9 +77,7 @@ export const CreateServiceForm: React.FC<{
     data: serviceTypesData,
     error: serviceTypesError,
     isLoading: serviceTypesLoading,
-  } = useSWR('/api/admin/service-types', fetcher);
-
-  // Debug service types data
+  } = useSWR('/api/admin/service-types', fetcher);
   useEffect(() => {
     console.log('🔍 Service Types Debug in Admin Services:');
     console.log('📊 serviceTypesData:', serviceTypesData);
@@ -106,33 +96,19 @@ export const CreateServiceForm: React.FC<{
     isLoading: providersLoading,
   } = useSWR('/api/admin/providers?filter=active', fetcher);
 
-
-
   const [isPending, startTransition] = useTransition();
-  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
-
-  // Helper function to detect if service requires username based on name/type patterns
+  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
   const detectOrderLinkType = useCallback((serviceName: string, serviceType?: string): 'link' | 'username' => {
     const name = serviceName.toLowerCase();
-    const type = serviceType?.toLowerCase() || '';
-    
-    // Keywords that typically require username
-    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
-    
-    // Keywords that typically require link
-    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
-    
-    // Check for username patterns first (more specific)
+    const type = serviceType?.toLowerCase() || '';
+    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
+    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
     if (usernameKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
       return 'username';
-    }
-    
-    // Check for link patterns
+    }
     if (linkKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
       return 'link';
-    }
-    
-    // Default to link if uncertain
+    }
     return 'link';
   }, []);
 
@@ -144,16 +120,13 @@ export const CreateServiceForm: React.FC<{
     setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
-    mode: 'onChange',
-    // No resolver to allow empty fields
+    mode: 'onChange',
     defaultValues: {
       ...createServiceDefaultValues,
-      mode: 'manual', // Set default mode to manual
-      orderLink: 'link', // Set default order link to 'link'
+      mode: 'manual',
+      orderLink: 'link',
     },
-  });
-
-  // Auto-select Default service type when service types are loaded
+  });
   useEffect(() => {
     if (serviceTypesData?.data && !watch('serviceTypeId')) {
       const defaultServiceType = serviceTypesData.data.find(
@@ -163,20 +136,10 @@ export const CreateServiceForm: React.FC<{
         setValue('serviceTypeId', defaultServiceType.id.toString());
       }
     }
-  }, [serviceTypesData, setValue, watch]);
-
-  // Watch refill field to control readonly state of refill days and display
-  const refillValue = watch('refill');
-  
-  // Watch mode field to control API provider field visibility
-  const modeValue = watch('mode');
-
-
-  
-  // Watch provider field for API services
-  const providerIdValue = watch('providerId');
-
-  // Fetch API services when provider is selected
+  }, [serviceTypesData, setValue, watch]);
+  const refillValue = watch('refill');
+  const modeValue = watch('mode');
+  const providerIdValue = watch('providerId');
   const {
     data: apiServicesData,
     error: apiServicesError,
@@ -184,35 +147,24 @@ export const CreateServiceForm: React.FC<{
   } = useSWR(
     modeValue === 'auto' && providerIdValue ? `/api/admin/providers/${providerIdValue}/services` : null,
     fetcher
-  );
-
-  // Watch API service selection for auto-fill
-  const providerServiceIdValue = watch('providerServiceId');
-
-  // Function to map API service type to internal service type ID
+  );
+  const providerServiceIdValue = watch('providerServiceId');
   const mapApiServiceTypeToInternalType = (apiServiceType: string): string | null => {
-    if (!apiServiceType || !serviceTypesData?.data) return null;
-    
-    // Normalize the API service type for comparison
-    const normalizedApiType = apiServiceType.toLowerCase().trim();
-    
-    // Define mapping rules (case-insensitive)
+    if (!apiServiceType || !serviceTypesData?.data) return null;
+    const normalizedApiType = apiServiceType.toLowerCase().trim();
     const typeMapping: { [key: string]: string[] } = {
-      '1': ['default', 'standard', 'normal', 'regular', 'basic'], // Default
-      '2': ['package', 'pack', 'bundle', 'fixed'], // Package
-      '3': ['special comments', 'custom comments', 'comments', 'special comment'], // Special Comments
-      '4': ['package comments', 'pack comments', 'bundle comments', 'package comment'], // Package Comments
-      '11': ['auto likes', 'auto like', 'subscription likes', 'auto-likes'], // Auto Likes
-      '12': ['auto views', 'auto view', 'subscription views', 'auto-views'], // Auto Views
-      '13': ['auto comments', 'auto comment', 'subscription comments', 'auto-comments'], // Auto Comments
-      '14': ['limited auto likes', 'limited likes', 'limited auto like'], // Limited Auto Likes
-      '15': ['limited auto views', 'limited views', 'limited auto view'], // Limited Auto Views
-    };
-    
-    // Find matching service type
+      '1': ['default', 'standard', 'normal', 'regular', 'basic'],
+      '2': ['package', 'pack', 'bundle', 'fixed'],
+      '3': ['special comments', 'custom comments', 'comments', 'special comment'],
+      '4': ['package comments', 'pack comments', 'bundle comments', 'package comment'],
+      '11': ['auto likes', 'auto like', 'subscription likes', 'auto-likes'],
+      '12': ['auto views', 'auto view', 'subscription views', 'auto-views'],
+      '13': ['auto comments', 'auto comment', 'subscription comments', 'auto-comments'],
+      '14': ['limited auto likes', 'limited likes', 'limited auto like'],
+      '15': ['limited auto views', 'limited views', 'limited auto view'],
+    };
     for (const [internalTypeId, apiTypeVariants] of Object.entries(typeMapping)) {
-      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
-        // Verify this service type exists in our system
+      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
         const serviceTypeExists = serviceTypesData.data.find(
           (type: any) => type.id.toString() === internalTypeId
         );
@@ -220,9 +172,7 @@ export const CreateServiceForm: React.FC<{
           return internalTypeId;
         }
       }
-    }
-    
-    // If no exact match found, try partial matching
+    }
     for (const serviceType of serviceTypesData.data) {
       const normalizedInternalName = serviceType.name.toLowerCase();
       if (normalizedApiType.includes(normalizedInternalName) || 
@@ -230,27 +180,23 @@ export const CreateServiceForm: React.FC<{
         return serviceType.id.toString();
       }
     }
-    
-    return null; // No match found
-  };
 
-  // Auto-fill form fields when API service is selected
+    return null;
+  };
   useEffect(() => {
     if (providerServiceIdValue && apiServicesData?.data?.services) {
       const selectedService = apiServicesData.data.services.find(
         (service: any) => service.id.toString() === providerServiceIdValue
       );
-      
+
       if (selectedService) {
         setValue('name', selectedService.name || '');
         setValue('description', selectedService.description || '');
         setValue('rate', selectedService.rate?.toString() || '');
         setValue('min_order', selectedService.min?.toString() || '');
         setValue('max_order', selectedService.max?.toString() || '');
-        setValue('perqty', '1000'); // Keep default per quantity
-        setValue('avg_time', '0-1 hours'); // Default average time
-        
-        // Auto-fill service type based on API service type
+        setValue('perqty', '1000');
+        setValue('avg_time', '0-1 hours');
         if (selectedService.type && serviceTypesData?.data) {
           const mappedServiceTypeId = mapApiServiceTypeToInternalType(selectedService.type);
           if (mappedServiceTypeId) {
@@ -259,11 +205,8 @@ export const CreateServiceForm: React.FC<{
           } else {
             console.log(`⚠️ No mapping found for service type: ${selectedService.type}`);
           }
-        }
-        
-        // Auto-fill refill and cancel settings from provider service
-        // Handle refill field - convert to boolean for form
-        let refillBoolValue = false; // default
+        }
+        let refillBoolValue = false;
         if (selectedService.refill !== undefined && selectedService.refill !== null) {
           if (typeof selectedService.refill === 'boolean') {
             refillBoolValue = selectedService.refill;
@@ -273,10 +216,8 @@ export const CreateServiceForm: React.FC<{
           } else if (typeof selectedService.refill === 'number') {
             refillBoolValue = selectedService.refill > 0;
           }
-        }
-        
-        // Handle cancel field - convert to boolean for form
-        let cancelBoolValue = false; // default
+        }
+        let cancelBoolValue = false;
         if (selectedService.cancel !== undefined && selectedService.cancel !== null) {
           if (typeof selectedService.cancel === 'boolean') {
             cancelBoolValue = selectedService.cancel;
@@ -287,31 +228,24 @@ export const CreateServiceForm: React.FC<{
             cancelBoolValue = selectedService.cancel > 0;
           }
         }
-        
+
         setValue('refill', refillBoolValue);
-        setValue('cancel', cancelBoolValue);
-        
-        // Set refill days and refill display if refill is enabled
-        if (refillBoolValue) {
-          // Set default values for refill days and display if not provided
+        setValue('cancel', cancelBoolValue);
+        if (refillBoolValue) {
           const refillDays = selectedService.refillDays || selectedService.refill_days || 30;
           const refillDisplay = selectedService.refillDisplay || selectedService.refill_display || 24;
-          
+
           setValue('refillDays', Number(refillDays) as any);
           setValue('refillDisplay', Number(refillDisplay) as any);
-        } else {
-          // Clear refill days and display when refill is disabled
+        } else {
           setValue('refillDays', undefined as any);
           setValue('refillDisplay', undefined as any);
-        }
-        
-        // Detect and set order link type based on service name and type
+        }
         const detectedType = detectOrderLinkType(selectedService.name, selectedService.type);
         setValue('orderLink', detectedType);
         setOrderLinkType(detectedType);
       }
-    } else {
-      // Reset to default when no API service is selected
+    } else {
       setValue('orderLink', 'link');
       setOrderLinkType('link');
       setValue('refill', false);
@@ -322,9 +256,7 @@ export const CreateServiceForm: React.FC<{
   }, [providerServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
-    console.log('Form submitted with values:', values);
-
-    // Validate required fields
+    console.log('Form submitted with values:', values);
     if (!values.categoryId || values.categoryId === '') {
       showToast('Please select a service category', 'error');
       return;
@@ -333,15 +265,11 @@ export const CreateServiceForm: React.FC<{
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
       return;
-    }
-
-    // Validate API provider when mode is auto
+    }
     if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
       showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
-    }
-
-    // Filter out empty values for create service
+    }
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
         if (value === '' || value === null || value === undefined) return false;
@@ -361,13 +289,12 @@ export const CreateServiceForm: React.FC<{
         console.log('API response:', response.data);
         if (response.data.success) {
           reset();
-          showToast(response.data.message, 'success');
-          // Live refresh all data
+          showToast(response.data.message, 'success');
           if (refreshAllDataWithServices) {
             await refreshAllDataWithServices();
           }
           if (onRefresh) onRefresh();
-          onClose(); // Close modal on success
+          onClose();
         } else {
           showToast(response.data.error, 'error');
         }
@@ -429,7 +356,7 @@ export const CreateServiceForm: React.FC<{
 
   return (
     <div className="w-full max-w-6xl">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -448,9 +375,9 @@ export const CreateServiceForm: React.FC<{
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Form Grid */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Service Name - 100% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -471,7 +398,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.name?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Category - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -499,7 +426,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.categoryId?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Type - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -525,7 +452,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.serviceTypeId?.message}</FormMessage>
             </FormItem>
 
-            {/* Mode - 100% width - REQUIRED with default manual */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -547,7 +474,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
 
-            {/* API Provider - 100% width - CONDITIONAL - Only show when mode is auto */}
+            {}
             {modeValue === 'auto' && (
               <FormItem className="md:col-span-2">
                 <FormLabel
@@ -575,9 +502,7 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             )}
 
-
-
-            {/* API Service - Only show when mode is auto and provider is selected */}
+            {}
             {modeValue === 'auto' && providerIdValue && (
               <FormItem className="md:col-span-2">
                 <FormLabel
@@ -612,7 +537,7 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             )}
 
-            {/* Service Price - 33% width - special grid - REQUIRED */}
+            {}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">
               <FormItem className="col-span-1">
                 <FormLabel
@@ -636,7 +561,7 @@ export const CreateServiceForm: React.FC<{
                 <FormMessage>{errors.rate?.message}</FormMessage>
               </FormItem>
 
-              {/* Minimum Order - 33% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -657,7 +582,7 @@ export const CreateServiceForm: React.FC<{
                 <FormMessage>{errors.min_order?.message}</FormMessage>
               </FormItem>
 
-              {/* Maximum Order - 33% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -679,9 +604,9 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             </div>
 
-            {/* Per Quantity and Average Time - 50% width each - REQUIRED */}
+            {}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Per Quantity - 50% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -702,7 +627,7 @@ export const CreateServiceForm: React.FC<{
                 <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
 
-              {/* Average Time - 50% width - REQUIRED */}
+              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -723,7 +648,7 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             </div>
 
-            {/* Refill - 100% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -747,7 +672,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
 
-            {/* Refill Days - 50% width (show only when refill is on) - REQUIRED */}
+            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -770,7 +695,7 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             )}
 
-            {/* Refill Display - 50% width (show only when refill is on) - REQUIRED */}
+            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -794,7 +719,7 @@ export const CreateServiceForm: React.FC<{
               </FormItem>
             )}
 
-            {/* Cancel - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -818,9 +743,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
 
-
-
-            {/* Order Link - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -842,7 +765,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.orderLink?.message}</FormMessage>
             </FormItem>
 
-            {/* Service Speed - 50% width - REQUIRED */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -867,7 +790,7 @@ export const CreateServiceForm: React.FC<{
               <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
             </FormItem>
 
-            {/* Example Link - 100% width - OPTIONAL */}
+            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -888,79 +811,15 @@ export const CreateServiceForm: React.FC<{
             </FormItem>
           </div>
 
-          {/* Refill and Cancel Options - Hidden from UI */}
-          {/*
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormItem className="md:col-span-1">
-              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                Refill Enabled
-              </FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
-                    {...register('refill')}
-                    disabled={isPending}
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Enable refill for this service
-                  </span>
-                </div>
-              </FormControl>
-              <FormMessage>{errors.refill?.message}</FormMessage>
-            </FormItem>
+          {}
+          {}
 
-            <FormItem className="md:col-span-1">
-              <FormLabel className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                Cancel Enabled
-              </FormLabel>
-              <FormControl>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 rounded"
-                    {...register('cancel')}
-                    disabled={isPending}
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Enable cancel for this service
-                  </span>
-                </div>
-              </FormControl>
-              <FormMessage>{errors.cancel?.message}</FormMessage>
-            </FormItem>
-          </div>
-          */}
+          {}
 
-          {/* Duplicate Refill Days field removed - using the one in grid layout above */}
+          {}
+          {}
 
-          {/* Processing Mode - 100% width - COMMENTED OUT */}
-          {/*
-          <div className="grid grid-cols-1 gap-6">
-            <FormItem className="md:col-span-1">
-              <FormLabel
-                className="text-sm font-medium"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                Processing Mode
-              </FormLabel>
-              <FormControl>
-                <select
-                  className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-                  {...register('mode')}
-                  disabled={isPending}
-                >
-                  <option value="manual">Manual</option>
-                  <option value="auto">Auto</option>
-                </select>
-              </FormControl>
-              <FormMessage>{errors.mode?.message}</FormMessage>
-            </FormItem>
-          </div>
-          */}
-
-          {/* Service Description - 100% width - REQUIRED */}
+          {}
           <FormItem>
             <FormLabel
               className="text-sm font-medium"
@@ -980,7 +839,7 @@ export const CreateServiceForm: React.FC<{
             <FormMessage>{errors.description?.message}</FormMessage>
           </FormItem>
 
-          {/* Submit Buttons */}
+          {}
           <div className="flex gap-2 justify-center">
             <button
               type="button"
@@ -1012,4 +871,3 @@ export const CreateServiceForm: React.FC<{
     </div>
   );
 };
-

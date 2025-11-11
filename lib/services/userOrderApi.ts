@@ -12,7 +12,7 @@ export const userOrderApi = createApi({
       }),
       providesTags: ['UserOrders'],
     }),
-    
+
     createOrder: builder.mutation({
       query: (orderData) => ({
         url: '/api/user/create-orders',

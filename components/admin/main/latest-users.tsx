@@ -6,18 +6,14 @@ import {
   FaUsers,
   FaCheckCircle,
   FaTimesCircle,
-} from 'react-icons/fa';
-
-// GradientSpinner component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// User interface
+);
 interface User {
   id: number;
   username: string;
@@ -35,9 +31,7 @@ interface User {
   lastLoginAt?: string;
   emailVerified: boolean;
   role: 'user' | 'admin' | 'moderator';
-}
-
-// Props interface for LatestUsers component
+}
 interface LatestUsersProps {
   latestUsers: User[];
   latestUsersLoading: boolean;
@@ -91,7 +85,7 @@ const LatestUsers = React.memo(function LatestUsers({
             </div>
           ) : (
             <>
-              {/* Desktop Table View - Hidden on mobile */}
+              {}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm min-w-[600px]">
                   <thead className="sticky top-0 bg-white border-b z-10">
@@ -215,7 +209,7 @@ const LatestUsers = React.memo(function LatestUsers({
                 </table>
               </div>
 
-              {/* Mobile Card View */}
+              {}
               <div className="lg:hidden">
                 <div className="space-y-4">
                   {latestUsers.map((user) => (

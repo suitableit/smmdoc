@@ -26,18 +26,14 @@ import {
     FaTimesCircle,
     FaUser,
     FaWallet
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -66,23 +62,17 @@ const DashboardPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Additional loading states for different sections
+  } | null>(null);
   const [userInfoLoading, setUserInfoLoading] = useState(true);
   const [financeLoading, setFinanceLoading] = useState(true);
   const [statisticsLoading, setStatisticsLoading] = useState(true);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ticketsLoading, setTicketsLoading] = useState(true);
 
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('Dashboard', appName);
-  }, [appName]);
-
-  // Simulate loading states for different sections
+  }, [appName]);
   useEffect(() => {
     const loadUserInfo = async () => {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -114,41 +104,31 @@ const DashboardPage = () => {
     loadStatistics();
     loadOrders();
     loadTickets();
-  }, []);
-
-  // Get recent orders from user stats
-  const userOrders = userStats?.recentOrders || [];
-
-  // User data from API or fallback to 0
+  }, []);
+  const userOrders = userStats?.recentOrders || [];
   const balance = userStats?.balance || 0;
   const totalSpend = userStats?.totalSpent || 0;
   const totalOrders = userStats?.totalOrders || 0;
   const pendingOrders = userStats?.ordersByStatus?.pending || 0;
   const completedOrders = userStats?.ordersByStatus?.completed || 0;
   const processingOrders = userStats?.ordersByStatus?.processing || 0;
-  const cancelledOrders = userStats?.ordersByStatus?.cancelled || 0;
-
-  // Format currency values consistently
-  const formatCurrency = (amount: number) => {
-    // Database balance is stored in BDT, so we need to convert properly
+  const cancelledOrders = userStats?.ordersByStatus?.cancelled || 0;
+  const formatCurrency = (amount: number) => {
     let convertedAmount = amount;
     let symbol = '৳';
 
-    if (currency === 'BDT') {
-      // If showing BDT, use the amount as is (already in BDT)
+    if (currency === 'BDT') {
       convertedAmount = amount;
       symbol = '৳';
-    } else if (currency === 'USD') {
-      // If showing USD, convert from BDT to USD
-      const bdtToUsdRate = 110; // BDT to USD rate
+    } else if (currency === 'USD') {
+      const bdtToUsdRate = 110;
       convertedAmount = amount / bdtToUsdRate;
       symbol = '$';
-    } else {
-      // For other currencies, convert from BDT using rate
+    } else {
       const bdtToUsdRate = 110;
       const usdAmount = amount / bdtToUsdRate;
       convertedAmount = usdAmount * (currencyRate || 1);
-      symbol = '$'; // Default symbol for other currencies
+      symbol = '$';
     }
 
     return `${symbol}${formatPrice(convertedAmount, 2)}`;
@@ -160,9 +140,7 @@ const DashboardPage = () => {
     } else {
       router.push('/new-order');
     }
-  };
-
-  // Get badge color based on status
+  };
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -197,9 +175,7 @@ const DashboardPage = () => {
       default:
         return <FaClock className="w-4 h-4" />;
     }
-  };
-
-  // Show toast notification
+  };
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -217,7 +193,7 @@ const DashboardPage = () => {
 
   return (
     <div className="px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -229,9 +205,9 @@ const DashboardPage = () => {
       </div>
 
       <div className="page-content">
-        {/* User Information Section */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {/* User ID Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -252,7 +228,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Username Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -273,7 +249,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Name Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -295,9 +271,9 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Financial Statistics Section */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {/* Balance Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -328,7 +304,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Total Orders Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -350,7 +326,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Total Spend Card */}
+          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -374,9 +350,9 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Statistics Overview */}
+          {}
           <div className="lg:col-span-2 space-y-6">
-            {/* Statistics Overview */}
+            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -386,7 +362,7 @@ const DashboardPage = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {/* Completed Orders */}
+                {}
                 <Link
                   href="/my-orders?status=completed"
                   className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200 cursor-pointer"
@@ -411,7 +387,7 @@ const DashboardPage = () => {
                   </div>
                 </Link>
 
-                {/* Processing Orders */}
+                {}
                 <Link
                   href="/my-orders?status=processing"
                   className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
@@ -436,7 +412,7 @@ const DashboardPage = () => {
                   </div>
                 </Link>
 
-                {/* Pending Orders */}
+                {}
                 <Link
                   href="/my-orders?status=pending"
                   className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors duration-200 cursor-pointer"
@@ -461,7 +437,7 @@ const DashboardPage = () => {
                   </div>
                 </Link>
 
-                {/* Cancelled Orders */}
+                {}
                 <Link
                   href="/my-orders?status=cancelled"
                   className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200 cursor-pointer"
@@ -488,7 +464,7 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Order History Section - Updated with OrdersList design */}
+            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -568,8 +544,7 @@ const DashboardPage = () => {
                             </td>
                             <td className="py-3 px-4 hidden md:table-cell">
                               <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {(() => {
-                                  // Order has stored prices in both USD and BDT
+                                {(() => {
                                   const usdPrice = order.usdPrice || 0;
                                   const bdtPrice = order.bdtPrice || 0;
 
@@ -583,8 +558,7 @@ const DashboardPage = () => {
                                     displayAmount = usdPrice;
                                   } else if (currentCurrencyData.code === 'BDT') {
                                     displayAmount = bdtPrice;
-                                  } else {
-                                    // Convert from USD to other currency
+                                  } else {
                                     displayAmount = usdPrice * currentCurrencyData.rate;
                                   }
 
@@ -651,9 +625,9 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Right Column - Support Tickets */}
+          {}
           <div className="space-y-6">
-            {/* Support Tickets Section */}
+            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -706,7 +680,7 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -731,7 +705,7 @@ const DashboardPage = () => {
                   <FaWallet className="w-4 h-4" />
                   Add Funds
                 </Link>
-                
+
                 <Link
                   href="/support-tickets/history"
                   className={`btn btn-secondary w-full flex items-center justify-center gap-2`}

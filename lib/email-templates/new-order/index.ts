@@ -1,5 +1,3 @@
-// New Order Email Templates
-// These templates are used for order notifications to users and admins
 
 import { createEmailTemplate, emailContentSections, EmailLayoutData } from '../shared/email-layout';
 
@@ -21,8 +19,7 @@ export interface NewOrderEmailData {
   paymentMethod?: string;
 }
 
-export const newOrderTemplates = {
-  // User notification when order is placed
+export const newOrderTemplates = {
   userOrderConfirmation: (data: NewOrderEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Order Confirmed!',
@@ -30,14 +27,13 @@ export const newOrderTemplates = {
       footerMessage: 'Thank you for choosing our services!',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         Thank you for your order! We've received your request and our team is now processing it. You'll receive updates as your order progresses.
       </p>
-            
-      <!-- Order Details -->
+
       <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #22c55e; padding-bottom: 10px;">Order Details</h3>
         ${emailContentSections.infoTable([
@@ -49,9 +45,9 @@ export const newOrderTemplates = {
           ...(data.paymentMethod ? [{label: 'Payment Method', value: data.paymentMethod}] : [])
         ])}
       </div>
-            
+
             ${data.orderItems && data.orderItems.length > 0 ? `
-            <!-- Order Items -->
+
             <div style="background-color: #f9fafb; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 18px;">Order Items:</h3>
               <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
@@ -67,8 +63,7 @@ export const newOrderTemplates = {
               </div>
             </div>
             ` : ''}
-            
-            <!-- What's Next -->
+
             <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">What happens next?</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -78,21 +73,18 @@ export const newOrderTemplates = {
                 <li style="margin-bottom: 8px;">You can track your order status in your dashboard</li>
               </ul>
             </div>
-            
-      
+
       ${emailContentSections.actionButtons([
         {text: 'Track Order Status', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Thank you for choosing our service! If you have any questions about your order, please don't hesitate to contact our support team.
       </p>
     `;
-    
-    return createEmailTemplate(layoutData, content);
-  },
 
-  // Admin notification when new order is placed
+    return createEmailTemplate(layoutData, content);
+  },
   adminNewOrder: (data: NewOrderEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'New Order Received',
@@ -100,13 +92,12 @@ export const newOrderTemplates = {
       footerMessage: 'Admin notification - please process promptly',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
         A new order has been placed and requires processing.
       </p>
-            
-            <!-- Order Details -->
+
             <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Order Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
@@ -144,9 +135,9 @@ export const newOrderTemplates = {
                 ` : ''}
               </table>
             </div>
-            
+
             ${data.orderItems && data.orderItems.length > 0 ? `
-            <!-- Order Items -->
+
             <div style="background-color: #f9fafb; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 18px;">Ordered Items:</h3>
               <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
@@ -162,8 +153,7 @@ export const newOrderTemplates = {
               </div>
             </div>
             ` : ''}
-            
-            <!-- Priority Actions -->
+
             <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #f59e0b;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Action Required:</h3>
               <ul style="color: #4b5563; margin: 0; padding-left: 20px;">
@@ -173,32 +163,29 @@ export const newOrderTemplates = {
                 <li style="margin-bottom: 8px;">Notify customer of any delays or issues</li>
               </ul>
             </div>
-            
-      
+
       ${emailContentSections.actionButtons([
         {text: 'Process Order', url: `${process.env.NEXT_PUBLIC_APP_URL}/admin/orders/${data.orderId}`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         Please process this order promptly to maintain customer satisfaction.
       </p>
     `;
-    
-    return createEmailTemplate(layoutData, content);
-  },
 
-  // User notification when order status is updated
+    return createEmailTemplate(layoutData, content);
+  },
   userOrderStatusUpdate: (data: NewOrderEmailData) => {
     const statusColor = data.orderStatus === 'completed' ? 'green' : data.orderStatus === 'cancelled' ? 'red' : 'orange';
     const statusTitle = data.orderStatus === 'completed' ? 'Completed' : data.orderStatus === 'cancelled' ? 'Cancelled' : 'Updated';
-    
+
     const layoutData: EmailLayoutData = {
       title: `Order ${statusTitle}!`,
       headerColor: 'primary-color',
       footerMessage: 'Thank you for choosing our services!',
       userEmail: data.userEmail
     };
-    
+
     const content = `
       ${emailContentSections.greeting(data.userName)}
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
@@ -207,8 +194,7 @@ export const newOrderTemplates = {
           data.orderStatus === 'processing' ? 'Your order is now being processed by our team.' :
           'Your order status has been updated.'}
       </p>
-            
-            <!-- Order Details -->
+
             <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0;">
               <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px; border-bottom: 2px solid ${data.orderStatus === 'completed' ? '#22c55e' : data.orderStatus === 'cancelled' ? '#ef4444' : '#f59e0b'}; padding-bottom: 10px;">Order Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
@@ -230,39 +216,38 @@ export const newOrderTemplates = {
                 </tr>
               </table>
             </div>
-            
+
             ${data.orderStatus === 'completed' ? `
-            <!-- Completion Message -->
+
             <div style="background-color: #ecfdf5; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #22c55e;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Order Completed Successfully!</h3>
               <p style="color: #4b5563; margin: 0;">Your order has been processed and completed. Thank you for choosing our service!</p>
             </div>
             ` : data.orderStatus === 'cancelled' ? `
-            <!-- Cancellation Message -->
+
             <div style="background-color: #fef2f2; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #ef4444;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Order Cancelled</h3>
               <p style="color: #4b5563; margin: 0;">If you have any questions about this cancellation, please contact our support team.</p>
             </div>
             ` : `
-            <!-- Processing Message -->
+
             <div style="background-color: #fef3c7; border-radius: 12px; padding: 25px; margin: 30px 0; border-left: 4px solid #f59e0b;">
               <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Order in Progress</h3>
               <p style="color: #4b5563; margin: 0;">Our team is working on your order. You'll receive another update when it's completed.</p>
             </div>
             `}
-            
-      
+
       ${emailContentSections.actionButtons([
         {text: 'View Order Details', url: `${process.env.NEXT_PUBLIC_APP_URL}/orders/${data.orderId}`}
       ])}
-      
+
       <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 30px 0 0 0;">
         ${data.orderStatus === 'completed' ? 'Thank you for your business! We hope to serve you again soon.' :
           data.orderStatus === 'cancelled' ? 'We apologize for any inconvenience. Please feel free to place a new order anytime.' :
           'Thank you for your patience as we process your order.'}
       </p>
     `;
-    
+
     return createEmailTemplate(layoutData, content);
   },
 };

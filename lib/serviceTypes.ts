@@ -217,9 +217,7 @@ export const SERVICE_TYPE_CONFIGS: Record<number, ServiceTypeConfig> = {
     icon: "👁️⏰",
     color: "teal"
   }
-};
-
-// Helper functions for service type operations
+};
 export function getServiceTypeConfig(typeId: number): ServiceTypeConfig | null {
   return SERVICE_TYPE_CONFIGS[typeId] || null;
 }
@@ -238,56 +236,50 @@ export function getPackageTypes(): ServiceTypeConfig[] {
 
 export function getCommentTypes(): ServiceTypeConfig[] {
   return Object.values(SERVICE_TYPE_CONFIGS).filter(config => config.requiresComments);
-}
-
-// Validation functions
+}
 export function validateOrderByType(typeConfig: ServiceTypeConfig, orderData: any): string[] {
   const errors: string[] = [];
-  
+
   if (typeConfig.requiresLink && !orderData.link) {
     errors.push('Link is required for this service type');
   }
-  
+
   if (typeConfig.requiresQuantity && (!orderData.qty || orderData.qty <= 0)) {
     errors.push('Quantity is required for this service type');
   }
-  
+
   if (typeConfig.requiresComments && !orderData.comments) {
     errors.push('Comments are required for this service type');
   }
-  
+
   if (typeConfig.requiresUsername && !orderData.username) {
     errors.push('Username is required for this service type');
   }
-  
+
   if (typeConfig.requiresPosts && (!orderData.posts || orderData.posts <= 0)) {
     errors.push('Number of posts is required for this service type');
   }
-  
+
   if (typeConfig.isSubscription) {
     if (typeConfig.allowsRuns && (!orderData.runs || orderData.runs <= 0)) {
       errors.push('Number of runs is required for subscription services');
     }
-    
+
     if (typeConfig.allowsInterval && (!orderData.intervalTime || orderData.intervalTime <= 0)) {
       errors.push('Interval time is required for subscription services');
     }
   }
-  
-  return errors;
-}
 
-// Price calculation functions
+  return errors;
+}
 export function calculatePrice(service: any, typeConfig: ServiceTypeConfig, quantity: number): number {
   if (typeConfig.fixedQuantity) {
     const fixedQty = service.typeParameters?.fixedQuantity || 1;
     return parseFloat(service.rate) * fixedQty;
   }
-  
-  return parseFloat(service.rate) * quantity;
-}
 
-// Order processing helper
+  return parseFloat(service.rate) * quantity;
+}
 export function getOrderProcessingData(typeConfig: ServiceTypeConfig, orderData: any) {
   return {
     serviceType: typeConfig.id,
@@ -301,9 +293,7 @@ export function getOrderProcessingData(typeConfig: ServiceTypeConfig, orderData:
     allowsInterval: typeConfig.allowsInterval,
     processingPriority: typeConfig.isSubscription ? 'high' : 'normal'
   };
-}
-
-// Type definitions for API responses
+}
 export interface ServiceTypeResponse {
   id: number;
   name: string;

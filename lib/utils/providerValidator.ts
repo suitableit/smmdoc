@@ -13,14 +13,8 @@ export interface ProviderValidationResult {
   };
 }
 
-/**
- * Validate if a provider has valid API URL and API key
- * @param providerId - The provider ID to validate
- * @returns Promise<ProviderValidationResult>
- */
 export async function validateProvider(providerId: number): Promise<ProviderValidationResult> {
-  try {
-    // Get provider from database
+  try {
     const provider = await db.api_providers.findUnique({
       where: { id: providerId },
       select: {
@@ -37,33 +31,25 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
         isValid: false,
         error: 'Provider not found'
       };
-    }
-
-    // Check if provider is active
+    }
     if (provider.status !== 'active') {
       return {
         isValid: false,
         error: 'Provider is not active'
       };
-    }
-
-    // Check if API key exists and is not empty
+    }
     if (!provider.api_key || provider.api_key.trim() === '') {
       return {
         isValid: false,
         error: 'Provider API key is missing or empty'
       };
-    }
-
-    // Validate API URL
+    }
     if (!provider.api_url || provider.api_url.trim() === '') {
       return {
         isValid: false,
         error: 'API URL is missing or empty'
       };
-    }
-
-    // Validate API URL format
+    }
     try {
       new URL(provider.api_url);
     } catch {
@@ -87,14 +73,8 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
   }
 }
 
-/**
- * Validate provider by name
- * @param providerName - The provider name to validate
- * @returns Promise<ProviderValidationResult>
- */
 export async function validateProviderByName(providerName: string): Promise<ProviderValidationResult> {
-  try {
-    // Get provider from database
+  try {
     const provider = await db.api_providers.findUnique({
       where: { name: providerName },
       select: {
@@ -124,10 +104,6 @@ export async function validateProviderByName(providerName: string): Promise<Prov
   }
 }
 
-/**
- * Get all valid (active with API URL and key) providers
- * @returns Promise<Array<{id: number, name: string, api_key: string, api_url: string, status: string, createdAt: Date, updatedAt: Date}>>
- */
 export async function getValidProviders(): Promise<Array<{
   id: number;
   name: string;
@@ -157,9 +133,7 @@ export async function getValidProviders(): Promise<Array<{
         createdAt: true,
         updatedAt: true
       }
-    });
-
-    // Additional validation for URL format
+    });
     const validProviders = providers.filter(provider => {
       try {
         new URL(provider.api_url);
@@ -178,15 +152,10 @@ export async function getValidProviders(): Promise<Array<{
   }
 }
 
-/**
- * Test provider API connection
- * @param providerId - The provider ID to test
- * @returns Promise<{success: boolean, error?: string}>
- */
 export async function testProviderConnection(providerId: number): Promise<{success: boolean, error?: string}> {
   try {
     const validation = await validateProvider(providerId);
-    
+
     if (!validation.isValid) {
       return {
         success: false,
@@ -194,28 +163,21 @@ export async function testProviderConnection(providerId: number): Promise<{succe
       };
     }
 
-    const provider = validation.provider!;
-
-    // Check if this is a test/sample provider
+    const provider = validation.provider!;
     const isTestProvider = provider.api_url.includes('samplesmm.com') || 
                           provider.api_url.includes('api.com') ||
                           provider.api_key.startsWith('sample_') ||
                           provider.api_key.startsWith('sp_api_') ||
                           provider.name.toLowerCase().includes('sample') ||
-                          provider.name.toLowerCase().includes('test');
-
-    // For test providers, perform basic validation only
+                          provider.name.toLowerCase().includes('test');
     if (isTestProvider) {
       console.log(`Skipping real API test for test provider: ${provider.name}`);
       return { 
         success: true,
         error: undefined
       };
-    }
-
-    // Test API connection by calling services endpoint for real providers
-    try {
-      // Import the default API specification
+    }
+    try {
       const { DEFAULT_SMM_API_SPEC } = await import('@/lib/provider-api-specification');
       const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       const servicesRequest = requestBuilder.buildServicesRequest();
@@ -224,7 +186,7 @@ export async function testProviderConnection(providerId: number): Promise<{succe
         method: servicesRequest.method,
         headers: servicesRequest.headers,
         body: servicesRequest.data,
-        signal: AbortSignal.timeout(10000) // 10 second timeout
+        signal: AbortSignal.timeout(10000)
       });
 
       if (response.ok) {

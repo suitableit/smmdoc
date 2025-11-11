@@ -4,17 +4,12 @@ const signInSchema = z.object({
   email: z
     .string()
     .min(1, 'Username or Email is required')
-    .refine((value) => {
-      // Allow either email format or username format
+    .refine((value) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const usernameRegex = /^[a-zA-Z0-9._-]+$/;
-
-      // If it contains @, validate as email
+      const usernameRegex = /^[a-zA-Z0-9._-]+$/;
       if (value.includes('@')) {
         return emailRegex.test(value);
-      }
-
-      // Otherwise validate as username
+      }
       return usernameRegex.test(value) && value.length >= 3;
     }, 'Please enter a valid email address or username'),
   password: z
@@ -54,9 +49,7 @@ const signUpSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  });
-
-// Dynamic sign up schema based on settings
+  });
 const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
   const baseSchema = {
     username: z.string().nonempty('Username is required'),
@@ -72,9 +65,7 @@ const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
       .string()
       .nonempty('Confirm password is required')
       .min(5, 'Confirm password must be at least 5 characters'),
-  };
-
-  // Add name field based on settings
+  };
   const schemaWithName = nameFieldEnabled
     ? { ...baseSchema, name: z.string().nonempty('Name is required') }
     : { ...baseSchema, name: z.string().optional() };
@@ -85,9 +76,7 @@ const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     });
-};
-
-// Type that matches the dynamic sign up schema produced by createSignUpSchema
+};
 export type DynamicSignUpSchema = z.infer<ReturnType<typeof createSignUpSchema>>;
 
 type SignUpSchema = z.infer<typeof signUpSchema>;
@@ -128,9 +117,7 @@ type NewPasswordSchema = z.infer<typeof newPasswordSchema>;
 
 const newPasswordDefaultValues: NewPasswordSchema = {
   password: '',
-};
-
-// Zod schema for password validation
+};
 const passwordSchema = z
   .object({
     currentPass: z.string().min(1, 'Current password is required'),
@@ -151,4 +138,3 @@ export {
     type NewPasswordSchema,
     type PasswordForm
 };
-

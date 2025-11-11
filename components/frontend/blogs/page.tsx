@@ -65,23 +65,19 @@ const BlogPage: React.FC = () => {
   const [allBlogPosts, setAllBlogPosts] = useState<BlogPost[]>([]);
   const [visiblePosts, setVisiblePosts] = useState(6);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-
-
-  // Fetch blog posts from API
+  const [isLoading, setIsLoading] = useState(true);
   const fetchBlogPosts = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await fetch('/api/blogs?status=published&limit=50');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch blog posts');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.success && data.data && data.data.posts) {
         setAllBlogPosts(data.data.posts);
         console.log('Frontend: Fetched blog posts from API:', data.data.posts.length);
@@ -90,16 +86,13 @@ const BlogPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Frontend: Error fetching blog posts:', error);
-      setError('Failed to load blog posts');
-      // No fallback data - show empty state
+      setError('Failed to load blog posts');
       setAllBlogPosts([]);
       console.log('Frontend: No blog posts available');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Load blog posts on component mount
+  };
   useEffect(() => {
     fetchBlogPosts();
   }, []);
@@ -107,8 +100,7 @@ const BlogPage: React.FC = () => {
   const displayedPosts = allBlogPosts.slice(0, visiblePosts);
   const hasMorePosts = visiblePosts < allBlogPosts.length;
 
-  const loadMorePosts = () => {
-    // Simulate loading delay
+  const loadMorePosts = () => {
     setTimeout(() => {
       setVisiblePosts((prev) => Math.min(prev + 3, allBlogPosts.length));
     }, 1000);
@@ -116,7 +108,7 @@ const BlogPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {}
       <Section className="pt-[60px] lg:pt-[120px]">
         <div className="text-center">
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
@@ -146,7 +138,7 @@ const BlogPage: React.FC = () => {
         </div>
       </Section>
 
-      {/* Blog Posts Grid */}
+      {}
       <Section className="pt-[30px]">
         {isLoading ? (
           <div className="card-padding bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300 p-12">
@@ -166,9 +158,9 @@ const BlogPage: React.FC = () => {
         )}
       </Section>
 
-      {/* Load More Section */}
+      {}
       <Section className="pt-0 pb-[120px]">
-        {/* Load More Button */}
+        {}
         {hasMorePosts && allBlogPosts.length > 0 && (
           <div className="text-center">
             <button
@@ -180,7 +172,7 @@ const BlogPage: React.FC = () => {
           </div>
         )}
 
-        {/* End Message */}
+        {}
         {!hasMorePosts && allBlogPosts.length > 6 && (
           <div className="text-center">
             <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors duration-200">
@@ -191,7 +183,7 @@ const BlogPage: React.FC = () => {
         )}
       </Section>
 
-      {/* Bottom Spacing Section - Removed as padding is now in Load More Section */}
+      {}
     </div>
   );
 };

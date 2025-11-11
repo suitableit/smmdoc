@@ -21,20 +21,19 @@ const PublicContactSystemGuard: React.FC<PublicContactSystemGuardProps> = ({ chi
           const data = await response.json();
           const enabled = data.contactSystemEnabled || false;
           setIsEnabled(enabled);
-          
-          // If disabled, redirect to home page
+
           if (!enabled) {
             router.push('/');
             return;
           }
         } else {
-          // If we can't fetch settings, assume disabled for security
+
           router.push('/');
           return;
         }
       } catch (error) {
         console.error('Error checking contact system status:', error);
-        // If there's an error, assume disabled for security
+
         router.push('/');
         return;
       } finally {
@@ -45,7 +44,6 @@ const PublicContactSystemGuard: React.FC<PublicContactSystemGuardProps> = ({ chi
     checkContactSystem();
   }, [router]);
 
-  // Show loading spinner while checking
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -59,12 +57,10 @@ const PublicContactSystemGuard: React.FC<PublicContactSystemGuardProps> = ({ chi
     );
   }
 
-  // If contact system is disabled, don't render children (redirect will happen)
   if (!isEnabled) {
     return null;
   }
 
-  // If contact system is enabled, render children
   return <>{children}</>;
 };
 

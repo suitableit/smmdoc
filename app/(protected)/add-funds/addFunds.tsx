@@ -22,18 +22,14 @@ import {
     FaSpinner,
     FaTimes,
     FaWallet,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -73,23 +69,17 @@ export function AddFundForm() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Set document title using useEffect for client-side
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     setPageTitle('Add Funds', appName);
-  }, [appName]);
-
-  // Simulate initial loading
+  }, [appName]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
-
-  // Show toast notification
+  }, []);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -106,9 +96,7 @@ export function AddFundForm() {
     mode: 'all',
     resolver: zodResolver(addFundSchema),
     defaultValues: addFundDefaultValues,
-  });
-
-  // Change active currency based on global currency real-time
+  });
   useEffect(() => {
     const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
     setActiveCurrency(newCurrency);
@@ -148,19 +136,15 @@ export function AddFundForm() {
   });
 
   const handleUSDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentRate = rate || 120; // Use fallback rate if not available
+    const currentRate = rate || 120;
     const usdValue = parseFloat(e.target.value) || 0;
-    const bdtValue = usdValue * currentRate;
-
-    // Update form values
+    const bdtValue = usdValue * currentRate;
     form.setValue('amountUSD', e.target.value, { shouldValidate: true });
     form.setValue('amountBDT', bdtValue.toFixed(2), { shouldValidate: true });
     form.setValue('amountBDTConverted', bdtValue.toFixed(2), {
       shouldValidate: true,
     });
-    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
-
-    // Update total amount state
+    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
     setTotalAmount({
       amount: bdtValue,
       currency: 'BDT',
@@ -168,27 +152,21 @@ export function AddFundForm() {
   };
 
   const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentRate = rate || 120; // Use fallback rate if not available
+    const currentRate = rate || 120;
     const bdtValue = parseFloat(e.target.value) || 0;
-    const usdValue = bdtValue / currentRate;
-
-    // Update form values
+    const usdValue = bdtValue / currentRate;
     form.setValue('amountBDT', e.target.value, { shouldValidate: true });
     form.setValue('amountUSD', usdValue.toFixed(2), { shouldValidate: true });
-    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
-
-    // Update total amount state
+    form.setValue('amount', bdtValue.toFixed(2), { shouldValidate: true });
     setTotalAmount({
       amount: bdtValue,
       currency: 'BDT',
     });
-  };
-
-  // Handle form submission
+  };
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
     startTransition(async () => {
       try {
-        const currentRate = rate || 120; // Use fallback rate
+        const currentRate = rate || 120;
         const amountInBDT =
           activeCurrency === 'USD'
             ? parseFloat(values.amountUSD || '0') * currentRate
@@ -209,7 +187,7 @@ export function AddFundForm() {
         const formValues = {
           method: 'uddoktapay',
           amount: activeCurrency === 'USD' ? values.amountUSD : values.amountBDT,
-          currency: activeCurrency, // Send user's selected currency
+          currency: activeCurrency,
           userId: user?.id,
           full_Name: user?.name || 'John Doe',
           email: user?.email || 'customer@example.com',
@@ -262,7 +240,7 @@ export function AddFundForm() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Loading State */}
+        {}
         <div className="card card-padding">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center flex flex-col items-center">
@@ -272,9 +250,9 @@ export function AddFundForm() {
           </div>
         </div>
 
-        {/* Right Column - Feature Cards */}
+        {}
         <div className="space-y-6">
-          {/* Secure Payment */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -287,7 +265,7 @@ export function AddFundForm() {
             </p>
           </div>
 
-          {/* 100% Safe */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -300,7 +278,7 @@ export function AddFundForm() {
             </p>
           </div>
 
-          {/* Instant Credit */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -319,7 +297,7 @@ export function AddFundForm() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -328,10 +306,10 @@ export function AddFundForm() {
         />
       )}
 
-      {/* Left Column - Payment Form */}
+      {}
       <div className="card card-padding">
         <div className="space-y-6">
-          {/* Amount Section */}
+          {}
           <div
             className="card"
             style={{
@@ -386,7 +364,7 @@ export function AddFundForm() {
                 </div>
               )}
 
-              {/* Currency Toggle */}
+              {}
               <div className="flex justify-center">
                 <button
                   type="button"
@@ -405,7 +383,7 @@ export function AddFundForm() {
               </div>
             </div>
 
-            {/* Converted Amount Display */}
+            {}
             <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
               <div className="text-sm text-gray-600 mb-2 font-medium">
                 Converted Amount
@@ -440,7 +418,7 @@ export function AddFundForm() {
             </div>
           </div>
 
-          {/* Phone Number Field */}
+          {}
           <div className="form-group">
             <input
               type="tel"
@@ -459,7 +437,7 @@ export function AddFundForm() {
             )}
           </div>
 
-          {/* Total Amount Summary */}
+          {}
           <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-semibold text-gray-700">
@@ -481,7 +459,7 @@ export function AddFundForm() {
             )}
           </div>
 
-          {/* Submit Button */}
+          {}
           <button
             type="button"
             onClick={form.handleSubmit(onSubmit)}
@@ -503,9 +481,9 @@ export function AddFundForm() {
         </div>
       </div>
 
-      {/* Right Column - Feature Cards */}
+      {}
       <div className="space-y-6">
-        {/* Secure Payment */}
+        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">
@@ -518,7 +496,7 @@ export function AddFundForm() {
           </p>
         </div>
 
-        {/* 100% Safe */}
+        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">
@@ -531,7 +509,7 @@ export function AddFundForm() {
           </p>
         </div>
 
-        {/* Instant Credit */}
+        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">

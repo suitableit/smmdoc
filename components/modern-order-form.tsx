@@ -21,9 +21,7 @@ export default function ModernOrderForm({
   const [selectedService, setSelectedService] = useState('');
   const [link, setLink] = useState('');
   const [quantity, setQuantity] = useState<number>(0);
-  const [price, setPrice] = useState<number>(0);
-
-  // Mock data
+  const [price, setPrice] = useState<number>(0);
   const categories = [
     { id: '1', name: 'Facebook - Live Stream Views', icon: '👤' },
     { id: '2', name: 'Instagram - Followers', icon: '📸' },
@@ -50,35 +48,24 @@ export default function ModernOrderForm({
       maxQuantity: 5000,
       averageTime: '30 minutes',
     },
-  ];
-
-  // Filter services based on selected category
+  ];
   const filteredServices = services.filter(
     (service) => service.categoryId === selectedCategory
-  );
-
-  // Get current service details
+  );
   const currentService = services.find(
     (service) => service.id === selectedService
-  );
-
-  // Update price when quantity or service changes
+  );
   useEffect(() => {
     if (currentService && quantity) {
-      const basePrice = (currentService.price * quantity) / 1000;
-      // Convert from USD to selected currency
+      const basePrice = (currentService.price * quantity) / 1000;
       const convertedPrice = convertAmount(basePrice, 'USD', currency);
       setPrice(convertedPrice);
     } else {
       setPrice(0);
     }
-  }, [currentService, quantity, currency, convertAmount]);
-
-  // Handle form submission
+  }, [currentService, quantity, currency, convertAmount]);
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validation
+    e.preventDefault();
     if (!selectedService || !link || !quantity) {
       alert('Please fill in all required fields');
       return;
@@ -93,15 +80,11 @@ export default function ModernOrderForm({
         `Quantity must be between ${currentService.minQuantity} and ${currentService.maxQuantity}`
       );
       return;
-    }
-
-    // Submit order logic would go here
+    }
     alert(
       `Order submitted: Service ID ${selectedService}, Link: ${link}, Quantity: ${quantity}`
     );
-  };
-
-  // For Mass Orders form
+  };
   const [massOrderText, setMassOrderText] = useState('');
 
   const handleMassOrderSubmit = (e: React.FormEvent) => {
@@ -110,9 +93,7 @@ export default function ModernOrderForm({
     if (!massOrderText.trim()) {
       alert('Please enter at least one order');
       return;
-    }
-
-    // Process orders
+    }
     const lines = massOrderText.trim().split('\n');
     alert(`${lines.length} orders submitted`);
   };
@@ -165,9 +146,7 @@ export default function ModernOrderForm({
         </form>
       </motion.div>
     );
-  }
-
-  // Custom Order Form
+  }
   if (type === 'custom') {
     return (
       <motion.div
@@ -249,9 +228,7 @@ export default function ModernOrderForm({
         </form>
       </motion.div>
     );
-  }
-
-  // Subscription Order Form
+  }
   if (type === 'subscription') {
     return (
       <motion.div

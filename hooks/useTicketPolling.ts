@@ -42,35 +42,28 @@ export const useTicketPolling = <T extends TicketDetails>(
         ? `/api/admin/tickets/${ticketId}` 
         : `/api/support-tickets/${ticketId}`;
       const response = await fetch(apiUrl);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch ticket updates');
       }
 
       const result = await response.json();
-      const updatedTicket: T = apiEndpoint === 'admin' ? result.ticket : result;
-      
-      // Check if there are new messages or status changes
+      const updatedTicket: T = apiEndpoint === 'admin' ? result.ticket : result;
       const currentMessageCount = updatedTicket.messages?.length || 0;
       const currentStatus = updatedTicket.status;
       const hasUpdates = updatedTicket.lastUpdated !== lastUpdateRef.current;
-      
-      if (hasUpdates) {
-        // Check if message count increased (new messages)
+
+      if (hasUpdates) {
         if (currentMessageCount > lastMessageCount) {
           setHasNewMessages(true);
-        }
-        
-        // Check if status changed
+        }
         if (currentStatus !== lastStatusRef.current && lastStatusRef.current !== '') {
           setHasStatusChange(true);
         }
-        
+
         setLastMessageCount(currentMessageCount);
         lastUpdateRef.current = updatedTicket.lastUpdated;
-        lastStatusRef.current = currentStatus;
-        
-        // Enhance the data with userInfo like in the initial fetch (only for admin)
+        lastStatusRef.current = currentStatus;
         if (apiEndpoint === 'admin') {
           const enhancedData = {
             ...updatedTicket,
@@ -78,10 +71,10 @@ export const useTicketPolling = <T extends TicketDetails>(
               ...updatedTicket.userInfo,
               fullName: updatedTicket.userInfo?.name || 'N/A',
               username: updatedTicket.userInfo?.username,
-              phone: 'N/A', // Not available in current schema
-              company: 'N/A', // Not available in current schema
-              address: 'N/A', // Not available in current schema
-              registeredAt: 'N/A', // Would need user creation date
+              phone: 'N/A',
+              company: 'N/A',
+              address: 'N/A',
+              registeredAt: 'N/A',
             }
           };
           setTicketDetails(enhancedData);
@@ -94,43 +87,31 @@ export const useTicketPolling = <T extends TicketDetails>(
     } finally {
       setIsPolling(false);
     }
-  };
-
-  // Start polling
+  };
   const startPolling = () => {
-    if (intervalRef.current) return; // Already polling
-    
-    intervalRef.current = setInterval(pollTicketUpdates, interval);
-  };
+    if (intervalRef.current) return;
 
-  // Stop polling
+    intervalRef.current = setInterval(pollTicketUpdates, interval);
+  };
   const stopPolling = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  };
-
-  // Reset new messages indicator
+  };
   const markMessagesAsRead = () => {
     setHasNewMessages(false);
-  };
-
-  // Reset status change indicator
+  };
   const markStatusChangeAsRead = () => {
     setHasStatusChange(false);
-  };
-
-  // Initialize state with current ticket details
+  };
   useEffect(() => {
     if (ticketDetails) {
       setLastMessageCount(ticketDetails.messages?.length || 0);
       lastUpdateRef.current = ticketDetails.lastUpdated;
       lastStatusRef.current = ticketDetails.status || '';
     }
-  }, [ticketDetails]);
-
-  // Initialize polling when conditions are met
+  }, [ticketDetails]);
   useEffect(() => {
     if (ticketId) {
       startPolling();
@@ -141,9 +122,7 @@ export const useTicketPolling = <T extends TicketDetails>(
     return () => {
       stopPolling();
     };
-  }, [ticketId, interval]);
-
-  // Cleanup on unmount
+  }, [ticketId, interval]);
   useEffect(() => {
     return () => {
       stopPolling();
@@ -158,7 +137,7 @@ export const useTicketPolling = <T extends TicketDetails>(
     markStatusChangeAsRead,
     startPolling,
     stopPolling,
-    pollTicketUpdates // Manual poll trigger
+    pollTicketUpdates
   };
 };
 

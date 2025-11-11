@@ -20,7 +20,7 @@ export default function GlobalError({ error }: ErrorProps) {
 
       <main className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#0d0712] transition-colors duration-200 px-4 py-[120px]">
         <div className="text-center max-w-2xl mx-auto">
-          {/* Content */}
+          {}
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
             Oops! Something went wrong
           </h4>
@@ -37,7 +37,7 @@ export default function GlobalError({ error }: ErrorProps) {
             continue exploring our services.
           </p>
 
-          {/* Error message */}
+          {}
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-8">
             <p className="text-red-600 dark:text-red-400 text-sm font-medium">
               Error: {error.message}

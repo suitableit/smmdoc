@@ -1,8 +1,6 @@
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-import NewPasswordForm from "./new-password";
-
-// Check if password reset is enabled
+import NewPasswordForm from "./new-password";
 async function checkPasswordResetEnabled() {
   const userSettings = await db.userSettings.findFirst();
   return userSettings?.resetPasswordEnabled ?? true;

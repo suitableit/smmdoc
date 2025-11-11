@@ -25,9 +25,7 @@ import {
     FaSpinner,
     FaSync,
     FaTimes,
-} from 'react-icons/fa';
-
-// Toast Component
+} from 'react-icons/fa';
 const Toast = ({
   message,
   type = 'success',
@@ -69,9 +67,7 @@ interface ServiceType {
 }
 
 export default function ApiIntegrationPage() {
-  const { appName } = useAppNameWithFallback();
-
-  // Set document title using useEffect for client-side
+  const { appName } = useAppNameWithFallback();
   useEffect(() => {
     setPageTitle('API Integration', appName);
   }, [appName]);
@@ -88,9 +84,7 @@ export default function ApiIntegrationPage() {
   const [activeTab, setActiveTab] = useState<'php' | 'python' | 'nodejs'>(
     'php'
   );
-  const user = useCurrentUser();
-
-  // Show toast notification
+  const user = useCurrentUser();
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -99,12 +93,10 @@ export default function ApiIntegrationPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  useEffect(() => {
-    // Simulate API call to fetch API key
+  useEffect(() => {
     const fetchApiKey = async () => {
       try {
-        setIsLoading(true);
-        // Simulate API response
+        setIsLoading(true);
         setTimeout(() => {
           setApiKey(
             'smmdoc_51NxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -123,8 +115,7 @@ export default function ApiIntegrationPage() {
   const generateNewApiKey = async () => {
     setIsGeneratingKey(true);
 
-    try {
-      // Simulate API response
+    try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const newApiKey =
@@ -159,9 +150,7 @@ export default function ApiIntegrationPage() {
         showToast('Failed to copy to clipboard', 'error');
       }
     );
-  };
-
-  // Service types with all possible parameters
+  };
   const serviceTypes: ServiceType[] = [
     {
       id: 0,
@@ -237,34 +226,23 @@ export default function ApiIntegrationPage() {
       serviceTypes.find((type) => type.id === selectedServiceType) ||
       serviceTypes[0]
     );
-  };
-
-  // Code examples
+  };
   const codeExamples = {
-    php: `<?php
-// API URL
-$url = 'https://smmdoc.com/api/v2';
-
-// API Key
-$apiKey = '${apiKey || 'YOUR_API_KEY'}';
-
-// Order details
+    php: `<?php
+$url = 'https://smmdoc.com/api/v2';
+$apiKey = '${apiKey || 'YOUR_API_KEY'}';
 $postData = [
     'key' => $apiKey,
     'action' => 'add',
-    'service' => 1, // Service ID
+    'service' => 1,
     'link' => 'https://www.instagram.com/username',
     'quantity' => 100
-];
-
-// Initialize cURL
+];
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-// Execute request
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 curl_close($ch);
 
@@ -305,7 +283,7 @@ axios.post(url, payload)
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -316,7 +294,7 @@ axios.post(url, payload)
 
       <div className="page-content">
         <div className="space-y-6">
-          {/* API Key Management Section */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -403,7 +381,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* API Documentation Overview */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -440,7 +418,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Service List */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -500,7 +478,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Add Order */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -510,7 +488,7 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-6">
-              {/* Service Type Selector */}
+              {}
               <div className="form-group">
                 <label className="form-label">Service Type</label>
                 <div className="relative">
@@ -528,7 +506,7 @@ axios.post(url, payload)
                 </div>
               </div>
 
-              {/* Parameters Table */}
+              {}
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -574,7 +552,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Order Status */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -636,7 +614,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Multiple Orders Status */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -710,7 +688,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Create Refill */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -768,7 +746,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Create Multiple Refill */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -839,7 +817,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Get Refill Status */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -897,7 +875,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Get Multiple Refill Status */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -968,7 +946,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Create Cancel */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1035,7 +1013,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* User Balance */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1088,7 +1066,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Code Examples */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1098,7 +1076,7 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-6">
-              {/* Tab Navigation */}
+              {}
               <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                 <button
                   onClick={() => setActiveTab('php')}
@@ -1132,7 +1110,7 @@ axios.post(url, payload)
                 </button>
               </div>
 
-              {/* Tab Content */}
+              {}
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900">
@@ -1172,7 +1150,7 @@ axios.post(url, payload)
             </div>
           </div>
 
-          {/* Help Section */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">

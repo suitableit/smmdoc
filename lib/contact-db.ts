@@ -1,18 +1,12 @@
-import { db } from './db';
-
-// Contact database client using main Prisma client
+import { db } from './db';
 class ContactDB {
   private prisma = db;
 
-  constructor() {
-    // Using main Prisma client for all contact operations
-  }
-
-  // Contact Settings Methods
+  constructor() {
+  }
   async getContactSettings() {
     try {
-      console.log('🔍 ContactDB - Getting contact settings from database...');
-      // Always get the latest record by ID
+      console.log('🔍 ContactDB - Getting contact settings from database...');
       const settings = await this.prisma.contactSettings.findFirst({
         orderBy: { updatedAt: 'desc' }
       });
@@ -28,8 +22,7 @@ class ContactDB {
     contactSystemEnabled: boolean;
     maxPendingContacts: string;
   }) {
-    try {
-      // Check if settings exist
+    try {
       const existingSettings = await this.prisma.contactSettings.findFirst();
 
       if (existingSettings) {
@@ -53,9 +46,7 @@ class ContactDB {
       console.error('Error upserting contact settings:', error);
       return false;
     }
-  }
-
-  // Contact Categories Methods
+  }
   async getContactCategories() {
     try {
       const categories = await this.prisma.contactCategory.findMany({
@@ -69,8 +60,7 @@ class ContactDB {
   }
 
   async createContactCategory(name: string) {
-    try {
-      // Get or create contact settings first
+    try {
       let settings = await this.prisma.contactSettings.findFirst();
       if (!settings) {
         settings = await this.prisma.contactSettings.create({
@@ -119,11 +109,7 @@ class ContactDB {
       console.error('Error deleting contact category:', error);
       return false;
     }
-  }
-
-
-
-  // Contact Messages Methods
+  }
   async createContactMessage(data: {
     userId: number;
     subject: string;
@@ -182,8 +168,7 @@ class ContactDB {
     limit?: number;
     offset?: number;
   }) {
-    try {
-      // Build WHERE clause for raw SQL
+    try {
       let whereClause = 'WHERE 1=1';
       const params: any[] = [];
 
@@ -196,9 +181,7 @@ class ContactDB {
         whereClause += ' AND (cm.subject LIKE ? OR cm.message LIKE ? OR u.username LIKE ? OR u.email LIKE ?)';
         const searchTerm = `%${filters.search}%`;
         params.push(searchTerm, searchTerm, searchTerm, searchTerm);
-      }
-
-      // Add LIMIT and OFFSET
+      }
       let limitClause = '';
       if (filters?.limit) {
         limitClause = ` LIMIT ${filters.limit}`;
@@ -224,9 +207,7 @@ class ContactDB {
         ${limitClause}
       `;
 
-      const messages = await this.prisma.$queryRawUnsafe(query, ...params) as any[];
-
-      // Format the response to match expected structure
+      const messages = await this.prisma.$queryRawUnsafe(query, ...params) as any[];
       const formattedMessages = messages.map((msg: any) => ({
         id: msg.id,
         userId: msg.userId,
@@ -280,9 +261,7 @@ class ContactDB {
       const messages = await this.prisma.$queryRawUnsafe(query, id) as any[];
       const message = messages[0];
 
-      if (!message) return null;
-
-      // Get notes if requested
+      if (!message) return null;
       let notes = [];
       if (includeNotes) {
         const notesQuery = `
@@ -296,9 +275,7 @@ class ContactDB {
           ORDER BY cn.createdAt DESC
         `;
         notes = await this.prisma.$queryRawUnsafe(notesQuery, id) as any[];
-      }
-
-      // Get user statistics
+      }
       const userStatsQuery = `
         SELECT 
           COUNT(*) as total_messages,
@@ -307,9 +284,7 @@ class ContactDB {
         WHERE userId = ?
       `;
       const userStats = await this.prisma.$queryRawUnsafe(userStatsQuery, message.userId) as any[];
-      const stats = userStats[0] || { total_messages: 0, open_messages: 0 };
-
-      // Format the response to match expected structure
+      const stats = userStats[0] || { total_messages: 0, open_messages: 0 };
       return {
         id: message.id,
         userId: message.userId,
@@ -384,56 +359,44 @@ class ContactDB {
   }
 
   async replyToContactMessage(id: number, adminReply: string, repliedBy: number, attachments?: string) {
-    try {
-      // Get current message to check for existing replies
+    try {
       const currentMessage = await this.prisma.contactMessage.findUnique({
         where: { id },
         select: { adminReply: true }
       });
 
-      let replies = [];
-      
-      // Parse existing replies if they exist
+      let replies = [];
       if (currentMessage?.adminReply) {
-        try {
-          // Try to parse as JSON array (new format)
+        try {
           replies = JSON.parse(currentMessage.adminReply);
-          if (!Array.isArray(replies)) {
-            // If it's not an array, it's the old single reply format
+          if (!Array.isArray(replies)) {
             replies = [{
               content: currentMessage.adminReply,
               repliedAt: new Date().toISOString(),
               repliedBy: repliedBy,
-              author: 'Admin' // Default for old replies
+              author: 'Admin'
             }];
           }
-        } catch {
-          // If JSON parsing fails, it's the old single reply format
+        } catch {
           replies = [{
             content: currentMessage.adminReply,
             repliedAt: new Date().toISOString(),
             repliedBy: repliedBy,
-            author: 'Admin' // Default for old replies
+            author: 'Admin'
           }];
         }
-      }
-
-      // Get admin username for the new reply
+      }
       const adminUser = await this.prisma.user.findUnique({
         where: { id: repliedBy },
         select: { username: true, name: true }
-      });
-
-      // Add new reply to the array
+      });
       replies.push({
         content: adminReply,
         repliedAt: new Date().toISOString(),
         repliedBy: repliedBy,
         author: adminUser?.username || adminUser?.name || 'Admin',
         attachments: attachments ? JSON.parse(attachments) : undefined
-      });
-
-      // Update the message with the new replies array
+      });
       await this.prisma.contactMessage.update({
         where: { id },
         data: {
@@ -460,15 +423,9 @@ class ContactDB {
       console.error('Error deleting contact message:', error);
       return false;
     }
-  }
-
-
-
-  // Cleanup method
+  }
   async disconnect() {
     await this.prisma.$disconnect();
   }
-}
-
-// Export singleton instance
+}
 export const contactDB = new ContactDB();

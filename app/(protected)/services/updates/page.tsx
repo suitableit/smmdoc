@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
@@ -12,18 +12,14 @@ import {
   FaClipboardList,
   FaSearch,
   FaTimes,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Toast Component
+);
 const Toast = ({
   message,
   type = 'success',
@@ -76,14 +72,10 @@ export default function UpdateServiceTable() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  const limit = 50;
-
-  // Set document title using useEffect for client-side
+  const limit = 50;
   useEffect(() => {
     setPageTitle('Service Updates', appName);
-  }, [appName]);
-
-  // Show toast notification
+  }, [appName]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -104,8 +96,7 @@ export default function UpdateServiceTable() {
   useEffect(() => {
     const fetchServices = async () => {
       setLoading(true);
-      try {
-        // First fetch the services
+      try {
         const response = await fetch(
           `/api/user/services/getUpdateServices?page=${page}&limit=${limit}&search=${debouncedSearch}`,
           revalidate
@@ -174,7 +165,7 @@ export default function UpdateServiceTable() {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -184,9 +175,9 @@ export default function UpdateServiceTable() {
       )}
 
       <div className="page-content">
-        {/* Service Updates Content Card - Everything in one box */}
+        {}
         <div className="card card-padding">
-          {/* Header with Icon */}
+          {}
           <div className="flex items-center gap-3 mb-6">
             <div className="card-icon">
               <FaBell className="w-5 h-5 text-white" />
@@ -194,7 +185,7 @@ export default function UpdateServiceTable() {
             <h1 className="card-title">Service Updates</h1>
           </div>
 
-          {/* Search Bar */}
+          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -211,7 +202,7 @@ export default function UpdateServiceTable() {
             </div>
           </div>
 
-          {/* Services Updates Table */}
+          {}
           {services?.length > 0 ? (
             <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full border-collapse">
@@ -234,13 +225,10 @@ export default function UpdateServiceTable() {
                 <tbody>
                   {services?.filter(service => {
                     try {
-                      const updateData = JSON.parse(service.updateText || '{}');
-                      // Only filter out updates that are explicitly from API providers
-                      // Keep all manual admin updates, even if they have provider-like properties
+                      const updateData = JSON.parse(service.updateText || '{}');
                       const isApiProviderSync = updateData.provider && updateData.providerId && updateData.lastSynced;
                       return !isApiProviderSync;
-                    } catch (error) {
-                      // Include services with invalid JSON (likely manual updates)
+                    } catch (error) {
                       return true;
                     }
                   }).map((service, i) => (
@@ -255,34 +243,26 @@ export default function UpdateServiceTable() {
                         <div className="break-words">
                           {(() => {
                             try {
-                              const updateData = JSON.parse(service.updateText || '{}');
-                              
-                              // Check for new service creation
+                              const updateData = JSON.parse(service.updateText || '{}');
                               if (updateData.action === 'created' || updateData.type === 'new_service' || updateData.action === 'create') {
                                 return 'New service';
-                              }
-                              
-                              // Check for service addition (imported)
+                              }
                               if (updateData.action === 'added' || updateData.type === 'service_added' || updateData.action === 'import') {
                                 return 'New service';
                               }
-                              
+
                               const updates = [];
                               let hasRateChange = false;
-                              let hasStatusChange = false;
-                              
-                              // Check for rate changes with proper decimal formatting
+                              let hasStatusChange = false;
                               const rateChange = updateData.changes?.rate || updateData.rate;
                               if (rateChange && rateChange.from !== undefined && rateChange.to !== undefined) {
                                 const oldRate = parseFloat(rateChange.from);
-                                const newRate = parseFloat(rateChange.to);
-                                
-                                // Format rates to remove unnecessary trailing zeros
+                                const newRate = parseFloat(rateChange.to);
                                 const formatRate = (rate: number) => {
                                   const formatted = rate.toFixed(6);
                                   return parseFloat(formatted).toString();
                                 };
-                                
+
                                 if (newRate > oldRate) {
                                   updates.push(`Rate increased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
                                   hasRateChange = true;
@@ -290,9 +270,7 @@ export default function UpdateServiceTable() {
                                   updates.push(`Rate decreased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
                                   hasRateChange = true;
                                 }
-                              }
-                              
-                              // Check for status changes
+                              }
                               const statusChange = updateData.changes?.status || updateData.status;
                               if (statusChange && statusChange.from !== undefined && statusChange.to !== undefined) {
                                 const oldStatus = statusChange.from;
@@ -304,50 +282,35 @@ export default function UpdateServiceTable() {
                                   updates.push('Service disabled');
                                   hasStatusChange = true;
                                 }
-                              }
-                              
-                              // Check for other service information changes
-                              const infoUpdates = [];
-                              
-                              // Check for min order changes
+                              }
+                              const infoUpdates = [];
                               const minOrderChange = updateData.changes?.min_order || updateData.min_order;
                               if (minOrderChange && minOrderChange.from !== undefined && minOrderChange.to !== undefined) {
                                 infoUpdates.push('min order');
-                              }
-                              
-                              // Check for max order changes
+                              }
                               const maxOrderChange = updateData.changes?.max_order || updateData.max_order;
                               if (maxOrderChange && maxOrderChange.from !== undefined && maxOrderChange.to !== undefined) {
                                 infoUpdates.push('max order');
-                              }
-                              
-                              // Check for name changes
+                              }
                               const nameChange = updateData.changes?.name || updateData.name;
                               if (nameChange && nameChange.from !== undefined && nameChange.to !== undefined) {
                                 infoUpdates.push('name');
-                              }
-                              
-                              // Check for description changes
+                              }
                               const descriptionChange = updateData.changes?.description || updateData.description;
                               if (descriptionChange && descriptionChange.from !== undefined && descriptionChange.to !== undefined) {
                                 infoUpdates.push('description');
-                              }
-                              
-                              // Check for category changes
+                              }
                               const categoryChange = updateData.changes?.categoryId || updateData.changes?.category || updateData.category;
                               if (categoryChange && categoryChange.from !== undefined && categoryChange.to !== undefined) {
                                 infoUpdates.push('category');
-                              }
-                              
-                              // If there are info updates but no rate/status changes, show "Service info updated"
+                              }
                               if (infoUpdates.length > 0 && !hasRateChange && !hasStatusChange) {
                                 updates.push('Service info updated');
                               }
-                              
+
                               return updates.length > 0 ? updates.join(', ') : 'Service updated';
-                              
-                            } catch (error) {
-                              // Handle plain text updates or invalid JSON
+
+                            } catch (error) {
                               const text = service.updateText || '';
                               if (text.toLowerCase().includes('created') || text.toLowerCase().includes('new')) {
                                 return 'New service';
@@ -387,7 +350,7 @@ export default function UpdateServiceTable() {
             </div>
           )}
 
-          {/* Pagination */}
+          {}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">

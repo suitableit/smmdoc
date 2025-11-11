@@ -14,10 +14,6 @@ export interface EmailConfig {
   from: string;
 }
 
-/**
- * Fetches email configuration from database
- * @returns EmailConfig object or null if not configured
- */
 export async function getEmailConfig(): Promise<EmailConfig | null> {
   try {
     const emailSettings = await prisma.emailSettings.findFirst({
@@ -27,15 +23,13 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
     if (!emailSettings || !emailSettings.smtp_host || !emailSettings.smtp_username) {
       console.warn('Email settings not configured in database');
       return null;
-    }
-
-    // Use support email from Email Settings, fallback to SMTP username
+    }
     const supportEmail = emailSettings.email || emailSettings.smtp_username;
 
     return {
       host: emailSettings.smtp_host,
       port: emailSettings.smtp_port,
-      secure: emailSettings.smtp_port === 465, // true for 465, false for other ports
+      secure: emailSettings.smtp_port === 465,
       auth: {
         user: emailSettings.smtp_username,
         pass: emailSettings.smtp_password,
@@ -48,13 +42,9 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
   }
 }
 
-/**
- * Creates a nodemailer transporter using database email settings
- * @returns Transporter instance or null if configuration is not available
- */
 export async function createEmailTransporter(): Promise<Transporter | null> {
   const config = await getEmailConfig();
-  
+
   if (!config) {
     return null;
   }
@@ -67,17 +57,14 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
       auth: config.auth,
       tls: {
         rejectUnauthorized: false,
-      },
-      // Connection pooling options
+      },
       pool: true,
       maxConnections: 1,
       rateDelta: 20000,
-      rateLimit: 5,
-      // Connection timeout settings
+      rateLimit: 5,
       connectionTimeout: 60000,
       greetingTimeout: 30000,
-      socketTimeout: 60000,
-      // Only add DKIM if private key is provided
+      socketTimeout: 60000,
       ...(process.env.DKIM_PRIVATE_KEY && {
         dkim: {
           domainName: config.from.split('@')[1] || config.host,
@@ -85,9 +72,7 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
           privateKey: process.env.DKIM_PRIVATE_KEY,
         }
       }),
-    });
-
-    // Verify the transporter
+    });
     console.log('🔍 Attempting to verify transporter...');
     try {
       await transporter.verify();
@@ -96,7 +81,7 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
       console.warn('Transporter verification failed, but continuing anyway:', (verifyError as Error).message);
       console.log('Transporter created without verification');
     }
-    
+
     return transporter;
   } catch (error) {
     const err = error as Error & { code?: string; command?: string; response?: string; responseCode?: number };
@@ -112,22 +97,15 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
   }
 }
 
-/**
- * Gets the "from" email address from General Settings (Administration Email Address)
- * @returns from email address or null if not configured
- */
 export async function getFromEmailAddress(): Promise<string | null> {
-  try {
-    // Use Support Email Address from Email Settings
+  try {
     const emailSettings = await prisma.emailSettings.findFirst({
       orderBy: { updated_at: 'desc' }
     });
-    
+
     if (emailSettings?.email) {
       return emailSettings.email;
-    }
-    
-    // Fallback to SMTP username if support email not set
+    }
     return emailSettings?.smtp_username || null;
   } catch (error) {
     console.error('Error fetching support email from Email Settings:', error);

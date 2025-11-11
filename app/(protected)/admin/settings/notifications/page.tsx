@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -15,21 +11,15 @@ import {
   FaTimes,
   FaUser,
   FaUserShield,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock components for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
-
-// Toast Message Component
+);
+const ButtonLoader = () => <div className="loading-spinner"></div>;
 const Toast = ({
   message,
   type = 'success',
@@ -46,9 +36,7 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-
-// Switch Component
+);
 const Switch = ({ checked, onCheckedChange, onClick, title }: any) => (
   <button
     onClick={onClick}
@@ -85,22 +73,16 @@ interface AdminNotifications {
 const NotificationSettingsPage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
-
-  // Set document title
+  const currentUser = useCurrentUser();
   useEffect(() => {
     setPageTitle('Notification Settings', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Notification settings state
+  } | null>(null);
   const [userNotifications, setUserNotifications] = useState<UserNotifications>({
     welcomeEnabled: true,
     apiKeyChangedEnabled: true,
@@ -122,9 +104,7 @@ const NotificationSettingsPage = () => {
     pendingTransactionsEnabled: true,
     apiSyncLogsEnabled: false,
     newChildPanelOrdersEnabled: true,
-  });
-
-  // Load settings on component mount
+  });
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -133,7 +113,7 @@ const NotificationSettingsPage = () => {
         const response = await fetch('/api/admin/notification-settings');
         if (response.ok) {
           const data = await response.json();
-          
+
           if (data.userNotifications) setUserNotifications(data.userNotifications);
           if (data.adminNotifications) setAdminNotifications(data.adminNotifications);
         } else {
@@ -148,18 +128,14 @@ const NotificationSettingsPage = () => {
     };
 
     loadSettings();
-  }, []);
-
-  // Show toast notification
+  }, []);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Save functions
+  };
   const saveUserNotifications = async () => {
     setIsLoading(true);
     try {
@@ -202,15 +178,13 @@ const NotificationSettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Show loading state
+  };
   if (isPageLoading) {
     return (
       <div className="page-container">
         <div className="page-content">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Loading cards */}
+            {}
             {[1, 2].map((i) => (
               <div key={i} className="card card-padding">
                 <div className="flex items-center justify-center min-h-[300px]">
@@ -229,7 +203,7 @@ const NotificationSettingsPage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -242,7 +216,7 @@ const NotificationSettingsPage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Admin Notifications Card */}
+          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -490,7 +464,7 @@ const NotificationSettingsPage = () => {
             </div>
           </div>
 
-          {/* User Notifications Card */}
+          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">

@@ -77,9 +77,7 @@ export const WebsiteIcon: React.FC<ServiceIconProps> = ({ size = 24, color = "#6
     <path d="M2 12h20" stroke="white" strokeWidth="1.5" />
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="white" strokeWidth="1.5" />
   </svg>
-);
-
-// New icons added below
+);
 
 export const WhatsappIcon: React.FC<ServiceIconProps> = ({ size = 24, color = "#25D366", className }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>

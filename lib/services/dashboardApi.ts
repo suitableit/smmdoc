@@ -12,7 +12,7 @@ export const dashboardApi = createApi({
       }),
       providesTags: ['AdminStats'],
     }),
-    
+
     getUserStats: builder.query({
       query: () => ({
         url: `/api/user/dashboard/stats`,

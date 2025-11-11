@@ -10,7 +10,6 @@ import {
   CreateCategorySchema,
 } from "@/lib/validators/admin/categories/categories.validator";
 
-// Local form UI helpers used by the modal
 const FormField = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
 );
@@ -90,7 +89,7 @@ export const CreateCategoryForm = ({
               res.data.message || "Category created successfully",
               "success"
             );
-            // Refresh relevant data
+
             mutate("/api/admin/categories");
             mutate("/api/admin/categories/get-categories");
             mutate("/api/admin/services");
@@ -113,14 +112,14 @@ export const CreateCategoryForm = ({
 
   return (
     <div className="w-full max-w-md">
-      {/* Modal Header */}
+      {}
       <div className="flex items-center justify-between p-6">
         <h3 className="text-lg font-semibold">Create New Category</h3>
       </div>
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Category Name */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Category Name</FormLabel>
             <FormControl>
@@ -136,7 +135,7 @@ export const CreateCategoryForm = ({
             <FormMessage>{errors.category_name?.message}</FormMessage>
           </FormItem>
 
-          {/* Hide Category */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Hide Category</FormLabel>
             <FormControl>
@@ -152,7 +151,7 @@ export const CreateCategoryForm = ({
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
           </FormItem>
 
-          {/* Position */}
+          {}
           <FormItem>
             <FormLabel className="form-label">Position</FormLabel>
             <FormControl>
@@ -168,7 +167,7 @@ export const CreateCategoryForm = ({
             <FormMessage>{errors.position?.message}</FormMessage>
           </FormItem>
 
-          {/* Submit Buttons */}
+          {}
           <div className="flex gap-2 justify-end">
             <button
               type="button"

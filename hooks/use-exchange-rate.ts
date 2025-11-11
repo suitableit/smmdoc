@@ -8,27 +8,23 @@ export function useExchangeRate() {
   useEffect(() => {
     const fetchRate = async () => {
       try {
-        setIsLoading(true);
-        // Use a free API or your own backend endpoint
+        setIsLoading(true);
         const response = await fetch(
           'https://api.exchangerate-api.com/v4/latest/USD'
         );
         const data = await response.json();
-        setRate(data.rates.BDT); // Get BDT rate
+        setRate(data.rates.BDT);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch exchange rate:', err);
-        setError('Failed to load exchange rates');
-        // Fallback rate if API fails
-        setRate(84.5); // Example fallback rate
+        setError('Failed to load exchange rates');
+        setRate(84.5);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRate();
-
-    // Refresh rate every hour
+    fetchRate();
     const interval = setInterval(fetchRate, 3600000);
     return () => clearInterval(interval);
   }, []);

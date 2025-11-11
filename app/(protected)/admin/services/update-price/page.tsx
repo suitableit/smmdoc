@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -12,21 +8,15 @@ import {
   FaCheck,
   FaDollarSign,
   FaTimes,
-} from 'react-icons/fa';
-
-// Custom Gradient Spinner Component
+} from 'react-icons/fa';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
-
-// Mock components for demonstration
-const ButtonLoader = () => <div className="loading-spinner"></div>;
-
-// Toast Message Component
+);
+const ButtonLoader = () => <div className="loading-spinner"></div>;
 const Toast = ({
   message,
   type = 'success',
@@ -62,62 +52,43 @@ interface PriceUpdateSettings {
 const UpdatePricePage = () => {
   const { appName } = useAppNameWithFallback();
 
-  const currentUser = useCurrentUser();
-
-  // Set document title
+  const currentUser = useCurrentUser();
   useEffect(() => {
     setPageTitle('Update Price', appName);
-  }, [appName]);
-
-  // State management
+  }, [appName]);
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-
-  // Ref to track if data has been loaded to prevent multiple API calls
-  const hasLoadedData = useRef(false);
-
-  // Price update settings state
+  } | null>(null);
+  const hasLoadedData = useRef(false);
   const [priceSettings, setPriceSettings] = useState<PriceUpdateSettings>({
     serviceType: 'all-services',
     profitPercentage: 10,
     providerId: '',
-  });
-
-  // Providers list
-  const [providers, setProviders] = useState<Provider[]>([]);
-
-  // Load settings and providers on component mount
+  });
+  const [providers, setProviders] = useState<Provider[]>([]);
   useEffect(() => {
     const loadData = async () => {
-      try {
-        // Wait for user authentication before making API calls
+      try {
         if (!currentUser) {
           console.log('User not authenticated yet, waiting...');
           return;
-        }
-
-        // Prevent multiple API calls if data has already been loaded
+        }
         if (hasLoadedData.current) {
           return;
         }
 
         setIsPageLoading(true);
-        hasLoadedData.current = true;
-
-        // Load existing price settings
+        hasLoadedData.current = true;
         const settingsResponse = await fetch('/api/admin/price-settings');
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json();
           if (settingsData.priceSettings) {
             setPriceSettings(settingsData.priceSettings);
           }
-        }
-
-        // Load providers with imported services only
+        }
         const providersResponse = await fetch('/api/admin/providers?filter=with-services');
         if (providersResponse.ok) {
           const providersData = await providersResponse.json();
@@ -134,8 +105,7 @@ const UpdatePricePage = () => {
         }
       } catch (error) {
         console.error('Error loading data:', error);
-        showToast('Error loading data', 'error');
-        // Reset the flag on error so user can retry
+        showToast('Error loading data', 'error');
         hasLoadedData.current = false;
       } finally {
         setIsPageLoading(false);
@@ -143,18 +113,14 @@ const UpdatePricePage = () => {
     };
 
     loadData();
-  }, [currentUser]);
-
-  // Show toast notification
+  }, [currentUser]);
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
-
-  // Update prices function
+  };
   const updatePrices = async () => {
     setIsLoading(true);
     try {
@@ -166,7 +132,7 @@ const UpdatePricePage = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('API Response:', result); // Debug log
+        console.log('API Response:', result);
         const updatedCount = result.data?.updatedCount || 0;
         showToast(`Prices updated successfully!`, 'success');
       } else {
@@ -179,9 +145,7 @@ const UpdatePricePage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Show loading state
+  };
   if (isPageLoading) {
     return (
       <div className="page-container">
@@ -211,7 +175,7 @@ const UpdatePricePage = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -225,7 +189,7 @@ const UpdatePricePage = () => {
       <div className="page-content">
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
-            {/* Update Price Card */}
+            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -242,8 +206,7 @@ const UpdatePricePage = () => {
                     onChange={(e) =>
                       setPriceSettings(prev => ({
                         ...prev,
-                        serviceType: e.target.value as 'all-services' | 'provider-services' | 'manual-services',
-                        // Clear provider when switching away from provider services
+                        serviceType: e.target.value as 'all-services' | 'provider-services' | 'manual-services',
                         providerId: e.target.value === 'provider-services' ? prev.providerId : ''
                       }))
                     }
@@ -257,7 +220,7 @@ const UpdatePricePage = () => {
                   </select>
                 </div>
 
-                {/* Conditional Provider Field */}
+                {}
                 {priceSettings.serviceType === 'provider-services' && (
                   <div className="form-group">
                     <label className="form-label">Provider</label>

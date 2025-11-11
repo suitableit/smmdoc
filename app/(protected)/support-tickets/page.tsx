@@ -1,9 +1,5 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { ChevronDown } from 'lucide-react';
@@ -22,7 +18,6 @@ import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import TicketSystemGuard from '@/components/TicketSystemGuard';
 
-// Custom Gradient Spinner Component
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -31,7 +26,6 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   </div>
 );
 
-// Toast/Twist Message Component using CSS classes
 const Toast = ({
   message,
   type = 'success',
@@ -57,7 +51,7 @@ interface TicketFormData {
   subcategory: string;
   ticketType: 'Human' | 'AI';
   aiSubcategory: string;
-  humanTicketSubject: string; // New field for Human ticket subjects
+  humanTicketSubject: string;
   orderIds: string;
   message: string;
   subject: string;
@@ -86,7 +80,6 @@ const TicketPage: React.FC = () => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
 
-  // Set document title using useEffect for client-side
   useEffect(() => {
     setPageTitle('Support Tickets', appName);
   }, [appName]);
@@ -99,7 +92,7 @@ const TicketPage: React.FC = () => {
     subcategory: '2',
     ticketType: 'AI',
     aiSubcategory: 'Refill',
-    humanTicketSubject: '', // Will be set when subjects are loaded
+    humanTicketSubject: '',
     orderIds: '',
     message: '',
     subject: '',
@@ -118,19 +111,15 @@ const TicketPage: React.FC = () => {
   const [uploadingFiles, setUploadingFiles] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<{name: string, url: string}[]>([]);
 
-  // ReCAPTCHA state
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
 
-  // Tickets data from API
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  
-  // Ticket subjects from admin settings
+
   const [ticketSubjects, setTicketSubjects] = useState<{ id: number; name: string }[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
 
-  // Fetch user tickets
   const fetchTickets = async () => {
     setTicketsLoading(true);
     try {
@@ -149,7 +138,6 @@ const TicketPage: React.FC = () => {
     }
   };
 
-  // Fetch ticket subjects from admin settings
   const fetchTicketSubjects = async () => {
     setSubjectsLoading(true);
     try {
@@ -167,13 +155,11 @@ const TicketPage: React.FC = () => {
     }
   };
 
-  // Fetch tickets and subjects on component mount
   useEffect(() => {
     fetchTickets();
     fetchTicketSubjects();
   }, []);
 
-  // Set default humanTicketSubject when subjects are loaded
   useEffect(() => {
     if (ticketSubjects.length > 0 && !formData.humanTicketSubject) {
       setFormData(prev => ({
@@ -209,7 +195,6 @@ const TicketPage: React.FC = () => {
     { value: 'Fake Complete', label: 'Fake Complete' },
   ];
 
-  // Simulate initial loading for ticket form only
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -218,7 +203,6 @@ const TicketPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Show toast notification
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -227,40 +211,37 @@ const TicketPage: React.FC = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Handle ticket type changes and AI-specific updates
   useEffect(() => {
     if (formData.ticketType === 'AI') {
-      // AI Ticket - hide message and file upload, set category to AI Support
+
       setShowMessageField(false);
       setShowFileUpload(false);
       setFormData((prev) => ({
         ...prev,
-        category: '1', // AI Support
+        category: '1',
         message: `${formData.orderIds || 'Order ID Not Found'} ${formData.aiSubcategory}`,
       }));
     }
   }, [formData.ticketType, formData.aiSubcategory, formData.orderIds]);
 
-  // Handle Human ticket type setup (only when ticket type changes)
   useEffect(() => {
     if (formData.ticketType === 'Human') {
-      // Human Ticket - show message and file upload, set category to Human Support
+
       setShowMessageField(true);
       setShowFileUpload(true);
       setFormData((prev) => ({
         ...prev,
-        category: '13', // Human Support
-        // Preserve existing message content
+        category: '13',
+
       }));
     }
   }, [formData.ticketType]);
 
-  // Handle ticket type change
   const handleTicketTypeChange = (ticketType: 'Human' | 'AI') => {
     setFormData((prev) => ({
       ...prev,
       ticketType,
-      // Reset relevant fields when switching types
+
       aiSubcategory: ticketType === 'AI' ? 'Refill' : prev.aiSubcategory,
       subcategory: ticketType === 'Human' ? '2' : prev.subcategory,
       humanTicketSubject: ticketType === 'Human' ? (ticketSubjects.length > 0 ? ticketSubjects[0].id.toString() : '1') : prev.humanTicketSubject,
@@ -274,17 +255,16 @@ const TicketPage: React.FC = () => {
   };
 
   const handleOrderIdsChange = (value: string) => {
-    // Only allow numbers and commas
+
     const sanitized = value.replace(/[^0-9,]/g, '');
-    
-    // Validate order ID format
+
     if (sanitized) {
       const orderIds = sanitized.split(',').map(id => id.trim()).filter(id => id);
       const invalidIds = orderIds.filter(id => {
-        // Order ID should be numeric
+
         return !/^\d+$/.test(id);
       });
-      
+
       if (invalidIds.length > 0) {
         setOrderIdsError(`Invalid order ID format: ${invalidIds.join(', ')}. Order IDs should be numeric.`);
       } else if (orderIds.length > 10) {
@@ -295,11 +275,10 @@ const TicketPage: React.FC = () => {
     } else {
       setOrderIdsError('');
     }
-    
+
     handleInputChange('orderIds', sanitized);
   };
 
-  // File upload handler
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -309,14 +288,13 @@ const TicketPage: React.FC = () => {
 
     try {
       for (const file of Array.from(files)) {
-        // Validate file size (3MB max)
-        const maxSize = 3 * 1024 * 1024; // 3MB
+
+        const maxSize = 3 * 1024 * 1024;
         if (file.size > maxSize) {
           showToast(`File "${file.name}" is too large. Maximum 3MB allowed.`, 'error');
           continue;
         }
 
-        // Validate file type (only images and PDFs)
         const allowedTypes = [
           'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
           'application/pdf'
@@ -328,7 +306,7 @@ const TicketPage: React.FC = () => {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('type', 'uploads'); // Store in public/uploads folder
+        formData.append('type', 'uploads');
 
         const response = await fetch('/api/upload', {
           method: 'POST',
@@ -361,12 +339,11 @@ const TicketPage: React.FC = () => {
       showToast('Error uploading files. Please try again.', 'error');
     } finally {
       setUploadingFiles(false);
-      // Reset the input value to allow uploading the same file again
+
       event.target.value = '';
     }
   };
 
-  // Remove uploaded file
   const removeUploadedFile = (index: number) => {
     const fileToRemove = uploadedFiles[index];
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
@@ -380,54 +357,49 @@ const TicketPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Check ReCAPTCHA if enabled
+
       if (isEnabledForForm('supportTicket') && !recaptchaToken) {
         showToast('Please complete the ReCAPTCHA verification', 'error');
         setIsSubmitting(false);
         return;
       }
 
-      // Check if both order ID and message fields are empty
       if (!formData.orderIds.trim() && !formData.message.trim()) {
         showToast('Please fill order ID and message field', 'error');
         setIsSubmitting(false);
         return;
       }
 
-      // Validate message field for Human Support tickets
       if (formData.ticketType === 'Human' && !formData.message.trim()) {
         showToast('Message is required for Human Support ticket', 'error');
         setIsSubmitting(false);
         return;
       }
 
-      // Validate order IDs for both Human and AI tickets
       if (!formData.orderIds.trim()) {
         showToast('Order ID is required for all tickets', 'error');
         setIsSubmitting(false);
         return;
       }
-      
+
       if (orderIdsError) {
         showToast('Please fix order ID format errors before submitting', 'error');
         setIsSubmitting(false);
         return;
       }
 
-      // Generate subject based on ticket type
       let subject = '';
       if (formData.ticketType === 'Human') {
-        // For Human tickets, use the selected subject from admin settings
+
         const selectedSubject = ticketSubjects.find(s => s.id === parseInt(formData.humanTicketSubject));
         subject = selectedSubject ? selectedSubject.name : 'General Support';
       } else {
-        // For AI tickets, use category and subcategory as before
+
         const categoryLabel = categories.find(c => c.value === formData.category)?.label || 'Support';
         const subcategoryLabel = subcategories.find(s => s.value === formData.subcategory)?.label || '';
         subject = `${categoryLabel} - ${subcategoryLabel}`;
       }
 
-      // Prepare order IDs array
       const orderIds = formData.orderIds ? formData.orderIds.split(',').map(id => id.trim()).filter(id => id) : [];
 
       const ticketData = {
@@ -455,12 +427,11 @@ const TicketPage: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         showToast('Ticket submitted successfully! Redirecting to ticket details...', 'success');
-        
-        // Redirect to the created ticket details page
+
         if (result.ticket && result.ticket.id) {
           router.push(`/support-tickets/${result.ticket.id}`);
         } else {
-          // Fallback: reset form and refresh tickets list if no ticket ID
+
           setFormData({
             category: '1',
             subcategory: '2',
@@ -473,9 +444,9 @@ const TicketPage: React.FC = () => {
             priority: 'medium',
             attachments: [],
           });
-          // Clear uploaded files
+
           setUploadedFiles([]);
-          // Refresh tickets list
+
           fetchTickets();
         }
       } else {
@@ -535,7 +506,7 @@ const TicketPage: React.FC = () => {
   };
 
   const handleticketsHistoryClick = () => {
-    // Navigate to Tickets History page
+
     router.push('/support-tickets/history');
   };
 
@@ -545,7 +516,7 @@ const TicketPage: React.FC = () => {
 
   return (
     <div className="page-container">
-      {/* Toast Container */}
+      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -558,9 +529,9 @@ const TicketPage: React.FC = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Ticket Form */}
+          {}
           <div className="space-y-6">
-            {/* Tab Navigation - Updated with cloned style */}
+            {}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
@@ -586,7 +557,7 @@ const TicketPage: React.FC = () => {
 
             <div className="card card-padding">
               {isLoading ? (
-                // Loading state for ticket form only
+
                 <div className="flex items-center justify-center min-h-[400px]">
                   <div className="text-center flex flex-col items-center">
                     <GradientSpinner size="w-14 h-14" className="mb-4" />
@@ -596,7 +567,7 @@ const TicketPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                // Main ticket form content
+
                 <div className="space-y-4">
                   <div className="space-y-4">
                     <div className="form-group">
@@ -667,11 +638,7 @@ const TicketPage: React.FC = () => {
                       value={formData.orderIds}
                       onChange={(e) => handleOrderIdsChange(e.target.value)}
                       placeholder="Enter order IDs separated by commas"
-                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                        orderIdsError 
-                          ? 'border-red-500 focus:ring-red-500' 
-                          : 'border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)]'
-                      }`}
+                      className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${orderIdsError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)]'}`}
                     />
                     {orderIdsError && (
                       <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -715,14 +682,9 @@ const TicketPage: React.FC = () => {
                             onChange={handleFileUpload}
                             disabled={uploadingFiles}
                             className="hidden"
-                            accept="image/*,.pdf,.txt,.doc,.docx"
+                            accept="image/*"
                           />
-                          <span className="text-sm text-gray-500">
-                            Max 3MB per file. Supported file: images and PDF
-                          </span>
                         </div>
-                        
-                        {/* Display uploaded files */}
                         {uploadedFiles.length > 0 && (
                           <div className="space-y-2">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -754,7 +716,7 @@ const TicketPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* ReCAPTCHA Component */}
+                  {}
                   {isEnabledForForm('supportTicket') && recaptchaSettings && (
                     <ReCAPTCHA
                       siteKey={recaptchaSettings.siteKey}
@@ -766,12 +728,12 @@ const TicketPage: React.FC = () => {
                       }}
                       onError={() => {
                         setRecaptchaToken(null);
-                        // Let Google's native error messages display instead of custom ones
-                        // This allows 'Invalid domain for site key' and other specific errors to show
+
+
                       }}
                       onExpired={() => {
                         setRecaptchaToken(null);
-                        // Let Google's native expired message display
+
                       }}
                     />
                   )}
@@ -789,7 +751,7 @@ const TicketPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column - Information */}
+          {}
           <div className="space-y-6">
             <div className="card card-padding">
               <div className="card-header">
@@ -800,7 +762,7 @@ const TicketPage: React.FC = () => {
               </div>
 
               <div className="space-y-3 mt-4">
-                {/* Accordion Item 1 */}
+                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -837,7 +799,7 @@ const TicketPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Accordion Item 2 */}
+                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -877,7 +839,7 @@ const TicketPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Accordion Item 3 */}
+                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"

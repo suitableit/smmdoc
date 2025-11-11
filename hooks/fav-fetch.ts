@@ -1,7 +1,5 @@
 import { fetcher } from '@/lib/utils';
-import useSWR from 'swr';
-
-// also fetch favorite categories
+import useSWR from 'swr';
 export const useGetFavCats = () => {
   const {
     data: favoriteCategories,

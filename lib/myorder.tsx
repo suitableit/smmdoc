@@ -4,9 +4,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 import { GridLayout } from '@/components/ui/GridLayout';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useEffect, useState } from 'react';
-
-// Order type definition
+import { useEffect, useState } from 'react';
 interface Order {
   id: number;
   date: string;
@@ -15,9 +13,7 @@ interface Order {
   quantity: number;
   price: number;
   status: 'pending' | 'processing' | 'completed' | 'canceled' | 'refunded';
-}
-
-// Stats type
+}
 interface OrderStats {
   total: number;
   completed: number;
@@ -33,21 +29,11 @@ export default function MyOrdersPage() {
     pending: 0,
     canceled: 0
   });
-  const [loading, setLoading] = useState(true);
-
-  // ডেটা লোড করার ফাংশন
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     async function loadOrders() {
       try {
-        setLoading(true);
-        // আসল API থেকে ডেটা লোড করুন
-        // const response = await fetch('/api/user/orders');
-        // const data = await response.json();
-        // setOrders(data.orders);
-        // calculateStats(data.orders);
-        
-        // এখানে আমরা মক ডেটা ব্যবহার করছি
-        // আসল প্রজেক্টে এটি API থেকে পাওয়া ডেটা দিয়ে প্রতিস্থাপন করুন
+        setLoading(true);
         setTimeout(() => {
           setOrders([]);
           setStats({
@@ -63,19 +49,16 @@ export default function MyOrdersPage() {
         setLoading(false);
       }
     }
-    
-    loadOrders();
-  }, []);
 
-  // ডেটা ফিল্টার করা
+    loadOrders();
+  }, []);
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Add your search logic here
+    e.preventDefault();
   };
 
   return (
     <PageContainer title="My Orders" subtitle="View and manage all your orders">
-      {/* Orders Stats */}
+      {}
       <section className="mb-8">
         <GridLayout cols={4} gap="md">
           <InfoCard
@@ -105,7 +88,7 @@ export default function MyOrdersPage() {
         </GridLayout>
       </section>
 
-      {/* Orders Filter */}
+      {}
       <section className="mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -143,7 +126,7 @@ export default function MyOrdersPage() {
         </div>
       </section>
 
-      {/* Orders Table */}
+      {}
       <section>
         <PageHeader 
           title="Order History" 
