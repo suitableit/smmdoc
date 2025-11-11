@@ -26,28 +26,6 @@ interface FAQ {
   answer: string;
 }
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
@@ -221,9 +199,7 @@ const ChildPanel: React.FC = () => {
 
   if (isPageLoading) {
     return (
-      <>
-        <ShimmerStyles />
-        <div className="page-container">
+      <div className="page-container">
           <div className="page-content">
             <div className="mb-6">
               <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
@@ -258,9 +234,9 @@ const ChildPanel: React.FC = () => {
                   <div className="card card-padding">
                     <div className="card-header mb-6">
                       <div className="card-icon">
-                        <div className="w-6 h-6 gradient-shimmer rounded" />
+                        <FaShoppingCart />
                       </div>
-                      <div className="h-6 w-32 gradient-shimmer rounded" />
+                      <h3 className="card-title">Create Child Panel</h3>
                     </div>
 
                     <div className="space-y-6">
@@ -335,7 +311,6 @@ const ChildPanel: React.FC = () => {
             </div>
           </div>
         </div>
-      </>
     );
   }
 

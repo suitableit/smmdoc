@@ -14,28 +14,6 @@ import {
     FaUserTie,
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 interface FAQItem {
   id: number;
   question: string;
@@ -192,27 +170,25 @@ const FAQPage = () => {
 
   if (isLoading) {
     return (
-      <>
-        <ShimmerStyles />
-        <div className="page-container">
+      <div className="page-container">
           <div className="page-content">
             <div className="card card-padding">
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <div className="w-4 h-4 gradient-shimmer rounded" />
+                    <FaSearch className="w-4 h-4 text-gray-500" />
                   </div>
                   <div className="h-10 w-full gradient-shimmer rounded-lg pl-10" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {Array.from({ length: 6 }).map((_, categoryIdx) => (
-                  <div key={categoryIdx}>
+                {Object.entries(categoryNames).map(([category, categoryInfo]) => (
+                  <div key={category}>
                     <div className="card-header mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <div className="card-icon">
-                          <div className="w-5 h-5 gradient-shimmer rounded" />
+                          {categoryInfo.icon}
                         </div>
                         <div className="h-6 w-32 gradient-shimmer rounded" />
                       </div>
@@ -227,7 +203,7 @@ const FAQPage = () => {
                               <div className="h-5 w-full gradient-shimmer rounded mb-2" />
                               <div className="h-5 w-3/4 gradient-shimmer rounded" />
                             </div>
-                            <div className="w-5 h-5 gradient-shimmer rounded ml-4" />
+                            <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0 ml-4" />
                           </div>
                         </div>
                       ))}
@@ -238,7 +214,6 @@ const FAQPage = () => {
             </div>
           </div>
         </div>
-      </>
     );
   }
 

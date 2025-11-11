@@ -24,28 +24,6 @@ import {
     FaUsers
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const Toast = ({
   message,
   type = 'success',
@@ -88,18 +66,15 @@ export default function AffiliateProgram() {
   }, [appName]);
 
   return (
-    <>
-      <ShimmerStyles />
-      <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
-        <div className="space-y-6">
-          {}
-          <AffiliateStatsCards />
+    <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
+      <div className="space-y-6">
+        {}
+        <AffiliateStatsCards />
 
-          {}
-          <AffiliateEarningsSection />
-        </div>
+        {}
+        <AffiliateEarningsSection />
       </div>
-    </>
+    </div>
   );
 }
 

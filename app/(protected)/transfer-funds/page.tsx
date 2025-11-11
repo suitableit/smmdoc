@@ -6,28 +6,6 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const useCurrency = () => ({
   currency: 'BDT' as 'USD' | 'BDT',
   rate: 110,
@@ -251,7 +229,6 @@ export default function TransferFund() {
     return (
       <div className={`page-container ${className}`}>
         <div className="page-content">
-          <ShimmerStyles />
           <div className="max-w-2xl mx-auto">
             <div className="card card-padding">
               <div className="card-header mb-6">
@@ -314,7 +291,6 @@ export default function TransferFund() {
       </div>
 
       <div className="page-content">
-        <ShimmerStyles />
         <div className="max-w-2xl mx-auto">
           {}
           <div className="card card-padding">
