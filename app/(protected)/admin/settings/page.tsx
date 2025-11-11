@@ -20,28 +20,6 @@ import {
     FaUsers
 } from 'react-icons/fa';
 
-const ShimmerStyles = () => (
-  <style dangerouslySetInnerHTML={{__html: `
-    @keyframes shimmer {
-      0% {
-        background-position: -200% 0;
-      }
-      100% {
-        background-position: 200% 0;
-      }
-    }
-    .gradient-shimmer {
-      background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%, #f0f0f0 100%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    .dark .gradient-shimmer {
-      background: linear-gradient(90deg, #2d2d2d 0%, #353535 25%, #2f2f2f 50%, #353535 75%, #2d2d2d 100%);
-      background-size: 200% 100%;
-    }
-  `}} />
-);
-
 const SettingsCardSkeleton = () => {
   return (
     <div className="card card-padding">
@@ -852,7 +830,6 @@ const GeneralSettingsPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <ShimmerStyles />
           <SettingsPageSkeleton />
         </div>
       </div>
@@ -881,7 +858,6 @@ const GeneralSettingsPage = () => {
       </div>
 
       <div className="page-content">
-        <ShimmerStyles />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <div className="card card-padding">

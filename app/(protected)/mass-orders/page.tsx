@@ -201,10 +201,11 @@ export default function MassOrder() {
   useEffect(() => {
     const checkMassOrderSettings = async () => {
       try {
-
         const response = await axiosInstance.get('/api/user/mass-orders?type=stats');
         if (response.data.success) {
           setMassOrderEnabled(true);
+        } else {
+          setMassOrderEnabled(false);
         }
       } catch (error) {
         console.error('Error checking mass order settings:', error);
@@ -218,20 +219,12 @@ export default function MassOrder() {
               router.push('/dashboard');
             }, 3000);
           } else {
-
-            setMassOrderEnabled(false);
-            showToast('Unable to verify mass order settings', 'error');
-            setTimeout(() => {
-              router.push('/dashboard');
-            }, 3000);
+            setMassOrderEnabled(true);
+            console.warn('Unable to verify mass order settings, but allowing access:', error);
           }
         } else {
-
-          setMassOrderEnabled(false);
-            showToast('Unable to verify mass order settings', 'error');
-            setTimeout(() => {
-              router.push('/dashboard');
-            }, 3000);
+          setMassOrderEnabled(true);
+          console.warn('Network error checking mass order settings, but allowing access:', error);
         }
       }
     };
