@@ -10,9 +10,6 @@ import {
 } from './lib/routes';
 import { getTicketSettings } from './lib/utils/ticket-settings';
 
-
-export const runtime = 'nodejs';
-
 export const { auth } = NextAuth(authConfig);
 
 export default auth(async (req) => {
@@ -72,7 +69,7 @@ export default auth(async (req) => {
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
-      console.error('Error checking ticket system status in middleware:', error);
+      console.error('Error checking ticket system status in proxy:', error);
       const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
       return NextResponse.redirect(new URL(redirectPath, nextUrl));
     }
@@ -110,12 +107,12 @@ export default auth(async (req) => {
   );
 
   if (isContactPage && isLoggedIn) {
-    console.log('Middleware: Contact page detected:', nextUrl.pathname);
-    console.log('Middleware: User role:', userRole?.role);
+    console.log('Proxy: Contact page detected:', nextUrl.pathname);
+    console.log('Proxy: User role:', userRole?.role);
     try {
 
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:3000`;
-      console.log('Middleware: Fetching contact status from:', `${baseUrl}/api/contact-system-status`);
+      console.log('Proxy: Fetching contact status from:', `${baseUrl}/api/contact-system-status`);
       const response = await fetch(`${baseUrl}/api/contact-system-status`, {
         method: 'GET',
         headers: {
@@ -123,24 +120,24 @@ export default auth(async (req) => {
         },
       });
 
-      console.log('Middleware: API response status:', response.status);
+      console.log('Proxy: API response status:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('Middleware: Contact system enabled:', data.contactSystemEnabled);
+        console.log('Proxy: Contact system enabled:', data.contactSystemEnabled);
         if (!data.contactSystemEnabled) {
 
           const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
-          console.log('Middleware: Redirecting to:', redirectPath);
+          console.log('Proxy: Redirecting to:', redirectPath);
           return NextResponse.redirect(new URL(redirectPath, nextUrl));
         }
       } else {
-        console.log('Middleware: API error, redirecting to safe page');
+        console.log('Proxy: API error, redirecting to safe page');
 
         const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
-      console.error('Error checking contact system status in middleware:', error);
+      console.error('Error checking contact system status in proxy:', error);
 
       const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
       return NextResponse.redirect(new URL(redirectPath, nextUrl));
