@@ -33,13 +33,13 @@ export async function GET(request: Request) {
               {
                 name: {
                   contains: search,
-                  lte: 'insensitive',
+                  mode: 'insensitive',
                 },
               },
               {
                 description: {
                   contains: search,
-                  lte: 'insensitive',
+                  mode: 'insensitive',
                 },
               },
             ],

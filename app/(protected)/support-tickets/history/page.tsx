@@ -464,7 +464,7 @@ export default function TicketsHistory() {
         )}
 
         <div className="page-content">
-        <div className="card card-padding">
+        <div className="md:card md:card-padding">
           {}
           <div className="card mb-6" style={{ padding: '8px' }}>
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
