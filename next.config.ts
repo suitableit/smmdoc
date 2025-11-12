@@ -7,7 +7,7 @@ const nextConfig = {
   },
   
   // Webpack configuration for better development experience
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (dev && !isServer) {
       // Reduce webpack polling for better performance
       config.watchOptions = {
@@ -21,6 +21,9 @@ const nextConfig = {
     
     return config;
   },
+  
+  // Turbopack configuration (empty to silence the warning)
+  turbopack: {},
   
   // Compiler options
   compiler: {

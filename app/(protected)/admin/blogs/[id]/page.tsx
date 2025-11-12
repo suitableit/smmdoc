@@ -11,16 +11,19 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
-import JoditEditor from 'jodit-react';
+import JoditEditor from 'jodit-react';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -37,7 +40,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface PostFormData {
   id: string;
   title: string;
@@ -58,7 +62,8 @@ interface PostFormData {
 const EditBlogPostPage = () => {
   const { appName } = useAppNameWithFallback();
   const params = useParams();
-  const postId = params.id as string;
+  const postId = params.id as string;
+
   const [formData, setFormData] = useState<PostFormData>({
     id: '',
     title: '',
@@ -91,7 +96,8 @@ const EditBlogPostPage = () => {
     updatedAt: '',
     author: ''
   });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   const [autoFilledFields, setAutoFilledFields] = useState<{
     excerpt: boolean;
     metaTitle: boolean;
@@ -105,17 +111,21 @@ const EditBlogPostPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
-  const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
+
   useEffect(() => {
     setPageTitle('Edit Post', appName);
-  }, [appName]);
+  }, [appName]);
+
   useEffect(() => {
     const loadPost = async () => {
       try {
-        setIsLoadingPost(true);
+        setIsLoadingPost(true);
+
         const response = await fetch(`/api/blogs/id/${postId}`);
 
         if (!response.ok) {
@@ -128,23 +138,27 @@ const EditBlogPostPage = () => {
           throw new Error(responseData.error || 'Failed to fetch post data');
         }
 
-        const postData = responseData.data;
+        const postData = responseData.data;
+
         const autoFilled = {
           excerpt: false,
           metaTitle: false,
           metaDescription: false
-        };
+        };
+
         let excerpt = postData.excerpt || '';
         if (!excerpt && postData.content) {
           const textContent = postData.content.replace(/<[^>]*>/g, '').replace(/[#*`]/g, '');
           excerpt = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
           autoFilled.excerpt = true;
-        }
+        }
+
         let metaTitle = postData.metaTitle || '';
         if (!metaTitle && postData.title) {
           metaTitle = postData.title;
           autoFilled.metaTitle = true;
-        }
+        }
+
         let metaDescription = postData.metaDescription || '';
         if (!metaDescription) {
           if (excerpt) {
@@ -154,7 +168,8 @@ const EditBlogPostPage = () => {
             metaDescription = textContent.substring(0, 160) + (textContent.length > 160 ? '...' : '');
           }
           autoFilled.metaDescription = true;
-        }
+        }
+
         const formDataToSet = {
           id: postData.id || '',
           title: postData.title || '',
@@ -187,18 +202,21 @@ const EditBlogPostPage = () => {
     if (postId) {
       loadPost();
     }
-  }, [postId]);
+  }, [postId]);
+
   useEffect(() => {
     const hasChanges = JSON.stringify(formData) !== JSON.stringify(originalFormData);
     setHasUnsavedChanges(hasChanges);
-  }, [formData, originalFormData]);
+  }, [formData, originalFormData]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -206,7 +224,8 @@ const EditBlogPostPage = () => {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
-  };
+  };
+
   const handleInputChange = (field: keyof PostFormData, value: any) => {
     console.log(`Updating field ${field} with value:`, value);
 
@@ -217,13 +236,15 @@ const EditBlogPostPage = () => {
       };
       console.log('Updated formData:', updated);
       return updated;
-    });
+    });
+
     if (field === 'excerpt' || field === 'metaTitle' || field === 'metaDescription') {
       setAutoFilledFields(prev => ({
         ...prev,
         [field]: false
       }));
-    }
+    }
+
     if (field === 'title' && value) {
       const generatedSlug = generateSlug(value);
       if (formData.slug === generateSlug(originalFormData.title)) {
@@ -233,7 +254,8 @@ const EditBlogPostPage = () => {
         }));
       }
     }
-  };
+  };
+
   const editorConfig = useMemo(() => ({
     readonly: false,
     placeholder: 'Write your post content here...',
@@ -241,7 +263,7 @@ const EditBlogPostPage = () => {
     toolbar: true,
     spellcheck: true,
     language: 'en',
-    toolbarButtonSize: 'middle',
+    toolbarButtonSize: 'middle' as const,
     theme: 'default',
     enableDragAndDropFileToEditor: true,
     uploader: {
@@ -253,26 +275,29 @@ const EditBlogPostPage = () => {
     showXPathInStatusbar: false,
     askBeforePasteHTML: false,
     askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html',
+    defaultActionOnPaste: 'insert_clear_html' as const,
     style: {
       background: '#ffffff',
       color: '#000000'
     },
     editorCssClass: 'jodit-editor-white-bg',
     events: {
-      afterInit: function (editor) {
+      afterInit: function (editor: any) {
         editor.focus();
       }
     }
-  }), []);
+  }), []);
+
   const handleImageUpload = async (file: File) => {
     try {
-      setImageUploading(true);
+      setImageUploading(true);
+
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
         return;
-      }
+      }
+
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast('File size must be less than 5MB', 'error');
@@ -305,10 +330,12 @@ const EditBlogPostPage = () => {
     } finally {
       setImageUploading(false);
     }
-  };
+  };
+
   const handleSubmit = async (status: 'draft' | 'published') => {
     try {
-      setIsLoading(true);
+      setIsLoading(true);
+
       if (!formData.title.trim()) {
         showToast('Please enter a post title', 'error');
         return;
@@ -331,7 +358,8 @@ const EditBlogPostPage = () => {
         seoDescription: formData.metaDescription
       };
 
-      console.log('Updating post:', postData);
+      console.log('Updating post:', postData);
+
       const response = await fetch(`/api/blogs/id/${formData.id}`, {
         method: 'PUT',
         headers: {
@@ -349,8 +377,10 @@ const EditBlogPostPage = () => {
       showToast(
         status === 'draft' ? 'Post saved as draft!' : 'Post updated successfully!',
         'success'
-      );
-      setOriginalFormData(formData);
+      );
+
+      setOriginalFormData(formData);
+
       if (status === 'published') {
         setTimeout(() => {
           window.location.href = '/admin/blogs';
@@ -362,7 +392,8 @@ const EditBlogPostPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const handleDiscardChanges = () => {
     if (hasUnsavedChanges) {
       const confirmed = window.confirm('Are you sure you want to discard all unsaved changes?');
@@ -371,7 +402,8 @@ const EditBlogPostPage = () => {
         showToast('Changes discarded', 'info');
       }
     }
-  };
+  };
+
   const handleBack = () => {
     if (hasUnsavedChanges) {
       const confirmed = window.confirm('You have unsaved changes. Are you sure you want to leave?');
@@ -400,7 +432,6 @@ const EditBlogPostPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -412,7 +443,6 @@ const EditBlogPostPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -649,7 +679,6 @@ const EditBlogPostPage = () => {
               </div>
             </div>
 
-            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Publish Settings
@@ -660,7 +689,7 @@ const EditBlogPostPage = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => handleInputChange('status', e.target.value)}
-                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer`}
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
@@ -669,8 +698,6 @@ const EditBlogPostPage = () => {
 
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Featured Image
@@ -694,7 +721,32 @@ const EditBlogPostPage = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       type="file"
-                      accept="image}
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageUpload(file);
+                        }
+                      }}
+                      className="hidden"
+                      id="featured-image-upload"
+                    />
+                    <label
+                      htmlFor="featured-image-upload"
+                      className="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    >
+                      <FaUpload className="mx-auto mb-2 text-3xl" />
+                      <p>Click to upload featured image</p>
+                      <p className="text-sm mt-1">PNG, JPG, GIF up to 5MB</p>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <div className="flex flex-1 gap-3">
           {hasUnsavedChanges && (

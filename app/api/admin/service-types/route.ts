@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if service type already exists
-    const existingType = await db.servicetype.findUnique({
+    const existingType = await prisma.servicetype.findUnique({
       where: { name: name.trim() }
     });
 
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const serviceType = await db.servicetype.create({
+    const serviceType = await prisma.servicetype.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,

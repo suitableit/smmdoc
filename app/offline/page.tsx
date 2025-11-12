@@ -36,10 +36,9 @@ interface ConnectionInfo {
 export default function OfflinePage() {
   const searchParams = useSearchParams();
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
-    ip: 'Unavailable',
     browser: 'Unknown',
     platform: 'Unknown',
-    errorCode: 'ERR_NETWORK_OFFLINE',
+    ipAddress: 'Unavailable',
     lastAttempt: new Date().toLocaleString()
   });
 

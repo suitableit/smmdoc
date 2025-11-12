@@ -73,15 +73,6 @@ export async function POST(
             mode: true
           }
         },
-        apiProvider: {
-          select: {
-            id: true,
-            name: true,
-            api_url: true,
-            api_key: true,
-            status: true
-          }
-        }
       }
     });
 
@@ -121,13 +112,37 @@ export async function POST(
     let newStatus = 'pending';
 
     // Check if this is an API provider service
-    if (order.service.providerId && order.service.providerServiceId && order.apiProvider) {
+    if (order.service.providerId && order.service.providerServiceId) {
+      // Fetch the provider separately
+      const apiProvider = await db.api_providers.findUnique({
+        where: { id: order.service.providerId }
+      });
+
+      if (!apiProvider) {
+        return NextResponse.json(
+          {
+            error: 'API provider not found for this service',
+            success: false,
+            data: null
+          },
+          { status: 404 }
+        );
+      }
+      // Create provider object for API calls
+      const providerForBalance: any = {
+        id: apiProvider.id,
+        name: apiProvider.name,
+        api_url: apiProvider.api_url,
+        api_key: apiProvider.api_key,
+        status: apiProvider.status
+      };
+
       try {
         // This is an API provider order - attempt to resend to provider
         const providerForwarder = ProviderOrderForwarder.getInstance();
 
         // Check if provider is active
-        if (order.apiProvider.status !== 'active') {
+        if (apiProvider.status !== 'active') {
           return NextResponse.json(
             {
               error: 'API provider is not active. Cannot resend order.',
@@ -140,12 +155,12 @@ export async function POST(
 
         // Check provider balance first
         try {
-          const providerBalance = await providerForwarder.getProviderBalance(order.apiProvider);
+          const providerBalance = await providerForwarder.getProviderBalance(providerForBalance);
           const orderCost = order.charge || order.price;
 
           if (providerBalance < orderCost) {
             // Provider has insufficient balance
-            console.log(`Provider ${order.apiProvider.name} has insufficient balance. Required: ${orderCost}, Available: ${providerBalance}`);
+            console.log(`Provider ${apiProvider.name} has insufficient balance. Required: ${orderCost}, Available: ${providerBalance}`);
             
             return NextResponse.json(
               {
@@ -177,7 +192,7 @@ export async function POST(
           interval: order.dripfeedInterval || undefined
         };
 
-        resendResult = await providerForwarder.forwardOrderToProvider(order.apiProvider, orderData);
+        resendResult = await providerForwarder.forwardOrderToProvider(providerForBalance, orderData);
 
         // Update order with new provider order ID and status
         newStatus = resendResult.status || 'pending';

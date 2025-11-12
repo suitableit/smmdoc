@@ -351,7 +351,7 @@ const AdminOrdersPage = () => {
         .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Orders request timed out' : 'Failed to fetch orders' }));
 
       let statsPromise: Promise<any>;
-      if (useCache) {
+      if (useCache && statsCache) {
         statsPromise = Promise.resolve({ success: true, data: statsCache.data });
       } else {
         statsController = new AbortController();
@@ -574,8 +574,7 @@ const AdminOrdersPage = () => {
 
       if (result.success) {
         showToast('Order deleted successfully', 'success');
-        fetchOrders();
-        fetchStats();
+        fetchDataOptimized();
         setDeleteDialogOpen(false);
         setOrderToDelete(null);
       } else {
@@ -607,9 +606,7 @@ const AdminOrdersPage = () => {
           `${selectedOrders.length} orders status updated to ${newStatus}`,
           'success'
         );
-        fetchOrders();
-        fetchStats();
-        fetchAllOrdersForCounts();
+        fetchDataOptimized();
         setSelectedOrders([]);
         setBulkStatusDialog({ open: false });
         setBulkStatus('');
@@ -652,9 +649,7 @@ const AdminOrdersPage = () => {
 
       if (result.success) {
         showToast('Order resent successfully', 'success');
-        fetchOrders();
-        fetchStats();
-        fetchAllOrdersForCounts();
+        fetchDataOptimized();
       } else {
         showToast(result.error || 'Failed to resend order', 'error');
       }
@@ -1049,7 +1044,7 @@ const AdminOrdersPage = () => {
         orderId={markPartialDialog.orderId}
         onSuccess={() => {
           setMarkPartialDialog({ open: false, orderId: '' });
-          fetchOrders();
+          fetchDataOptimized();
           showToast('Order marked as partial successfully');
         }}
         showToast={showToast}
@@ -1063,7 +1058,7 @@ const AdminOrdersPage = () => {
         currentCount={editStartCountDialog.currentCount}
         onSuccess={() => {
           setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
-          fetchOrders();
+          fetchDataOptimized();
           showToast('Start count updated successfully');
         }}
         showToast={showToast}
@@ -1077,7 +1072,7 @@ const AdminOrdersPage = () => {
         currentStatus={updateStatusDialog.currentStatus}
         onSuccess={() => {
           setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' });
-          fetchOrders();
+          fetchDataOptimized();
           showToast('Order status updated successfully');
         }}
         showToast={showToast}

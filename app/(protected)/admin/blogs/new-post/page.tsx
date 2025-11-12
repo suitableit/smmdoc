@@ -8,16 +8,19 @@ import {
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
-import JoditEditor from 'jodit-react';
+import JoditEditor from 'jodit-react';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -34,7 +37,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface PostFormData {
   title: string;
   slug: string;
@@ -47,17 +51,20 @@ interface PostFormData {
 }
 
 const NewPostPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   useEffect(() => {
     setPageTitle('New Post', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [formData, setFormData] = useState<PostFormData>({
     title: '',
     slug: '',
@@ -72,9 +79,11 @@ const NewPostPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+
   const [slugStatus, setSlugStatus] = useState<{
     isChecking: boolean;
     isAvailable: boolean | null;
@@ -83,8 +92,10 @@ const NewPostPage = () => {
     isChecking: false,
     isAvailable: null,
     message: ''
-  });
-  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  });
+
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+
   const editorConfig = useMemo(() => ({
     readonly: false,
     placeholder: 'Write your post content here...',
@@ -92,7 +103,7 @@ const NewPostPage = () => {
     toolbar: true,
     spellcheck: true,
     language: 'en',
-    toolbarButtonSize: 'middle',
+    toolbarButtonSize: 'middle' as const,
     theme: 'default',
     enableDragAndDropFileToEditor: true,
     uploader: {
@@ -104,13 +115,14 @@ const NewPostPage = () => {
     showXPathInStatusbar: false,
     askBeforePasteHTML: false,
     askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html',
+    defaultActionOnPaste: 'insert_clear_html' as const,
     style: {
       background: '#ffffff',
       color: '#000000'
     },
     editorCssClass: 'jodit-editor-white-bg'
-  }), []);
+  }), []);
+
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -119,7 +131,8 @@ const NewPostPage = () => {
       .replace(/-+/g, '-')
       .replace(/^-+|-+$/g, '')
       .trim();
-  };
+  };
+
   const checkSlugAvailability = async (slug: string) => {
     if (!slug || slug.length < 3) {
       setSlugStatus({ isChecking: false, isAvailable: null, message: '' });
@@ -128,8 +141,10 @@ const NewPostPage = () => {
 
     setSlugStatus({ isChecking: true, isAvailable: null, message: 'Checking availability...' });
 
-    try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+
+      await new Promise(resolve => setTimeout(resolve, 800));
+
       const isAvailable = !slug.includes('test');
 
       setSlugStatus({
@@ -146,7 +161,8 @@ const NewPostPage = () => {
         message: 'Error checking availability'
       });
     }
-  };
+  };
+
   const debounce = (func: Function, wait: number) => {
     let timeout: NodeJS.Timeout;
     return function executedFunction(...args: any[]) {
@@ -157,26 +173,33 @@ const NewPostPage = () => {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
-  };
-  const debouncedSlugCheck = debounce(checkSlugAvailability, 1000);
+  };
+
+  const debouncedSlugCheck = debounce(checkSlugAvailability, 1000);
+
   const handleInputChange = (field: keyof PostFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
-    }));
+    }));
+
     if (field === 'title' && value && !isSlugManuallyEdited) {
       const newSlug = generateSlug(value);
       setFormData(prev => ({
         ...prev,
         slug: newSlug
-      }));
+      }));
+
       debouncedSlugCheck(newSlug);
-    }
+    }
+
     if (field === 'slug') {
-      setIsSlugManuallyEdited(true);
+      setIsSlugManuallyEdited(true);
+
       debouncedSlugCheck(value);
     }
-  };
+  };
+
   const regenerateSlug = () => {
     if (formData.title) {
       const newSlug = generateSlug(formData.title);
@@ -187,15 +210,18 @@ const NewPostPage = () => {
       setIsSlugManuallyEdited(false);
       debouncedSlugCheck(newSlug);
     }
-  };
+  };
+
   const handleImageUpload = async (file: File) => {
     try {
-      setImageUploading(true);
+      setImageUploading(true);
+
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       if (!allowedTypes.includes(file.type)) {
         showToast('Only image files (JPEG, PNG, GIF, WebP) are allowed', 'error');
         return;
-      }
+      }
+
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast('File size must be less than 5MB', 'error');
@@ -228,10 +254,12 @@ const NewPostPage = () => {
     } finally {
       setImageUploading(false);
     }
-  };
+  };
+
   const handleSubmit = async (status: 'draft' | 'published') => {
     try {
-      setIsLoading(true);
+      setIsLoading(true);
+
       if (!formData.title.trim()) {
         showToast('Please enter a post title', 'error');
         return;
@@ -254,7 +282,8 @@ const NewPostPage = () => {
         seoDescription: formData.metaDescription
       };
 
-      console.log('Submitting post:', postData);
+      console.log('Submitting post:', postData);
+
       const response = await fetch('/api/blogs', {
         method: 'POST',
         headers: {
@@ -272,7 +301,8 @@ const NewPostPage = () => {
       showToast(
         status === 'draft' ? 'Post saved as draft!' : 'Post published successfully!',
         'success'
-      );
+      );
+
       if (status === 'published') {
         setTimeout(() => {
           window.location.href = '/admin/blogs';
@@ -288,7 +318,6 @@ const NewPostPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -300,7 +329,6 @@ const NewPostPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -480,9 +508,7 @@ const NewPostPage = () => {
             </div>
           </div>
 
-          {}
           <div className="space-y-6">
-            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Publish Settings
@@ -493,7 +519,7 @@ const NewPostPage = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => handleInputChange('status', e.target.value)}
-                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer`}
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
@@ -501,8 +527,6 @@ const NewPostPage = () => {
                 </div>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 Featured Image
@@ -526,7 +550,32 @@ const NewPostPage = () => {
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input
                       type="file"
-                      accept="image}
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleImageUpload(file);
+                        }
+                      }}
+                      className="hidden"
+                      id="featured-image-upload"
+                    />
+                    <label
+                      htmlFor="featured-image-upload"
+                      className="cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                    >
+                      <FaUpload className="mx-auto mb-2 text-3xl" />
+                      <p>Click to upload featured image</p>
+                      <p className="text-sm mt-1">PNG, JPG, GIF up to 5MB</p>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <button
           onClick={() => handleSubmit('draft')}

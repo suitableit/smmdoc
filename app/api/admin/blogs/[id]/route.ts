@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // DELETE /api/admin/blogs/[id] - Delete blog post by ID (Admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -21,7 +21,8 @@ export async function DELETE(
       );
     }
 
-    const blogId = parseInt(params.id);
+    const { id } = await params;
+    const blogId = parseInt(id);
 
     if (isNaN(blogId)) {
       return NextResponse.json(

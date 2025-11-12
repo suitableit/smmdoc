@@ -12,7 +12,7 @@ import {
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
 import { ServiceTypeFields } from '@/components/ServiceTypeFields';
-import { validateOrderByType, getServiceTypeConfig, ServiceType } from '@/lib/serviceTypes';
+import { validateOrderByType, getServiceTypeConfig, ServiceTypeConfig } from '@/lib/serviceTypes';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -1323,7 +1323,7 @@ function NewOrder() {
                   {}
                   {selectedService && selected?.type && (
                     <ServiceTypeFields
-                      serviceType={selected.type as ServiceType}
+                      serviceType={selected.type as number}
                       values={serviceTypeFields}
                       onChange={handleServiceTypeFieldChange}
                       errors={serviceTypeErrors}

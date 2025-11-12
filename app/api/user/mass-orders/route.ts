@@ -294,7 +294,7 @@ export async function POST(request: Request) {
       for (const orderData of validatedOrders) {
         const { orderIndex, service, ...createData } = orderData;
 
-        const order = await prisma.order.create({
+        const order = await prisma.newOrder.create({
           data: {
             ...createData,
             // Service type specific fields
@@ -413,7 +413,7 @@ export async function GET(request: Request) {
 
     if (type === 'stats') {
       // Get Mass Orders statistics
-      const stats = await db.order.aggregate({
+      const stats = await db.newOrder.aggregate({
         where: {
           userId: session.user.id,
           createdAt: {
@@ -444,7 +444,7 @@ export async function GET(request: Request) {
 
     if (type === 'recent') {
       // Get recent orders grouped by creation time (potential Mass Orderss)
-      const recentOrders = await db.order.findMany({
+      const recentOrders = await db.newOrder.findMany({
         where: {
           userId: session.user.id,
           createdAt: {

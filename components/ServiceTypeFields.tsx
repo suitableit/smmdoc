@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { ServiceType, getServiceTypeConfig } from '@/lib/serviceTypes';
+import { getServiceTypeConfig } from '@/lib/serviceTypes';
 
 interface ServiceTypeFieldsProps {
-  serviceType: ServiceType;
+  serviceType: number;
   values: {
     comments?: string;
     username?: string;
@@ -29,7 +29,104 @@ export const ServiceTypeFields: React.FC<ServiceTypeFieldsProps> = ({
 }) => {
   const config = getServiceTypeConfig(serviceType);
 
-  if (!config || config.fields.length === 0) {
+  if (!config) {
+    return null;
+  }
+
+  const fields: Array<{ name: string; type: string; label: string; placeholder?: string; required?: boolean; description?: string; min?: number; max?: number }> = [];
+
+  if (config.requiresComments) {
+    fields.push({
+      name: 'comments',
+      type: 'textarea',
+      label: 'Comments',
+      placeholder: 'Enter your comments',
+      required: true,
+      description: 'Custom comments for this service'
+    });
+  }
+
+  if (config.requiresUsername) {
+    fields.push({
+      name: 'username',
+      type: 'text',
+      label: 'Username',
+      placeholder: 'Enter username',
+      required: true,
+      description: 'Username for this service'
+    });
+  }
+
+  if (config.requiresPosts) {
+    fields.push({
+      name: 'posts',
+      type: 'number',
+      label: 'Number of Posts',
+      placeholder: 'Enter number of posts',
+      required: true,
+      min: 1,
+      description: 'Number of posts for this service'
+    });
+  }
+
+  if (config.allowsDelay) {
+    fields.push({
+      name: 'delay',
+      type: 'number',
+      label: 'Delay (minutes)',
+      placeholder: 'Enter delay in minutes',
+      required: false,
+      min: 0,
+      description: 'Delay before starting the service'
+    });
+  }
+
+  if (config.allowsRuns) {
+    fields.push({
+      name: 'dripfeedRuns',
+      type: 'number',
+      label: 'Number of Runs',
+      placeholder: 'Enter number of runs',
+      required: config.isSubscription,
+      min: 1,
+      description: 'Number of times to run this service'
+    });
+  }
+
+  if (config.allowsInterval) {
+    fields.push({
+      name: 'dripfeedInterval',
+      type: 'number',
+      label: 'Interval (minutes)',
+      placeholder: 'Enter interval in minutes',
+      required: config.isSubscription,
+      min: 1,
+      description: 'Interval between runs'
+    });
+  }
+
+  if (config.isSubscription) {
+    fields.push({
+      name: 'minQty',
+      type: 'number',
+      label: 'Min Quantity',
+      placeholder: 'Enter minimum quantity',
+      required: false,
+      min: 1,
+      description: 'Minimum quantity for subscription'
+    });
+    fields.push({
+      name: 'maxQty',
+      type: 'number',
+      label: 'Max Quantity',
+      placeholder: 'Enter maximum quantity',
+      required: false,
+      min: 1,
+      description: 'Maximum quantity for subscription'
+    });
+  }
+
+  if (fields.length === 0) {
     return null;
   }
 
@@ -158,7 +255,7 @@ export const ServiceTypeFields: React.FC<ServiceTypeFieldsProps> = ({
           {config.name} Settings
         </h4>
         <div className="space-y-4">
-          {config.fields.map(renderField)}
+          {fields.map(renderField)}
         </div>
       </div>
     </div>

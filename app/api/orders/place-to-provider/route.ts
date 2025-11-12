@@ -2,7 +2,7 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
-import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 // POST /api/orders/place-to-provider - Forward order to external provider
 export async function POST(req: NextRequest) {
@@ -55,14 +55,7 @@ export async function POST(req: NextRequest) {
 
     // Get provider details
     const provider = await db.api_providers.findUnique({
-      where: { id: providerId },
-      select: {
-        id: true,
-        name: true,
-        api_url: true,
-        api_key: true,
-        status: true
-      }
+      where: { id: providerId }
     });
 
     if (!provider) {
@@ -79,11 +72,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Create API specification from provider configuration
+    const apiSpec = createApiSpecFromProvider(provider);
+    
     // Prepare provider API request using API specification system
-    const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+    const requestBuilder = new ApiRequestBuilder(
+      apiSpec,
+      provider.api_url,
+      provider.api_key,
+      (provider as any).http_method || (provider as any).httpMethod || 'POST'
+    );
     
     const orderRequest = requestBuilder.buildAddOrderRequest(
-      order.service.providerServiceId || order.serviceId,
+      order.service.providerServiceId || order.serviceId.toString(),
       order.link,
       order.qty
     );
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check provider response using API specification system
-    const responseParser = new ApiResponseParser();
+    const responseParser = new ApiResponseParser(apiSpec);
     let parsedOrder;
     
     try {

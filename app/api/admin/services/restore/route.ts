@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       select: { role: true }
     });
 
-    if (user?.role !== 'ADMIN') {
+    if (user?.role !== 'admin') {
       return NextResponse.json(
         { success: false, message: 'Admin access required' },
         { status: 403 }
@@ -38,10 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Find the service
     const service = await db.service.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        provider: true
-      }
+      where: { id: parseInt(id) }
     });
 
     if (!service) {
@@ -52,15 +49,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if service is actually in trash (inactive with a provider)
-    if (service.status !== 'inactive' || !service.provider) {
+    if (service.status !== 'inactive' || !service.providerId) {
       return NextResponse.json(
         { success: false, message: 'Service is not in trash' },
         { status: 400 }
       );
     }
 
+    // Fetch the provider to check its status
+    const provider = await db.api_providers.findUnique({
+      where: { id: service.providerId }
+    });
+
+    if (!provider) {
+      return NextResponse.json(
+        { success: false, message: 'Provider not found' },
+        { status: 404 }
+      );
+    }
+
     // Check if the provider is active (can only restore if provider is active)
-    if (service.provider.status !== 'active') {
+    if (provider.status !== 'active') {
       return NextResponse.json(
         { success: false, message: 'Cannot restore service: Provider is not active' },
         { status: 400 }
@@ -72,7 +81,7 @@ export async function POST(request: NextRequest) {
       where: { id: parseInt(id) },
       data: {
         status: 'active',
-        updated_at: new Date()
+        updatedAt: new Date()
       }
     });
 

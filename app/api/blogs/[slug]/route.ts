@@ -5,10 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET /api/blogs/[slug] - Get single blog post by slug
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
 
     const post = await db.blogPost.findUnique({
       where: { slug },
@@ -79,7 +79,7 @@ export async function GET(
 // PUT /api/blogs/[slug] - Update blog post (Admin only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await auth();
@@ -95,7 +95,7 @@ export async function PUT(
       );
     }
 
-    const { slug } = params;
+    const { slug } = await params;
     const body = await req.json();
     const {
       title,
@@ -186,22 +186,6 @@ export async function PUT(
             name: true,
             image: true
           }
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
-          }
-        },
-        tags: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            color: true
-          }
         }
       }
     });
@@ -227,7 +211,7 @@ export async function PUT(
 // DELETE /api/blogs/[slug] - Delete blog post (Admin only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const session = await auth();
@@ -243,7 +227,7 @@ export async function DELETE(
       );
     }
 
-    const { slug } = params;
+    const { slug } = await params;
 
     // Check if post exists
     const existingPost = await db.blogPost.findUnique({

@@ -182,7 +182,7 @@ async function seedServiceTypes() {
   ]
 
   for (const serviceType of serviceTypes) {
-    await prisma.serviceType.upsert({
+    await prisma.servicetype.upsert({
       where: { name: serviceType.name },
       update: serviceType,
       create: serviceType,

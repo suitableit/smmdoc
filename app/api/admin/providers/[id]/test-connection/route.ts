@@ -4,10 +4,11 @@ import { testProviderConnection } from '@/lib/utils/providerValidator';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const providerId = parseInt(params.id);
+    const { id } = await params;
+    const providerId = parseInt(id);
     
     if (isNaN(providerId)) {
       return NextResponse.json(
