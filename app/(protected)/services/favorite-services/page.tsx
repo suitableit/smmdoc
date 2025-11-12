@@ -367,7 +367,7 @@ const FavoriteServicesTable: React.FC = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+          <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-4 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4 h-12">
@@ -474,7 +474,7 @@ const FavoriteServicesTable: React.FC = () => {
 
       <div className="page-content">
         {}
-        <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-4 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
           {}
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -516,7 +516,7 @@ const FavoriteServicesTable: React.FC = () => {
                       placeholder="Search by ID, Service Name, Category..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 h-12"
+                      className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 text-sm h-12"
                       autoComplete="off"
                     />
                     {isSearchLoading && (
@@ -537,37 +537,37 @@ const FavoriteServicesTable: React.FC = () => {
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Fav
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       ID
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Service
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Type
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Rate per 1000
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Min order
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Max order
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Average time
                     </th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-center py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Refill
                     </th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-center py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Cancel
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
                       Action
                     </th>
                   </tr>
@@ -638,7 +638,7 @@ const FavoriteServicesTable: React.FC = () => {
                               onClick={() => toggleCategory(categoryName)}
                             >
                               <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">
+                                <h3 className="text-base md:text-lg font-semibold">
                                   {categoryName} ({categoryServices.length} services)
                                 </h3>
                                 <div className="flex items-center gap-2">
@@ -675,12 +675,12 @@ const FavoriteServicesTable: React.FC = () => {
                                   </span>
                                 </td>
                                 <td className="py-3 px-4">
-                                  <div className="font-medium text-gray-900 dark:text-white">
+                                  <div className="text-sm md:text-base font-medium text-gray-900 dark:text-white">
                                     {service.name}
                                   </div>
                                 </td>
                                 <td className="py-3 px-4">
-                                  <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
+                                  <div className="text-sm font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 w-fit">
                                     {service?.serviceType?.name || 'Standard'}
                                   </div>
                                 </td>
@@ -767,7 +767,7 @@ const FavoriteServicesTable: React.FC = () => {
                             <tr>
                               <td colSpan={11} className="py-8 text-center">
                                 <div className="flex flex-col items-center justify-center text-gray-500">
-                                  <FaClipboardList className="text-4xl mb-2" />
+                                  <FaClipboardList className="text-2xl md:text-4xl mb-2" />
                                   <p className="text-sm font-medium">No services found!</p>
                                 </div>
                               </td>
@@ -779,8 +779,8 @@ const FavoriteServicesTable: React.FC = () => {
                       <tr>
                         <td colSpan={11} className="py-8 text-center">
                           <div className="flex flex-col items-center justify-center text-gray-500">
-                            <FaClipboardList className="text-4xl mb-2" />
-                            <div className="text-lg font-medium text-gray-900 dark:text-white">
+                            <FaClipboardList className="text-2xl md:text-4xl mb-2" />
+                            <div className="text-base md:text-lg font-medium text-gray-900 dark:text-white">
                               No favorite services found!
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -807,14 +807,14 @@ const FavoriteServicesTable: React.FC = () => {
                 <button
                   onClick={handlePrevious}
                   disabled={page === 1 || loading}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Previous
                 </button>
                 <button
                   onClick={handleNext}
                   disabled={page === totalPages || loading}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Next
                 </button>
@@ -823,38 +823,6 @@ const FavoriteServicesTable: React.FC = () => {
           )}
 
           {}
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-            <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
-              <div className="flex items-center justify-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <FaClipboardList className="w-4 h-4 text-blue-500" />
-                  <span>Showing <span className="font-medium">{services.length}</span> of <span className="font-medium">{totalServices}</span> favorite services</span>
-                </div>
-                {favoriteServices.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <FaHeart className="w-4 h-4 text-red-500" />
-                    <span><span className="font-medium">{favoriteServices.length}</span> favorites</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <FaClipboardList className="w-4 h-4 text-green-500" />
-                  <span><span className="font-medium">{Object.keys(groupedServices).length}</span> categories</span>
-                </div>
-                {limit === 'all' && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-green-600 dark:text-green-400 font-medium">Showing all favorite services</span>
-                  </div>
-                )}
-                {hasMoreData && limit !== 'all' && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                    <span className="text-orange-600 dark:text-orange-400">More pages available</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

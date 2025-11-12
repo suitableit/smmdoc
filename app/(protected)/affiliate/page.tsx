@@ -795,7 +795,7 @@ function AffiliateEarningsSection() {
 
       {}
       <div className="card">
-        <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+        <div className="card-header p-4 pt-4 pb-0 md:p-6 md:pt-6 md:pb-0">
 
           {}
           <div className="mb-4">
@@ -876,7 +876,7 @@ function AffiliateEarningsSection() {
           </div>
         </div>
 
-        <div style={{ padding: '0 24px' }}>
+        <div className="px-4 md:px-6">
           {earningsLoading ? (
             <div className="overflow-x-auto" style={{ minHeight: '400px' }}>
               <table className="w-full text-sm min-w-[700px]">
@@ -938,7 +938,7 @@ function AffiliateEarningsSection() {
                 </tbody>
               </table>
               
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-6 border-t gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 md:pb-6 border-t gap-3">
                 <div className="h-4 w-48 gradient-shimmer rounded" />
                 <div className="flex flex-row items-center justify-center gap-2 w-full sm:w-auto">
                   <div className="h-10 w-20 gradient-shimmer rounded-lg" />
@@ -1061,7 +1061,7 @@ function AffiliateEarningsSection() {
               </div>
 
               {}
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-6 border-t gap-3">
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 md:pb-6 border-t gap-3">
                 <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to {formatNumber(Math.min(pagination.page * pagination.limit, pagination.total))} of {formatNumber(pagination.total)} earnings
                 </div>

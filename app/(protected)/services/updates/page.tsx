@@ -4,7 +4,6 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { revalidate } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import {
   FaBell,
@@ -95,8 +94,14 @@ export default function UpdateServiceTable() {
       try {
 
         const response = await fetch(
-          `/api/user/services/getUpdateServices?page=${page}&limit=${limit}&search=${debouncedSearch}`,
-          revalidate
+          `/api/user/services/getUpdateServices?page=${page}&limit=${limit}&search=${encodeURIComponent(debouncedSearch)}`,
+          {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+            },
+          }
         );
         const data = await response.json();
 
@@ -243,18 +248,7 @@ export default function UpdateServiceTable() {
                   </tr>
                 </thead>
                 <tbody>
-                  {services?.filter(service => {
-                    try {
-                      const updateData = JSON.parse(service.updateText || '{}');
-
-
-                      const isApiProviderSync = updateData.provider && updateData.providerId && updateData.lastSynced;
-                      return !isApiProviderSync;
-                    } catch (error) {
-
-                      return true;
-                    }
-                  }).map((service, i) => (
+                  {services?.map((service, i) => (
                     <tr key={service.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {service.id}
