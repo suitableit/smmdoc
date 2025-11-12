@@ -348,7 +348,6 @@ const PostCategoriesPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -360,10 +359,8 @@ const PostCategoriesPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <select
                 value={pagination.limit}
@@ -393,8 +390,6 @@ const PostCategoriesPage = () => {
                 <FaSync className={postCategoriesLoading ? 'animate-spin' : ''} />
                 Refresh
               </button>
-
-              {}
               <button
                 onClick={() => setAddDialogOpen(true)}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full sm:w-auto"
@@ -403,8 +398,6 @@ const PostCategoriesPage = () => {
                 Add New Category
               </button>
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1">
                 <FaSearch
@@ -422,8 +415,6 @@ const PostCategoriesPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div style={{ padding: '24px 24px 0px 24px' }}>
             {postCategoriesLoading ? (
@@ -464,7 +455,6 @@ const PostCategoriesPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -530,7 +520,6 @@ const PostCategoriesPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            {}
                             <div className="relative">
                               <button
                                 className="btn btn-secondary p-2"
@@ -550,8 +539,6 @@ const PostCategoriesPage = () => {
                               >
                                 <FaEllipsisH className="h-3 w-3" />
                               </button>
-
-                              {}
                               <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                 <div className="py-1">
                                   <button
@@ -594,8 +581,6 @@ const PostCategoriesPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -659,8 +644,6 @@ const PostCategoriesPage = () => {
             )}
           </div>
         </div>
-
-        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -703,8 +686,6 @@ const PostCategoriesPage = () => {
             </div>
           </div>
         )}
-
-        {}
         {editDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -740,8 +721,6 @@ const PostCategoriesPage = () => {
             </div>
           </div>
         )}
-
-        {}
         {addDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

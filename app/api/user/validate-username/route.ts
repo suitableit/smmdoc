@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const username = searchParams.get('username');
 
-    // Validation
     if (!username) {
       return NextResponse.json(
         {
@@ -18,7 +17,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if username is too short
     if (username.length < 3) {
       return NextResponse.json(
         {
@@ -30,7 +28,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if username contains only allowed characters
     const usernameRegex = /^[a-z0-9._]+$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json(
@@ -43,7 +40,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if username exists in database
     const existingUser = await db.user.findUnique({
       where: { username: username },
       select: {
@@ -65,7 +61,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Username is valid and exists
     return NextResponse.json(
       {
         message: 'Username is valid.',

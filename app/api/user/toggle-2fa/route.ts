@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update 2FA status
     const updatedUser = await db.user.update({
       where: { id: session.user.id },
       data: { 
@@ -67,7 +65,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Activity logging removed for now
 
     return NextResponse.json(
       {

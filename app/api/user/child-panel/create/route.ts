@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 
-// POST /api/user/child-panel/create - Create child panel
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -19,7 +18,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if child panel selling is enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const childPanelSellingEnabled = moduleSettings?.childPanelSellingEnabled ?? false;
     const childPanelPrice = moduleSettings?.childPanelPrice ?? 10;
@@ -39,7 +37,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { domain, panelName, plan = 'basic' } = body;
 
-    // Validate required fields
     if (!domain || !panelName) {
       return NextResponse.json(
         {
@@ -51,7 +48,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user already has a child panel
     const existingPanel = await db.child_panels.findUnique({
       where: { userId }
     });
@@ -67,7 +63,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if domain is already taken
     const existingDomain = await db.child_panels.findUnique({
       where: { domain }
     });
@@ -83,7 +78,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check user balance
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { balance: true, currency: true }
@@ -100,18 +94,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate unique API key
     const generateApiKey = (): string => {
       return crypto.randomBytes(32).toString('hex');
     };
 
     const apiKey = generateApiKey();
     const expiryDate = new Date();
-    expiryDate.setMonth(expiryDate.getMonth() + 1); // 1 month from now
+    expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-    // Create child panel and subscription in transaction
     const result = await db.$transaction(async (prisma) => {
-      // Deduct balance from user
       await prisma.user.update({
         where: { id: userId },
         data: { 
@@ -120,7 +111,6 @@ export async function POST(request: Request) {
         }
       });
 
-      // Create child panel
       const childPanel = await prisma.child_panels.create({
         data: {
           userId,
@@ -149,7 +139,6 @@ export async function POST(request: Request) {
         }
       });
 
-      // Create subscription record
       await prisma.child_panel_subscriptions.create({
         data: {
           childPanelId: childPanel.id,

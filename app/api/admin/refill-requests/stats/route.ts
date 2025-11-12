@@ -2,12 +2,10 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/refill-requests/stats - Get refill request statistics
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -19,7 +17,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get refill request statistics
     const [
       totalRequests,
       pendingRequests,
@@ -27,31 +24,25 @@ export async function GET(req: NextRequest) {
       declinedRequests,
       completedRequests
     ] = await Promise.all([
-      // Total refill requests
       db.refillRequest.count(),
       
-      // Pending requests
       db.refillRequest.count({
         where: { status: 'pending' }
       }),
       
-      // Approved requests
       db.refillRequest.count({
         where: { status: 'approved' }
       }),
       
-      // Declined requests
       db.refillRequest.count({
         where: { status: 'declined' }
       }),
       
-      // Completed requests
       db.refillRequest.count({
         where: { status: 'completed' }
       })
     ]);
 
-    // Get eligible orders for refill (completed orders with refill enabled services)
     const eligibleOrdersCount = await db.newOrder.count({
       where: {
         status: 'completed',

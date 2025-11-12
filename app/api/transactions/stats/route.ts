@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -19,9 +18,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || 'all'; // all, today, week, month
+    const period = searchParams.get('period') || 'all';
 
-    // Build date filter based on period
     let dateFilter = {};
     const now = new Date();
     
@@ -50,11 +48,9 @@ export async function GET(request: NextRequest) {
         };
         break;
       default:
-        // No date filter for 'all'
         break;
     }
 
-    // Get comprehensive stats
     const [
       totalTransactions,
       pendingTransactions,
@@ -65,36 +61,29 @@ export async function GET(request: NextRequest) {
       todayTransactions,
       recentTransactions
     ] = await Promise.all([
-      // Total transactions
       db.addFund.count({ where: dateFilter }),
       
-      // Pending transactions
       db.addFund.count({ 
         where: { ...dateFilter, admin_status: 'Pending' } 
       }),
       
-      // Completed transactions
       db.addFund.count({ 
         where: { ...dateFilter, admin_status: 'Success' } 
       }),
       
-      // Cancelled transactions
       db.addFund.count({ 
         where: { ...dateFilter, admin_status: 'Cancelled' } 
       }),
       
-      // Suspicious transactions
       db.addFund.count({ 
         where: { ...dateFilter, admin_status: 'Suspicious' } 
       }),
       
-      // Total volume (completed transactions only)
       db.addFund.aggregate({
         where: { ...dateFilter, admin_status: 'Success' },
         _sum: { amount: true }
       }),
       
-      // Today's transactions
       db.addFund.count({
         where: {
           createdAt: {
@@ -103,7 +92,6 @@ export async function GET(request: NextRequest) {
         }
       }),
       
-      // Recent transactions for quick overview
       db.addFund.findMany({
         where: dateFilter,
         orderBy: { createdAt: 'desc' },
@@ -125,20 +113,17 @@ export async function GET(request: NextRequest) {
 
     const totalVolume = totalVolumeResult._sum.amount || 0;
 
-    // Calculate status breakdown
     const statusBreakdown = {
       pending: pendingTransactions,
       completed: completedTransactions,
       cancelled: cancelledTransactions,
       suspicious: suspiciousTransactions,
-      // Legacy format for compatibility
       Success: completedTransactions,
       Pending: pendingTransactions,
       Cancelled: cancelledTransactions,
       Suspicious: suspiciousTransactions
     };
 
-    // Calculate percentage distributions
     const percentages = {
       pending: totalTransactions > 0 ? Math.round((pendingTransactions / totalTransactions) * 100) : 0,
       completed: totalTransactions > 0 ? Math.round((completedTransactions / totalTransactions) * 100) : 0,

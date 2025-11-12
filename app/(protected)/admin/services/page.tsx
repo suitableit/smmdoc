@@ -2268,7 +2268,6 @@ function AdminServicesPage() {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -2280,7 +2279,6 @@ function AdminServicesPage() {
       </div>
 
       <div className="page-content">
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {serviceStats.map((stat, index) => (
             <div
@@ -2304,13 +2302,9 @@ function AdminServicesPage() {
             </div>
           ))}
         </div>
-
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
-              {}
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(e.target.value)}
@@ -2321,8 +2315,6 @@ function AdminServicesPage() {
                 <option value="100">100</option>
                 <option value="all">All</option>
               </select>
-
-              {}
               <select 
                 value={providerFilter}
                 onChange={(e) => setProviderFilter(e.target.value)}
@@ -2373,8 +2365,6 @@ function AdminServicesPage() {
                 Import Services
               </Link>
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -2394,11 +2384,8 @@ function AdminServicesPage() {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card animate-in fade-in duration-500">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -2534,8 +2521,6 @@ function AdminServicesPage() {
                     >
                       {selectedServices.length} selected
                     </span>
-
-                    {}
                     <select
                       value={selectedBulkOperation}
                       onChange={(e) => {
@@ -2571,8 +2556,6 @@ function AdminServicesPage() {
                       <option value="delete">Delete Selected Services</option>
                       <option value="delete-services-categories">Delete Selected Services & Categories</option>
                     </select>
-
-                    {}
                     {selectedBulkOperation && (
                       <button
                         onClick={executeBatchOperation}
@@ -2590,8 +2573,6 @@ function AdminServicesPage() {
                     )}
                   </div>
                 )}
-
-                {}
                 <div className="overflow-x-auto">
                   <ServicesTable
                   groupedServices={groupedServices}
@@ -2637,8 +2618,6 @@ function AdminServicesPage() {
                   handleServiceDrop={handleServiceDrop}
                 />
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -2657,8 +2636,6 @@ function AdminServicesPage() {
                       } total categories)`
                     )}
                   </div>
-
-                  {}
                   {pageSize !== 'all' && (
                     <div className="flex items-center gap-2 mt-4 md:mt-0">
                       <button
@@ -2692,8 +2669,6 @@ function AdminServicesPage() {
             )}
           </div>
         </div>
-
-        {}
         {editServiceModal.open && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2720,8 +2695,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {createServiceModal && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2748,8 +2721,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {createCategoryModal && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2775,8 +2746,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {editCategoryModal.open && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2804,8 +2773,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {deleteConfirmationModal && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2831,8 +2798,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {deleteServicesAndCategoriesModal && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
@@ -2859,8 +2824,6 @@ function AdminServicesPage() {
             </div>
           </div>
         )}
-
-        {}
         {deleteCategoryModal.open && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${

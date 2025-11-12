@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -13,7 +13,6 @@ export async function GET() {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
@@ -26,7 +25,6 @@ export async function GET() {
       );
     }
 
-    // Get custom codes settings
     const customCodesSettings = await db.customCodesSettings.findFirst();
 
     return NextResponse.json({
@@ -56,7 +54,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
@@ -78,9 +75,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upsert custom codes settings
     const updatedSettings = await db.customCodesSettings.upsert({
-      where: { id: 1 }, // Assuming single settings record
+      where: { id: 1 },
       update: {
         headerCodes: customCodesSettings.headerCodes || '',
         footerCodes: customCodesSettings.footerCodes || '',

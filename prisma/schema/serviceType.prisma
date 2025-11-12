@@ -3,7 +3,7 @@ model ServiceType {
   name              String    @unique(map: "ServiceType_name_key")
   description       String?
   status            String    @default("active")
-  packageType       Int       @default(1) // Service package type (1-15)
+  packageType       Int       @default(1)
   requiresLink      Boolean   @default(true)
   requiresQuantity  Boolean   @default(true)
   requiresComments  Boolean   @default(false)

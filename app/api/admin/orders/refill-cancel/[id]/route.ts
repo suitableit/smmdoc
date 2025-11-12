@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/orders/refill-cancel/:id - Process a refill or cancel task
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -10,7 +9,6 @@ export async function PUT(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -48,8 +46,6 @@ export async function PUT(
       );
     }
 
-    // Extract order ID from task ID (this is a simulation)
-    // In a real implementation, you would query the RefillRequest/CancelRequest table
     const taskParts = id.split('_');
     if (taskParts.length < 2) {
       return NextResponse.json(
@@ -62,10 +58,9 @@ export async function PUT(
       );
     }
 
-    const taskType = taskParts[0]; // 'refill' or 'cancel'
+    const taskType = taskParts[0];
     const orderId = taskParts[1];
 
-    // Get the order
     const order = await db.newOrder.findUnique({
       where: { id: Number(orderId) },
       include: {
@@ -113,13 +108,11 @@ export async function PUT(
 
     if (action === 'approve') {
       if (taskType === 'refill') {
-        // Process refill request
         const refillQuantity = order.remains || order.qty;
         const refillPrice = (refillQuantity / order.qty) * order.price;
         const refillUsdPrice = (refillQuantity / order.qty) * order.usdPrice;
         const refillBdtPrice = (refillQuantity / order.qty) * order.bdtPrice;
 
-        // Check if user has sufficient balance
         const userBalance = order.user.currency === 'USD' ? order.user.balance : order.user.balance;
         const requiredAmount = order.user.currency === 'USD' ? refillUsdPrice : refillBdtPrice;
 
@@ -134,7 +127,6 @@ export async function PUT(
           );
         }
 
-        // Create refill order using transaction
         result = await db.$transaction(async (prisma) => {
           const refillOrder = await prisma.newOrder.create({
             data: {
@@ -154,7 +146,6 @@ export async function PUT(
             }
           });
 
-          // Deduct balance from user
           await prisma.user.update({
             where: { id: order.userId },
             data: {
@@ -170,7 +161,6 @@ export async function PUT(
           return refillOrder;
         });
 
-        // Log the action
         console.log(`Admin ${session.user.email} approved refill task for order ${orderId}`, {
           taskId: id,
           orderId,
@@ -182,11 +172,9 @@ export async function PUT(
         });
 
       } else if (taskType === 'cancel') {
-        // Process cancel request
         const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
 
         result = await db.$transaction(async (prisma) => {
-          // Update order status to cancelled
           const cancelledOrder = await prisma.newOrder.update({
             where: { id: Number(orderId) },
             data: {
@@ -195,7 +183,6 @@ export async function PUT(
             }
           });
 
-          // Refund user if order was paid
           if (order.status !== 'pending') {
             await prisma.user.update({
               where: { id: order.userId },
@@ -213,7 +200,6 @@ export async function PUT(
           return cancelledOrder;
         });
 
-        // Log the action
         console.log(`Admin ${session.user.email} approved cancel task for order ${orderId}`, {
           taskId: id,
           orderId,
@@ -223,7 +209,6 @@ export async function PUT(
         });
       }
     } else if (action === 'reject') {
-      // Log the rejection
       console.log(`Admin ${session.user.email} rejected ${taskType} task for order ${orderId}`, {
         taskId: id,
         orderId,

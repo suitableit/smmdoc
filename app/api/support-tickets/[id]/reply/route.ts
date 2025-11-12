@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
-// Validation schema for replies
 const replySchema = z.object({
   message: z.string().min(1, 'Message is required').max(5000, 'Message too long'),
   attachments: z.string().optional(),
@@ -15,7 +14,6 @@ interface RouteParams {
   }>;
 }
 
-// POST - Add reply to support ticket
 export async function POST(
   request: NextRequest,
   { params }: RouteParams
@@ -40,7 +38,6 @@ export async function POST(
       );
     }
 
-    // Check if user is admin or ticket owner
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -58,7 +55,6 @@ export async function POST(
       );
     }
 
-    // Check permissions
     const isAdmin = user?.role === 'admin';
     const isOwner = ticket.userId === parseInt(session.user.id);
 
@@ -69,7 +65,6 @@ export async function POST(
       );
     }
 
-    // Check if ticket is closed
     if (ticket.status === 'closed') {
       return NextResponse.json(
         { error: 'Cannot reply to closed ticket' },
@@ -77,7 +72,6 @@ export async function POST(
       );
     }
 
-    // Handle FormData for file uploads
     let message: string;
     let attachments: string | undefined;
 
@@ -101,7 +95,6 @@ export async function POST(
       );
     }
 
-    // Create the reply message
     const reply = await db.ticketMessage.create({
       data: {
         ticketId: ticketId,
@@ -122,7 +115,6 @@ export async function POST(
       }
     });
 
-    // Update ticket status and last updated time
     const newStatus = isAdmin ? 'Answered' : 'Customer Reply';
     await db.supportTicket.update({
       where: { id: ticketId },
@@ -134,7 +126,6 @@ export async function POST(
       }
     });
 
-    // Fetch the complete updated ticket with all messages
     const updatedTicket = await db.supportTicket.findUnique({
       where: { id: ticketId },
       include: {
@@ -172,7 +163,6 @@ export async function POST(
       );
     }
 
-    // Get additional ticket data for complete response
     const ticketWithNotes = await db.supportTicket.findUnique({
       where: { id: ticketId },
       include: {
@@ -226,7 +216,6 @@ export async function POST(
       );
     }
 
-    // Get user statistics
     const totalTickets = await db.supportTicket.count({
       where: { userId: ticketWithNotes.userId }
     });
@@ -238,7 +227,6 @@ export async function POST(
       }
     });
 
-    // Transform the ticket data to match frontend expectations
     const transformedTicket = {
       id: ticketWithNotes.id.toString(),
       userId: ticketWithNotes.userId.toString(),
@@ -270,10 +258,8 @@ export async function POST(
         if (msg.messageType === 'system') {
            authorName = 'System';
          } else if (msg.isFromAdmin || msg.user?.role === 'admin') {
-           // Hide admin names for users - show generic 'Support Admin' label
            authorName = 'Support Admin';
          } else {
-           // Show user's own name
            authorName = msg.user?.name || 'Unknown';
          }
         
@@ -291,10 +277,8 @@ export async function POST(
       notes: ticketWithNotes.notes.map(note => {
         let authorName;
          if (note.user.role === 'admin') {
-           // Hide admin names for users - show generic 'Support Admin' label
            authorName = 'Support Admin';
          } else {
-           // Show user's own name
            authorName = note.user.username || note.user.name || 'Unknown';
          }
         

@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate language
     const allowedLanguages = ['en', 'bn', 'ar', 'es', 'fr', 'hi'];
     if (!allowedLanguages.includes(language)) {
       return NextResponse.json(
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: session.user.id }
     });
@@ -61,7 +59,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update user language
     const updatedUser = await db.user.update({
       where: { id: session.user.id },
       data: { 
@@ -75,7 +72,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for language update
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       await ActivityLogger.profileUpdated(

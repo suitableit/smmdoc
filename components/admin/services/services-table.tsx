@@ -66,7 +66,6 @@ const ServiceActionsDropdown = React.memo(({
 
       {isOpen && (
         <>
-          {}
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
@@ -280,7 +279,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
             >
               Cancel
             </th>
-            {}
             {statusFilter !== 'trash' && (
               <th
                 className="text-left p-3 font-semibold"
@@ -294,7 +292,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
               style={{ color: 'var(--text-primary)' }}
             >
               Actions
-              {}
               <button
                 onClick={toggleAllCategories}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
@@ -353,7 +350,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
             })
             .map(([categoryName, services], categoryIndex) => (
               <Fragment key={categoryName}>
-                {}
                 {draggedCategory &&
                   draggedCategory !== categoryName && (
                     <tr
@@ -379,8 +375,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       </td>
                     </tr>
                   )}
-
-                {}
                 <tr
                   className={`bg-gray-50 border-t-2 border-gray-200 ${
                     draggedCategory === categoryName
@@ -400,7 +394,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                   <td colSpan={11} className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {}
                         <input
                           type="checkbox"
                           checked={selectedCategories.includes(categoryName)}
@@ -437,8 +430,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                             <FaChevronDown className="h-3 w-3" />
                           )}
                         </button>
-
-                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -481,8 +472,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           {services.length} service
                           {services.length !== 1 ? 's' : ''}
                         </span>
-
-                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -507,8 +496,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                         >
                           <FaEdit className="h-3 w-3" />
                         </button>
-
-                        {}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -554,13 +541,10 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                     </div>
                   </td>
                 </tr>
-
-                {}
                 {!collapsedCategories.includes(categoryName) &&
                   (services.length > 0 ? (
                     services.map((service: any, i: number) => (
                       <Fragment key={service.id}>
-                        {}
                         {draggedService &&
                           draggedService !== service.id && (
                             <tr
@@ -778,8 +762,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                   <FaToggleOff className="h-5 w-5" />
                                 )}
                               </button>
-
-                              {}
                               {service.refill && (
                                 <div className="text-xs text-gray-600 space-y-1">
                                   {service.refillDays && (
@@ -812,7 +794,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                               )}
                             </button>
                           </td>
-                          {}
                           {statusFilter !== 'trash' && (
                             <td className="p-3">
                               <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
@@ -838,8 +819,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                             </div>
                           </td>
                         </tr>
-
-                        {}
                         {draggedService &&
                           draggedService !== service.id && (
                             <tr
@@ -887,8 +866,6 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       </td>
                     </tr>
                   ))}
-
-                {}
                 {draggedCategory &&
                   draggedCategory !== categoryName && (
                     <tr

@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
@@ -31,7 +30,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if service exists before deleting
     const existingService = await db.service.findUnique({
       where: { id: Number(id) },
       select: { id: true, name: true }
@@ -48,7 +46,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete the service
     await db.service.delete({
       where: {
         id: Number(id),

@@ -243,10 +243,8 @@ export function AddFundForm() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="card card-padding">
             <div className="space-y-6">
-              {}
               <div
                 className="card"
                 style={{
@@ -272,13 +270,9 @@ export function AddFundForm() {
                   <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
               </div>
-
-              {}
               <div className="form-group">
                 <div className="h-10 w-full gradient-shimmer rounded-lg" />
               </div>
-
-              {}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
                 <div className="flex justify-between items-center mb-2">
                   <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -286,15 +280,10 @@ export function AddFundForm() {
                 </div>
                 <div className="h-4 w-24 gradient-shimmer rounded" />
               </div>
-
-              {}
               <div className="h-14 w-full gradient-shimmer rounded-lg" />
             </div>
           </div>
-
-          {}
           <div className="space-y-6">
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -306,8 +295,6 @@ export function AddFundForm() {
                 SSL encrypted transactions with UddoktaPay
               </p>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -319,8 +306,6 @@ export function AddFundForm() {
                 Your financial data is protected
               </p>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -339,7 +324,6 @@ export function AddFundForm() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {}
         {toastMessage && (
           <Toast
             message={toastMessage.message}
@@ -347,11 +331,8 @@ export function AddFundForm() {
             onClose={() => setToastMessage(null)}
           />
         )}
-
-      {}
       <div className="card card-padding">
         <div className="space-y-6">
-          {}
           <div
             className="card"
             style={{
@@ -405,8 +386,6 @@ export function AddFundForm() {
                   </div>
                 </div>
               )}
-
-              {}
               <div className="flex justify-center">
                 <button
                   type="button"
@@ -424,8 +403,6 @@ export function AddFundForm() {
                 </button>
               </div>
             </div>
-
-            {}
             <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
               <div className="text-sm text-gray-600 mb-2 font-medium">
                 Converted Amount
@@ -459,8 +436,6 @@ export function AddFundForm() {
               )}
             </div>
           </div>
-
-          {}
           <div className="form-group">
             <input
               type="tel"
@@ -478,8 +453,6 @@ export function AddFundForm() {
               </p>
             )}
           </div>
-
-          {}
           <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-semibold text-gray-700">
@@ -500,8 +473,6 @@ export function AddFundForm() {
               </div>
             )}
           </div>
-
-          {}
           <button
             type="button"
             onClick={form.handleSubmit(onSubmit)}
@@ -522,10 +493,7 @@ export function AddFundForm() {
           </button>
         </div>
       </div>
-
-      {}
       <div className="space-y-6">
-        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">
@@ -537,8 +505,6 @@ export function AddFundForm() {
             SSL encrypted transactions with UddoktaPay
           </p>
         </div>
-
-        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">
@@ -550,8 +516,6 @@ export function AddFundForm() {
             Your financial data is protected
           </p>
         </div>
-
-        {}
         <div className="card card-padding">
           <div className="card-header">
             <div className="card-icon">

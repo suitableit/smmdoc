@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 
-// Test SMMCoder API connection
 export async function GET() {
   try {
     const apiKey = 'd51d09535663bf9b5c171e360a0892ee';
 
-    // Test multiple possible URLs
     const testUrls = [
       'https://smmcoder.com/api/v2',
       'https://api.smmcoder.com/v2',
@@ -36,7 +34,6 @@ export async function GET() {
           console.log('Is array:', Array.isArray(data));
 
           if (Array.isArray(data) && data.length > 0) {
-            // Extract categories
             const categoryMap = new Map();
             data.forEach((service: any) => {
               const categoryName = service.category || 'Uncategorized';
@@ -70,7 +67,6 @@ export async function GET() {
       }
     }
 
-    // If no URL worked
     return NextResponse.json({
       success: false,
       error: 'All API URLs failed',
@@ -88,7 +84,6 @@ export async function GET() {
   }
 }
 
-// Also add a simple HTML response for browser testing
 export async function POST() {
   return new Response(`
     <html>

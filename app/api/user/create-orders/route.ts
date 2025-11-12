@@ -35,11 +35,9 @@ export async function POST(request: Request) {
 
     const body = await request.json();
 
-    // Handle both single order and Mass Orderss
     const isMultipleOrders = Array.isArray(body);
     const orders = isMultipleOrders ? body : [body];
 
-    // Validate all orders first
     for (const orderData of orders) {
       const { 
         categoryId, 
@@ -70,7 +68,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Validate service exists and is active
       const service = await db.service.findUnique({
         where: { id: serviceId },
         select: {
@@ -109,7 +106,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Validate quantity limits
       if (qty < service.min_order || qty > service.max_order) {
         return NextResponse.json(
           {
@@ -121,7 +117,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Service type validation
       const typeConfig = getServiceTypeConfig(service.packageType || 1);
       const validationData = {
         link,
@@ -154,7 +149,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Calculate total cost for all orders
     let totalCost = 0;
     const processedOrders: any[] = [];
 
@@ -169,7 +163,6 @@ export async function POST(request: Request) {
         bdtPrice,
         currency,
         avg_time,
-        // Service type specific fields
         comments,
         username,
         posts,
@@ -182,28 +175,23 @@ export async function POST(request: Request) {
         isSubscription = false,
       } = orderData;
 
-      // Get service details for price calculation
       const service = await db.service.findUnique({
         where: { id: serviceId },
         select: { rate: true, avg_time: true, packageType: true },
       });
 
-      // Calculate prices if not provided
       const calculatedUsdPrice = usdPrice || (service!.rate * qty) / 1000;
       const calculatedBdtPrice =
         bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
 
-      // IMPORTANT: Always use user's current currency for final price
       let finalPrice;
       if (user.currency === 'USD') {
         finalPrice = calculatedUsdPrice;
       } else if (user.currency === 'BDT') {
         finalPrice = calculatedBdtPrice;
       } else if (user.currency === 'USDT') {
-        // For USDT, use USD price (1:1 ratio)
         finalPrice = calculatedUsdPrice;
       } else {
-        // Default fallback
         finalPrice = price || calculatedUsdPrice;
       }
 
@@ -223,7 +211,6 @@ export async function POST(request: Request) {
         status: 'pending',
         remains: parseInt(qty),
         startCount: 0,
-        // Service type specific fields
         packageType: service!.packageType || 1,
         comments: comments || null,
         username: username || null,
@@ -239,7 +226,6 @@ export async function POST(request: Request) {
       });
     }
 
-    // Debug logging
     console.log('Order creation debug:', {
       userCurrency: user.currency,
       userBalance: user.balance,
@@ -253,14 +239,11 @@ export async function POST(request: Request) {
       originalOrders: orders.map(o => ({ currency: o.currency, price: o.price }))
     });
 
-    // Convert balance to user's currency for comparison
     let availableBalance = user.balance;
     if (user.currency === 'USD' || user.currency === 'USDT') {
-      // Convert BDT balance to USD for comparison
       availableBalance = user.balance / (user.dollarRate || 121.52);
     }
 
-    // Check if user has enough balance for all orders
     if (availableBalance < totalCost) {
       return NextResponse.json(
         {
@@ -274,9 +257,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create all orders in a transaction
     const result = await db.$transaction(async (prisma) => {
-      // Create all orders
       const createdOrders = [];
       for (const orderData of processedOrders) {
         const order = await prisma.newOrder.create({
@@ -302,15 +283,12 @@ export async function POST(request: Request) {
         createdOrders.push(order);
       }
 
-      // Calculate the amount to deduct from balance (always in BDT)
       let balanceDeductionAmount = totalCost;
       const currentRate = user.dollarRate && user.dollarRate > 1 ? user.dollarRate : 121.52;
       if (user.currency === 'USD' || user.currency === 'USDT') {
-        // Convert USD cost to BDT for balance deduction
         balanceDeductionAmount = totalCost * currentRate;
       }
 
-      // Deduct total cost from user balance and update total spent
       console.log('About to deduct balance:', {
         userId: session.user.id,
         userCurrency: user.currency,
@@ -337,7 +315,6 @@ export async function POST(request: Request) {
       return createdOrders;
     });
 
-    // Log the order creation
     console.log(
       `User ${session.user.email} created ${result.length} order(s)`,
       {
@@ -349,7 +326,6 @@ export async function POST(request: Request) {
       }
     );
 
-    // Log activity for order creation
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       await ActivityLogger.orderCreated(
@@ -363,7 +339,6 @@ export async function POST(request: Request) {
       console.error('Failed to log order creation activity:', error);
     }
 
-    // Forward provider orders to external providers
     for (const order of result) {
       if (order.service.providerId && order.service.providerServiceId) {
         try {

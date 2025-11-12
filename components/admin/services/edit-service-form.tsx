@@ -276,7 +276,6 @@ export const EditServiceForm = ({
 
   return (
     <div className="w-full max-w-6xl">
-      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -295,9 +294,7 @@ export const EditServiceForm = ({
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -316,8 +313,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.name?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -344,8 +339,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.categoryId?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -370,8 +363,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.serviceTypeId?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -391,8 +382,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.mode?.message}</FormMessage>
             </FormItem>
-
-            {}
             {modeValue === 'auto' && (
               <FormItem className="md:col-span-2">
                 <FormLabel
@@ -419,8 +408,6 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.providerId?.message}</FormMessage>
               </FormItem>
             )}
-
-            {}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">
               <FormItem className="col-span-1">
                 <FormLabel
@@ -442,8 +429,6 @@ export const EditServiceForm = ({
                 </FormControl>
                 <FormMessage>{errors.rate?.message}</FormMessage>
               </FormItem>
-
-              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -463,8 +448,6 @@ export const EditServiceForm = ({
                 </FormControl>
                 <FormMessage>{errors.min_order?.message}</FormMessage>
               </FormItem>
-
-              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -485,10 +468,7 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.max_order?.message}</FormMessage>
               </FormItem>
             </div>
-
-            {}
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -509,8 +489,6 @@ export const EditServiceForm = ({
                 </FormControl>
                 <FormMessage>{errors.perqty?.message}</FormMessage>
               </FormItem>
-
-              {}
               <FormItem className="col-span-1">
                 <FormLabel
                   className="text-sm font-medium"
@@ -530,8 +508,6 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.avg_time?.message}</FormMessage>
               </FormItem>
             </div>
-
-            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -554,8 +530,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.refill?.message}</FormMessage>
             </FormItem>
-
-            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -577,8 +551,6 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.refillDays?.message}</FormMessage>
               </FormItem>
             )}
-
-            {}
             {refillValue === true && (
               <FormItem className="md:col-span-1">
                 <FormLabel
@@ -601,8 +573,6 @@ export const EditServiceForm = ({
                 <FormMessage>{errors.refillDisplay?.message}</FormMessage>
               </FormItem>
             )}
-
-            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -625,8 +595,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.cancel?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-1">
               <FormLabel
                 className="text-sm font-medium"
@@ -647,8 +615,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.orderLink?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -672,8 +638,6 @@ export const EditServiceForm = ({
               </FormControl>
               <FormMessage>{errors.serviceSpeed?.message}</FormMessage>
             </FormItem>
-
-            {}
             <FormItem className="md:col-span-2">
               <FormLabel
                 className="text-sm font-medium"
@@ -693,8 +657,6 @@ export const EditServiceForm = ({
               <FormMessage>{errors.exampleLink?.message}</FormMessage>
             </FormItem>
           </div>
-
-          {}
           <FormItem>
             <FormLabel
               className="text-sm font-medium"
@@ -713,8 +675,6 @@ export const EditServiceForm = ({
             </FormControl>
             <FormMessage>{errors.description?.message}</FormMessage>
           </FormItem>
-
-          {}
           <div className="flex gap-2 justify-center">
             <button
               type="button"

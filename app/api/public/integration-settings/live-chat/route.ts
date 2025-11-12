@@ -5,11 +5,9 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    // Fetch integration settings from database
     const integrationSettings = await prisma.integrationSettings.findFirst();
 
     if (!integrationSettings) {
-      // Return default settings if no settings found
       return NextResponse.json({
         enabled: false,
         hoverTitle: 'Contact Support',
@@ -26,7 +24,6 @@ export async function GET() {
       });
     }
 
-    // Map database fields to response format
     const liveChatSettings = {
       enabled: integrationSettings.liveChatEnabled,
       hoverTitle: integrationSettings.liveChatHoverTitle || 'Contact Support',

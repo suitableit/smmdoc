@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get integration settings from database
     const dbSettings = await db.integrationSettings.findFirst();
     
     if (!dbSettings || !dbSettings.analyticsEnabled) {
@@ -30,7 +29,6 @@ export async function GET() {
       });
     }
 
-    // Return only public analytics settings
     const publicSettings = {
       enabled: dbSettings.analyticsEnabled,
       googleAnalytics: {

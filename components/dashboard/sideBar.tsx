@@ -44,7 +44,6 @@ function SideBarContent({
         collapsed ? 'w-[80px]' : 'w-[280px]'
       } overflow-hidden`}
     >
-      {}
       <div
         className={`sidebar-header ${
           collapsed ? 'p-4 flex-col space-y-3' : 'p-4'
@@ -115,8 +114,6 @@ function SideBarContent({
           </>
         )}
       </div>
-
-      {}
       <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100%-6rem)]">
         <SideBarNav collapsed={collapsed} session={session} setOpen={() => {}} />
       </div>

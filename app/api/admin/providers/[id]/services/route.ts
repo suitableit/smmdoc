@@ -1,8 +1,7 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-helpers';
 
-// GET /api/admin/providers/[id]/services - Get services by provider ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function GET(
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -36,7 +34,6 @@ export async function GET(
       );
     }
 
-    // Check if provider exists
     const provider = await db.api_providers.findUnique({
       where: { id: providerId }
     });
@@ -54,7 +51,6 @@ export async function GET(
 
 
 
-    // Fetch services from the provider's API
     if (!provider.api_url || !provider.api_key) {
 
       return NextResponse.json(
@@ -68,7 +64,6 @@ export async function GET(
     }
 
     try {
-      // Build the API request for fetching services
       const apiKeyParam = provider.api_key_param || 'key';
       const actionParam = provider.action_param || 'action';
       const servicesAction = provider.services_action || 'services';
@@ -85,10 +80,8 @@ export async function GET(
       let servicesUrl = provider.api_url;
 
       if (httpMethod.toUpperCase() === 'GET') {
-        // For GET requests, use query parameters
         servicesUrl = `${provider.api_url}?${apiKeyParam}=${encodeURIComponent(provider.api_key)}&${actionParam}=${servicesAction}`;
       } else {
-        // For POST requests, use form data in body
         const formData = new URLSearchParams();
         formData.append(apiKeyParam, provider.api_key);
         formData.append(actionParam, servicesAction);
@@ -109,12 +102,9 @@ export async function GET(
 
       let servicesArray = [];
 
-      // Validate and extract the services array from different response formats
       if (Array.isArray(apiServices)) {
-        // Direct array response
         servicesArray = apiServices;
       } else if (typeof apiServices === 'object' && apiServices !== null) {
-        // Check for various possible object structures
         if (Array.isArray(apiServices.services)) {
           servicesArray = apiServices.services;
         } else if (Array.isArray(apiServices.data)) {
@@ -145,7 +135,6 @@ export async function GET(
         });
       }
 
-      // Transform the services data to a consistent format
       const transformedServices = servicesArray.map((service: any) => ({
         id: service.service || service.id,
         name: service.name,
@@ -155,7 +144,6 @@ export async function GET(
         max: parseInt(service.max) || 1000000,
         category: service.category || 'Uncategorized',
         type: service.type || 'Default',
-        // Extract refill and cancel information from various possible field names
         refill: service.refill === true || service.refill === 1 || service.refill === '1' || 
                 service.refill_enabled === true || service.refill_enabled === 1 || service.refill_enabled === '1' ||
                 service.refillEnabled === true || service.refillEnabled === 1 || service.refillEnabled === '1' ||

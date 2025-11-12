@@ -1,17 +1,12 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/stats - Get order statistics for admin dashboard
 export async function GET(req: NextRequest) {
   try {
-    // console.log('Stats API called');
     const session = await auth();
-    // console.log('Stats session:', session?.user?.email, session?.user?.role);
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
-      // console.log('Stats unauthorized access attempt');
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
@@ -23,13 +18,11 @@ export async function GET(req: NextRequest) {
     }
     
     const { searchParams } = new URL(req.url);
-    const period = searchParams.get('period') || 'all'; // days or 'all'
-    const userId = searchParams.get('userId'); // optional filter by user
+    const period = searchParams.get('period') || 'all';
+    const userId = searchParams.get('userId');
 
-    // Build where clause
     const whereClause: any = {};
 
-    // Only add date filter if period is not 'all'
     if (period !== 'all') {
       const periodDays = parseInt(period);
       const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
@@ -42,7 +35,6 @@ export async function GET(req: NextRequest) {
       whereClause.userId = userId;
     }
     
-    // Get overall statistics
     const [
       totalStats,
       statusStats,
@@ -51,7 +43,6 @@ export async function GET(req: NextRequest) {
       topUsers,
       revenueStats
     ] = await Promise.all([
-      // Total orders and revenue
       db.newOrder.aggregate({
         where: whereClause,
         _count: {
@@ -66,7 +57,6 @@ export async function GET(req: NextRequest) {
         }
       }),
       
-      // Orders by status
       db.newOrder.groupBy({
         by: ['status'],
         where: whereClause,
@@ -78,7 +68,6 @@ export async function GET(req: NextRequest) {
         }
       }),
       
-      // Daily order trends (last 30 days or all time)
       period === 'all' ?
         (userId ? 
           db.$queryRaw`
@@ -133,7 +122,6 @@ export async function GET(req: NextRequest) {
           `
         ),
       
-      // Top services by order count
       db.newOrder.groupBy({
         by: ['serviceId'],
         where: whereClause,
@@ -152,7 +140,6 @@ export async function GET(req: NextRequest) {
         take: 10
       }),
       
-      // Top users by order count (if not filtering by specific user)
       userId ? [] : db.newOrder.groupBy({
         by: ['userId'],
         where: whereClause,
@@ -170,7 +157,6 @@ export async function GET(req: NextRequest) {
         take: 10
       }),
       
-      // Revenue by currency
       db.newOrder.groupBy({
         by: ['currency'],
         where: whereClause,
@@ -183,7 +169,6 @@ export async function GET(req: NextRequest) {
       })
     ]);
     
-    // Get service details for top services
     const serviceIds = topServices.map(s => s.serviceId);
     const services = serviceIds.length > 0 ? await db.service.findMany({
       where: {
@@ -203,7 +188,6 @@ export async function GET(req: NextRequest) {
       }
     }) : [];
     
-    // Get user details for top users (if not filtering by specific user)
     const userIds = topUsers.map(u => u.userId);
     const users = userIds.length > 0 ? await db.user.findMany({
       where: {
@@ -219,7 +203,6 @@ export async function GET(req: NextRequest) {
       }
     }) : [];
     
-    // Combine service data with statistics
     const topServicesWithDetails = topServices.map(stat => {
       const service = services.find(s => s.id === stat.serviceId);
       return {
@@ -228,7 +211,6 @@ export async function GET(req: NextRequest) {
       };
     });
     
-    // Combine user data with statistics
     const topUsersWithDetails = topUsers.map(stat => {
       const user = users.find(u => u.id === stat.userId);
       return {
@@ -237,7 +219,6 @@ export async function GET(req: NextRequest) {
       };
     });
     
-    // Calculate growth rates (compare with previous period) - only if period is specified
     let orderGrowth = 0;
     let revenueGrowth = 0;
     const periodInfo: any = {
@@ -281,7 +262,6 @@ export async function GET(req: NextRequest) {
     console.log('Total stats:', totalStats);
     console.log('Status stats:', statusStats);
 
-    // Convert BigInt values to Numbers for JSON serialization
     const convertBigIntToNumber = (value: any): number => {
       return typeof value === 'bigint' ? Number(value) : (value || 0);
     };

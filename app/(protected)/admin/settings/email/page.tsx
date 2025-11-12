@@ -296,7 +296,6 @@ const EmailSettingsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -310,13 +309,11 @@ const EmailSettingsPage = () => {
       <div className="page-content">
         <div className="flex justify-center">
           <div className="page-content">
-            {}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {isPageLoading ? (
                 <EmailSettingsSkeleton />
               ) : (
                 <>
-              {}
               <div>
                 <div className="card card-padding">
                   <div className="card-header">
@@ -430,8 +427,6 @@ const EmailSettingsPage = () => {
                 </div>
                 </div>
               </div>
-
-              {}
               <div>
                 <div className="card card-padding">
                 <div className="card-header">

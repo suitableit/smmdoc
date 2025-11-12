@@ -1,15 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
-// Helper function to capitalize status for display
 const capitalizeStatus = (status: string): string => {
   if (status === 'closed') return 'Closed';
   return status;
 };
 
-// Validation schema for status update
 const statusUpdateSchema = z.object({
   status: z.enum(['Open', 'Answered', 'Customer Reply', 'On Hold', 'In Progress', 'Closed'])
 });
@@ -20,7 +18,6 @@ interface RouteParams {
   }>;
 }
 
-// PATCH - Update ticket status (admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: RouteParams
@@ -35,7 +32,6 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -58,7 +54,6 @@ export async function PATCH(
       );
     }
 
-    // Check if ticket exists
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId }
     });
@@ -73,16 +68,13 @@ export async function PATCH(
     const body = await request.json();
     const { generateSystemMessage = true, ...statusData } = body;
     
-    // Validate status using schema
     const { status } = statusUpdateSchema.parse(statusData);
 
-    // Update the ticket status
     const updatedTicket = await db.supportTicket.update({
       where: { id: ticketId },
       data: {
         status,
         updatedAt: new Date(),
-        // If closing the ticket, mark as read
         ...(status === 'Closed' && { isRead: true })
       },
       include: {
@@ -96,7 +88,6 @@ export async function PATCH(
       }
     });
 
-    // Create a system message for status change only if explicitly requested
     if (status !== existingTicket.status && generateSystemMessage) {
       await db.ticketMessage.create({
         data: {

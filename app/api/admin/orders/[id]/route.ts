@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/:id - Get a specific order
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -10,7 +9,6 @@ export async function GET(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -35,7 +33,6 @@ export async function GET(
       );
     }
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -48,7 +45,6 @@ export async function GET(
       );
     }
 
-    // Get order with all related data
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -114,7 +110,6 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/orders/:id - Update order details
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -122,7 +117,6 @@ export async function PUT(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -148,7 +142,6 @@ export async function PUT(
       );
     }
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -161,7 +154,6 @@ export async function PUT(
       );
     }
 
-    // Get current order
     const currentOrder = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -187,10 +179,8 @@ export async function PUT(
       );
     }
     
-    // Prepare update data
     const updateData: any = {};
     
-    // Allow updating specific fields
     if (body.status !== undefined) {
       updateData.status = body.status;
     }
@@ -209,21 +199,17 @@ export async function PUT(
     
     if (body.qty !== undefined) {
       updateData.qty = parseInt(body.qty);
-      // If quantity changes, update remains accordingly
       if (updateData.remains === undefined) {
         updateData.remains = parseInt(body.qty) - (currentOrder.qty - currentOrder.remains);
       }
     }
     
-    // Add updated timestamp
     updateData.updatedAt = new Date();
     
-    // Handle balance adjustments for status changes
     if (body.status && body.status !== currentOrder.status) {
       const user = currentOrder.user;
       const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.bdtPrice;
       
-      // If changing from pending to active status, deduct balance
       if (currentOrder.status === 'pending' && ['processing', 'completed'].includes(body.status)) {
         if (user.balance < orderPrice) {
           return NextResponse.json(
@@ -236,7 +222,6 @@ export async function PUT(
           );
         }
 
-        // Deduct balance and update spent amount
         await db.user.update({
           where: { id: user.id },
           data: {
@@ -250,7 +235,6 @@ export async function PUT(
         });
       }
       
-      // If changing from active status to cancelled/refunded, refund balance
       if (['processing', 'completed'].includes(currentOrder.status) && ['cancelled', 'refunded'].includes(body.status)) {
         await db.user.update({
           where: { id: user.id },
@@ -266,7 +250,6 @@ export async function PUT(
       }
     }
     
-    // Update the order
     const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: updateData,
@@ -295,7 +278,6 @@ export async function PUT(
       }
     });
     
-    // Log the order update
     console.log(`Admin ${session.user.email} updated order ${id}`, {
       orderId: id,
       changes: updateData,
@@ -324,7 +306,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/orders/:id - Delete an order
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -332,7 +313,6 @@ export async function DELETE(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -357,7 +337,6 @@ export async function DELETE(
       );
     }
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -370,7 +349,6 @@ export async function DELETE(
       );
     }
 
-    // Get order details before deletion for refund calculation
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -394,7 +372,6 @@ export async function DELETE(
       );
     }
     
-    // If order was paid (not pending), refund the user
     if (order.status !== 'pending') {
       const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
 
@@ -411,12 +388,10 @@ export async function DELETE(
       });
     }
     
-    // Delete the order
     await db.newOrder.delete({
       where: { id: orderId }
     });
 
-    // Log the order deletion
     console.log(`Admin ${session.user.email} deleted order ${orderId}`, {
       orderId: orderId,
       userId: order.userId,

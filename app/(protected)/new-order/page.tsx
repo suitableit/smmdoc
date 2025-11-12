@@ -156,7 +156,6 @@ const ServiceDetailsCard = ({
 
   return (
     <div className="space-y-6">
-      {}
       <div
         className="card"
         style={{
@@ -177,11 +176,8 @@ const ServiceDetailsCard = ({
           per 1000
         </div>
       </div>
-
-      {}
       <div className="card card-padding">
         <div className="grid grid-cols-2 gap-4">
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Example Link</h4>
             <div className="flex items-center text-gray-600">
@@ -207,8 +203,6 @@ const ServiceDetailsCard = ({
               )}
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Speed</h4>
             <div className="flex items-center text-gray-600">
@@ -253,8 +247,6 @@ const ServiceDetailsCard = ({
               </span>
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Start Time</h4>
             <div className="flex items-center text-gray-600">
@@ -264,8 +256,6 @@ const ServiceDetailsCard = ({
               <span className="text-sm">Instant</span>
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Refill</h4>
             <div className="flex items-center text-gray-600">
@@ -283,8 +273,6 @@ const ServiceDetailsCard = ({
               </span>
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Cancel</h4>
             <div className="flex items-center text-gray-600">
@@ -302,8 +290,6 @@ const ServiceDetailsCard = ({
               </span>
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Average Time</h4>
             <div className="flex items-center text-gray-600">
@@ -315,8 +301,6 @@ const ServiceDetailsCard = ({
               </span>
             </div>
           </div>
-
-          {}
           <div>
             <h4 className="font-medium text-gray-900 mb-2">Guarantee</h4>
             <div className="flex items-center text-gray-600">
@@ -340,8 +324,6 @@ const ServiceDetailsCard = ({
             </div>
           </div>
         </div>
-
-        {}
         <div className="mt-6">
           <h4 className="font-medium text-gray-900 mb-2">More Details</h4>
           <div className="bg-gray-50 rounded-lg p-4">
@@ -355,8 +337,6 @@ const ServiceDetailsCard = ({
             />
           </div>
         </div>
-
-        {}
         <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div className="text-center">
             <div className="text-lg font-bold text-gray-900">
@@ -1139,8 +1119,6 @@ function NewOrder() {
                         autoComplete="off"
                         style={{ width: '100%', minWidth: '0' }}
                       />
-
-                      {}
                       {showDropdown && (
                         <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                           {isSearchLoading && (
@@ -1178,8 +1156,6 @@ function NewOrder() {
                       )}
                     </div>
                   </div>
-
-                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="category">
                       Category
@@ -1253,8 +1229,6 @@ function NewOrder() {
                       ))}
                     </select>
                   </div>
-
-                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="link">
                       {selected?.orderLink === 'username' ? 'Username' : 'Link'}
@@ -1274,8 +1248,6 @@ function NewOrder() {
                       pattern={selected?.orderLink === 'username' ? undefined : "https?://.+"}
                     />
                   </div>
-
-                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="qty">
                       Quantity
@@ -1319,8 +1291,6 @@ function NewOrder() {
                       </div>
                     )}
                   </div>
-
-                  {}
                   {selectedService && selected?.type && (
                     <ServiceTypeFields
                       serviceType={selected.type as number}
@@ -1329,8 +1299,6 @@ function NewOrder() {
                       errors={serviceTypeErrors}
                     />
                   )}
-
-                  {}
                   <div className="form-group">
                     <label className="form-label" htmlFor="price">
                       Charge (per 1000 = ${price.toFixed(2)})

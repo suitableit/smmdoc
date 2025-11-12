@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { clearMetaSettingsCache } from '@/lib/utils/meta-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default meta settings
 const defaultMetaSettings = {
   googleTitle: 'SMM Panel - Best Social Media Marketing Services',
   siteTitle: 'SMM Panel',
@@ -12,7 +11,6 @@ const defaultMetaSettings = {
   thumbnail: '',
 };
 
-// GET - Load meta settings
 export async function GET() {
   try {
     const session = await auth();
@@ -21,7 +19,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get meta settings from general settings table (create if not exists)
     let settings = await db.generalSettings.findFirst();
     if (!settings) {
       settings = await db.generalSettings.create({
@@ -60,7 +57,6 @@ export async function GET() {
   }
 }
 
-// POST - Save meta settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -78,7 +74,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate required fields
     if (!metaSettings.googleTitle?.trim()) {
       return NextResponse.json(
         { error: 'Google title is required' },
@@ -100,7 +95,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate description length
     if (metaSettings.siteDescription.length > 160) {
       return NextResponse.json(
         { error: 'Site description must be 160 characters or less' },
@@ -108,7 +102,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update meta settings in general settings table
     await db.generalSettings.upsert({
       where: { id: 1 },
       update: {
@@ -134,7 +127,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Clear cache to ensure homepage gets updated meta settings
     clearMetaSettingsCache();
 
     return NextResponse.json({

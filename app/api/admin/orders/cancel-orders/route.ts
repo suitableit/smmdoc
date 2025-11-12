@@ -1,13 +1,11 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/cancel-orders - Get orders eligible for cancellation
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -27,19 +25,16 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for cancellation-eligible orders
     const whereClause: any = {
       status: {
-        in: ['pending', 'processing', 'in_progress'] // Only these statuses can be cancelled
+        in: ['pending', 'processing', 'in_progress']
       }
     };
 
-    // Add status filter if specified
     if (status && status !== 'all') {
       whereClause.status = status;
     }
 
-    // Add search filter
     if (search) {
       whereClause.OR = [
         {
@@ -75,7 +70,6 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Get cancellation-eligible orders
     const [orders, totalCount] = await Promise.all([
       db.newOrder.findMany({
         where: whereClause,
@@ -119,7 +113,6 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Calculate stats
     const stats = await db.newOrder.aggregate({
       where: {
         status: {
@@ -146,16 +139,14 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Calculate potential refund amounts
     const totalRefundValue = orders.reduce((sum, order) => {
-      // Calculate refund based on order progress
       const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
-      let refundPercentage = 1; // Default full refund
+      let refundPercentage = 1;
       
       if (order.status === 'processing' && progress > 0) {
-        refundPercentage = 0.8; // 80% refund if processing started
+        refundPercentage = 0.8;
       } else if (order.status === 'in_progress') {
-        refundPercentage = Math.max(0.5, (100 - progress) / 100); // Proportional refund
+        refundPercentage = Math.max(0.5, (100 - progress) / 100);
       }
       
       return sum + (order.price * refundPercentage);

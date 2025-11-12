@@ -1,13 +1,11 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/refill-cancel - Get all refill and cancel tasks
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -19,17 +17,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // For now, we'll simulate refill and cancel tasks based on orders
-    // In a real implementation, you would have separate RefillRequest and CancelRequest tables
     
-    // Get orders that could have refill/cancel requests
     const orders = await db.newOrder.findMany({
       where: {
         OR: [
-          { status: 'completed' }, // Eligible for refill
-          { status: 'partial' },   // Eligible for refill
-          { status: 'processing' }, // Eligible for cancel
-          { status: 'pending' },    // Eligible for cancel
+          { status: 'completed' },
+          { status: 'partial' },
+          { status: 'processing' },
+          { status: 'pending' },
         ]
       },
       include: {
@@ -58,14 +53,12 @@ export async function GET(req: NextRequest) {
       orderBy: {
         createdAt: 'desc'
       },
-      take: 50 // Limit for performance
+      take: 50
     });
 
-    // Create refill and cancel tasks based on order status
     const tasks = [];
 
     for (const order of orders) {
-      // Create refill tasks for completed/partial orders
       if (['completed', 'partial'].includes(order.status) && (order.service as any)?.status === 'active') {
         tasks.push({
           id: `refill_${order.id}`,
@@ -82,7 +75,6 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Create cancel tasks for pending/processing/in_progress orders
       if (['pending', 'processing', 'in_progress'].includes(order.status)) {
         const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
         let refundType = 'full';
@@ -90,10 +82,10 @@ export async function GET(req: NextRequest) {
 
         if (order.status === 'processing' && progress > 0) {
           refundType = 'partial';
-          customRefundAmount = order.price * 0.8; // 80% refund if processing started
+          customRefundAmount = order.price * 0.8;
         } else if (order.status === 'in_progress') {
           refundType = 'partial';
-          customRefundAmount = order.price * Math.max(0.5, (100 - progress) / 100); // Proportional refund
+          customRefundAmount = order.price * Math.max(0.5, (100 - progress) / 100);
         }
 
         tasks.push({
@@ -112,7 +104,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Calculate statistics
     const cancelTasks = tasks.filter(t => t.type === 'cancel');
     const refillTasks = tasks.filter(t => t.type === 'refill');
 

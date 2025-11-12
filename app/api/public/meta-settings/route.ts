@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get meta settings from general settings table (public endpoint, no auth required)
     const settings = await db.generalSettings.findFirst({
       select: {
         googleTitle: true,
@@ -14,7 +13,6 @@ export async function GET() {
       },
     });
 
-    // Default meta settings if none exist
     const defaultMetaSettings = {
       googleTitle: 'SMM Panel - Best Social Media Marketing Services',
       siteTitle: 'SMM Panel',

@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -20,9 +19,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const period = searchParams.get('period') || 'all';
-    const roleFilter = searchParams.get('role') || 'user'; // Default to 'user', can be 'moderator', 'admin', etc.
+    const roleFilter = searchParams.get('role') || 'user';
 
-    // Calculate date ranges based on period
     const now = new Date();
     let startDate: Date | undefined;
 
@@ -40,24 +38,21 @@ export async function GET(req: NextRequest) {
         startDate = new Date(now.getFullYear(), 0, 1);
         break;
       default:
-        startDate = undefined; // All time
+        startDate = undefined;
     }
 
-    // Build where clause for date filtering
     const dateFilter = startDate ? {
       createdAt: {
         gte: startDate
       }
     } : {};
 
-    // Get overview statistics
     const [
       totalUsers,
       totalBalance,
       totalSpent,
       totalDeposits
     ] = await Promise.all([
-      // Total users with specified role
       db.user.count({
         where: {
           role: roleFilter as any,
@@ -65,7 +60,6 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      // Total balance across users with specified role
       db.user.aggregate({
         where: {
           role: roleFilter as any
@@ -75,7 +69,6 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      // Total spent by users with specified role
       db.user.aggregate({
         where: {
           role: roleFilter as any
@@ -85,7 +78,6 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      // Total deposits by users with specified role
       db.user.aggregate({
         where: {
           role: roleFilter as any
@@ -96,9 +88,7 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    // Get status breakdown - count users by their effective status (considering emailVerified)
     const [verifiedActiveUsers, verifiedSuspendedUsers, verifiedBannedUsers, unverifiedUsers] = await Promise.all([
-      // Verified active users
       db.user.count({
         where: {
           role: roleFilter as any,
@@ -107,7 +97,6 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      // Verified suspended users
       db.user.count({
         where: {
           role: roleFilter as any,
@@ -116,7 +105,6 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      // Verified banned users
       db.user.count({
         where: {
           role: roleFilter as any,
@@ -125,7 +113,6 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      // Unverified users (all count as pending)
       db.user.count({
         where: {
           role: roleFilter as any,
@@ -135,7 +122,6 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    // Create complete status breakdown with proper pending count
     const completeStatusBreakdown = [
       { status: 'active', _count: { id: verifiedActiveUsers } },
       { status: 'suspended', _count: { id: verifiedSuspendedUsers } },
@@ -143,7 +129,6 @@ export async function GET(req: NextRequest) {
       { status: 'pending', _count: { id: unverifiedUsers } }
     ];
 
-    // Get daily registration trends for the last 30 days
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
     const dailyRegistrations = await db.user.groupBy({
@@ -162,7 +147,6 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Format daily trends
     const dailyTrends = [];
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
@@ -178,7 +162,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Get currency breakdown
     const currencyBreakdown = await db.user.groupBy({
       by: ['currency'],
       where: {
@@ -192,7 +175,6 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Get top users by balance
     const topUsersByBalance = await db.user.findMany({
       where: {
         role: roleFilter as any
@@ -211,7 +193,6 @@ export async function GET(req: NextRequest) {
       take: 10
     });
 
-    // Get top users by spending
     const topUsersBySpending = await db.user.findMany({
       where: {
         role: roleFilter as any
@@ -230,13 +211,11 @@ export async function GET(req: NextRequest) {
       take: 10
     });
 
-    // Format status breakdown for easier consumption
     const formattedStatusBreakdown = completeStatusBreakdown.map(status => ({
       status: status.status || 'active',
       count: status._count.id
     }));
 
-    // Format currency breakdown
     const formattedCurrencyBreakdown = currencyBreakdown.map(currency => ({
       currency: currency.currency || 'BDT',
       users: currency._count.id,
@@ -247,8 +226,8 @@ export async function GET(req: NextRequest) {
       overview: {
         totalUsers,
         totalBalance: (totalBalance._sum as any).balance || 0,
-        totalSpent: (totalSpent._sum as any).balance || 0, // Using balance as proxy since total_spent doesn't exist
-        totalDeposits: (totalDeposits._sum as any).balance || 0 // Using balance as proxy since total_deposit doesn't exist
+        totalSpent: (totalSpent._sum as any).balance || 0,
+        totalDeposits: (totalDeposits._sum as any).balance || 0
       },
       statusBreakdown: formattedStatusBreakdown,
       currencyBreakdown: formattedCurrencyBreakdown,

@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/refill-requests/:id - Approve/Decline refill request
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function PUT(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -24,7 +22,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
-    const { action, adminNotes } = body; // action: 'approve' | 'decline'
+    const { action, adminNotes } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -48,7 +46,6 @@ export async function PUT(
       );
     }
 
-    // Find the refill request
     const refillRequest = await db.refillRequest.findUnique({
       where: { id: Number(id) },
       include: {
@@ -92,7 +89,6 @@ export async function PUT(
       );
     }
 
-    // Update refill request status
     const updatedRequest = await db.refillRequest.update({
       where: { id: Number(id) },
       data: {
@@ -103,17 +99,15 @@ export async function PUT(
       }
     });
 
-    // If approved, create a new refill order
     if (action === 'approve') {
-      // Create refill order with same quantity
       await db.newOrder.create({
         data: {
-          categoryId: refillRequest.order.serviceId, // Use same service
+          categoryId: refillRequest.order.serviceId,
           serviceId: refillRequest.order.serviceId,
           userId: refillRequest.userId,
-          link: 'REFILL_ORDER', // Special identifier for refill orders
+          link: 'REFILL_ORDER',
           qty: refillRequest.order.qty,
-          price: 0, // Refill is free
+          price: 0,
           usdPrice: 0,
           bdtPrice: 0,
           currency: 'USD',
@@ -124,7 +118,6 @@ export async function PUT(
         }
       });
 
-      // Update refill request to completed
       await db.refillRequest.update({
         where: { id: Number(id) },
         data: {

@@ -104,7 +104,6 @@ export default function MemoryMonitor() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
@@ -159,8 +158,6 @@ export default function MemoryMonitor() {
             )}
           </CardContent>
         </Card>
-
-        {}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Database Statistics</CardTitle>
@@ -213,8 +210,6 @@ export default function MemoryMonitor() {
           </CardContent>
         </Card>
       </div>
-
-      {}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Performance Tips</CardTitle>

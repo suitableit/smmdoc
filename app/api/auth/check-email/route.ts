@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email } = body;
 
-    // Validation
     if (!email) {
       return NextResponse.json(
         {
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -31,7 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email exists in database
     const existingUser = await db.user.findUnique({
       where: { email: email },
       select: { id: true }
@@ -48,7 +45,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Email is available
     return NextResponse.json(
       {
         message: 'Email is available',

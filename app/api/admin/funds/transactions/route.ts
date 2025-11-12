@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -21,7 +20,6 @@ export async function GET(req: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build search conditions
     let whereCondition = {};
     
     if (search) {
@@ -34,7 +32,6 @@ export async function GET(req: NextRequest) {
       };
     }
     
-    // Get transactions with pagination
     const transactions = await db.addFund.findMany({
       where: whereCondition,
       select: {
@@ -68,7 +65,6 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
     
-    // Get total count for pagination
     const totalCount = await db.addFund.count({ where: whereCondition });
     const totalPages = Math.ceil(totalCount / limit);
     

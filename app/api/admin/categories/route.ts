@@ -16,9 +16,7 @@ export async function POST(request: NextRequest) {
     }
     const { category_name, position, hideCategory } = validedFields.data;
 
-    // Handle position logic - only for the current user's categories
     if (position === 'top') {
-      // If position is 'top', update all existing 'top' categories to 'bottom'
       await db.category.updateMany({
         where: {
           position: 'top' as any,

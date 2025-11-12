@@ -2,12 +2,10 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/mass-orderss - Get Mass Orderss with pagination and filtering
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -27,7 +25,6 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for filtering
     const whereClause: any = {};
 
     if (status && status !== 'all') {
@@ -61,8 +58,6 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Get Mass Orderss by grouping orders created at the same time by the same user
-    // We'll identify Mass Orderss as orders created within 1 minute of each other by the same user
     const massOrdersRaw = await db.$queryRaw`
       SELECT 
         u.id as userId,
@@ -107,7 +102,6 @@ export async function GET(req: NextRequest) {
       OFFSET ${skip}
     `;
 
-    // Get total count for pagination
     const totalCountRaw = await db.$queryRaw`
       SELECT COUNT(*) as total
       FROM (
@@ -130,7 +124,6 @@ export async function GET(req: NextRequest) {
     const totalCount = Number((totalCountRaw as any)[0]?.total || 0);
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Format the Mass Orderss data
     const massOrders = (massOrdersRaw as any[]).map((row) => ({
       id: `${row.userid}-${new Date(row.orderbatch).getTime()}`,
       userId: row.userid,
@@ -146,7 +139,6 @@ export async function GET(req: NextRequest) {
       orderIds: row.orderids,
     }));
 
-    // Get stats
     const stats = await db.$queryRaw`
       SELECT 
         COUNT(DISTINCT CONCAT(userId, DATE_TRUNC('minute', createdAt))) as totalMassOrders,

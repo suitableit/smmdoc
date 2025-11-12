@@ -1161,7 +1161,6 @@ const APIProvidersPage = () => {
 
     return (
       <div className="flex items-center gap-2 justify-center">
-        {}
         {provider.status !== 'trash' && (
           <button
             onClick={() => handleSyncProvider(provider.id)}
@@ -1172,8 +1171,6 @@ const APIProvidersPage = () => {
             <FaSync className={`w-3 h-3 ${syncingProvider === provider.id ? 'animate-spin' : ''}`} />
           </button>
         )}
-
-        {}
         <div className="relative">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -1185,13 +1182,10 @@ const APIProvidersPage = () => {
 
           {isOpen && (
             <>
-              {}
               <div
                 className="fixed inset-0 z-10"
                 onClick={() => setIsOpen(false)}
               />
-
-              {}
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
                 <div className="py-1">
                   {provider.status === 'trash' ? (
@@ -1319,7 +1313,6 @@ const APIProvidersPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -1383,7 +1376,6 @@ const APIProvidersPage = () => {
                 </div>
 
                 <form onSubmit={handleAddProvider} className="space-y-6">
-                  {}
                   <div className="form-group">
                     <label className="form-label">Provider Name</label>
                     <input
@@ -1396,8 +1388,6 @@ const APIProvidersPage = () => {
                       required
                     />
                   </div>
-
-                  {}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">API Configuration</h4>
 
@@ -1521,8 +1511,6 @@ const APIProvidersPage = () => {
             </div>
           </div>
         )}
-
-        {}
         {showEditForm && editingProvider && (
           <div 
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -1576,7 +1564,6 @@ const APIProvidersPage = () => {
                 </div>
 
                 <form onSubmit={handleEditProvider} className="space-y-6">
-                  {}
                   <div className="form-group">
                     <label className="form-label">Provider Name</label>
                     <input
@@ -1589,8 +1576,6 @@ const APIProvidersPage = () => {
                       required
                     />
                   </div>
-
-                  {}
                   <div className="space-y-4">
                     <h4 className="text-lg font-medium text-gray-900 dark:text-white">API Configuration</h4>
 
@@ -1713,7 +1698,6 @@ const APIProvidersPage = () => {
         )}
 
         <div className="space-y-6">
-          {}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -1746,12 +1730,7 @@ const APIProvidersPage = () => {
               </div>
             </div>
           </div>
-
-          {}
-
-          {}
           <div className="card card-padding relative">
-            {}
             {isRefreshing ? (
               <ProvidersTableSkeleton />
             ) : (
@@ -1848,8 +1827,6 @@ const APIProvidersPage = () => {
                 </button>
               </div>
             </div>
-
-            {}
             <div className="hidden md:block">
               {(() => {
                 const filteredProviders = providers.filter(provider => {
@@ -1910,19 +1887,14 @@ const APIProvidersPage = () => {
                       {filteredProviders
                     .map((provider, index) => (
                     <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t hover:bg-gray-50 transition-colors duration-200">
-                      {}
                       <td className="p-3">
                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                           {provider.id}
                         </div>
                       </td>
-
-                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.name}</div>
                       </td>
-
-                      {}
                       <td className="p-3">
                         <div className="text-sm">
                           <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -1936,20 +1908,14 @@ const APIProvidersPage = () => {
                           </div>
                         </div>
                       </td>
-
-                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.orders.toLocaleString()}</div>
                       </td>
-
-                      {}
                       <td className="p-3">
                         <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
                           ${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
-
-                      {}
                       {statusFilter !== 'trash' && (
                         <td className="p-3">
                           <div>
@@ -1972,8 +1938,6 @@ const APIProvidersPage = () => {
                           </div>
                         </td>
                       )}
-
-                      {}
                       {statusFilter !== 'trash' && (
                         <td className="p-3">
                           <button
@@ -1997,8 +1961,6 @@ const APIProvidersPage = () => {
                           </button>
                         </td>
                       )}
-
-                      {}
                       <td className="p-3">
                         {connectionStatuses[provider.id] === 'testing' ? (
                           <span className="px-3 py-1 rounded-full text-xs font-medium w-fit bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
@@ -2020,8 +1982,6 @@ const APIProvidersPage = () => {
                           </span>
                         )}
                       </td>
-
-                      {}
                       <td className="p-3 text-right">
                         <ProviderActions provider={provider} />
                       </td>
@@ -2032,8 +1992,6 @@ const APIProvidersPage = () => {
                 );
               })()}
             </div>
-
-            {}
             <div className="md:hidden space-y-4">
               {providers
                 .filter(provider => {
@@ -2085,7 +2043,6 @@ const APIProvidersPage = () => {
                 })
                 .map((provider, index) => (
                 <div key={provider.id || `provider-${provider.name}-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  {}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-gray-400">#{provider.id}</span>
@@ -2111,8 +2068,6 @@ const APIProvidersPage = () => {
                       )}
                     </button>
                   </div>
-
-                  {}
                   <div className="mb-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
                       provider.apiUrl && provider.apiUrl.trim() !== '' 
@@ -2122,8 +2077,6 @@ const APIProvidersPage = () => {
                       {provider.apiUrl && provider.apiUrl.trim() !== '' ? 'API Connected' : 'API Not Connected'}
                     </span>
                   </div>
-
-                  {}
                   <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                     <div>
                       <div className="text-gray-500 dark:text-gray-400">Services</div>
@@ -2163,8 +2116,6 @@ const APIProvidersPage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {}
                   <ProviderActions provider={provider} />
                 </div>
               ))
@@ -2173,10 +2124,7 @@ const APIProvidersPage = () => {
               </>
             )}
           </div>
-
-          {}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -2208,8 +2156,6 @@ const APIProvidersPage = () => {
                 </button>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -2261,8 +2207,6 @@ const APIProvidersPage = () => {
                 </div>
               </div>
             </div>
-
-            {}
             {providers.length > 0 && (
               <div className="card card-padding">
                 <div className="card-header">
@@ -2304,8 +2248,6 @@ const APIProvidersPage = () => {
           </div>
         </div>
       </div>
-
-      {}
       {showDeletePopup && providerToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div
@@ -2313,7 +2255,6 @@ const APIProvidersPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full max-w-lg">
-              {}
               <div className="flex items-center justify-between p-6">
                 <h3
                   className="text-lg font-semibold"
@@ -2335,7 +2276,6 @@ const APIProvidersPage = () => {
 
               <div className="px-6 pb-6">
                 <div className="space-y-4">
-                  {}
                   <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
                     <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
                     <div>
@@ -2347,8 +2287,6 @@ const APIProvidersPage = () => {
                       </p>
                     </div>
                   </div>
-
-                  {}
                   <div className="space-y-3">
                     <p className="font-medium text-gray-800">
                       {providerToDelete.status === 'trash' 
@@ -2370,7 +2308,6 @@ const APIProvidersPage = () => {
                     ) : (
 
                       <>
-                        {}
                         <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                           <input
                             type="radio"
@@ -2389,8 +2326,6 @@ const APIProvidersPage = () => {
                             </div>
                           </div>
                         </label>
-
-                        {}
                         <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                           <input
                             type="radio"
@@ -2412,22 +2347,16 @@ const APIProvidersPage = () => {
                       </>
                     )}
                   </div>
-
-                  {}
                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                      <p className="text-sm text-red-800">
                        <strong>Warning:</strong> The action will be scheduled until the completion of any orders/refill/cancel request operation.
                      </p>
                    </div>
-
-                   {}
                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                      <p className="text-sm text-blue-800">
                        <strong>Note:</strong> After being scheduled, users are not able to see the associated services of the scheduled deletion or trash of the provider.
                      </p>
                    </div>
-
-                  {}
                   <div className="flex gap-2 justify-end pt-2">
                     <button
                       onClick={() => setShowDeletePopup(false)}

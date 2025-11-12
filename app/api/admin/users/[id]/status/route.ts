@@ -1,9 +1,8 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/users/[id]/status - Update user status
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -50,7 +49,6 @@ export async function PUT(
       );
     }
 
-    // Validate suspension duration if status is suspended
     if (status === 'suspended' && !suspensionDuration) {
       return NextResponse.json(
         {
@@ -62,7 +60,6 @@ export async function PUT(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, username: true, email: true, role: true, status: true }
@@ -79,7 +76,6 @@ export async function PUT(
       );
     }
 
-    // Prevent changing status of admin users
     if (existingUser.role === 'admin') {
       return NextResponse.json(
         {
@@ -91,7 +87,6 @@ export async function PUT(
       );
     }
 
-    // Calculate suspension end time if status is suspended
     let suspendedUntil: Date | null = null;
     if (status === 'suspended' && suspensionDuration) {
       const now = new Date();
@@ -112,9 +107,7 @@ export async function PUT(
       }
     }
 
-    // Update user status and invalidate sessions if suspended or banned
     const updatedUser = await db.$transaction(async (prisma) => {
-      // Update user status
       const user = await prisma.user.update({
         where: { id: userId },
         data: { 
@@ -131,7 +124,6 @@ export async function PUT(
         }
       });
 
-      // If user is suspended or banned, invalidate all their sessions
       if (status === 'suspended' || status === 'banned') {
         await prisma.session.deleteMany({
           where: { userId: userId }
@@ -141,7 +133,6 @@ export async function PUT(
       return user;
     });
 
-    // Log the activity
     try {
       const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
       const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
@@ -180,7 +171,6 @@ export async function PUT(
   }
 }
 
-// PATCH /api/admin/users/[id]/status - Update user status (alias for PUT)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -188,7 +178,6 @@ export async function PATCH(
   return PUT(req, { params });
 }
 
-// GET /api/admin/users/[id]/status - Get user status
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string   }> }

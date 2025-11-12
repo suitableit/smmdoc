@@ -377,7 +377,6 @@ export default function MassOrder() {
 
   return (
     <div className="page-container">
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -388,9 +387,7 @@ export default function MassOrder() {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="space-y-6">
-            {}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
@@ -409,8 +406,6 @@ export default function MassOrder() {
                 </button>
               </div>
             </div>
-
-            {}
             {activeTab === 'massOrder' && (
               <div className="card card-padding">
                 {isFormLoading ? (
@@ -468,8 +463,6 @@ export default function MassOrder() {
                             </div>
                           )}
                         </div>
-
-                        {}
                         {validationResult && (
                           <div className="mt-2 text-xs">
                             <div className={`flex items-center ${
@@ -486,8 +479,6 @@ export default function MassOrder() {
                             </div>
                           </div>
                         )}
-
-                        {}
                         {validationErrors.length > 0 && (
                           <div className="mt-2 text-xs text-red-600 dark:text-red-400">
                             {validationErrors.slice(0, 3).map((error, index) => (
@@ -504,8 +495,6 @@ export default function MassOrder() {
                           </div>
                         )}
                       </div>
-
-                      {}
                       {validationResult && validationResult.validOrders.length > 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -526,8 +515,6 @@ export default function MassOrder() {
                               </span>
                             </div>
                           </div>
-
-                          {}
                           {balanceCheck && (
                             <div className={`mt-2 p-2 rounded text-xs ${
                               balanceCheck.sufficient 
@@ -559,8 +546,6 @@ export default function MassOrder() {
                           </div>
                         </div>
                       )}
-
-                      {}
                       {validationResult && validationResult.validOrders.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                           <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
@@ -643,8 +628,6 @@ export default function MassOrder() {
               </div>
             )}
           </div>
-
-          {}
           <div className="space-y-6">
             <InstructionsPanel />
           </div>

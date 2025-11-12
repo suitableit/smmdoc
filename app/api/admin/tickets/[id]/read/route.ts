@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
 
-// Validation schema for read status
 const readStatusSchema = z.object({
   isRead: z.boolean()
 });
@@ -16,7 +15,6 @@ interface RouteParams {
   }>;
 }
 
-// PATCH - Update ticket read status (admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: RouteParams
@@ -31,7 +29,6 @@ export async function PATCH(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -44,7 +41,6 @@ export async function PATCH(
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -63,7 +59,6 @@ export async function PATCH(
       );
     }
 
-    // Check if ticket exists
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId }
     });
@@ -78,7 +73,6 @@ export async function PATCH(
     const body = await request.json();
     const { isRead } = readStatusSchema.parse(body);
 
-    // Update the ticket read status
     const updatedTicket = await db.supportTicket.update({
       where: { id: ticketId },
       data: {

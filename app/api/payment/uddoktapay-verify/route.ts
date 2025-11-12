@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { logSMS, sendSMS, smsTemplates } from '@/lib/sms';
@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Find the payment record in the database
     const payment = await db.addFund.findUnique({
       where: { invoice_id },
       include: { user: true }
@@ -31,7 +30,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // If payment is already successful, return success
     if (payment.status === "Success") {
       return NextResponse.json({
         status: "COMPLETED",
@@ -46,11 +44,9 @@ export async function POST(req: NextRequest) {
     }
     
     try {
-      // Handle UddoktaPay sandbox response types
       let verificationStatus = "PENDING";
       let isSuccessful = false;
       
-      // Check response_type from UddoktaPay sandbox
       if (response_type) {
         const responseTypeLower = response_type.toLowerCase();
         
@@ -63,7 +59,6 @@ export async function POST(req: NextRequest) {
           verificationStatus = "CANCELLED";
         }
       } else {
-        // Fallback to transaction_id pattern matching
         if (transaction_id) {
           const lowerTransactionId = transaction_id.toLowerCase();
           
@@ -80,12 +75,9 @@ export async function POST(req: NextRequest) {
       
       console.log("UddoktaPay verification result:", { isSuccessful, verificationStatus, response_type });
       
-      // Handle COMPLETED status - Auto approve and add balance
       if (isSuccessful && verificationStatus === "COMPLETED" && payment.user) {
         try {
-          // Use Prisma transaction to ensure both operations succeed or fail together
           await db.$transaction(async (prisma) => {
-            // Update the payment status
             await prisma.addFund.update({
               where: { invoice_id },
               data: {
@@ -96,10 +88,8 @@ export async function POST(req: NextRequest) {
               }
             });
             
-            // Use original amount if available, otherwise calculate from USD amount
             const originalAmount = payment.original_amount || payment.amount;
 
-            // Check user settings for payment bonus
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
 
@@ -109,20 +99,18 @@ export async function POST(req: NextRequest) {
 
             const totalAmountToAdd = originalAmount + bonusAmount;
 
-            // Update user balance with original currency amount plus bonus
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: totalAmountToAdd }, // Add original amount + bonus in user's currency
-                balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
-                total_deposit: { increment: originalAmount } // Track only actual deposit, not bonus
+                balance: { increment: totalAmountToAdd },
+                balanceUSD: { increment: payment.amount },
+                total_deposit: { increment: originalAmount }
               }
             });
             
             console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
           });
 
-          // Send success email to user
           if (payment.user.email) {
             const emailData = emailTemplates.paymentSuccess({
               userName: payment.user.name || 'Customer',
@@ -141,7 +129,6 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // Send admin notification email
           const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
           const adminEmailData = transactionEmailTemplates.adminAutoApproved({
             userName: payment.user.name || 'Unknown User',
@@ -159,7 +146,6 @@ export async function POST(req: NextRequest) {
             html: adminEmailData.html
           });
 
-          // Send SMS notification to user if phone number is available
           if (phone && payment.user) {
             const smsMessage = smsTemplates.paymentSuccess(
               payment.user.name || 'Customer',
@@ -172,7 +158,6 @@ export async function POST(req: NextRequest) {
               message: smsMessage
             });
 
-            // Log SMS attempt
             await logSMS({
               userId: payment.userId.toString(),
               phone: phone,
@@ -202,9 +187,7 @@ export async function POST(req: NextRequest) {
         }
       } 
       
-      // Handle PENDING status - Requires manual admin review
       else if (verificationStatus === "PENDING") {
-        // Update payment with transaction ID but keep status as Processing and admin_status as pending
         await db.addFund.update({
           where: { invoice_id },
           data: {
@@ -215,7 +198,6 @@ export async function POST(req: NextRequest) {
           }
         });
 
-        // Send admin notification for pending transaction
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
         const adminEmailData = emailTemplates.adminPendingReview({
           userName: payment.user?.name || 'Unknown User',
@@ -246,9 +228,7 @@ export async function POST(req: NextRequest) {
         });
       } 
       
-      // Handle CANCELLED/FAILED status
       else {
-        // Payment failed or cancelled
         await db.addFund.update({
           where: { invoice_id },
           data: {

@@ -487,7 +487,6 @@ const AnnouncementsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -499,7 +498,6 @@ const AnnouncementsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex items-center justify-start">
             <button
@@ -514,12 +512,8 @@ const AnnouncementsPage = () => {
             </button>
           </div>
         </div>
-
-        {}
         <div className="card card-padding mb-6">
-          {}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {}
             <div className="min-w-0">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -532,8 +526,6 @@ const AnnouncementsPage = () => {
                 />
               </div>
             </div>
-
-            {}
             <div className="min-w-0">
               <select
                 value={statusFilter}
@@ -547,8 +539,6 @@ const AnnouncementsPage = () => {
                 <option value="draft">Draft</option>
               </select>
             </div>
-
-            {}
             <div className="min-w-0">
               <select
                 value={typeFilter}
@@ -562,8 +552,6 @@ const AnnouncementsPage = () => {
                 <option value="critical">Critical</option>
               </select>
             </div>
-
-            {}
             <div className="min-w-0">
               <select
                 value={audienceFilter}
@@ -577,8 +565,6 @@ const AnnouncementsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="space-y-4">
           {announcementsLoading ? (
             <div className="min-h-[600px]">
@@ -704,7 +690,6 @@ const AnnouncementsPage = () => {
                     </button>
                   </div>
                 </div>
-                {}
                 <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => handleToggleStatus(announcement.id, announcement.status)}
@@ -737,8 +722,6 @@ const AnnouncementsPage = () => {
           )}
         </div>
       </div>
-
-      {}
       {(showCreateModal || editingAnnouncement) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -916,8 +899,6 @@ const AnnouncementsPage = () => {
           </div>
         </div>
       )}
-
-      {}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">

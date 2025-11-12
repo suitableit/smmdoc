@@ -15,22 +15,18 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Prepare update data
     let updateData: any = {
       category_name: category_name,
     };
 
-    // Add position if provided
     if (position) {
       updateData.position = position;
     }
 
-    // Add hideCategory if provided
     if (hideCategory !== undefined) {
       updateData.hideCategory = hideCategory;
     }
 
-    // Update the category in the database
     await db.category.update({
       where: {
         id: Number(id),

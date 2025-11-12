@@ -57,9 +57,6 @@ export async function POST(req: NextRequest) {
     const { image } = await req.json();
 
     if (image) {
-      // Note: NextAuth JWT sessions are immutable during request
-      // The image will be updated on next session refresh via jwt callback
-      // which fetches fresh user data from database
       console.log('Session update requested for image:', image);
     }
 

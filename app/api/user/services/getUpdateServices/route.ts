@@ -4,11 +4,9 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   try {
-    // Check module settings for services list access control
     const moduleSettings = await db.moduleSettings.findFirst();
     const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
 
-    // If services list is private, require authentication
     if (!servicesListPublic) {
       const session = await auth();
       if (!session?.user) {
@@ -25,7 +23,6 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || '';
     const skip = (page - 1) * limit;
     const whereClause = {
-      // Only return active services
       status: 'active',
       ...(search
         ? {
@@ -45,7 +42,6 @@ export async function GET(request: Request) {
             ],
           }
         : {}),
-      // only fetch services with updateText
       updateText: {
         not: null,
       },

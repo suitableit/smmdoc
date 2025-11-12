@@ -40,8 +40,6 @@ const PasswordInput = React.forwardRef<
           {showPassword ? "Hide password" : "Show password"}
         </span>
       </Button>
-
-      {}
       <style>{`
 					.hide-password-toggle::-ms-reveal,
 					.hide-password-toggle::-ms-clear {

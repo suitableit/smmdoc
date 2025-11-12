@@ -108,7 +108,6 @@ const BlogPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {}
       <Section className="pt-[60px] lg:pt-[120px]">
         <div className="text-center">
           <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
@@ -137,8 +136,6 @@ const BlogPage: React.FC = () => {
           )}
         </div>
       </Section>
-
-      {}
       <Section className="pt-[30px]">
         {isLoading ? (
           <div className="card-padding bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300 p-12">
@@ -157,10 +154,7 @@ const BlogPage: React.FC = () => {
           </div>
         )}
       </Section>
-
-      {}
       <Section className="pt-0 pb-[120px]">
-        {}
         {hasMorePosts && allBlogPosts.length > 0 && (
           <div className="text-center">
             <button
@@ -171,8 +165,6 @@ const BlogPage: React.FC = () => {
             </button>
           </div>
         )}
-
-        {}
         {!hasMorePosts && allBlogPosts.length > 6 && (
           <div className="text-center">
             <p className="text-gray-600 dark:text-gray-300 text-lg transition-colors duration-200">
@@ -182,8 +174,6 @@ const BlogPage: React.FC = () => {
           </div>
         )}
       </Section>
-
-      {}
     </div>
   );
 };

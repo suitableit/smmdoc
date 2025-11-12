@@ -823,7 +823,6 @@ const ChildPanelsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -835,10 +834,8 @@ const ChildPanelsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -873,8 +870,6 @@ const ChildPanelsPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -894,11 +889,8 @@ const ChildPanelsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -1020,7 +1012,6 @@ const ChildPanelsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedPanels.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <span
@@ -1103,7 +1094,6 @@ const ChildPanelsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1307,8 +1297,6 @@ const ChildPanelsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1368,8 +1356,6 @@ const ChildPanelsPage = () => {
                     </button>
                   </div>
                 </div>
-
-                {}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1434,8 +1420,6 @@ const ChildPanelsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {settingsDialog.open && settingsDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1452,8 +1436,6 @@ const ChildPanelsPage = () => {
                           <FaTimes className="h-5 w-5" />
                         </button>
                       </div>
-
-                      {}
                       <div className="border-b border-gray-200 mb-6">
                         <nav className="-mb-px flex flex-wrap space-x-0 sm:space-x-8 gap-2">
                           <button
@@ -1498,8 +1480,6 @@ const ChildPanelsPage = () => {
                           </button>
                         </nav>
                       </div>
-
-                      {}
                       <div className="mb-6">
                         {activeSettingsTab === 'general' && (
                           <div className="space-y-6">
@@ -1728,8 +1708,6 @@ const ChildPanelsPage = () => {
                           <div className="space-y-6">
                             <div>
                               <h4 className="text-md font-semibold mb-4 text-gray-800">Panel Features</h4>
-
-                              {}
                               <div className="mb-4">
                                 <label className="flex items-center gap-2">
                                   <input
@@ -1756,10 +1734,7 @@ const ChildPanelsPage = () => {
                                   <span className="font-medium text-sm">Select All Features</span>
                                 </label>
                               </div>
-
-                              {}
                               <div className="grid grid-cols-2 gap-4">
-                                {}
                                 <div className="space-y-3">
                                   <label className="flex items-center gap-2">
                                     <input
@@ -1833,8 +1808,6 @@ const ChildPanelsPage = () => {
                                     <span className="text-sm">Mass Orders</span>
                                   </label>
                                 </div>
-
-                                {}
                                 <div className="space-y-3">
                                   <label className="flex items-center gap-2">
                                     <input
@@ -1909,8 +1882,6 @@ const ChildPanelsPage = () => {
                                   </label>
                                 </div>
                               </div>
-
-                              {}
                               <div className="mt-4 text-sm text-gray-600">
                                 {Object.values(settingsData.featuresEnabled).every(v => !v) ? (
                                   <span className="text-amber-600">No features selected. Panel will have limited functionality.</span>
@@ -1936,8 +1907,6 @@ const ChildPanelsPage = () => {
                           </div>
                         )}
                       </div>
-
-                      {}
                       <div className="flex gap-3 justify-end pt-4 border-t">
                         <button
                           onClick={() => setSettingsDialog({ open: false, panel: null })}
@@ -1955,8 +1924,6 @@ const ChildPanelsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {viewDialog.open && viewDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1973,8 +1940,6 @@ const ChildPanelsPage = () => {
                           <FaTimes className="h-5 w-5" />
                         </button>
                       </div>
-
-                      {}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                           <h4 className="text-md font-semibold mb-4 text-gray-800">
@@ -2082,8 +2047,6 @@ const ChildPanelsPage = () => {
                           </div>
                         </div>
                       </div>
-
-                      {}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Technical Details
@@ -2115,8 +2078,6 @@ const ChildPanelsPage = () => {
                           </div>
                         </div>
                       </div>
-
-                      {}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Important Dates
@@ -2151,8 +2112,6 @@ const ChildPanelsPage = () => {
                           </div>
                         </div>
                       </div>
-
-                      {}
                       <div className="flex gap-3 justify-end pt-4 border-t">
                         <button
                           onClick={() => {

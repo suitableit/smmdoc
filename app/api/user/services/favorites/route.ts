@@ -20,7 +20,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Convert string to number
     const userId = parseInt(userIdParam);
     if (isNaN(userId)) {
       return NextResponse.json(
@@ -29,7 +28,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // First get the favorite service IDs for this user
     const favoriteServices = await db.favoriteService.findMany({
       where: { userId },
       select: { serviceId: true },
@@ -37,7 +35,6 @@ export async function GET(request: Request) {
 
     const favoriteServiceIds = favoriteServices.map((fav) => fav.serviceId);
     
-    // If there are no favorites, return early
     if (favoriteServiceIds.length === 0) {
       return NextResponse.json(
         {
@@ -50,13 +47,11 @@ export async function GET(request: Request) {
       );
     }
     
-    // Build search condition if needed
     const isNumericSearch = /^\d+$/.test(search);
     
     const searchCondition = search
       ? {
           OR: [
-            // If search is numeric, prioritize exact ID match
             ...(isNumericSearch 
               ? [{
                   id: {
@@ -65,19 +60,16 @@ export async function GET(request: Request) {
                 }] 
               : []
             ),
-            // Search by service name
             {
               name: {
                 contains: search,
               },
             },
-            // Search by description
             {
               description: {
                 contains: search,
               },
             },
-            // Search by category name
             {
               category: {
                 category_name: {
@@ -89,7 +81,6 @@ export async function GET(request: Request) {
         }
       : {};
     
-    // Combine conditions
     const whereClause = {
       id: { in: favoriteServiceIds },
       ...searchCondition,
@@ -97,14 +88,12 @@ export async function GET(request: Request) {
     
 
 
-    // Get services with pagination
     const [services, total] = await Promise.all([
       db.service.findMany({
         where: whereClause,
         skip,
         take: limit,
         orderBy: [
-          // If numeric search, prioritize exact ID matches first
           ...(isNumericSearch 
             ? [{ id: 'asc' as any }] 
             : []

@@ -1,21 +1,20 @@
-// Support Ticket System Models
 model SupportTicket {
   id            Int      @id @default(autoincrement())
   userId        Int
   subject       String
   message       String   @db.Text
-  status        String   @default("pending") // pending, in_progress, resolved, closed
-  category      String   // AI Support, Human Support
-  subcategory   String?  // subcategory based on category
-  ticketType    String   @default("Human") // Human, AI
-  aiSubcategory String?  // AI ticket subcategory (Refill, Cancel, etc.)
-  humanTicketSubject  String?  // Human ticket subject from admin settings
-  systemMessage String?  @db.Text // System generated message for AI tickets
-  orderIds      String?  @db.Text // JSON string for order IDs
-  priority      String   @default("medium") // low, medium, high, urgent
-  attachments   String?  @db.Text // JSON string for file paths
+  status        String   @default("pending")
+  category      String
+  subcategory   String?
+  ticketType    String   @default("Human")
+  aiSubcategory String?
+  humanTicketSubject  String?
+  systemMessage String?  @db.Text
+  orderIds      String?  @db.Text
+  priority      String   @default("medium")
+  attachments   String?  @db.Text
   adminReply    String?  @db.Text
-  isRead        Boolean  @default(false) // Track if ticket has been read by admin
+  isRead        Boolean  @default(false)
   repliedAt     DateTime?
   repliedBy     Int?
   createdAt     DateTime @default(now())

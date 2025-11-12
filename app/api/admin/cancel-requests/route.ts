@@ -1,13 +1,11 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/cancel-requests - Get all cancel requests
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -29,7 +27,6 @@ export async function GET(req: NextRequest) {
 
     console.log('Query params:', { page, limit, status, search });
 
-    // Build Prisma where conditions
     const whereCondition: any = {};
 
     if (status && status !== 'all') {
@@ -39,17 +36,14 @@ export async function GET(req: NextRequest) {
     if (search) {
       const searchNumber = parseInt(search);
       whereCondition.OR = [
-        // Search by order ID if search is a number
         ...(isNaN(searchNumber) ? [] : [{
           order: { id: searchNumber }
         }]),
-        // Search by user email
         {
           user: {
             email: { contains: search, mode: 'insensitive' }
           }
         },
-        // Search by user name
         {
           user: {
             name: { contains: search, mode: 'insensitive' }
@@ -60,7 +54,6 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma where condition:', JSON.stringify(whereCondition, null, 2));
 
-    // Get cancel requests using Prisma ORM
     const cancelRequestsResult = await db.cancelRequest.findMany({
       where: whereCondition,
       include: {
@@ -81,14 +74,12 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma result sample:', JSON.stringify(cancelRequestsResult[0], null, 2));
 
-    // Get total count for pagination
     const total = await db.cancelRequest.count({
       where: whereCondition
     });
 
 
 
-    // Transform data to match frontend interface
     const transformedRequests = cancelRequestsResult.map((request) => ({
       id: request.id,
       order: {
@@ -108,7 +99,7 @@ export async function GET(req: NextRequest) {
         link: request.order.link,
         status: request.order.status,
         createdAt: request.order.createdAt.toISOString(),
-        seller: 'Self' // Default seller name
+        seller: 'Self'
       },
       user: {
         id: request.user.id,
@@ -128,7 +119,6 @@ export async function GET(req: NextRequest) {
 
     console.log('Transformed requests sample:', JSON.stringify(transformedRequests[0], null, 2));
 
-    // Calculate pagination info
     const totalPages = Math.ceil(total / limit);
     const hasNext = page < totalPages;
     const hasPrev = page > 1;
@@ -152,7 +142,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching cancel requests:', error);
 
-    // Return fallback mock data if database query fails
     const mockData = [
       {
         id: 'CR001',
@@ -205,7 +194,7 @@ export async function GET(req: NextRequest) {
           charge: 15.00,
           link: 'https://facebook.com/test',
           status: 'processing',
-          createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
           seller: 'Self'
         },
         user: {
@@ -217,7 +206,7 @@ export async function GET(req: NextRequest) {
         },
         reason: 'Found a better service provider.',
         status: 'pending',
-        requestedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        requestedAt: new Date(Date.now() - 3600000).toISOString(),
         refundAmount: 15.00
       },
       {
@@ -238,7 +227,7 @@ export async function GET(req: NextRequest) {
           charge: 25.00,
           link: 'https://youtube.com/watch?v=test',
           status: 'completed',
-          createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+          createdAt: new Date(Date.now() - 172800000).toISOString(),
           seller: 'Self'
         },
         user: {
@@ -250,8 +239,8 @@ export async function GET(req: NextRequest) {
         },
         reason: 'Service quality was not satisfactory.',
         status: 'approved',
-        requestedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        processedAt: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        requestedAt: new Date(Date.now() - 86400000).toISOString(),
+        processedAt: new Date(Date.now() - 3600000).toISOString(),
         processedBy: 'admin',
         refundAmount: 25.00,
         adminNotes: 'Refund approved due to quality issues.'
@@ -274,7 +263,7 @@ export async function GET(req: NextRequest) {
           charge: 18.00,
           link: 'https://twitter.com/test',
           status: 'in_progress',
-          createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+          createdAt: new Date(Date.now() - 259200000).toISOString(),
           seller: 'Self'
         },
         user: {
@@ -286,8 +275,8 @@ export async function GET(req: NextRequest) {
         },
         reason: 'Order taking too long to complete.',
         status: 'declined',
-        requestedAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        processedAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        requestedAt: new Date(Date.now() - 172800000).toISOString(),
+        processedAt: new Date(Date.now() - 86400000).toISOString(),
         processedBy: 'admin',
         refundAmount: 0,
         adminNotes: 'Request declined. Order is already in progress and cannot be cancelled.'

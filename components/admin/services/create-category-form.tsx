@@ -112,14 +112,12 @@ export const CreateCategoryForm = ({
 
   return (
     <div className="w-full max-w-md">
-      {}
       <div className="flex items-center justify-between p-6">
         <h3 className="text-lg font-semibold">Create New Category</h3>
       </div>
 
       <div className="px-6 pb-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {}
           <FormItem>
             <FormLabel className="form-label">Category Name</FormLabel>
             <FormControl>
@@ -134,8 +132,6 @@ export const CreateCategoryForm = ({
             </FormControl>
             <FormMessage>{errors.category_name?.message}</FormMessage>
           </FormItem>
-
-          {}
           <FormItem>
             <FormLabel className="form-label">Hide Category</FormLabel>
             <FormControl>
@@ -150,8 +146,6 @@ export const CreateCategoryForm = ({
             </FormControl>
             <FormMessage>{errors.hideCategory?.message}</FormMessage>
           </FormItem>
-
-          {}
           <FormItem>
             <FormLabel className="form-label">Position</FormLabel>
             <FormControl>
@@ -166,8 +160,6 @@ export const CreateCategoryForm = ({
             </FormControl>
             <FormMessage>{errors.position?.message}</FormMessage>
           </FormItem>
-
-          {}
           <div className="flex gap-2 justify-end">
             <button
               type="button"

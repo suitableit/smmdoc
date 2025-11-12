@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/auth/session-check - Check if current session is valid
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -14,7 +13,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Check user status in database
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -26,7 +24,6 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // If user not found or suspended/banned, session is invalid
     if (!user || user.status === 'suspended' || user.status === 'banned') {
       return NextResponse.json({
         valid: false,

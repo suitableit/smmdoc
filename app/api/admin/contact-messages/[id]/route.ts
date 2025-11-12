@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { contactDB } from '@/lib/contact-db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET - Get specific contact message
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,11 +22,9 @@ export async function GET(
       );
     }
 
-    // Check if notes should be included
     const { searchParams } = new URL(request.url);
     const includeNotes = searchParams.get('include_notes') === 'true';
 
-    // Get the contact message
     const message = await contactDB.getContactMessageById(messageId, includeNotes);
 
     if (!message) {
@@ -37,7 +34,6 @@ export async function GET(
       );
     }
 
-    // Format message for the UI
     const formattedMessage = {
       id: message.id,
       userId: message.userId,
@@ -57,7 +53,6 @@ export async function GET(
       notes: message.notes || []
     };
 
-    // Mark as read if it's unread
     if (message.status === 'Unread') {
       await contactDB.updateContactMessageStatus(messageId, 'Read');
       formattedMessage.status = 'Read';
@@ -77,7 +72,6 @@ export async function GET(
   }
 }
 
-// PUT - Update contact message (reply, status change)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -134,7 +128,6 @@ export async function PUT(
           attachments
         );
 
-        // Send notification to user
         try {
           const contactMessage = await contactDB.getContactMessageById(messageId);
           if (contactMessage && contactMessage.user) {
@@ -147,15 +140,12 @@ export async function PUT(
             const userName = (contactMessage.user as any).name || contactMessage.user.username || 'User';
             const userPhone = (contactMessage.user as any).phone;
             
-            // Send email notification to user
             if (userEmail) {
-              // Parse admin reply attachments if any
               let adminAttachments = undefined;
               if (attachments) {
                 try {
                   const attachmentData = JSON.parse(attachments);
                   adminAttachments = attachmentData.map((attachment: any) => {
-                    // Handle both old format (string paths) and new format (objects)
                     if (typeof attachment === 'string') {
                       const filename = attachment.split('/').pop() || 'attachment';
                       return {
@@ -166,7 +156,6 @@ export async function PUT(
                         mimeType: 'application/octet-stream'
                       };
                     } else {
-                      // New format with original and encrypted names
                       return {
                         originalName: attachment.originalName,
                         encryptedName: attachment.encryptedPath.split('/').pop() || 'attachment',
@@ -198,7 +187,6 @@ export async function PUT(
               });
             }
             
-            // Send SMS notification to user (if phone number available)
              if (userPhone) {
                const { isValidBangladeshiPhone } = await import('@/lib/sms');
                if (isValidBangladeshiPhone(userPhone)) {
@@ -212,7 +200,6 @@ export async function PUT(
           }
         } catch (notificationError) {
           console.error('Error sending user notification:', notificationError);
-          // Don't fail the main request if notification fails
         }
         break;
 
@@ -244,7 +231,6 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete contact message
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -265,7 +251,6 @@ export async function DELETE(
       );
     }
 
-    // Check if message exists
     const message = await contactDB.getContactMessageById(messageId);
     if (!message) {
       return NextResponse.json(
@@ -274,7 +259,6 @@ export async function DELETE(
       );
     }
 
-    // Delete the message
     const result = await contactDB.deleteContactMessage(messageId);
 
     if (!result) {

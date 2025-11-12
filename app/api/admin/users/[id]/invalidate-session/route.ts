@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/admin/users/[id]/invalidate-session - Invalidate user sessions
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +34,6 @@ export async function POST(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, username: true, role: true }
@@ -52,7 +50,6 @@ export async function POST(
       );
     }
 
-    // Prevent invalidating admin sessions
     if (existingUser.role === 'admin') {
       return NextResponse.json(
         {
@@ -64,7 +61,6 @@ export async function POST(
       );
     }
 
-    // Delete all user sessions to force logout
     await db.session.deleteMany({
       where: { userId: userId }
     });

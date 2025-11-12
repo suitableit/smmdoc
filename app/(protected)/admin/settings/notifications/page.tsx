@@ -237,7 +237,6 @@ const NotificationSettingsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -250,7 +249,6 @@ const NotificationSettingsPage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -497,8 +495,6 @@ const NotificationSettingsPage = () => {
               </button>
             </div>
           </div>
-
-          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">

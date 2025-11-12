@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { contactDB } from '@/lib/contact-db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET - Get contact messages for admin
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -18,10 +17,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    // Get contact messages with filters using contactDB
     console.log('🔍 Fetching contact messages with filters:', { status, search, limit, offset });
 
-    // Use contactDB to get messages with proper joins
     const messages = await contactDB.getContactMessages({
       status: status !== 'All' ? status : undefined,
       search: search || undefined,
@@ -31,7 +28,6 @@ export async function GET(request: NextRequest) {
 
     console.log('📋 Found messages:', messages.length);
 
-    // Get message counts for status tabs
     const totalCount = await contactDB.countContactMessages({});
     const unreadCount = await contactDB.countContactMessages({ status: ['Unread'] });
     const readCount = await contactDB.countContactMessages({ status: ['Read'] });
@@ -45,7 +41,6 @@ export async function GET(request: NextRequest) {
     };
     console.log('📊 Message counts:', counts);
 
-    // Format messages for the UI
     const formattedMessages = messages.map((msg: any) => ({
       id: msg.id.toString(),
       username: msg.user?.username || 'No Username',
@@ -84,7 +79,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error getting contact messages:', error);
     
-    // Return fallback sample data when database is unavailable
     const sampleMessages = [
       {
         id: '001',

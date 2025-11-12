@@ -584,7 +584,6 @@ const BlogsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -596,10 +595,8 @@ const BlogsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {}
             <div className="flex flex-wrap w-full md:w-auto items-center gap-2">
               <select
                 value={pagination.limit}
@@ -642,8 +639,6 @@ const BlogsPage = () => {
                 New Blog Post
               </button>
             </div>
-
-            {}
             <div className="w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -663,11 +658,8 @@ const BlogsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -732,7 +724,6 @@ const BlogsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedBlogs.length > 0 && (
               <div className="flex flex-wrap md:flex-nowrap items-start gap-2">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -881,7 +872,6 @@ const BlogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1103,8 +1093,6 @@ const BlogsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1164,8 +1152,6 @@ const BlogsPage = () => {
                     </button>
                   </div>
                 </div>
-
-                {}
                 {deleteDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1212,8 +1198,6 @@ const BlogsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

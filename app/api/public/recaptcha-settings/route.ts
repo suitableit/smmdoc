@@ -1,9 +1,8 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get integration settings from database
     const dbSettings = await db.integrationSettings.findFirst();
     
     if (!dbSettings || !dbSettings.recaptchaEnabled) {
@@ -25,8 +24,6 @@ export async function GET() {
       });
     }
 
-    // Return only public ReCAPTCHA settings (no secret key)
-    // Use the correct site key based on version
     const siteKey = dbSettings.recaptchaVersion === 'v2' 
       ? dbSettings.recaptchaV2SiteKey 
       : dbSettings.recaptchaV3SiteKey;
@@ -34,7 +31,7 @@ export async function GET() {
     const publicSettings = {
       enabled: dbSettings.recaptchaEnabled,
       version: dbSettings.recaptchaVersion,
-      siteKey: siteKey || dbSettings.recaptchaSiteKey, // Fallback to legacy field
+      siteKey: siteKey || dbSettings.recaptchaSiteKey,
       threshold: dbSettings.recaptchaThreshold,
       enabledForms: {
         signUp: dbSettings.recaptchaSignUp,

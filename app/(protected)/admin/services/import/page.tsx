@@ -645,7 +645,6 @@ const ImportServicesPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -657,10 +656,7 @@ const ImportServicesPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <StepProgress currentStep={currentStep} />
-
-        {}
         <div className="card animate-in fade-in duration-500">
           <div className="px-6 py-6">
             <h2
@@ -671,11 +667,8 @@ const ImportServicesPage = () => {
               {currentStep === 2 && 'Select Categories'}
               {currentStep === 3 && 'Customize Services'}
             </h2>
-
-            {}
             {currentStep === 1 && (
               <div className="space-y-6">
-                {}
                 <div>
                   <label
                     className="form-label mb-3"
@@ -740,8 +733,6 @@ const ImportServicesPage = () => {
                     </div>
                   )}
                 </div>
-
-                {}
                 <div>
                   <label
                     className="form-label mb-3"
@@ -794,8 +785,6 @@ const ImportServicesPage = () => {
                     </p>
                   </div>
                 </div>
-
-                {}
                 {selectedProvider && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-800 mb-2">
@@ -819,8 +808,6 @@ const ImportServicesPage = () => {
                 )}
               </div>
             )}
-
-            {}
             {currentStep === 2 && (
               <div className="space-y-6">
                 {categoriesLoading ? (
@@ -875,7 +862,6 @@ const ImportServicesPage = () => {
                   </>
                 ) : (
                   <>
-                    {}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -901,8 +887,6 @@ const ImportServicesPage = () => {
                         </button>
                       </div>
                     </div>
-
-                    {}
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm min-w-[600px]">
                         <thead className="sticky top-0 bg-white border-b z-10">
@@ -997,8 +981,6 @@ const ImportServicesPage = () => {
                         </tbody>
                       </table>
                     </div>
-
-                    {}
                     {apiCategories.some((cat) => cat.selected) && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <h4 className="font-semibold text-green-800 mb-2">
@@ -1023,8 +1005,6 @@ const ImportServicesPage = () => {
                 )}
               </div>
             )}
-
-            {}
             {currentStep === 3 && (
               <div className="space-y-6">
                 {isLoading ? (
@@ -1159,7 +1139,6 @@ const ImportServicesPage = () => {
                   </>
                 ) : (
                   <>
-                {}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                     <div className="mb-2 md:mb-0">
@@ -1184,10 +1163,7 @@ const ImportServicesPage = () => {
                     </div>
                   </div>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
-                  {}
                   <div className="relative flex-1 md:max-w-md">
                     <FaSearch
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
@@ -1201,8 +1177,6 @@ const ImportServicesPage = () => {
                       className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     />
                   </div>
-
-                  {}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                     {hasChanges && (
                       <div className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -1212,8 +1186,6 @@ const ImportServicesPage = () => {
                         </span>
                       </div>
                     )}
-
-                    {}
                     <button
                       onClick={() => {
                         const allCategories = Object.keys(groupedServices);
@@ -1262,8 +1234,6 @@ const ImportServicesPage = () => {
                     </button>
                   </div>
                 </div>
-
-                {}
                 {Object.keys(groupedServices).length === 0 ? (
                   <div className="text-center py-12">
                     <FaExclamationTriangle
@@ -1287,7 +1257,6 @@ const ImportServicesPage = () => {
                   </div>
                 ) : (
                   <>
-                    {}
                     <div className="hidden lg:block card animate-in fade-in duration-500">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm min-w-[1000px]">
@@ -1347,7 +1316,6 @@ const ImportServicesPage = () => {
                             {Object.entries(groupedServices).map(
                               ([category, categoryServices]) => (
                                 <React.Fragment key={category}>
-                                  {}
                                   <tr className="bg-gray-50 border-t-2 border-gray-200">
                                     <td colSpan={8} className="p-3">
                                       <div className="flex items-center justify-between">
@@ -1394,8 +1362,6 @@ const ImportServicesPage = () => {
                                       </div>
                                     </td>
                                   </tr>
-
-                                  {}
                                   {!collapsedCategories[category] &&
                                     (categoryServices.length > 0 ? (
                                       categoryServices.map((service, index) => (
@@ -1583,8 +1549,6 @@ const ImportServicesPage = () => {
                         </table>
                       </div>
                     </div>
-
-                    {}
                     <div className="lg:hidden space-y-6">
                       {Object.entries(groupedServices).map(
                         ([category, categoryServices]) => (
@@ -1592,7 +1556,6 @@ const ImportServicesPage = () => {
                             key={category}
                             className="space-y-4 animate-in fade-in duration-500"
                           >
-                            {}
                             <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
@@ -1633,8 +1596,6 @@ const ImportServicesPage = () => {
                                 </div>
                               )}
                             </div>
-
-                            {}
                             {!collapsedCategories[category] && (
                               <div className="space-y-4 ml-4">
                                 {categoryServices.length > 0 ? (
@@ -1650,7 +1611,6 @@ const ImportServicesPage = () => {
                                         animationDelay: `${index * 50}ms`,
                                       }}
                                     >
-                                      {}
                                       <div className="flex items-center justify-between mb-4">
                                         <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                                           {formatID(service.id)}
@@ -1661,8 +1621,6 @@ const ImportServicesPage = () => {
                                           </span>
                                         )}
                                       </div>
-
-                                      {}
                                       <div className="mb-4">
                                         <label className="form-label mb-2">
                                           Service Name
@@ -1685,8 +1643,6 @@ const ImportServicesPage = () => {
                                           className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                                         />
                                       </div>
-
-                                      {}
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                           <label className="form-label mb-2">
@@ -1733,8 +1689,6 @@ const ImportServicesPage = () => {
                                           />
                                         </div>
                                       </div>
-
-                                      {}
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
                                           <label className="form-label mb-2">
@@ -1791,8 +1745,6 @@ const ImportServicesPage = () => {
                                           </div>
                                         </div>
                                       </div>
-
-                                      {}
                                       <div>
                                         <label className="form-label mb-2">
                                           Description
@@ -1833,8 +1785,6 @@ const ImportServicesPage = () => {
                         )
                       )}
                     </div>
-
-                    {}
                     {hasMoreServices && !isLoading && (
                       <div className="flex justify-center py-6">
                         <button
@@ -1861,8 +1811,6 @@ const ImportServicesPage = () => {
                 )}
               </div>
             )}
-
-            {}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t mt-8">
               <div className="w-full md:w-auto">
                 {currentStep > 1 && (

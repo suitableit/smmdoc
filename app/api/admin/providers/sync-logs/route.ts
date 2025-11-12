@@ -1,10 +1,8 @@
 import { auth } from '@/auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-// In-memory sync logs (in production, use database table)
 let syncLogs: any[] = [];
 
-// GET - Get sync logs
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -20,7 +18,6 @@ export async function GET(req: NextRequest) {
     const syncType = searchParams.get('syncType');
     const status = searchParams.get('status');
 
-    // Filter logs
     let filteredLogs = [...syncLogs];
 
     if (provider) {
@@ -37,15 +34,12 @@ export async function GET(req: NextRequest) {
       filteredLogs = filteredLogs.filter(log => log.status === status);
     }
 
-    // Sort by timestamp (newest first)
     filteredLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    // Paginate
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedLogs = filteredLogs.slice(startIndex, endIndex);
 
-    // Calculate stats
     const stats = {
       total: filteredLogs.length,
       successful: filteredLogs.filter(log => log.status === 'success').length,
@@ -79,7 +73,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Add sync log entry
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -98,7 +91,6 @@ export async function POST(req: NextRequest) {
       ...logEntry
     };
 
-    // Add to logs (keep only last 1000 entries)
     syncLogs.unshift(newLog);
     if (syncLogs.length > 1000) {
       syncLogs = syncLogs.slice(0, 1000);
@@ -119,7 +111,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE - Clear sync logs
 export async function DELETE() {
   try {
     const session = await auth();
@@ -147,7 +138,6 @@ export async function DELETE() {
   }
 }
 
-// Helper function to add sync log (can be called from other APIs)
 async function addSyncLog(logData: any) {
   try {
     const newLog = {

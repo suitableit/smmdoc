@@ -3,7 +3,6 @@ import { db } from '@/lib/db';
 import { clearAppNameCache } from '@/lib/utils/general-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default general settings
 const defaultGeneralSettings = {
   siteTitle: 'SMM Panel',
   tagline: 'Best SMM Services Provider',
@@ -13,7 +12,6 @@ const defaultGeneralSettings = {
   adminEmail: 'admin@example.com',
 };
 
-// GET - Load general settings
 export async function GET() {
   try {
     const session = await auth();
@@ -22,7 +20,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get general settings from database (create if not exists)
     let settings = await db.generalSettings.findFirst();
     if (!settings) {
       settings = await db.generalSettings.create({
@@ -51,7 +48,6 @@ export async function GET() {
   }
 }
 
-// POST - Save general settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -73,7 +69,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate required fields
     if (!generalSettings.siteTitle?.trim()) {
       console.log('❌ Site title validation failed:', generalSettings.siteTitle);
       return NextResponse.json(
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(generalSettings.adminEmail)) {
       return NextResponse.json(
@@ -99,7 +93,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update general settings
     await db.generalSettings.upsert({
       where: { id: 1 },
       update: {
@@ -121,7 +114,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Clear the app name cache so the new site title takes effect immediately
     clearAppNameCache();
 
     return NextResponse.json({

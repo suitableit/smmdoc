@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// GET /api/service-types - Get all active service types (public endpoint)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

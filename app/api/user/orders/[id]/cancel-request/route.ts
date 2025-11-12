@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/user/orders/:id/cancel-request - Customer cancel request
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string   }> }
@@ -10,7 +9,6 @@ export async function POST(
   try {
     const session = await auth();
     
-    // Check if user is authenticated
     if (!session || !session.user) {
       return NextResponse.json(
         { 
@@ -48,7 +46,6 @@ export async function POST(
       );
     }
 
-    // Find the order and verify ownership
     const order = await db.newOrder.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -80,7 +77,6 @@ export async function POST(
       );
     }
 
-    // Verify order ownership
     if (order.userId !== session.user.id) {
       return NextResponse.json(
         { 
@@ -92,7 +88,6 @@ export async function POST(
       );
     }
 
-    // Check if service supports cancel
     if (!order.service.cancel) {
       return NextResponse.json(
         { 
@@ -104,7 +99,6 @@ export async function POST(
       );
     }
 
-    // Check if order is eligible for cancellation (pending or processing)
     if (!['pending', 'processing', 'in_progress'].includes(order.status)) {
       return NextResponse.json(
         { 
@@ -116,7 +110,6 @@ export async function POST(
       );
     }
 
-    // Check cancel time limit (24 hours)
     const orderDate = new Date(order.createdAt);
     const currentDate = new Date();
     const hoursDifference = Math.floor((currentDate.getTime() - orderDate.getTime()) / (1000 * 3600));
@@ -132,7 +125,6 @@ export async function POST(
       );
     }
 
-    // Check if cancel request already exists
     const existingRequest = await db.cancelRequest.findFirst({
       where: {
         orderId: parseInt(id),
@@ -151,10 +143,8 @@ export async function POST(
       );
     }
 
-    // Calculate potential refund amount
-    const refundAmount = order.price; // Full refund for pending/processing orders
+    const refundAmount = order.price;
 
-    // Create cancel request
     const cancelRequest = await db.cancelRequest.create({
       data: {
         orderId: parseInt(id),

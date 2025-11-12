@@ -2,10 +2,8 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// Real-time exchange rate API
 const EXCHANGE_API_URL = 'https://api.exchangerate-api.com/v4/latest/USD';
 
-// Fallback rates if API fails
 const FALLBACK_RATES = {
   USD: 1.0000,
   EUR: 0.8500,
@@ -28,7 +26,6 @@ export async function POST() {
 
     console.log('🔄 Starting automatic currency rate update...');
 
-    // Fetch real-time rates from API
     let realTimeRates = null;
     try {
       const response = await fetch(EXCHANGE_API_URL, { 
@@ -47,7 +44,6 @@ export async function POST() {
       console.warn('⚠️ Failed to fetch real-time rates, using fallback rates');
     }
 
-    // Get all currencies from database
     const currencies = await db.currency.findMany();
     
     if (currencies.length === 0) {
@@ -58,25 +54,19 @@ export async function POST() {
 
     const updatedCurrencies = [];
 
-    // Update each currency rate
     for (const currency of currencies) {
       let newRate = FALLBACK_RATES[currency.code as keyof typeof FALLBACK_RATES] || 1.0000;
 
-      // Use real-time rate if available
       if (realTimeRates && realTimeRates[currency.code]) {
         if (currency.code === 'BDT') {
-          // For BDT, use the rate directly (USD to BDT)
           newRate = realTimeRates[currency.code];
         } else if (currency.code === 'USD') {
-          // USD is base currency
           newRate = 1.0000;
         } else {
-          // For other currencies, use the rate from API
           newRate = realTimeRates[currency.code];
         }
       }
 
-      // Update currency in database
       const updatedCurrency = await db.currency.update({
         where: { code: currency.code },
         data: { rate: newRate },
@@ -114,7 +104,6 @@ export async function POST() {
   }
 }
 
-// GET method to check current rates
 export async function GET() {
   try {
     const session = await auth();

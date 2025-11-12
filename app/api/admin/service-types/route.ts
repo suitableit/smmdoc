@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get service counts for each packageType from the database
     const serviceCounts = await prisma.service.groupBy({
       by: ['packageType'],
       _count: {
@@ -19,12 +18,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Create a map for quick lookup
     const serviceCountMap = new Map(
       serviceCounts.map(item => [item.packageType, item._count.id])
     );
 
-    // Return only the predefined service types with their counts
     const serviceTypes = Object.entries(SERVICE_TYPE_CONFIGS).map(([key, config]) => {
       const packageType = parseInt(key);
       const serviceCount = serviceCountMap.get(packageType) || 0;
@@ -47,7 +44,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/service-types - Create new service type
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -108,7 +104,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if service type already exists
     const existingType = await prisma.servicetype.findUnique({
       where: { name: name.trim() }
     });

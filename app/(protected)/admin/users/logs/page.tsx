@@ -291,7 +291,6 @@ const UserActivityLogsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -303,12 +302,9 @@ const UserActivityLogsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) => {
@@ -337,8 +333,6 @@ const UserActivityLogsPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -356,8 +350,6 @@ const UserActivityLogsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             {selectedLogs.length > 0 && (
@@ -402,7 +394,6 @@ const UserActivityLogsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -532,8 +523,6 @@ const UserActivityLogsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {getPaginatedData().map((log) => (
@@ -541,7 +530,6 @@ const UserActivityLogsPage = () => {
                         key={log.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -555,8 +543,6 @@ const UserActivityLogsPage = () => {
                               {log.username}
                             </div>
                           </div>
-
-                          {}
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => {
@@ -570,8 +556,6 @@ const UserActivityLogsPage = () => {
                             </button>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <div
                             className="text-xs font-medium mb-1"
@@ -586,8 +570,6 @@ const UserActivityLogsPage = () => {
                             {log.details}
                           </div>
                         </div>
-
-                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -632,8 +614,6 @@ const UserActivityLogsPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {}
                 <div
                   className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t"
                 >
@@ -683,8 +663,6 @@ const UserActivityLogsPage = () => {
             )}
           </div>
         </div>
-
-        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -727,8 +705,6 @@ const UserActivityLogsPage = () => {
             </div>
           </div>
         )}
-
-        {}
         {bulkDeleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // cat id by service
     const body = await request.json();
     const { favrouteCatId } = body;
     const result = await db.service.findMany({

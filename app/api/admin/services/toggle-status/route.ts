@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Toggle status between 'active' and 'inactive'
     const newStatus = status === 'active' ? 'inactive' : 'active';
 
     const updatedService = await db.service.update({

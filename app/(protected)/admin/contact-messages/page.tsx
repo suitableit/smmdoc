@@ -584,7 +584,6 @@ const ContactMessagesPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -596,12 +595,9 @@ const ContactMessagesPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -631,8 +627,6 @@ const ContactMessagesPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -650,8 +644,6 @@ const ContactMessagesPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         {fallbackMode && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
             <div className="flex-shrink-0">
@@ -672,11 +664,8 @@ const ContactMessagesPage = () => {
             </div>
           </div>
         )}
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -760,7 +749,6 @@ const ContactMessagesPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedMessages.length > 0 && (
               <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -770,8 +758,6 @@ const ContactMessagesPage = () => {
                   >
                     {selectedMessages.length} selected
                   </span>
-
-                  {}
                   <select 
                     value={selectedBulkOperation}
                     onChange={(e) => setSelectedBulkOperation(e.target.value)}
@@ -784,8 +770,6 @@ const ContactMessagesPage = () => {
                     <option value="delete_selected">Delete Selected</option>
                   </select>
                 </div>
-
-                {}
                 {selectedBulkOperation && (
                   <button
                     onClick={() => {
@@ -828,7 +812,6 @@ const ContactMessagesPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -964,7 +947,6 @@ const ContactMessagesPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
-                              {}
                               {message.adminReply ? (
                                 <button
                                   className="btn btn-secondary p-2"
@@ -982,8 +964,6 @@ const ContactMessagesPage = () => {
                                   <FaEdit className="h-3 w-3" />
                                 </button>
                               )}
-
-                              {}
                               <button
                                 className="btn btn-secondary p-2"
                                 title="Delete Message"
@@ -1002,8 +982,6 @@ const ContactMessagesPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1063,8 +1041,6 @@ const ContactMessagesPage = () => {
             )}
           </div>
         </div>
-
-        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

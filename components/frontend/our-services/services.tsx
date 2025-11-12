@@ -150,7 +150,6 @@ const ServicesTable: React.FC = () => {
               acc[categoryName].push(service);
               return acc;
             },
-            {}
           );
           setGroupedServices(grouped);
           setTotalPages(data.totalPages || 1);
@@ -197,7 +196,6 @@ const ServicesTable: React.FC = () => {
               acc[categoryName].push(service);
               return acc;
             },
-            {}
           );
           setGroupedServices(grouped);
         } catch (favError) {
@@ -221,7 +219,6 @@ const ServicesTable: React.FC = () => {
               acc[categoryName].push(service);
               return acc;
             },
-            {}
           );
           setGroupedServices(grouped);
         }
@@ -242,7 +239,6 @@ const ServicesTable: React.FC = () => {
               acc[categoryName].push(service);
               return acc;
             },
-            {}
           );
 
           data.allCategories.forEach((category: any) => {
@@ -350,7 +346,6 @@ const ServicesTable: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -358,8 +353,6 @@ const ServicesTable: React.FC = () => {
           onClose={() => setToastMessage(null)}
         />
       )}
-
-      {}
       <div className="mb-6">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -375,7 +368,6 @@ const ServicesTable: React.FC = () => {
             className="w-full pl-10 pr-12 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             autoComplete="off"
           />
-          {}
           {search && (
             <button
               onClick={() => setSearch('')}
@@ -386,8 +378,6 @@ const ServicesTable: React.FC = () => {
             </button>
           )}
         </div>
-
-        {}
         {search && (
           <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             {loading ? (
@@ -417,8 +407,6 @@ const ServicesTable: React.FC = () => {
           </div>
         )}
       </div>
-
-      {}
       {Object.keys(groupedServices).length > 0 ? (
         <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
           <table className="w-full border-collapse">
@@ -454,7 +442,6 @@ const ServicesTable: React.FC = () => {
               {Object.entries(groupedServices).map(
                 ([categoryName, categoryServices]) => (
                   <Fragment key={categoryName}>
-                    {}
                     <tr>
                       <td colSpan={8} className="py-0">
                         <div className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 shadow-lg">
@@ -464,8 +451,6 @@ const ServicesTable: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-
-                    {}
                     {categoryServices.map((service, index) => {
                       const isLastInCategory =
                         index === categoryServices.length - 1;
@@ -576,8 +561,6 @@ const ServicesTable: React.FC = () => {
           )}
         </div>
       )}
-
-      {}
       {totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 gap-4">
           <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -591,7 +574,6 @@ const ServicesTable: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {}
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}
@@ -600,8 +582,6 @@ const ServicesTable: React.FC = () => {
             >
               ««
             </button>
-
-            {}
             <button
               onClick={handlePrevious}
               disabled={page === 1}
@@ -609,8 +589,6 @@ const ServicesTable: React.FC = () => {
             >
               Previous
             </button>
-
-            {}
             <div className="flex items-center gap-1">
               {(() => {
                 const pageNumbers = [];
@@ -675,8 +653,6 @@ const ServicesTable: React.FC = () => {
                 return pageNumbers;
               })()}
             </div>
-
-            {}
             <button
               onClick={handleNext}
               disabled={page === totalPages}
@@ -684,8 +660,6 @@ const ServicesTable: React.FC = () => {
             >
               Next
             </button>
-
-            {}
             <button
               onClick={() => setPage(totalPages)}
               disabled={page === totalPages}

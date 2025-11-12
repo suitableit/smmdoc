@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// POST /api/user/affiliate/join - Join affiliate program
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -18,7 +17,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if affiliate system is enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const affiliateSystemEnabled = moduleSettings?.affiliateSystemEnabled ?? false;
 
@@ -35,7 +33,6 @@ export async function POST(request: Request) {
 
     const userId = parseInt(session.user.id);
 
-    // Check if user is already an affiliate
     const existingAffiliate = await db.affiliates.findUnique({
       where: { userId }
     });
@@ -51,7 +48,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate unique referral code
     const generateReferralCode = async (): Promise<string> => {
       const baseCode = `REF${userId}${Date.now().toString().slice(-4)}`;
       const existingCode = await db.affiliates.findUnique({
@@ -59,7 +55,7 @@ export async function POST(request: Request) {
       });
       
       if (existingCode) {
-        return generateReferralCode(); // Recursive call if code exists
+        return generateReferralCode();
       }
       
       return baseCode;
@@ -68,7 +64,6 @@ export async function POST(request: Request) {
     const referralCode = await generateReferralCode();
     const commissionRate = moduleSettings?.commissionRate ?? 5;
 
-    // Create affiliate record
     const affiliate = await db.affiliates.create({
       data: {
         userId,

@@ -5,8 +5,6 @@ export async function PUT() {
   try {
     const session = await requireAuth();
 
-    // TODO: Implement actual marking all notifications as read in database
-    // For now, just return success
     return NextResponse.json({
       success: true,
       message: 'All notifications marked as read'

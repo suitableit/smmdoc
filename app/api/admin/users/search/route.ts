@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -25,7 +24,6 @@ export async function GET(req: NextRequest) {
 
     console.log(`Searching for users with query: "${query}"`);
     
-    // Search users by name, email, username or ID
     const users = await db.user.findMany({
       where: {
         OR: [
@@ -42,7 +40,7 @@ export async function GET(req: NextRequest) {
         username: true,
         role: true,
       },
-      take: 10, // Limit results
+      take: 10,
     });
 
     console.log(`Search query: "${query}", Found ${users.length} users:`, users);

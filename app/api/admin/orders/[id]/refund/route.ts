@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/admin/orders/[id]/refund - Process order refund
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function POST(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -25,7 +23,6 @@ export async function POST(
     const { id } = await params;
     const { refundType, refundAmount } = await req.json();
 
-    // Validate refund type
     if (!['partial', 'full'].includes(refundType)) {
       return NextResponse.json(
         {
@@ -37,7 +34,6 @@ export async function POST(
       );
     }
 
-    // Check if order exists
     const existingOrder = await db.newOrder.findUnique({
       where: { id: Number(id) },
       include: {
@@ -64,7 +60,6 @@ export async function POST(
       );
     }
 
-    // Check if order can be refunded
     if (['refunded', 'cancelled'].includes(existingOrder.status)) {
       return NextResponse.json(
         {
@@ -76,25 +71,20 @@ export async function POST(
       );
     }
 
-    // Calculate refund amount
     let finalRefundAmount: number;
     if (refundType === 'full') {
       finalRefundAmount = existingOrder.price;
     } else {
-      // For partial refund, use provided amount or calculate based on remaining quantity
       if (refundAmount && refundAmount > 0) {
         finalRefundAmount = Math.min(refundAmount, existingOrder.price);
       } else {
-        // Calculate based on remaining quantity
         const completedPercentage = ((existingOrder.qty - existingOrder.remains) / existingOrder.qty) * 100;
         const refundPercentage = Math.max(0, 100 - completedPercentage);
         finalRefundAmount = (existingOrder.price * refundPercentage) / 100;
       }
     }
 
-    // Start transaction
     const result = await db.$transaction(async (tx) => {
-      // Update user balance
       await tx.user.update({
         where: { id: existingOrder.user.id },
         data: {
@@ -104,7 +94,6 @@ export async function POST(
         }
       });
 
-      // Update order status
       const updatedOrder = await tx.newOrder.update({
         where: { id: Number(id) },
         data: { 
@@ -129,7 +118,6 @@ export async function POST(
         }
       });
 
-      // Create refund record using AddFund model
       await tx.addFund.create({
         data: {
           userId: existingOrder.user.id,
@@ -151,7 +139,6 @@ export async function POST(
         }
       });
 
-      // Note: Order logging would be implemented here if OrderLog model exists
 
       return updatedOrder;
     });

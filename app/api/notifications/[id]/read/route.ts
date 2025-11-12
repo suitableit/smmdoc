@@ -1,4 +1,4 @@
-import { requireAuth } from '@/lib/auth-helpers';
+﻿import { requireAuth } from '@/lib/auth-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(
@@ -17,8 +17,6 @@ export async function PUT(
       );
     }
 
-    // TODO: Implement actual notification marking as read in database
-    // For now, just return success
     return NextResponse.json({
       success: true,
       message: 'Notification marked as read'

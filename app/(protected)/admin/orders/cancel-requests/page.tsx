@@ -488,7 +488,6 @@ const CancelRequestsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -500,10 +499,8 @@ const CancelRequestsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -538,8 +535,6 @@ const CancelRequestsPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -559,11 +554,8 @@ const CancelRequestsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -663,7 +655,6 @@ const CancelRequestsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedRequests.length > 0 && (
               <div className="flex flex-row flex-wrap items-center gap-2 py-4 border-b mb-4 w-full">
                 <div className="flex items-center gap-2">
@@ -849,7 +840,6 @@ const CancelRequestsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1100px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -972,7 +962,6 @@ const CancelRequestsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              {}
                               <div
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
@@ -980,7 +969,6 @@ const CancelRequestsPage = () => {
                                 {request.order?.service?.name ||
                                   'Unknown Service'}
                               </div>
-                              {}
                               <div
                                 className="text-xs truncate max-w-44"
                                 style={{ color: 'var(--text-muted)' }}
@@ -1082,8 +1070,6 @@ const CancelRequestsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="lg:hidden">
                   <div className="space-y-4">
                     {cancelRequests.map((request) => (
@@ -1091,7 +1077,6 @@ const CancelRequestsPage = () => {
                         key={request.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -1120,8 +1105,6 @@ const CancelRequestsPage = () => {
                             </button>
                           </div>
                         </div>
-
-                        {}
                         <div className="flex items-center justify-between mb-4 pb-4 border-b">
                           <div>
                             <div
@@ -1155,17 +1138,13 @@ const CancelRequestsPage = () => {
                             {request.order?.seller || 'null'}
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
-                          {}
                           <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {request.order?.service?.name || 'Unknown Service'}
                           </div>
-                          {}
                           <div
                             className="text-xs"
                             style={{ color: 'var(--text-muted)' }}
@@ -1175,8 +1154,6 @@ const CancelRequestsPage = () => {
                             • Seller: {request.order?.seller || 'Unknown'}
                           </div>
                         </div>
-
-                        {}
                         <div className="grid grid-cols-3 gap-4 mb-4">
                           <div>
                             <div
@@ -1225,8 +1202,6 @@ const CancelRequestsPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <div
                             className="text-xs font-medium mb-1"
@@ -1252,8 +1227,6 @@ const CancelRequestsPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1301,8 +1274,6 @@ const CancelRequestsPage = () => {
                     </button>
                   </div>
                 </div>
-
-                {}
                 {approveDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1364,8 +1335,6 @@ const CancelRequestsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {viewDialog.open &&
                   viewDialog.request &&
                   viewDialog.request.order && (
@@ -1384,8 +1353,6 @@ const CancelRequestsPage = () => {
                             <FaTimes className="h-5 w-5" />
                           </button>
                         </div>
-
-                        {}
                         <div className="mb-6">
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
@@ -1436,8 +1403,6 @@ const CancelRequestsPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-6">
                           <h4 className="text-md font-semibold mb-4 text-gray-800">
                             Order Summary
@@ -1545,8 +1510,6 @@ const CancelRequestsPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-6">
                           <h4 className="text-md font-semibold mb-3 text-gray-800">
                             Cancel Reason
@@ -1558,8 +1521,6 @@ const CancelRequestsPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         {viewDialog.request.adminNotes && (
                           <div className="mb-6">
                             <h4 className="text-md font-semibold mb-3 text-gray-800">
@@ -1586,8 +1547,6 @@ const CancelRequestsPage = () => {
                             </div>
                           </div>
                         )}
-
-                        {}
                         {viewDialog.request.status === 'pending' &&
                           viewDialog.request.order?.seller === 'Self' && (
                             <div className="flex gap-3 justify-end pt-4 border-t">
@@ -1619,8 +1578,6 @@ const CancelRequestsPage = () => {
                       </div>
                     </div>
                   )}
-
-                {}
                 {declineDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

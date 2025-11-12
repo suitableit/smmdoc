@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all blog posts for statistics
     const allBlogs = await prisma.blogPost.findMany({
       select: {
         id: true,
@@ -17,7 +16,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Calculate status counts
     const statusCounts: Record<string, number> = {
       published: 0,
       draft: 0,
@@ -34,19 +32,15 @@ export async function GET(request: NextRequest) {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     allBlogs.forEach((blog) => {
-      // Count by status
       statusCounts[blog.status] = (statusCounts[blog.status] || 0) + 1;
 
-      // Sum totals
       totalViews += blog.views || 0;
       totalReadTime += blog.readingTime || 0;
 
-      // Today's views (simplified - in real app you'd track daily views)
       if (blog.publishedAt && new Date(blog.publishedAt).toDateString() === today.toDateString()) {
         todayViews += blog.views || 0;
       }
 
-      // This month's posts
       if (blog.createdAt >= startOfMonth) {
         thisMonthPosts++;
       }
@@ -61,10 +55,10 @@ export async function GET(request: NextRequest) {
       scheduledBlogs: statusCounts.scheduled || 0,
       archivedBlogs: statusCounts.archived || 0,
       totalViews,
-      totalLikes: 0, // Not available in current schema
-      totalComments: 0, // Not available in current schema
+      totalLikes: 0,
+      totalComments: 0,
       averageReadTime,
-      topCategories: 0, // Would need category analysis
+      topCategories: 0,
       todayViews,
       thisMonthPosts,
     };

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse DATABASE_URL to extract connection details
     const databaseUrl = process.env.DATABASE_URL;
     
     if (!databaseUrl) {
@@ -12,8 +11,6 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Parse the MySQL connection string
-    // Format: mysql://username:password@host:port/database
     const urlMatch = databaseUrl.match(/^mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
     
     if (!urlMatch) {
@@ -25,7 +22,6 @@ export async function GET(request: NextRequest) {
 
     const [, username, , host, port, database] = urlMatch;
 
-    // Get current timestamp
     const currentTime = new Date().toLocaleString('en-US', {
       timeZone: 'UTC',
       year: 'numeric',
@@ -37,7 +33,6 @@ export async function GET(request: NextRequest) {
       hour12: false
     });
 
-    // Get server uptime (approximate)
     const uptimeSeconds = process.uptime();
     const uptimeHours = Math.floor(uptimeSeconds / 3600);
     const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);

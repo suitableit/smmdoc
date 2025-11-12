@@ -58,7 +58,6 @@ export default function MyOrdersPage() {
 
   return (
     <PageContainer title="My Orders" subtitle="View and manage all your orders">
-      {}
       <section className="mb-8">
         <GridLayout cols={4} gap="md">
           <InfoCard
@@ -87,8 +86,6 @@ export default function MyOrdersPage() {
           />
         </GridLayout>
       </section>
-
-      {}
       <section className="mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -125,8 +122,6 @@ export default function MyOrdersPage() {
           </form>
         </div>
       </section>
-
-      {}
       <section>
         <PageHeader 
           title="Order History" 

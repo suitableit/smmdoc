@@ -487,12 +487,9 @@ const Header = () => {
           }
         `
       }} />
-      {}
       <Link href="/" className="flex lg:hidden items-center">
         <img src="/logo.png" alt="Logo" className="h-12 w-auto" />
       </Link>
-
-      {}
       <div className="hidden lg:flex items-center gap-3 flex-grow max-w-md">
         <div className="relative w-full h-10 flex items-center">
           <div className="absolute inset-y-0 left-0 flex items-center pl-4">
@@ -507,8 +504,6 @@ const Header = () => {
             }}
           />
         </div>
-
-        {}
         {isAdmin ? (
           <Link
             href="/admin/settings"
@@ -528,10 +523,7 @@ const Header = () => {
           />
         )}
       </div>
-
-      {}
       <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-        {}
         <div className="hidden sm:flex items-center gap-3">
           <DropdownMenu 
             open={openDropdowns.currency}
@@ -622,8 +614,6 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
-        {}
         {!isAdmin && (
           <Link
             href="/add-funds"
@@ -642,22 +632,16 @@ const Header = () => {
             </span>
           </Link>
         )}
-
-        {}
         <HeaderNotificationBox
           open={openDropdowns.notifications}
           onOpenChange={(isOpen) => handleDropdownChange('notifications', isOpen)}
         />
-
-        {}
         <div className="hidden sm:flex items-center">
           <ThemeToggle 
             openDropdowns={openDropdowns}
             handleDropdownChange={handleDropdownChange}
           />
         </div>
-
-        {}
         <div className="flex items-center justify-center">
           {user && <ProfileCard 
             user={user} 
@@ -665,8 +649,6 @@ const Header = () => {
             handleDropdownChange={handleDropdownChange}
           />}
         </div>
-
-        {}
         <div className="flex items-center lg:hidden">
           <MobileSidebar />
         </div>

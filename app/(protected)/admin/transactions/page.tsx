@@ -1076,7 +1076,6 @@ const AdminAllTransactionsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -1088,12 +1087,10 @@ const AdminAllTransactionsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-col md:flex-row items-left gap-2">
               <div className="flex items-center gap-2 justify-start"> {} 
-                {}
                 <select
                   value={pagination.limit}
                   onChange={(e) =>
@@ -1137,8 +1134,6 @@ const AdminAllTransactionsPage = () => {
                   Refresh
                 </button>
               </div>
-
-              {}
               <div className="w-full md:w-auto">
                 <button
                   onClick={handleAddDeductBalance}
@@ -1149,8 +1144,6 @@ const AdminAllTransactionsPage = () => {
                 </button>
               </div>
             </div>
-
-            {}
             <div className="flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-auto">
@@ -1171,8 +1164,6 @@ const AdminAllTransactionsPage = () => {
 
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
             <div className="mb-4">
@@ -1300,7 +1291,6 @@ const AdminAllTransactionsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1612,8 +1602,6 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   )}
                 </div>
-
-                {}
                 {viewDetailsDialog.open && viewDetailsDialog.transaction && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
@@ -1770,8 +1758,6 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {updateStatusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
@@ -1828,8 +1814,6 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 {approveConfirmDialog.open &&
                   approveConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1919,8 +1903,6 @@ const AdminAllTransactionsPage = () => {
                               Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved {approveConfirmDialog.transaction?.type}.
                             </p>
                           </div>
-
-                          {}
                         </div>
 
                         <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
@@ -1955,8 +1937,6 @@ const AdminAllTransactionsPage = () => {
                       </div>
                     </div>
                   )}
-
-                {}
                 {cancelConfirmDialog.open &&
                   cancelConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -2053,8 +2033,6 @@ const AdminAllTransactionsPage = () => {
                       </div>
                     </div>
                   )}
-
-                {}
                 {addDeductBalanceDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
@@ -2171,8 +2149,6 @@ const AdminAllTransactionsPage = () => {
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
-
-                        {}
                         {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && userFound && (
                           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <div className="text-sm text-blue-800">

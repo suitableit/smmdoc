@@ -34,7 +34,6 @@ export const DeleteCategoryModal = ({
 
   return (
     <div className="w-full max-w-lg">
-      {}
       <div className="flex items-center justify-between p-6">
         <h3
           className="text-lg font-semibold"
@@ -53,7 +52,6 @@ export const DeleteCategoryModal = ({
 
       <div className="px-6 pb-6">
         <div className="space-y-4">
-          {}
           <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
             <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
             <div>
@@ -66,14 +64,10 @@ export const DeleteCategoryModal = ({
               </p>
             </div>
           </div>
-
-          {}
           <div className="space-y-3">
             <p className="font-medium text-gray-800">
               What would you like to do with the services?
             </p>
-
-            {}
             <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
@@ -93,8 +87,6 @@ export const DeleteCategoryModal = ({
                 </div>
               </div>
             </label>
-
-            {}
             <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
@@ -118,8 +110,6 @@ export const DeleteCategoryModal = ({
                   Transfer all services to a different category before deleting
                   this one
                 </div>
-
-                {}
                 {deleteAction === "move" && availableCategories.length > 0 && (
                   <div className="mt-3">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -142,8 +132,6 @@ export const DeleteCategoryModal = ({
               </div>
             </label>
           </div>
-
-          {}
           {deleteAction === "delete" && (
             <div className="p-3 bg-red-50 rounded-lg border border-red-200">
               <p className="text-sm text-red-800">
@@ -154,8 +142,6 @@ export const DeleteCategoryModal = ({
               </p>
             </div>
           )}
-
-          {}
           {deleteAction === "move" && targetCategoryId && (
             <div className="p-3 bg-green-50 rounded-lg border border-green-200">
               <p className="text-sm text-green-800">
@@ -169,8 +155,6 @@ export const DeleteCategoryModal = ({
               </p>
             </div>
           )}
-
-          {}
           <div className="flex gap-2 justify-end pt-2">
             <button
               onClick={onClose}

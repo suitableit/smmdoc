@@ -10,7 +10,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { to, subject, message } = body;
     
-    // Validate required fields
     if (!to || !subject || !message) {
       return NextResponse.json(
         { error: 'All fields (to, subject, message) are required' },
@@ -29,7 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(to)) {
       return NextResponse.json(
@@ -38,7 +35,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Create transporter using database settings
     const transporter = await createEmailTransporter();
     
     if (!transporter) {
@@ -48,9 +44,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Send test email
     try {
-      // Get support email from Email Settings and app name from General Settings
       const fromEmail = await getFromEmailAddress();
       const appName = await getAppName();
       
@@ -101,7 +95,6 @@ export async function POST(req: NextRequest) {
         subject: subject
       });
       
-      // Provide specific error messages based on error type
       let errorMessage = 'Failed to send test email. Please check your SMTP settings.';
       
       if (emailError.code === 'EAUTH') {

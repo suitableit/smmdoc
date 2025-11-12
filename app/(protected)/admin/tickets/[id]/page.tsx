@@ -24,18 +24,21 @@ import {
     FaUser,
     FaUserShield,
     FaVideo
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import useTicketPolling from '@/hooks/useTicketPolling';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
+import TicketSystemGuard from '@/components/TicketSystemGuard';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -52,8 +55,10 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
-const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
+);
+
+const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
+
 interface TicketMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
@@ -126,7 +131,8 @@ interface SupportTicketDetails {
 const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const [ticketId, setTicketId] = useState<string | null>(null);
+  const [ticketId, setTicketId] = useState<string | null>(null);
+
   useEffect(() => {
     const resolveParams = async () => {
       try {
@@ -137,12 +143,14 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       }
     };
     resolveParams();
-  }, [params]);
+  }, [params]);
+
   useEffect(() => {
     if (ticketId) {
       setPageTitle(`Ticket #${ticketId}`, appName);
     }
-  }, [appName, ticketId]);
+  }, [appName, ticketId]);
+
   const [ticketDetails, setTicketDetails] = useState<SupportTicketDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -156,13 +164,15 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  } | null>(null);
+
   const { hasNewMessages, markMessagesAsRead, isPolling } = useTicketPolling(
     ticketId,
     ticketDetails,
     setTicketDetails,
     3000
-  );
+  );
+
   useEffect(() => {
     if (!ticketId) return;
 
@@ -174,7 +184,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
           throw new Error('Failed to fetch ticket details');
         }
         const result = await response.json();
-        const data = result.ticket;
+        const data = result.ticket;
+
         const enhancedData = {
           ...data,
           userInfo: {
@@ -187,7 +198,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
           }
         };
 
-        setTicketDetails(enhancedData);
+        setTicketDetails(enhancedData);
+
         if (!data.isRead) {
           try {
             await fetch(`/api/admin/tickets/${ticketId}/read`, {
@@ -211,17 +223,20 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     };
 
     fetchTicketDetails();
-  }, [ticketId]);
+  }, [ticketId]);
+
   const formatTicketID = (id: string | number) => {
     return String(id || '0');
   };
 
   const calculateTimeSpent = (createdAt: string, status: string, lastUpdated?: string) => {
     const created = new Date(createdAt);
-    let endTime: Date;
+    let endTime: Date;
+
     if (status === 'Closed' && lastUpdated) {
       endTime = new Date(lastUpdated);
-    } else if (status === 'Closed') {
+    } else if (status === 'Closed') {
+
       endTime = created;
     } else {
       endTime = new Date();
@@ -271,14 +286,16 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
     if (mimetype.includes('zip') || mimetype.includes('rar')) return <FaFileArchive className="h-4 w-4" />;
     return <FaFileAlt className="h-4 w-4" />;
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const handleStatusChange = async (newStatus: string) => {
     try {
       const response = await fetch(`/api/admin/tickets/${ticketId}/status`, {
@@ -301,7 +318,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       console.error('Error updating ticket status:', error);
       showToast('Error updating ticket status', 'error');
     }
-  };
+  };
+
   const handleCloseTicket = async () => {
     const confirmed = window.confirm('Are you sure you want to close this ticket? This action cannot be undone.');
     if (!confirmed) return;
@@ -330,14 +348,16 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsClosingTicket(false);
     }
-  };
+  };
+
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
 
     setIsReplying(true);
 
     try {
-      let attachmentPaths: string[] = [];
+      let attachmentPaths: string[] = [];
+
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           const fileFormData = new FormData();
@@ -356,7 +376,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
           const uploadResult = await uploadResponse.json();
           attachmentPaths.push(uploadResult.filePath);
         }
-      }
+      }
+
       const response = await fetch(`/api/support-tickets/${ticketId}/reply`, {
         method: 'POST',
         headers: {
@@ -384,7 +405,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsReplying(false);
     }
-  };
+  };
+
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
@@ -414,12 +436,14 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     } finally {
       setIsAddingNote(false);
     }
-  };
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const validFiles: File[] = [];
 
-    for (const file of files) {
+    for (const file of files) {
+
       const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
         'application/pdf'
@@ -427,7 +451,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
       if (!allowedTypes.includes(file.type)) {
         showToast(`File "${file.name}" has an unsupported format. Only images and PDFs are allowed.`, 'error');
         continue;
-      }
+      }
+
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
         showToast(`File "${file.name}" is too large. Maximum 10MB allowed for admin uploads.`, 'error');
@@ -440,12 +465,15 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
     if (validFiles.length > 0) {
       setSelectedFiles(prev => [...prev, ...validFiles]);
       showToast(`${validFiles.length} file(s) selected successfully!`, 'success');
-    }
+    }
+
     event.target.value = '';
-  };
+  };
+
   const removeSelectedFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  };
+
   if (loading || !ticketId) {
     return (
       <div className="page-container">
@@ -467,7 +495,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
         </div>
       </div>
     );
-  }
+  }
+
   if (!ticketDetails) {
     return (
       <div className="page-container">
@@ -718,7 +747,8 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       {message.attachments && Array.isArray(message.attachments) && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment, index) => {
+                          {message.attachments.map((attachment, index) => {
+
                             const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
                             const filename = typeof attachment === 'string' 
                               ? attachment.split('/').pop() || 'Unknown file'

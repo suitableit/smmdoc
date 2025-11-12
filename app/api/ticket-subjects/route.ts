@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get ticket settings with subjects from database
     const ticketSettings = await db.ticket_settings.findFirst({
       include: {
         ticket_subjects: {
@@ -24,7 +23,6 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Only return subjects from database - no fallback
     const subjects = ticketSettings?.ticket_subjects?.map(subject => ({
       id: subject.id,
       name: subject.name

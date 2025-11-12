@@ -316,7 +316,6 @@ const ChildPanel: React.FC = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -328,7 +327,6 @@ const ChildPanel: React.FC = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
@@ -360,20 +358,15 @@ const ChildPanel: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="space-y-6">
-            {}
             <div id="childPanelOrder">
               <div className="card card-padding">
-                {}
                 <div className="card-header mb-6">
                   <div className="card-icon">
                     <FaShoppingCart />
                   </div>
                   <h3 className="card-title">Create Child Panel</h3>
                 </div>
-
-                {}
                 <div className="space-y-6">
                   <div className="form-group">
                     <label htmlFor="domain" className="form-label">
@@ -509,8 +502,6 @@ const ChildPanel: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="space-y-6">
             <div className="card card-padding">
               <div className="card-header">

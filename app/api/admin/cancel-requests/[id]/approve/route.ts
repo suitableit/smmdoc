@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/cancel-requests/:id/approve - Approve a cancel request
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,7 +16,6 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin
     if (session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required', success: false },
@@ -44,9 +42,7 @@ export async function PUT(
       );
     }
 
-    // Admin notes are optional - no validation required
 
-    // Check if the cancel request exists and is pending
     const existingRequest = await db.cancelRequest.findUnique({
       where: {
         id: requestId
@@ -71,9 +67,7 @@ export async function PUT(
       );
     }
 
-    // Use transaction to ensure data consistency
     const result = await db.$transaction(async (tx) => {
-      // Update the cancel request status to approved
       const updatedRequest = await tx.cancelRequest.update({
         where: {
           id: requestId
@@ -96,7 +90,6 @@ export async function PUT(
         }
       });
 
-      // Update the order status to cancelled
       await tx.newOrder.update({
         where: {
           id: existingRequest.orderId
@@ -106,7 +99,6 @@ export async function PUT(
         }
       });
 
-      // Process refund by adding the amount to user's balance
       const refundAmountFloat = parseFloat(refundAmount.toString());
       await tx.user.update({
         where: {

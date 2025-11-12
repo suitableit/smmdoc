@@ -1,5 +1,4 @@
-// app/api/currency/route.ts
-import { currentUser } from '@/lib/actions/auth';
+﻿import { currentUser } from '@/lib/actions/auth';
 import { updateUserCurrency } from '@/lib/actions/currency';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
@@ -19,8 +18,7 @@ export async function POST(req: Request) {
     const { currency } = await req.json();
     console.log('Currency API: Requested currency:', currency);
 
-    // Load available currencies from database to validate
-    let validCurrencies = ['USD', 'BDT', 'USDT']; // fallback
+    let validCurrencies = ['USD', 'BDT', 'USDT'];
 
     try {
       const enabledCurrencies = await db.currency.findMany({

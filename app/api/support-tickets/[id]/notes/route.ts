@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
-// Validation schema for notes
 const noteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(2000, 'Note too long'),
 });
@@ -14,7 +13,6 @@ interface RouteParams {
   }>;
 }
 
-// POST - Add internal note to support ticket (admin only)
 export async function POST(
   request: NextRequest,
   { params }: RouteParams
@@ -29,7 +27,6 @@ export async function POST(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -52,7 +49,6 @@ export async function POST(
       );
     }
 
-    // Check if ticket exists
     const ticket = await db.supportTicket.findUnique({
       where: { id: ticketId },
       select: { id: true }
@@ -68,7 +64,6 @@ export async function POST(
     const body = await request.json();
     const { content } = noteSchema.parse(body);
 
-    // Create the internal note
     const note = await db.ticketNote.create({
       data: {
         ticketId: ticketId,
@@ -85,7 +80,6 @@ export async function POST(
       }
     });
 
-    // Fetch the complete updated ticket with all notes
     const updatedTicket = await db.supportTicket.findUnique({
       where: { id: ticketId },
       include: {
@@ -145,7 +139,6 @@ export async function POST(
       );
     }
 
-    // Get user statistics
     const [totalTickets, openTickets] = await Promise.all([
       db.supportTicket.count({
         where: { userId: updatedTicket.userId }
@@ -158,7 +151,6 @@ export async function POST(
       })
     ]);
 
-    // Transform the ticket data to match frontend expectations
     const transformedTicket = {
       id: updatedTicket.id.toString(),
       userId: updatedTicket.userId.toString(),
@@ -239,7 +231,6 @@ export async function POST(
   }
 }
 
-// GET - Get all internal notes for a ticket (admin only)
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -254,7 +245,6 @@ export async function GET(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -277,7 +267,6 @@ export async function GET(
       );
     }
 
-    // Get all notes for the ticket
     const notes = await db.ticketNote.findMany({
       where: { ticketId },
       orderBy: {

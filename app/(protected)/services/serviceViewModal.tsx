@@ -46,24 +46,18 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {}
       <div 
         className={`fixed inset-0 bg-black transition-opacity duration-300 ${
           isAnimating ? 'bg-opacity-50' : 'bg-opacity-0'
         }`}
         onClick={handleBackdropClick}
       />
-
-      {}
       <div className={`relative w-full max-w-3xl max-h-[90vh] bg-white rounded-lg overflow-hidden shadow-xl transition-all duration-300 transform ${
         isAnimating 
           ? 'scale-100 opacity-100 translate-y-0' 
           : 'scale-95 opacity-0 translate-y-4'
       }`}>
-
-        {}
         <div className="max-h-[90vh] overflow-y-auto">
-          {}
           <div className="flex justify-end p-4 pb-0 sticky top-0 bg-white z-10">
             <button
               onClick={handleClose}
@@ -72,8 +66,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
               <FaTimes className="w-4 h-4 text-red-600" />
             </button>
           </div>
-
-          {}
           <div className="bg-[#f3f3f3] mx-6 mb-6 px-6 py-4 rounded-lg">
             <div className="text-center">
               <div className="text-sm text-gray-600 font-medium mb-2">
@@ -84,11 +76,8 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
               </h2>
             </div>
           </div>
-
-          {}
           <div className="px-6 pb-6">
             <div className="space-y-4">
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaDollarSign className="text-black w-4 h-4" />
@@ -98,8 +87,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <PriceDisplay amount={service?.rate || 1.9688} originalCurrency={'USD'} />
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaArrowDown className="text-black w-4 h-4" />
@@ -109,8 +96,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {(service?.min_order || 10).toString()}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaArrowUp className="text-black w-4 h-4" />
@@ -120,8 +105,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {(service?.max_order || 10000000).toString()}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaClock className="text-black w-4 h-4" />
@@ -131,8 +114,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {service?.avg_time || '4 minutes'}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaRedo className="text-black w-4 h-4" />
@@ -152,8 +133,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   )}
                 </div>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaTimes className="text-black w-4 h-4" />
@@ -173,8 +152,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   )}
                 </div>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaClock className="text-black w-4 h-4" />
@@ -184,8 +161,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {service?.start_time || '0-1 mint'}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaCheckCircle className="text-black w-4 h-4" />
@@ -195,8 +170,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {service?.guarantee || 'No Guarantee'}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaTachometerAlt className="text-black w-4 h-4" />
@@ -206,8 +179,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   {service?.speed || '100k/Days'}
                 </span>
               </div>
-
-              {}
               <div className="flex items-center justify-between pb-2 border-b border-dotted border-gray-300">
                 <div className="flex items-center gap-2">
                   <FaLink className="text-black w-4 h-4" />
@@ -219,11 +190,8 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
               </div>
             </div>
           </div>
-
-          {}
           <div className="px-6 pb-6">
             <div className="space-y-4 text-sm text-gray-700">
-              {}
               <div>
                 <p className="font-semibold text-gray-800 mb-2">Service Description:</p>
                 <div className="space-y-2 text-sm">
@@ -235,8 +203,6 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
               </div>
             </div>
           </div>
-
-          {}
           <div className="px-6 pb-6">
             <Link href={`/new-order?sId=${service?.id}`}>
               <Button 

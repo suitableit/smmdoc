@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// GET /api/user/child-panel/status - Get user's child panel status
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -18,7 +17,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Check if child panel selling is enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const childPanelSellingEnabled = moduleSettings?.childPanelSellingEnabled ?? false;
     const childPanelPrice = moduleSettings?.childPanelPrice ?? 10;
@@ -37,7 +35,6 @@ export async function GET(request: Request) {
 
     const userId = parseInt(session.user.id);
 
-    // Get user's child panel
     const childPanel = await db.child_panels.findUnique({
       where: { userId },
       include: {
@@ -60,7 +57,6 @@ export async function GET(request: Request) {
       });
     }
 
-    // Calculate days until expiry
     const now = new Date();
     const expiryDate = childPanel.expiryDate ? new Date(childPanel.expiryDate) : null;
     const daysUntilExpiry = expiryDate ? Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;

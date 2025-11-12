@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/orders/:id/status - Update order status
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function PUT(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -48,7 +46,6 @@ export async function PUT(
       );
     }
     
-    // Validate status values
     const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -61,7 +58,6 @@ export async function PUT(
       );
     }
     
-    // Convert string ID to integer
     console.log('Order ID received:', id, 'Type:', typeof id);
     const orderId = parseInt(id);
     console.log('Parsed Order ID:', orderId, 'isNaN:', isNaN(orderId));
@@ -76,7 +72,6 @@ export async function PUT(
       );
     }
 
-    // Get current order
     const currentOrder = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -117,10 +112,8 @@ export async function PUT(
     const user = currentOrder.user;
     const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.bdtPrice;
     
-    // Handle balance adjustments based on status changes
     let balanceUpdate = null;
     
-    // If changing from pending to active status, deduct balance
     if (currentOrder.status === 'pending' && ['processing', 'in_progress', 'completed', 'partial'].includes(status)) {
       if (user.balance < orderPrice) {
         return NextResponse.json(
@@ -143,7 +136,6 @@ export async function PUT(
       };
     }
     
-    // If changing from active status to cancelled/refunded, refund balance
     if (['processing', 'in_progress', 'completed', 'partial'].includes(currentOrder.status) && ['cancelled', 'refunded'].includes(status)) {
       balanceUpdate = {
         balance: {
@@ -155,13 +147,11 @@ export async function PUT(
       };
     }
     
-    // Prepare order update data
     const updateData: any = {
       status,
       updatedAt: new Date()
     };
     
-    // Update start count and remains if provided
     if (startCount !== undefined) {
       updateData.startCount = parseInt(startCount);
     }
@@ -170,14 +160,11 @@ export async function PUT(
       updateData.remains = parseInt(remains);
     }
     
-    // For completed orders, set remains to 0
     if (status === 'completed') {
       updateData.remains = 0;
     }
     
-    // Use transaction to ensure data consistency
     const result = await db.$transaction(async (prisma) => {
-      // Update user balance if needed
       if (balanceUpdate) {
         await prisma.user.update({
           where: { id: user.id },
@@ -185,7 +172,6 @@ export async function PUT(
         });
       }
       
-      // Update order
       const updatedOrder = await prisma.newOrder.update({
         where: { id: orderId },
         data: updateData,
@@ -218,7 +204,6 @@ export async function PUT(
       return updatedOrder;
     });
     
-    // Log the status change
     console.log(`Admin ${session.user.email} changed order ${id} status from ${currentOrder.status} to ${status}`, {
       orderId: id,
       userId: user.id,
@@ -229,7 +214,6 @@ export async function PUT(
       timestamp: new Date().toISOString()
     });
     
-    // Activity logging removed for now
     
     return NextResponse.json({
       success: true,
@@ -252,7 +236,6 @@ export async function PUT(
   }
 }
 
-// PATCH /api/admin/orders/:id/status - Simple status update (for frontend compatibility)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -260,7 +243,6 @@ export async function PATCH(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -275,7 +257,6 @@ export async function PATCH(
     const { id } = await params;
     const { status } = await req.json();
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -288,7 +269,6 @@ export async function PATCH(
       );
     }
 
-    // Validate status
     const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -301,7 +281,6 @@ export async function PATCH(
       );
     }
 
-    // Update order status
     const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: {
@@ -346,7 +325,6 @@ export async function PATCH(
   }
 }
 
-// GET /api/admin/orders/:id/status - Get order status history (if implemented)
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -354,7 +332,6 @@ export async function GET(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -379,7 +356,6 @@ export async function GET(
       );
     }
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -392,7 +368,6 @@ export async function GET(
       );
     }
 
-    // Get current order status
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       select: {
@@ -417,11 +392,8 @@ export async function GET(
       );
     }
     
-    // Calculate progress
     const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
     
-    // Return current status info
-    // In a full implementation, you might have a separate OrderStatusHistory table
     const statusInfo = {
       currentStatus: order.status,
       progress: Math.round(progress),
@@ -431,7 +403,6 @@ export async function GET(
       startCount: order.startCount,
       createdAt: order.createdAt,
       lastUpdated: order.updatedAt,
-      // Mock status history - in real implementation, query from status history table
       statusHistory: [
         {
           status: 'pending',

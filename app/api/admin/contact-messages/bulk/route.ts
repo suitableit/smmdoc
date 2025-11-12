@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { contactDB } from '@/lib/contact-db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST - Bulk operations on contact messages
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -26,7 +25,6 @@ export async function POST(request: NextRequest) {
 
     for (const messageId of messageIds) {
       try {
-        // Convert string ID to number for Prisma
         const numericId = parseInt(messageId, 10);
         if (isNaN(numericId)) {
           console.error(`Invalid message ID: ${messageId}`);

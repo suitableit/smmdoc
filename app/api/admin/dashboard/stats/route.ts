@@ -6,21 +6,16 @@ export async function GET() {
   try {
     const session = await requireAdmin();
     
-    // Get total orders
     const totalOrders = await db.newOrder.count();
     
-    // Get total users
     const totalUsers = await db.user.count({
       where: { role: 'user' }
     });
     
-    // Get total services
     const totalServices = await db.service.count();
     
-    // Get total categories
     const totalCategories = await db.category.count();
     
-    // Get total revenue
     const orders = await db.newOrder.findMany({
       where: {
         status: {
@@ -34,7 +29,6 @@ export async function GET() {
     
     const totalRevenue = orders.reduce((acc, order) => acc + order.usdPrice, 0);
     
-    // Get recent orders
     const recentOrders = await db.newOrder.findMany({
       take: 5,
       orderBy: {
@@ -55,7 +49,6 @@ export async function GET() {
       }
     });
     
-    // Get orders by status
     const pendingOrders = await db.newOrder.count({
       where: { status: 'pending' }
     });
@@ -76,7 +69,6 @@ export async function GET() {
       where: { status: 'partial' }
     });
 
-    // Get today's orders
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
@@ -91,7 +83,6 @@ export async function GET() {
       }
     });
 
-    // Get today's profit
     const todaysOrdersWithProfit = await db.newOrder.findMany({
       where: {
         createdAt: {
@@ -109,7 +100,6 @@ export async function GET() {
 
     const todaysProfit = todaysOrdersWithProfit.reduce((acc, order) => acc + (order.profit || 0), 0);
 
-    // Get new users today
     const newUsersToday = await db.user.count({
       where: {
         createdAt: {
@@ -120,7 +110,6 @@ export async function GET() {
       }
     });
     
-    // Get daily orders for the last 7 days
     const today = new Date();
     const lastWeek = new Date(today);
     lastWeek.setDate(today.getDate() - 7);
@@ -140,7 +129,6 @@ export async function GET() {
       }
     });
     
-    // Format daily orders for chart
     const formattedDailyOrders = dailyOrders.map(order => ({
       date: order.createdAt.toISOString().split('T')[0],
       orders: order._count.id

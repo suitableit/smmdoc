@@ -1,4 +1,3 @@
-// Provider Schema - Provider Order Tracking এর জন্য আলাদা schema
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/provider-client"
@@ -9,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// API Provider Model - External provider configuration
 model apiProvider {
   id         Int      @id @default(autoincrement())
   name       String   @unique
@@ -25,14 +23,13 @@ model apiProvider {
   @@map("api_providers")
 }
 
-// Provider Order Log Model - Provider order এর সব activity track করে
 model ProviderOrderLog {
   id               Int      @id @default(autoincrement())
-  orderId          Int      // NewOrder এর reference
-  action           String   // created, status_check, completed, failed
-  providerResponse String?  @db.Text // Provider এর response data
-  status           String?  // Provider status
-  errorMessage     String?  @db.Text // Error message if any
+  orderId          Int
+  action           String
+  providerResponse String?  @db.Text
+  status           String?
+  errorMessage     String?  @db.Text
   createdAt        DateTime @default(now())
 
   @@index([orderId], map: "ProviderOrderLog_orderId_idx")
@@ -41,14 +38,13 @@ model ProviderOrderLog {
   @@map("provider_order_log")
 }
 
-// Provider Service Configuration - Service এর provider related fields
 model ProviderServiceConfig {
   id                Int      @id @default(autoincrement())
-  serviceId         Int      @unique // Main service এর reference
-  providerId        Int?     // API Provider reference
+  serviceId         Int      @unique
+  providerId        Int?
   providerName      String?
-  providerServiceId String?  // Provider এর service ID
-  providerApiUrl    String?  // Provider এর API URL
+  providerServiceId String?
+  providerApiUrl    String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -57,15 +53,14 @@ model ProviderServiceConfig {
   @@map("provider_service_config")
 }
 
-// Provider Order Tracking - NewOrder এর provider related fields
 model ProviderOrderTracking {
   id               Int       @id @default(autoincrement())
-  orderId          Int       @unique // NewOrder এর reference
-  providerOrderId  String?   // External provider's order ID
-  providerStatus   String?   // Provider থেকে আসা status
-  isProviderOrder  Boolean   @default(false) // এটি provider order কিনা
-  providerResponse String?   @db.Text // Provider এর response data
-  lastSyncAt       DateTime? // শেষ sync এর সময়
+  orderId          Int       @unique
+  providerOrderId  String?
+  providerStatus   String?
+  isProviderOrder  Boolean   @default(false)
+  providerResponse String?   @db.Text
+  lastSyncAt       DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -76,17 +71,16 @@ model ProviderOrderTracking {
   @@map("provider_order_tracking")
 }
 
-// Provider API Response Log - API call এর detailed log
 model ProviderApiLog {
   id               Int      @id @default(autoincrement())
-  providerId       Int?     // API Provider reference
-  endpoint         String   // API endpoint
-  method           String   // GET, POST, etc.
-  requestData      String?  @db.Text // Request payload
-  responseData     String?  @db.Text // Response data
-  statusCode       Int?     // HTTP status code
-  responseTime     Int?     // Response time in ms
-  errorMessage     String?  @db.Text // Error if any
+  providerId       Int?
+  endpoint         String
+  method           String
+  requestData      String?  @db.Text
+  responseData     String?  @db.Text
+  statusCode       Int?
+  responseTime     Int?
+  errorMessage     String?  @db.Text
   createdAt        DateTime @default(now())
 
   @@index([providerId], map: "ProviderApiLog_providerId_idx")
@@ -95,13 +89,12 @@ model ProviderApiLog {
   @@map("provider_api_log")
 }
 
-// Provider Status Mapping - Provider status কে internal status এ map করে
 model ProviderStatusMapping {
   id             Int      @id @default(autoincrement())
-  providerId     Int      // API Provider reference
-  providerStatus String   // Provider এর status
-  internalStatus String   // আমাদের internal status
-  description    String?  // Status এর description
+  providerId     Int
+  providerStatus String
+  internalStatus String
+  description    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

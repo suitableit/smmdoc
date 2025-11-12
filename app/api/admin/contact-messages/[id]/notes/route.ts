@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 
-// Validation schema for notes
 const noteSchema = z.object({
   content: z.string().min(1, 'Note content is required').max(2000, 'Note too long'),
 });
@@ -14,7 +13,6 @@ interface RouteParams {
   }>;
 }
 
-// POST - Add a new note to a contact message
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
@@ -39,7 +37,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const validatedData = noteSchema.parse(body);
 
-    // Check if the contact message exists
     const contactMessage = await db.contactMessage.findUnique({
       where: { id: messageId },
       select: { id: true }
@@ -52,7 +49,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Create the note
     await db.contactNote.create({
       data: {
         messageId: messageId,
@@ -62,7 +58,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    // Fetch the complete updated contact message with all notes
     const updatedMessage = await db.contactMessage.findUnique({
       where: { id: messageId },
       include: {
@@ -90,7 +85,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Transform the response to match the expected format
     const transformedMessage = {
       ...updatedMessage,
       notes: updatedMessage.notes.map(note => ({

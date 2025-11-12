@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { username } = body;
 
-    // Validation
     if (!username) {
       return NextResponse.json(
         {
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if username is too short
     if (username.length < 3) {
       return NextResponse.json(
         {
@@ -30,7 +28,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if username contains only allowed characters
     const usernameRegex = /^[a-z0-9._]+$/;
     if (!usernameRegex.test(username)) {
       return NextResponse.json(
@@ -43,7 +40,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if username exists in database
     const existingUser = await db.user.findUnique({
       where: { username: username },
       select: { id: true }
@@ -60,7 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Username is available
     return NextResponse.json(
       {
         message: 'Username is available',

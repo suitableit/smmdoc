@@ -7,7 +7,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -18,7 +17,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { type, amount, transaction_id } = body;
     
-    // Get admin email for testing
     const testEmail = session.user.email || process.env.ADMIN_EMAIL || 'admin@example.com';
     
     let emailData;
@@ -80,7 +78,6 @@ export async function POST(req: NextRequest) {
         );
     }
     
-    // Send test email
     const emailSent = await sendMail({
       sendTo: testEmail,
       subject: `${emailData.subject}`,

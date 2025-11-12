@@ -1,14 +1,12 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
-// GET /api/admin/provider-sync - Get provider sync status and logs
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -30,7 +28,6 @@ export async function GET(req: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build where clause for filtering
     const whereClause: any = {};
     
     if (orderId) {
@@ -49,7 +46,6 @@ export async function GET(req: NextRequest) {
       whereClause.status = status;
     }
 
-    // Get provider order logs with pagination
     const [logs, totalCount] = await Promise.all([
       db.providerOrderLog.findMany({
         where: whereClause,
@@ -98,7 +94,6 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    // Get summary statistics
     const stats = await db.providerOrderLog.groupBy({
       by: ['status', 'action'],
       _count: {
@@ -106,12 +101,11 @@ export async function GET(req: NextRequest) {
       },
       where: {
         createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
         }
       }
     });
 
-    // Get provider order counts
     const providerOrderStats = await db.newOrder.groupBy({
       by: ['providerStatus'],
       _count: {
@@ -157,12 +151,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin/provider-sync - Trigger manual sync for specific orders or all pending orders
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -187,7 +179,6 @@ export async function POST(req: NextRequest) {
     let ordersToSync = [];
 
     if (syncAll) {
-      // Get all pending provider orders
       const whereClause: any = {
         isProviderOrder: true,
         providerOrderId: { not: null },
@@ -195,7 +186,6 @@ export async function POST(req: NextRequest) {
       };
 
       if (providerId) {
-        // Filter by provider if specified
         const services = await db.service.findMany({
           where: { providerId },
           select: { id: true }
@@ -215,10 +205,9 @@ export async function POST(req: NextRequest) {
             }
           }
         },
-        take: 100 // Limit to prevent timeout
+        take: 100
       });
     } else if (orderIds && orderIds.length > 0) {
-      // Get specific orders
       ordersToSync = await db.newOrder.findMany({
         where: {
           id: { in: orderIds },
@@ -258,7 +247,6 @@ export async function POST(req: NextRequest) {
 
     console.log(`Starting manual sync for ${ordersToSync.length} orders`);
 
-    // Group orders by provider
     const ordersByProvider = new Map();
     
     for (const order of ordersToSync) {
@@ -275,7 +263,6 @@ export async function POST(req: NextRequest) {
     let totalSynced = 0;
     const syncResults = [];
 
-    // Sync orders for each provider
     for (const [providerIdKey, orders] of ordersByProvider) {
       try {
         const provider = await db.api_providers.findUnique({
@@ -296,7 +283,6 @@ export async function POST(req: NextRequest) {
 
         console.log(`Syncing ${orders.length} orders for provider: ${provider.name}`);
 
-        // Sync each order with the provider
         for (const order of orders) {
           try {
             const syncResult = await syncSingleOrder(order, provider);
@@ -347,7 +333,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Helper functions (same as in cron sync)
 async function getProviderIdForOrder(order: any): Promise<string | null> {
   try {
     const service = await db.service.findUnique({

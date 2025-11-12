@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default user settings
 const defaultUserSettings = {
   resetPasswordEnabled: true,
   signUpPageEnabled: true,
@@ -17,7 +16,6 @@ const defaultUserSettings = {
   updatedAt: new Date(),
 };
 
-// GET - Load user settings
 export async function GET() {
   try {
     const session = await auth();
@@ -26,7 +24,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user settings from database (create if not exists)
     let settings = await db.userSettings.findFirst();
     if (!settings) {
       settings = await db.userSettings.create({
@@ -59,7 +56,6 @@ export async function GET() {
   }
 }
 
-// POST - Save user settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -77,7 +73,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate numeric fields
     if (userSettings.resetLinkMax && (userSettings.resetLinkMax < 1 || userSettings.resetLinkMax > 10)) {
       return NextResponse.json(
         { error: 'Reset link max must be between 1 and 10' },
@@ -106,7 +101,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update user settings
     await db.userSettings.upsert({
       where: { id: 1 },
       update: {

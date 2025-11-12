@@ -310,8 +310,6 @@ const Hero: React.FC = () => {
             </Link>
           )}
         </div>
-
-        {}
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
@@ -362,7 +360,6 @@ const Hero: React.FC = () => {
     <section className="flex justify-center items-center pt-[60px] pb-[30px] lg:pt-[120px] lg:pb-[60px] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className={`${isAuthenticated ? 'flex flex-col-reverse' : 'grid grid-cols-1'} lg:grid lg:grid-cols-2 gap-8 2xl:gap-x-20 items-center`}>
-          {}
           <div>
             <div className="text-left">
               <h1
@@ -386,8 +383,6 @@ const Hero: React.FC = () => {
                 SMM Panel with more then 3 years on the market and 1,000+
                 Orders processed successfully until now!
               </p>
-
-              {}
               {!isAuthenticated && !isLoading && (
                 <Link
                   href="/sign-up"
@@ -419,8 +414,6 @@ const Hero: React.FC = () => {
                   )}
                 </Link>
               )}
-
-              {}
               <div
                 className="flex items-center gap-3 justify-start mt-4"
                 data-aos="fade-up"
@@ -451,8 +444,6 @@ const Hero: React.FC = () => {
               </pre>
             </div>
           )}
-
-          {}
           <div className="flex justify-center">
             {isLoading && <LoadingContent />}
             {!isLoading && isAuthenticated && <AuthenticatedUserContent />}
@@ -576,8 +567,6 @@ const Hero: React.FC = () => {
                           </p>
                         )}
                       </div>
-
-                      {}
                       {isEnabledForForm('signIn') && (
                         <ErrorBoundary fallback={
                           <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
@@ -638,8 +627,6 @@ const Hero: React.FC = () => {
                     )}
                   </button>
                 </form>
-
-                {}
                 {!showTwoFactor && (
                   <div className="mt-4">
                     <div className="relative mb-4">

@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Simple database connection test
     const result = await db.$queryRaw`SELECT 1 as test`;
     
     return NextResponse.json({

@@ -1,19 +1,14 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
 
-// GET /api/admin/orders - Get all orders with pagination and filtering
 export async function GET(req: NextRequest) {
   try {
-    // console.log('Admin orders API called');
     const session = await auth();
-    // console.log('Session:', session?.user?.email, session?.user?.role);
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
-      // console.log('Unauthorized access attempt');
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
@@ -36,7 +31,6 @@ export async function GET(req: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build where clause for filtering
     const whereClause: any = {};
     
     if (status && status !== 'all') {
@@ -69,7 +63,6 @@ export async function GET(req: NextRequest) {
     
     console.log('Fetching orders with whereClause:', whereClause);
 
-    // Test database connection first
     try {
       await db.$connect();
       console.log('Database connected successfully');
@@ -78,7 +71,6 @@ export async function GET(req: NextRequest) {
       throw new Error('Database connection failed');
     }
 
-    // Get orders with related data using Prisma relations
     const [orders, totalCount] = await Promise.all([
       db.newOrder.findMany({
         where: whereClause,
@@ -122,14 +114,12 @@ export async function GET(req: NextRequest) {
 
     console.log('Orders found:', orders.length, 'Total count:', totalCount);
 
-    // Remove duplicates based on order ID to prevent React key conflicts
     const uniqueOrders = orders.filter((order, index, self) =>
       index === self.findIndex(o => o.id === order.id)
     );
 
     console.log('Unique orders after deduplication:', uniqueOrders.length);
 
-    // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit);
 
     return NextResponse.json({
@@ -159,12 +149,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin/orders - Create a new order (admin can create orders for users)
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -190,7 +178,6 @@ export async function POST(req: NextRequest) {
       avg_time,
       status = 'pending',
       skipBalanceCheck = false,
-      // Service type specific fields
       comments,
       username,
       posts,
@@ -203,7 +190,6 @@ export async function POST(req: NextRequest) {
       isSubscription = false
     } = body;
     
-    // Validate required fields
     if (!userId || !categoryId || !serviceId || !link || !qty) {
       return NextResponse.json(
         { 
@@ -215,7 +201,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Validate service exists and is active
     const service = await db.service.findUnique({
       where: { id: serviceId },
       include: { 
@@ -246,7 +231,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Validate quantity limits
     if (qty < service.min_order || qty > service.max_order) {
       return NextResponse.json(
         { 
@@ -258,7 +242,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Service type validation
     const typeConfig = getServiceTypeConfig(service.packageType || 1);
     const orderData = {
       link,
@@ -289,7 +272,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Get user details
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
@@ -313,12 +295,10 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Calculate prices if not provided
     const calculatedUsdPrice = usdPrice || (service.rate * qty) / 1000;
     const calculatedBdtPrice = bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
     const finalPrice = price || (user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice);
     
-    // Check user balance (unless admin explicitly skips this check)
     if (!skipBalanceCheck) {
       const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
 
@@ -334,7 +314,6 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Create the order
     const order = await db.newOrder.create({
       data: {
         userId,
@@ -348,9 +327,8 @@ export async function POST(req: NextRequest) {
         currency: user.currency,
         avg_time: avg_time || service.avg_time,
         status,
-        remains: parseInt(qty), // Initially, all quantity remains to be delivered
+        remains: parseInt(qty),
         startCount: 0,
-        // Service type specific fields
         packageType: service.packageType || 1,
         comments: comments || null,
         username: username || null,
@@ -388,7 +366,6 @@ export async function POST(req: NextRequest) {
       }
     });
     
-    // Deduct balance if not skipping balance check and status is not pending
     if (!skipBalanceCheck && status !== 'pending') {
       const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
 
@@ -405,10 +382,8 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // Forward to API provider if applicable
     let updatedOrder = order;
     try {
-      // Ensure service has provider mapping
       if (service.providerId && service.providerServiceId) {
         const apiProvider = await db.api_providers.findUnique({
           where: { id: service.providerId }
@@ -481,7 +456,6 @@ export async function POST(req: NextRequest) {
       console.error('Error forwarding order to provider:', providerError);
     }
 
-    // Log the order creation
     console.log(`Admin ${session.user.email} created order ${order.id} for user ${user.email}`, {
       orderId: order.id,
       userId,

@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -13,7 +12,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { role: true }
@@ -36,7 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the service
     const service = await db.service.findUnique({
       where: { id: parseInt(id) }
     });
@@ -48,7 +45,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if service is actually in trash (inactive with a provider)
     if (service.status !== 'inactive' || !service.providerId) {
       return NextResponse.json(
         { success: false, message: 'Service is not in trash' },
@@ -56,7 +52,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch the provider to check its status
     const provider = await db.api_providers.findUnique({
       where: { id: service.providerId }
     });
@@ -68,7 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the provider is active (can only restore if provider is active)
     if (provider.status !== 'active') {
       return NextResponse.json(
         { success: false, message: 'Cannot restore service: Provider is not active' },
@@ -76,7 +70,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Restore the service by setting status to active
     await db.service.update({
       where: { id: parseInt(id) },
       data: {

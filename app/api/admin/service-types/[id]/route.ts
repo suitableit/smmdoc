@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/service-types/[id] - Get specific service type
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -73,7 +72,6 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/service-types/[id] - Update service type
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -137,7 +135,6 @@ export async function PUT(
       );
     }
 
-    // Check if service type exists
     const existingType = await db.servicetype.findUnique({
       where: { id: Number((await params).id) }
     });
@@ -153,7 +150,6 @@ export async function PUT(
       );
     }
 
-    // Check if name is already taken by another service type
     const duplicateType = await db.servicetype.findFirst({
       where: { 
         name: name.trim(),
@@ -217,7 +213,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/service-types/[id] - Delete service type
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
@@ -236,7 +231,6 @@ export async function DELETE(
       );
     }
 
-    // Check if service type exists and get service count
     const serviceType = await db.servicetype.findUnique({
       where: { id: Number((await params).id) },
       include: {
@@ -259,7 +253,6 @@ export async function DELETE(
       );
     }
 
-    // Protect the Default service type from deletion
     if (serviceType.name === 'Default') {
       return NextResponse.json(
         {
@@ -271,7 +264,6 @@ export async function DELETE(
       );
     }
 
-    // Check if there are services using this type
     if (serviceType._count.services > 0) {
       return NextResponse.json(
         {

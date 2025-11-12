@@ -373,7 +373,6 @@ export default function TransactionsPage() {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -464,7 +463,6 @@ export default function TransactionsPage() {
             </div>
           ) : (
             <>
-              {}
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -482,8 +480,6 @@ export default function TransactionsPage() {
                   />
                 </div>
               </div>
-
-              {}
               <div className="mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -518,8 +514,6 @@ export default function TransactionsPage() {
                   </button>
                 )}
               </div>
-
-              {}
               <div className="mb-6">
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -571,8 +565,6 @@ export default function TransactionsPage() {
                   </button>
                 </div>
               </div>
-
-              {}
               {searchLoading ? (
                 <div className="card">
                   <div className="overflow-x-auto">

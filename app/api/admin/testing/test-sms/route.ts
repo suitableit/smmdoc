@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -58,16 +57,13 @@ export async function POST(req: NextRequest) {
         );
     }
     
-    // Add test prefix to message
     smsMessage = `${smsMessage}`;
     
-    // Send test SMS
     const smsResult = await sendSMS({
       to: phone,
       message: smsMessage
     });
     
-    // Log SMS attempt
     await logSMS({
       userId: 'test-user-id',
       phone: phone,

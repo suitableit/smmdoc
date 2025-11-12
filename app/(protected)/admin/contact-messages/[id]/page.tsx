@@ -24,16 +24,19 @@ import {
     FaTimes,
     FaUser,
     FaVideo
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
-import { setPageTitle } from '@/lib/utils/set-page-title';
+import { setPageTitle } from '@/lib/utils/set-page-title';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -63,7 +66,8 @@ const getFileIcon = (mimetype: string) => {
   if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
   if (mimetype.includes('zip') || mimetype.includes('rar') || mimetype.includes('archive')) return <FaFileArchive className="h-4 w-4" />;
   return <FaFileAlt className="h-4 w-4" />;
-};
+};
+
 interface ContactMessage {
   id: string;
   type: 'customer' | 'staff' | 'system';
@@ -127,13 +131,16 @@ interface ContactMessageDetails {
 const ContactDetailsPage = () => {
   const router = useRouter();
   const { appName } = useAppNameWithFallback();
-  const currentUser = useCurrentUser();
+  const currentUser = useCurrentUser();
+
   const messageId: string = typeof window !== 'undefined'
     ? (window.location.pathname.split('/').pop() ?? '1')
-    : '1';
+    : '1';
+
   useEffect(() => {
     setPageTitle(`Message Details ${formatMessageID(messageId)}`, appName);
-  }, [messageId]);
+  }, [messageId]);
+
   const [contactDetails, setContactDetails] = useState<ContactMessageDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -147,8 +154,10 @@ const ContactDetailsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const formatMessageID = (id: string) => {
     return `#${parseInt(id.toString()).toString()}`;
   };
@@ -161,15 +170,19 @@ const ContactDetailsPage = () => {
     if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return <FaFileExcel className="h-4 w-4" />;
     if (mimetype.includes('zip') || mimetype.includes('rar')) return <FaFileArchive className="h-4 w-4" />;
     return <FaFileAlt className="h-4 w-4" />;
-  };
+  };
+
   const fetchContactDetails = async () => {
     try {
       const response = await fetch(`/api/admin/contact-messages/${messageId}?include_notes=true`);
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        const messages: ContactMessage[] = [];
-        if (data.message.message) {
+      if (response.ok && data.success) {
+
+        const messages: ContactMessage[] = [];
+
+        if (data.message.message) {
+
           let parsedAttachments: ContactAttachment[] = [];
           if (data.message.attachments) {
             try {
@@ -200,18 +213,24 @@ const ContactDetailsPage = () => {
             createdAt: data.message.createdAt,
             attachments: parsedAttachments
           });
-        }
+        }
+
         if (data.message.adminReply) {
-          try {
+          try {
+
             const replies = JSON.parse(data.message.adminReply);
-            if (Array.isArray(replies)) {
-              replies.forEach((reply, index) => {
+            if (Array.isArray(replies)) {
+
+              replies.forEach((reply, index) => {
+
                 let replyAttachments: ContactAttachment[] = [];
                 if (reply.attachments && Array.isArray(reply.attachments)) {
-                  replyAttachments = reply.attachments.map((attachment: any, attachIndex: number) => {
+                  replyAttachments = reply.attachments.map((attachment: any, attachIndex: number) => {
+
                     let filename, fileUrl, filesize = '0 KB', mimetype = 'application/octet-stream';
 
-                    if (typeof attachment === 'string') {
+                    if (typeof attachment === 'string') {
+
                       filename = attachment.split('/').pop() || 'attachment';
                       fileUrl = attachment;
                       const extension = filename.split('.').pop()?.toLowerCase() || '';
@@ -224,7 +243,8 @@ const ContactDetailsPage = () => {
                       } else if (['xls', 'xlsx'].includes(extension)) {
                         mimetype = 'application/vnd.ms-excel';
                       }
-                    } else {
+                    } else {
+
                       filename = attachment.encryptedName || attachment.filename || 'attachment';
                       fileUrl = attachment.encryptedPath || attachment.fileUrl;
                       filesize = attachment.fileSize ? `${Math.round(attachment.fileSize / 1024)} KB` : 'Unknown size';
@@ -252,7 +272,8 @@ const ContactDetailsPage = () => {
                   attachments: replyAttachments
                 });
               });
-            } else {
+            } else {
+
               let singleReplyAttachments: ContactAttachment[] = [];
               if (data.message.attachments) {
                 try {
@@ -269,7 +290,8 @@ const ContactDetailsPage = () => {
                       } else if (extension === 'pdf') {
                         mimeType = 'application/pdf';
                       }
-                    } else {
+                    } else {
+
                       const encryptedName = attachment.encryptedName || (attachment.encryptedPath ? attachment.encryptedPath.split('/').pop() : null);
                       filename = encryptedName || attachment.filename || 'attachment';
                       fileUrl = attachment.encryptedPath || attachment.fileUrl;
@@ -300,7 +322,8 @@ const ContactDetailsPage = () => {
                 attachments: singleReplyAttachments
               });
             }
-          } catch {
+          } catch {
+
             messages.push({
               id: `admin_${data.message.id}`,
               type: 'staff',
@@ -309,7 +332,8 @@ const ContactDetailsPage = () => {
               createdAt: data.message.repliedAt || data.message.updatedAt
             });
           }
-        }
+        }
+
         const transformedData: ContactMessageDetails = {
           id: data.message.id.toString(),
           userId: data.message.userId.toString(),
@@ -341,7 +365,8 @@ const ContactDetailsPage = () => {
           }
         };
 
-        setContactDetails(transformedData);
+        setContactDetails(transformedData);
+
         if (data.message.status !== 'Read') {
           markAsRead();
         }
@@ -354,7 +379,8 @@ const ContactDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };
+
   const markAsRead = async () => {
     try {
       await fetch(`/api/admin/contact-messages/${messageId}`, {
@@ -369,39 +395,46 @@ const ContactDetailsPage = () => {
     } catch (error) {
       console.error('Error marking message as read:', error);
     }
-  };
+  };
+
   useEffect(() => {
     if (messageId) {
       fetchContactDetails();
     }
-  }, [messageId]);
+  }, [messageId]);
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
-  };
+  };
+
   const removeSelectedFile = (index: number) => {
     const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(newSelectedFiles);
 
-    if (newSelectedFiles.length === 0) {
+    if (newSelectedFiles.length === 0) {
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  };
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setSelectedFiles(prev => [...prev, ...files]);
-  };
+  };
+
   const handleReplySubmit = async () => {
     if (!replyContent.trim()) return;
 
     setIsReplying(true);
 
-    try {
+    try {
+
       let attachmentData: Array<{
         originalName: string;
         encryptedPath: string;
@@ -424,15 +457,18 @@ const ContactDetailsPage = () => {
 
         if (!uploadData.success) {
           throw new Error(uploadData.error || 'Failed to upload files');
-        }
-        if (uploadData.files) {
+        }
+
+        if (uploadData.files) {
+
           attachmentData = uploadData.files.map((file: any) => ({
             originalName: file.originalName,
             encryptedPath: file.fileUrl,
             fileSize: file.fileSize,
             mimeType: file.mimeType
           }));
-        } else if (uploadData.originalName) {
+        } else if (uploadData.originalName) {
+
           attachmentData = [{
             originalName: uploadData.originalName,
             encryptedPath: uploadData.fileUrl,
@@ -456,7 +492,8 @@ const ContactDetailsPage = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok && data.success) {
+
         setContactDetails(prev => prev ? ({
           ...prev,
           adminReply: replyContent.trim(),
@@ -466,11 +503,13 @@ const ContactDetailsPage = () => {
         }) : null);
 
         setReplyContent('');
-        setSelectedFiles([]);
+        setSelectedFiles([]);
+
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        showToast(data.message || 'Reply sent successfully', 'success');
+        showToast(data.message || 'Reply sent successfully', 'success');
+
         fetchContactDetails();
       } else {
         showToast(data.error || 'Error sending reply', 'error');
@@ -480,7 +519,8 @@ const ContactDetailsPage = () => {
     } finally {
       setIsReplying(false);
     }
-  };
+  };
+
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
@@ -499,7 +539,8 @@ const ContactDetailsPage = () => {
         throw new Error('Failed to add note');
       }
 
-      const updatedMessage = await response.json();
+      const updatedMessage = await response.json();
+
       setContactDetails(prev => prev ? ({
         ...prev,
         notes: updatedMessage.notes.map((note: any) => ({
@@ -519,7 +560,8 @@ const ContactDetailsPage = () => {
     } finally {
       setIsAddingNote(false);
     }
-  };
+  };
+
   if (loading) {
     return (
       <div className="page-container">
@@ -534,7 +576,8 @@ const ContactDetailsPage = () => {
         </div>
       </div>
     );
-  }
+  }
+
   if (!contactDetails) {
     return (
       <div className="page-container">
@@ -661,7 +704,8 @@ const ContactDetailsPage = () => {
                     {message.attachments && message.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
                         <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                        {message.attachments.map((attachment, index) => {
+                        {message.attachments.map((attachment, index) => {
+
                           const attachmentUrl = attachment.url || attachment.fileUrl;
                           const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
                           const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';
@@ -725,7 +769,8 @@ const ContactDetailsPage = () => {
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
-                          {message.attachments.map((attachment, index) => {
+                          {message.attachments.map((attachment, index) => {
+
                             const attachmentUrl = attachment.url || attachment.fileUrl;
                             const filename = attachment.encryptedName || attachment.filename || 'Unknown file';
                             const mimetype = attachment.mimetype || attachment.mimeType || 'application/octet-stream';

@@ -190,7 +190,6 @@ export default function UpdateServiceTable() {
 
   return (
     <div className="page-container">
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -200,17 +199,13 @@ export default function UpdateServiceTable() {
       )}
 
       <div className="page-content">
-        {}
         <div className="card card-padding">
-          {}
           <div className="flex items-center gap-3 mb-6">
             <div className="card-icon">
               <FaBell className="w-5 h-5 text-white" />
             </div>
             <h1 className="card-title">Service Updates</h1>
           </div>
-
-          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -226,8 +221,6 @@ export default function UpdateServiceTable() {
               />
             </div>
           </div>
-
-          {}
           {services?.length > 0 ? (
             <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full border-collapse">
@@ -379,8 +372,6 @@ export default function UpdateServiceTable() {
               </div>
             </div>
           )}
-
-          {}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">

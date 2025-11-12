@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/cancel-requests/:id/decline - Decline a cancel request
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -17,7 +16,6 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id!) },
       select: { role: true }
@@ -49,7 +47,6 @@ export async function PUT(
       );
     }
 
-    // Check if cancel request exists and is pending
     const existingRequest = await db.cancelRequest.findUnique({
       where: { id: requestId },
       include: {
@@ -76,7 +73,6 @@ export async function PUT(
       );
     }
 
-    // Update the cancel request status to declined
     const updatedRequest = await db.cancelRequest.update({
       where: { id: requestId },
       data: {

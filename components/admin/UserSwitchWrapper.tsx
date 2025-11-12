@@ -69,7 +69,6 @@ const UserSwitchWrapper = () => {
 
   return (
     <>
-      {}
       <div className="toast-container">
         {toast && (
           <Toast

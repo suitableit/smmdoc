@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// GET /api/admin/service-update-logs - Get service update logs
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -18,7 +17,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Check if service update logs are enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const serviceUpdateLogsEnabled = moduleSettings?.serviceUpdateLogsEnabled ?? true;
 
@@ -45,7 +43,6 @@ export async function GET(request: Request) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
     if (serviceId) {
@@ -70,7 +67,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // Get logs with pagination
     const [logs, total] = await Promise.all([
       db.service_update_logs.findMany({
         where,
@@ -106,7 +102,6 @@ export async function GET(request: Request) {
   }
 }
 
-// DELETE /api/admin/service-update-logs - Clear old logs
 export async function DELETE(request: Request) {
   try {
     const session = await auth();
@@ -125,7 +120,6 @@ export async function DELETE(request: Request) {
     const body = await request.json();
     const { olderThanDays = 30 } = body;
 
-    // Delete logs older than specified days
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 

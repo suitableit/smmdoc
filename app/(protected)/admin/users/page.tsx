@@ -963,7 +963,6 @@ const UsersListPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -975,7 +974,6 @@ const UsersListPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
             <div className="card-content">
@@ -1049,13 +1047,9 @@ const UsersListPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -1084,8 +1078,6 @@ const UsersListPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -1105,11 +1097,8 @@ const UsersListPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -1238,7 +1227,6 @@ const UsersListPage = () => {
               </div>
             ) : (
               <>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -1485,8 +1473,6 @@ const UsersListPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
                     {users.map((user) => (
@@ -1512,8 +1498,6 @@ const UsersListPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {}
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
@@ -1523,8 +1507,6 @@ const UsersListPage = () => {
             )}
           </div>
         </div>
-
-        {}
         <DeleteConfirmationModal
           isOpen={deleteDialogOpen}
           onClose={() => {
@@ -1648,8 +1630,6 @@ const UsersListPage = () => {
             actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`
           }
         />
-
-        {}
         <EditUserModal
           isOpen={editUserDialog.open}
           currentUser={editUserDialog.currentUser}
@@ -1729,8 +1709,6 @@ const UserActions: React.FC<UserActionsProps> = ({
                 <FaEdit className="h-3 w-3" />
                 Edit User
               </button>
-
-              {}
               {(user.status === 'suspended' || user.status === 'banned') && (
                 <button
                   onClick={() => {
@@ -1743,8 +1721,6 @@ const UserActions: React.FC<UserActionsProps> = ({
                   Update User Status
                 </button>
               )}
-
-              {}
               {!user.emailVerified && (
                 <>
                   <hr className="my-1" />
@@ -1760,8 +1736,6 @@ const UserActions: React.FC<UserActionsProps> = ({
                   </button>
                 </>
               )}
-
-              {}
               {user.emailVerified && user.status !== 'suspended' && user.status !== 'banned' && (
                 <>
                   <button
@@ -2354,8 +2328,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
-
-          {}
           {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="text-sm text-blue-800">
@@ -2627,7 +2599,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         <h3 className="text-lg font-semibold mb-4">Edit User</h3>
 
         <div className="space-y-4">
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Username</label>
             <input
@@ -2639,8 +2610,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               disabled={isLoading}
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Full Name</label>
             <input
@@ -2652,8 +2621,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               disabled={isLoading}
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">User Email</label>
             <input
@@ -2665,8 +2632,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               disabled={isLoading}
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Balance Amount (in USD)</label>
             <input
@@ -2679,8 +2644,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               disabled={isLoading}
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label
               className={`flex items-center gap-3 ${
@@ -2716,8 +2679,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 : "Check this if the user's email is verified"}
             </p>
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Password</label>
             <div className="relative">

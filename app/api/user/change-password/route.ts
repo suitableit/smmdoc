@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate new password strength
     if (newPassword.length < 6) {
       return NextResponse.json(
         {
@@ -45,7 +44,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get user with current password
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -67,7 +65,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return NextResponse.json(
@@ -80,10 +77,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-    // Update user password
     await db.user.update({
       where: { id: session.user.id },
       data: { 
@@ -92,7 +87,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for password change
     try {
       const username = user.username || user.email?.split('@')[0] || `user${user.id}`;
       await ActivityLogger.passwordChanged(

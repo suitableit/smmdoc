@@ -139,8 +139,6 @@ const UserSwitchIcon: React.FC<UserSwitchIconProps> = ({ onSwitchBack, isLoading
             <FaUserShield className="w-5 h-5" />
           )}
         </button>
-
-        {}
         <div className="absolute right-full mr-2 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none shadow-lg">
           Switch back to admin
           <div className="absolute left-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>

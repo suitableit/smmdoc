@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// GET /api/blogs/trending - Get top 3 most viewed published blog posts
 export async function GET(req: NextRequest) {
   try {
     const trendingPosts = await db.blogPost.findMany({

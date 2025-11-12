@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { currentUser } from '@/lib/actions/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
@@ -29,10 +29,7 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    // Handle position logic - only for the current user's categories
     if (position === 'top') {
-      // If position is 'top', update all existing 'top' categories to 'bottom'
-      // but exclude the current category being updated
       await db.category.updateMany({
         where: {
           position: 'top',
@@ -47,27 +44,23 @@ export async function PUT(
       });
     }
 
-    // Prepare update data
     const updateData: any = {
       category_name: category_name,
       updatedAt: new Date(),
     };
 
-    // Add position if provided
     if (position) {
       updateData.position = position as any;
     }
 
-    // Add hideCategory if provided
     if (hideCategory !== undefined) {
       updateData.hideCategory = hideCategory;
     }
 
-    // Update the category in the database
     const updatedCategory = await db.category.update({
       where: {
         id: parseInt(id),
-        userId: user.id, // Ensure user can only update their own categories
+        userId: user.id,
       },
       data: updateData,
       include: {
@@ -136,7 +129,6 @@ export async function GET(
   }
 }
 
-// DELETE /api/admin/categories/[id] - Delete category
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -165,7 +157,6 @@ export async function DELETE(
       }, { status: 400 });
     }
 
-    // Convert string ID to integer
     const categoryId = parseInt(id);
 
     if (isNaN(categoryId)) {
@@ -176,7 +167,6 @@ export async function DELETE(
       }, { status: 400 });
     }
 
-    // Check if category exists and get service count
     const category = await db.category.findUnique({
       where: { id: categoryId },
       include: {
@@ -196,7 +186,6 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    // Delete all refill requests for orders in this category first
     let deleteRefillRequestsResult = { count: 0 };
     try {
       deleteRefillRequestsResult = await db.refillRequest.deleteMany({
@@ -212,7 +201,6 @@ export async function DELETE(
 
     console.log(`Deleted ${deleteRefillRequestsResult.count} refill requests in category ${categoryId}`);
 
-    // Delete all cancel requests for orders in this category
     let deleteCancelRequestsResult = { count: 0 };
     try {
       deleteCancelRequestsResult = await db.cancelRequest.deleteMany({
@@ -228,21 +216,18 @@ export async function DELETE(
 
     console.log(`Deleted ${deleteCancelRequestsResult.count} cancel requests in category ${categoryId}`);
 
-    // Delete all orders in this category
     const deleteOrdersResult = await db.newOrder.deleteMany({
       where: { categoryId: categoryId }
     });
 
     console.log(`Deleted ${deleteOrdersResult.count} orders in category ${categoryId}`);
 
-    // Delete all services in this category (cascade delete)
     const deleteServicesResult = await db.service.deleteMany({
       where: { categoryId: categoryId }
     });
 
     console.log(`Deleted ${deleteServicesResult.count} services in category ${categoryId}`);
 
-    // Delete the category
     await db.category.delete({
       where: { id: categoryId }
     });

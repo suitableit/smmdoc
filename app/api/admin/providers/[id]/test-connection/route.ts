@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { testProviderConnection } from '@/lib/utils/providerValidator';
 
@@ -17,7 +17,6 @@ export async function POST(
       );
     }
 
-    // Test the provider connection
     const connectionResult = await testProviderConnection(providerId);
 
     return NextResponse.json({

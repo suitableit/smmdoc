@@ -9,7 +9,6 @@ const Loading = () => {
         width: '100vw',
       }}
     >
-      {}
     </div>
   );
 };

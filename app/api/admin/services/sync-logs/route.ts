@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -27,7 +26,6 @@ export async function GET(req: NextRequest) {
     
     const skip = (page - 1) * limit;
     
-    // Build where clause for filtering
     const whereClause: any = {};
     
     if (status && status !== 'all') {
@@ -46,8 +44,6 @@ export async function GET(req: NextRequest) {
       ];
     }
     
-    // For now, return mock data since we don't have a sync_logs table yet
-    // In a real implementation, you would query the database
     const mockLogs = [
       {
         id: '1',
@@ -106,7 +102,6 @@ export async function GET(req: NextRequest) {
       }
     ];
     
-    // Apply filters to mock data
     let filteredLogs = mockLogs;
     
     if (status && status !== 'all') {
@@ -126,7 +121,6 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Apply pagination
     const paginatedLogs = filteredLogs.slice(skip, skip + limit);
     
     return NextResponse.json({
@@ -160,7 +154,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -175,7 +168,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, provider } = body;
     
-    // Validate input
     if (!action) {
       return NextResponse.json(
         { 
@@ -187,15 +179,9 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Simulate sync initiation
     const syncId = `sync_${Date.now()}`;
     
-    // In a real implementation, you would:
-    // 1. Create a sync log entry in the database
-    // 2. Queue the sync job for background processing
-    // 3. Return the sync job ID
     
-    // For now, simulate the process
     const syncLog = {
       id: syncId,
       provider: provider || 'All Providers',
@@ -208,7 +194,6 @@ export async function POST(req: NextRequest) {
       errorDetails: null
     };
     
-    // Log the sync initiation
     console.log(`Admin ${session.user.email} initiated sync:`, {
       action,
       provider,
@@ -239,12 +224,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET sync statistics
 export async function PUT(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -256,8 +239,6 @@ export async function PUT(req: NextRequest) {
       );
     }
     
-    // Return mock sync statistics
-    // In a real implementation, you would query the database for actual stats
     const stats = {
       totalSyncs: 156,
       successfulSyncs: 142,

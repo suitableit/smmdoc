@@ -28,7 +28,6 @@ const categories = [
 export default function ExploreServicesPage() {
   return (
     <PageContainer title="Explore Services" subtitle="Browse and order from our wide range of social media services">
-      {}
       <section className="mb-8">
         <GridLayout cols={3} gap="md">
           {stats.map((stat, index) => (
@@ -43,8 +42,6 @@ export default function ExploreServicesPage() {
           ))}
         </GridLayout>
       </section>
-
-      {}
       <section className="mb-8">
         <PageHeader title="Service Categories" subtitle="Browse services by category" />
         <GridLayout cols={4} gap="md">
@@ -60,8 +57,6 @@ export default function ExploreServicesPage() {
           ))}
         </GridLayout>
       </section>
-
-      {}
       <section>
         <PageHeader 
           title="Popular Services" 

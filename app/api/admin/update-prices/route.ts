@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 
@@ -12,7 +12,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -39,7 +38,6 @@ export async function POST(req: NextRequest) {
 
     const { serviceType, profitPercentage, providerId } = priceSettings;
 
-    // Validate profit percentage
     if (typeof profitPercentage !== 'number' || profitPercentage < 0) {
       return NextResponse.json(
         {
@@ -51,14 +49,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build where clause based on service type
     let whereClause: any = {
-      deletedAt: null, // Only active services
+      deletedAt: null,
     };
 
     switch (serviceType) {
       case 'all-services':
-        // No additional filters - update all services
         break;
       case 'provider-services':
         if (!providerId) {
@@ -74,7 +70,6 @@ export async function POST(req: NextRequest) {
         whereClause.providerId = parseInt(providerId);
         break;
       case 'manual-services':
-        // Look for services that are either manual mode OR have no providerId (self-created)
         whereClause.OR = [
           { mode: 'manual' },
           { providerId: null }
@@ -91,10 +86,8 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    // Debug: Log the where clause
     console.log('Where clause for service query:', JSON.stringify(whereClause, null, 2));
 
-    // First, get all services that match the criteria to calculate new rate
     const servicesToUpdate = await db.service.findMany({
       where: whereClause,
       select: {
@@ -107,7 +100,6 @@ export async function POST(req: NextRequest) {
     console.log(`Found ${servicesToUpdate.length} services matching criteria`);
     console.log('Sample services:', servicesToUpdate.slice(0, 3));
 
-    // Update each service individually to calculate new rate based on providerPrice and percentage
     let updateCount = 0;
     for (const service of servicesToUpdate) {
       const providerPrice = service.providerPrice || 0;

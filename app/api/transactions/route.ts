@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20'); // Increased for admin view
+    const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
     const page = parseInt(searchParams.get('page') || '1');
     const status = searchParams.get('status');
@@ -22,35 +22,28 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || '';
     const adminView = searchParams.get('admin') === 'true';
 
-    // Calculate skip for pagination
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
-    // If admin view, don't filter by userId, otherwise filter by current user
     if (!adminView || session.user.role !== 'admin') {
       where.userId = session.user.id;
     }
 
-    // Add search functionality for admin view
     if (search && adminView && session.user.role === 'admin') {
       if (searchType === 'id') {
-        // Search by transaction ID or invoice ID
         where.OR = [
           { transaction_id: { contains: search } },
           { invoice_id: { contains: search } },
           { id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
         ].filter(condition => condition.id !== undefined || condition.transaction_id || condition.invoice_id);
       } else if (searchType === 'username') {
-        // Search by username or user details
         where.OR = [
           { user: { name: { contains: search } } },
           { user: { email: { contains: search } } },
           { user: { username: { contains: search } } },
         ];
       } else {
-        // Default search across all fields
         where.OR = [
           { transaction_id: { contains: search } },
           { invoice_id: { contains: search } },
@@ -61,7 +54,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add search functionality for user view
     if (search && (!adminView || session.user.role !== 'admin')) {
       where.OR = [
         { transaction_id: { contains: search } },
@@ -70,7 +62,6 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Status filtering
     if (status && status !== 'all') {
       if (status === 'Success' || status === 'completed') {
         where.admin_status = 'Success';
@@ -85,17 +76,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Type filtering (deposit/withdrawal)
     if (type && type !== 'all') {
-      // For now, AddFund table only contains deposits
-      // In future, you might have separate tables for withdrawals
       if (type === 'withdrawal') {
-        // Return empty result for now as we don't have withdrawal data
-        where.id = -1; // This will return no results
+        where.id = -1;
       }
     }
 
-    // Date filtering
     if (startDate || endDate) {
       where.createdAt = {};
 
@@ -108,12 +94,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch transactions from database (using AddFund model) with timeout and retry
     let transactions: any[] = [];
     let totalCount = 0;
 
     try {
-      // Test database connection first
       await db.$queryRaw`SELECT 1`;
 
       const [transactionsResult, totalCountResult] = await Promise.all([
@@ -122,8 +106,8 @@ export async function GET(request: NextRequest) {
           orderBy: {
             createdAt: 'desc',
           },
-          take: limit > 10000 ? undefined : limit, // No limit for "All" option
-          skip: adminView ? skip : offset, // Use skip for admin pagination, offset for user
+          take: limit > 10000 ? undefined : limit,
+          skip: adminView ? skip : offset,
           select: {
             id: true,
             invoice_id: true,
@@ -150,7 +134,6 @@ export async function GET(request: NextRequest) {
             },
           },
         }),
-        // Get total count for pagination (only for admin view)
         adminView && session.user.role === 'admin'
           ? db.addFund.count({ where })
           : Promise.resolve(0)
@@ -162,7 +145,6 @@ export async function GET(request: NextRequest) {
     } catch (dbError) {
       console.error('Database error:', dbError);
 
-      // Return empty result with error info for admin view
       if (adminView && session.user.role === 'admin') {
         return NextResponse.json({
           success: false,
@@ -188,12 +170,10 @@ export async function GET(request: NextRequest) {
           }
         });
       } else {
-        // For user view, return empty array
         return NextResponse.json([]);
       }
     }
 
-    // Transform data to match frontend interface
     const transformedTransactions = transactions.map((transaction: any) => ({
       id: transaction.id,
       transactionId: transaction.transaction_id || transaction.id,
@@ -207,7 +187,7 @@ export async function GET(request: NextRequest) {
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
       updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt.toISOString(),
-      type: 'deposit', // All AddFund records are deposits
+      type: 'deposit',
       phone: transaction.sender_number || '',
       currency: transaction.currency || 'BDT',
       userId: transaction.userId,
@@ -217,15 +197,13 @@ export async function GET(request: NextRequest) {
         email: transaction.user.email || '',
         username: transaction.user.username || '',
       } : null,
-      notes: '', // Can be added later if needed
+      notes: '',
       processedAt: transaction.admin_status === 'Success' ? transaction.updatedAt?.toISOString() : null,
     }));
 
-    // For admin view, return structured response with pagination
     if (adminView && session.user.role === 'admin') {
       const totalPages = Math.ceil(totalCount / limit);
 
-      // Calculate stats for admin dashboard
       const stats = {
         totalTransactions: totalCount,
         pendingTransactions: await db.addFund.count({
@@ -269,14 +247,12 @@ export async function GET(request: NextRequest) {
         error: null
       });
     } else {
-      // Return array directly for backward compatibility
       return NextResponse.json(transformedTransactions);
     }
 
   } catch (error) {
     console.error('Error fetching transactions:', error);
 
-    // Return more detailed error information
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json(
@@ -295,7 +271,6 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -313,7 +288,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
 
-    // Find the transaction
     const transaction = await db.addFund.findUnique({
       where: { id: Number(transactionId) },
       include: { user: true }
@@ -323,7 +297,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
 
-    // Update transaction status based on action
     const updateData: Record<string, any> = {
       updatedAt: new Date()
     };
@@ -332,7 +305,6 @@ export async function PATCH(request: NextRequest) {
       updateData.status = 'Success';
       updateData.admin_status = 'Success';
 
-      // Add balance to user account only if not already approved
       if (transaction.admin_status !== 'Success') {
         await db.user.update({
           where: { id: transaction.userId },
@@ -346,7 +318,6 @@ export async function PATCH(request: NextRequest) {
       updateData.status = 'Cancelled';
       updateData.admin_status = 'Cancelled';
 
-      // If transaction was previously approved, deduct balance
       if (transaction.admin_status === 'Success') {
         await db.user.update({
           where: { id: transaction.userId },
@@ -358,13 +329,12 @@ export async function PATCH(request: NextRequest) {
       }
     } else if (status === 'Suspicious') {
       updateData.admin_status = 'Suspicious';
-      updateData.status = 'Processing'; // Keep original status but mark as suspicious
+      updateData.status = 'Processing';
     } else if (status === 'Pending' || status === 'pending') {
       updateData.admin_status = 'Pending';
       updateData.status = 'Processing';
     }
 
-    // Update the transaction
     const updatedTransaction = await db.addFund.update({
       where: { id: Number(transactionId) },
       data: updateData,

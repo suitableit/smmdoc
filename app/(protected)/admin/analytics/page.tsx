@@ -171,14 +171,11 @@ const CustomChart = ({ data, activeTab, maxValue }: {
 
   return (
     <div className="relative h-80 bg-gray-50 rounded-lg p-4">
-      {}
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
         ))}
       </div>
-
-      {}
       <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600">
         {[0, 1, 2, 3, 4].map((i) => {
           const value = maxValue - (i * maxValue / 4);
@@ -189,8 +186,6 @@ const CustomChart = ({ data, activeTab, maxValue }: {
           );
         })}
       </div>
-
-      {}
       <div className="absolute left-12 right-4 bottom-8 top-4 flex items-end justify-between gap-1">
         {data.map((item, index) => {
           const value = activeTab === 'profit' ? item.profit :
@@ -200,12 +195,9 @@ const CustomChart = ({ data, activeTab, maxValue }: {
 
           return (
             <div key={index} className="flex flex-col items-center flex-1 group">
-              {}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
                 {item.month}: {activeTab === 'orders' ? value.toLocaleString() : formatValue(value)}
               </div>
-
-              {}
               <div 
                 className={`w-full ${getBarColor()} rounded-t-sm transition-all duration-300 hover:opacity-80 cursor-pointer`}
                 style={{ height: `${height}%` }}
@@ -214,8 +206,6 @@ const CustomChart = ({ data, activeTab, maxValue }: {
           );
         })}
       </div>
-
-      {}
       <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600">
         {data.map((item, index) => (
           <div key={index} className="flex-1 text-center">
@@ -242,14 +232,11 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
 
   return (
     <div className="relative h-64 bg-gray-50 rounded-lg p-4">
-      {}
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
         ))}
       </div>
-
-      {}
       <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600">
         {[0, 1, 2, 3, 4].map((i) => {
           const value = maxValue - (i * maxValue / 4);
@@ -260,19 +247,14 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
           );
         })}
       </div>
-
-      {}
       <div className="absolute left-12 right-4 bottom-8 top-4 flex items-end justify-between gap-1">
         {data.map((item, index) => {
 
           return (
             <div key={index} className="flex flex-col justify-end items-center flex-1 group relative">
-              {}
               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
                 {item.month}: {platforms.reduce((sum, platform) => sum + (item[platform.key as keyof AnalyticsData] as number), 0).toLocaleString()}
               </div>
-
-              {}
               <div className="w-full flex flex-col-reverse">
                 {platforms.map((platform) => {
                   const value = item[platform.key as keyof AnalyticsData] as number;
@@ -292,8 +274,6 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
           );
         })}
       </div>
-
-      {}
       <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600">
         {data.map((item, index) => (
           <div key={index} className="flex-1 text-center">
@@ -402,7 +382,6 @@ export default function AnalyticsPage() {
   return (
     <div className="page-container">
       <div className="page-content">
-        {}
         <div className="mb-6">
         <div className="card card-padding">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -415,8 +394,6 @@ export default function AnalyticsPage() {
                 <p className="text-sm text-gray-600">Track your SMM panel performance and growth</p>
               </div>
             </div>
-
-            {}
             <div className="relative">
               <button
                 onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
@@ -450,11 +427,8 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
-
-      {}
       <div className="mb-6">
         <div className="card card-padding">
-          {}
           <div className="flex flex-wrap gap-3 mb-6">
             <TabButton
               id="profit"
@@ -478,8 +452,6 @@ export default function AnalyticsPage() {
               onClick={() => setActiveTab('orders')}
             />
           </div>
-
-          {}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition-colors duration-200">
               <div className="flex items-center justify-between">
@@ -545,8 +517,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
           </div>
-
-          {}
           <div className="mb-4">
             <h3 className="card-title mb-4">
               {activeTab === 'profit' ? 'Monthly Profit Analysis' :
@@ -565,8 +535,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
-
-      {}
       {activeTab === 'orders' && !loading && (
         <div className="mb-6">
           <div className="card card-padding">
@@ -603,8 +571,6 @@ export default function AnalyticsPage() {
               <h4 className="text-md font-semibold text-gray-900 mb-4">Monthly Platform Distribution</h4>
               <PlatformChart data={analyticsData} totalOrders={metrics.total} />
             </div>
-
-            {}
             <div className="flex flex-wrap gap-4 justify-center mt-4">
               {[
                 { name: 'Instagram', color: 'bg-pink-500' },

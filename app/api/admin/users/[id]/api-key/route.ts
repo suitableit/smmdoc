@@ -1,14 +1,12 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Generate a secure API key
 function generateApiKey(): string {
   return randomBytes(32).toString('hex');
 }
 
-// POST /api/admin/users/[id]/api-key - Generate new API key for user
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -29,7 +27,6 @@ export async function POST(
 
     const { id  } = await params;
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
@@ -46,10 +43,8 @@ export async function POST(
       );
     }
 
-    // Generate new API key
     const newApiKey = generateApiKey();
 
-    // Update user with new API key
     const updatedUser = await db.user.update({
       where: { id: Number(id) },
       data: { apiKey: newApiKey },
@@ -82,7 +77,6 @@ export async function POST(
   }
 }
 
-// DELETE /api/admin/users/[id]/api-key - Remove API key for user
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -103,7 +97,6 @@ export async function DELETE(
 
     const { id  } = await params;
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
@@ -120,7 +113,6 @@ export async function DELETE(
       );
     }
 
-    // Remove API key
     const updatedUser = await db.user.update({
       where: { id: Number(id) },
       data: { apiKey: null },
@@ -153,7 +145,6 @@ export async function DELETE(
   }
 }
 
-// GET /api/admin/users/[id]/api-key - Get user API key status
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string   }> }
@@ -196,7 +187,6 @@ export async function GET(
       );
     }
 
-    // Return user data with masked API key for security
     const responseData = {
       ...user,
       apiKey: user.apiKey ? `${user.apiKey.substring(0, 8)}...${user.apiKey.substring(user.apiKey.length - 8)}` : null,

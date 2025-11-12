@@ -506,7 +506,6 @@ const TicketPage: React.FC = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -519,9 +518,7 @@ const TicketPage: React.FC = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="space-y-6">
-            {}
             <div className="card" style={{ padding: '8px' }}>
               <div className="flex space-x-2">
                 <button
@@ -719,8 +716,6 @@ const TicketPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-
-                  {}
                   {isEnabledForForm('supportTicket') && recaptchaSettings && (
                     <ReCAPTCHA
                       siteKey={recaptchaSettings.siteKey}
@@ -754,8 +749,6 @@ const TicketPage: React.FC = () => {
               )}
             </div>
           </div>
-
-          {}
           <div className="space-y-6">
             <div className="card card-padding">
               <div className="card-header">
@@ -766,7 +759,6 @@ const TicketPage: React.FC = () => {
               </div>
 
               <div className="space-y-3 mt-4">
-                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -802,8 +794,6 @@ const TicketPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -842,8 +832,6 @@ const TicketPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {}
                 <div className="card">
                   <button
                     className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"

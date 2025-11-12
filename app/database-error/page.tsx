@@ -100,7 +100,6 @@ export default function DatabaseErrorPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl mx-auto">
-        {}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 text-center">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6 relative">
@@ -116,8 +115,6 @@ export default function DatabaseErrorPage() {
               We're experiencing technical difficulties. Please try again in a moment.
             </p>
           </div>
-
-          {}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleRetryConnection}
@@ -147,8 +144,6 @@ export default function DatabaseErrorPage() {
               <span>Contact Support</span>
             </a>
           </div>
-
-          {}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center mb-6">
               <div className="w-10 h-10 bg-gradient-to-r from-[#5F1DE8] to-purple-600 rounded-lg flex items-center justify-center mr-3">

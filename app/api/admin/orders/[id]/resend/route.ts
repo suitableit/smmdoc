@@ -1,9 +1,8 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
 
-// POST /api/admin/orders/:id/resend - Resend a failed order
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +10,6 @@ export async function POST(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -36,7 +34,6 @@ export async function POST(
       );
     }
 
-    // Convert string ID to integer
     const orderId = parseInt(id);
     if (isNaN(orderId)) {
       return NextResponse.json(
@@ -49,7 +46,6 @@ export async function POST(
       );
     }
 
-    // Get the order with all necessary relations
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -87,7 +83,6 @@ export async function POST(
       );
     }
 
-    // Check if order status is 'failed'
     if (order.status !== 'failed') {
       return NextResponse.json(
         {
@@ -99,7 +94,6 @@ export async function POST(
       );
     }
 
-    // Log the resend attempt
     console.log(`Admin ${session.user.email} attempting to resend order ${order.id} for user ${order.user.email}`, {
       orderId: order.id,
       userId: order.user.id,
@@ -111,9 +105,7 @@ export async function POST(
     let resendResult = null;
     let newStatus = 'pending';
 
-    // Check if this is an API provider service
     if (order.service.providerId && order.service.providerServiceId) {
-      // Fetch the provider separately
       const apiProvider = await db.api_providers.findUnique({
         where: { id: order.service.providerId }
       });
@@ -128,7 +120,6 @@ export async function POST(
           { status: 404 }
         );
       }
-      // Create provider object for API calls
       const providerForBalance: any = {
         id: apiProvider.id,
         name: apiProvider.name,
@@ -138,10 +129,8 @@ export async function POST(
       };
 
       try {
-        // This is an API provider order - attempt to resend to provider
         const providerForwarder = ProviderOrderForwarder.getInstance();
 
-        // Check if provider is active
         if (apiProvider.status !== 'active') {
           return NextResponse.json(
             {
@@ -153,13 +142,11 @@ export async function POST(
           );
         }
 
-        // Check provider balance first
         try {
           const providerBalance = await providerForwarder.getProviderBalance(providerForBalance);
           const orderCost = order.charge || order.price;
 
           if (providerBalance < orderCost) {
-            // Provider has insufficient balance
             console.log(`Provider ${apiProvider.name} has insufficient balance. Required: ${orderCost}, Available: ${providerBalance}`);
             
             return NextResponse.json(
@@ -183,7 +170,6 @@ export async function POST(
           );
         }
 
-        // Attempt to resend the order to the provider
         const orderData = {
           service: order.service.providerServiceId,
           link: order.link,
@@ -194,7 +180,6 @@ export async function POST(
 
         resendResult = await providerForwarder.forwardOrderToProvider(providerForBalance, orderData);
 
-        // Update order with new provider order ID and status
         newStatus = resendResult.status || 'pending';
         
         await db.newOrder.update({
@@ -213,7 +198,6 @@ export async function POST(
       } catch (providerError) {
         console.error('Error resending order to provider:', providerError);
         
-        // Check if it's a balance-related error
         const errorMessage = providerError instanceof Error ? providerError.message : String(providerError);
         if (errorMessage.toLowerCase().includes('balance') || errorMessage.toLowerCase().includes('insufficient')) {
           return NextResponse.json(
@@ -226,7 +210,6 @@ export async function POST(
           );
         }
 
-        // For other provider errors, return a generic error
         return NextResponse.json(
           {
             error: 'Failed to resend order to provider. Please try again.',
@@ -237,7 +220,6 @@ export async function POST(
         );
       }
     } else {
-      // This is a manual order - just update status to pending
       await db.newOrder.update({
         where: { id: orderId },
         data: {
@@ -249,7 +231,6 @@ export async function POST(
       console.log(`Manual order ${order.id} status updated to pending for resend`);
     }
 
-    // Get the updated order to return
     const updatedOrder = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {

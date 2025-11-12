@@ -6,7 +6,6 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -24,12 +23,10 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for filtering
     const whereClause: any = {
       admin_status: status,
     };
 
-    // Add search functionality
     if (search) {
       whereClause.OR = [
         {
@@ -63,7 +60,6 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Build orderBy clause
     let orderBy: any = {};
     if (sortBy === 'user.name') {
       orderBy = {
@@ -75,7 +71,6 @@ export async function GET(req: NextRequest) {
       orderBy[sortBy] = sortOrder;
     }
 
-    // Fetch transactions with pagination
     const [transactions, totalCount] = await Promise.all([
       db.addFund.findMany({
         where: whereClause,

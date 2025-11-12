@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -13,7 +13,7 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return; // Still loading
+    if (status === 'loading') return;
 
     if (!session) {
       router.push('/sign-in');
@@ -21,12 +21,11 @@ export default function AdminLayout({
     }
 
     if (session.user.role !== 'admin') {
-      router.push('/dashboard'); // Redirect non-admin users
+      router.push('/dashboard');
       return;
     }
   }, [session, status, router]);
 
-  // Show loading while checking authentication
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -35,7 +34,6 @@ export default function AdminLayout({
     );
   }
 
-  // Don't render anything if not authenticated or not admin
   if (!session || session.user.role !== 'admin') {
     return null;
   }

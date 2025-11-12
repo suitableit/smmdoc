@@ -465,7 +465,6 @@ function ContactSupportPage() {
 
   return (
     <div className="page-container">
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -476,7 +475,6 @@ function ContactSupportPage() {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {}
           <div className="lg:col-span-2">
             <div className="card card-padding">
               <div className="card-header">
@@ -487,7 +485,6 @@ function ContactSupportPage() {
               </div>
 
               <div className="space-y-6">
-                {}
                 <div className="form-group">
                   <label className="form-label" htmlFor="username">
                     Username
@@ -502,8 +499,6 @@ function ContactSupportPage() {
                     style={{ backgroundColor: '#f9fafb', color: '#6b7280' }}
                   />
                 </div>
-
-                {}
                 <div className="form-group">
                   <label className="form-label" htmlFor="subject">
                     Subject
@@ -617,8 +612,6 @@ function ContactSupportPage() {
                     </div>
                   )}
                 </div>
-
-                {}
                 {isEnabledForForm('contactSupport') && recaptchaSettings && (
                   <ReCAPTCHA
                     siteKey={recaptchaSettings.siteKey}
@@ -639,8 +632,6 @@ function ContactSupportPage() {
                     }}
                   />
                 )}
-
-                {}
                 <button
                   type="button"
                   onClick={handleSubmit}
@@ -661,10 +652,7 @@ function ContactSupportPage() {
               </div>
             </div>
           </div>
-
-          {}
           <div className="space-y-6">
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -705,8 +693,6 @@ function ContactSupportPage() {
                 </div>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -729,8 +715,6 @@ function ContactSupportPage() {
                 </Link>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">

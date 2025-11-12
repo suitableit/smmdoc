@@ -661,7 +661,6 @@ const AdminOrdersPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toastNotification && (
         <Toast
@@ -673,7 +672,6 @@ const AdminOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <div className="card card-padding">
             <div className="card-content">
@@ -747,13 +745,9 @@ const AdminOrdersPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -788,8 +782,6 @@ const AdminOrdersPage = () => {
               </button>
 
             </div>
-
-            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -806,16 +798,11 @@ const AdminOrdersPage = () => {
                   className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-
-              {}
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -956,7 +943,6 @@ const AdminOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedOrders.length > 0 && (
               <div className="flex items-center gap-2 py-4 border-b mb-4">
                 <span
@@ -1026,8 +1012,6 @@ const AdminOrdersPage = () => {
           </div>
         </div>
       </div>
-
-      {}
       <ChangeAllStatusModal
         isOpen={bulkStatusDialog.open}
         onClose={() => setBulkStatusDialog({ open: false })}
@@ -1036,8 +1020,6 @@ const AdminOrdersPage = () => {
         setBulkStatus={setBulkStatus}
         onUpdate={handleBulkStatusUpdate}
       />
-
-      {}
       <MarkPartialModal
         isOpen={markPartialDialog.open}
         onClose={() => setMarkPartialDialog({ open: false, orderId: '' })}
@@ -1049,8 +1031,6 @@ const AdminOrdersPage = () => {
         }}
         showToast={showToast}
       />
-
-      {}
       <StartCountModal
         isOpen={editStartCountDialog.open}
         onClose={() => setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 })}
@@ -1063,8 +1043,6 @@ const AdminOrdersPage = () => {
         }}
         showToast={showToast}
       />
-
-      {}
       <UpdateOrderStatusModal
         isOpen={updateStatusDialog.open}
         onClose={() => setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' })}

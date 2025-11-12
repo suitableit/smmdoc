@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Check if affiliate system is enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const affiliateSystemEnabled = moduleSettings?.affiliateSystemEnabled ?? false;
 
@@ -36,7 +35,6 @@ export async function GET(req: NextRequest) {
 
     const userId = parseInt(session.user.id);
 
-    // Get affiliate data
     const affiliate = await db.affiliates.findUnique({
       where: { userId },
       include: {
@@ -65,7 +63,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Calculate stats
     const totalCommissions = affiliate.affiliate_commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
     const conversionRate = affiliate.totalVisits > 0 ? ((affiliate.totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
 

@@ -5,11 +5,9 @@ export async function GET() {
   try {
     console.log('Testing database connection...');
     
-    // Test basic connection
     const orderCount = await db.newOrder.count();
     console.log('Total orders in database:', orderCount);
     
-    // Get first few orders
     const orders = await db.newOrder.findMany({
       take: 5,
       select: {
