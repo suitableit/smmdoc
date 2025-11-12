@@ -36,7 +36,8 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger
 } from '../ui/dropdown-menu';
-import MobileSidebar from './mobile-siderbar';
+import MobileSidebar from './mobile-siderbar';
+
 const Avatar = ({
   className,
   children,
@@ -74,7 +75,8 @@ const AvatarFallback = ({ children }: { children: React.ReactNode }) => (
   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-sm">
     {children}
   </div>
-);
+);
+
 const ThemeToggle = ({ 
   isMobile = false, 
   openDropdowns, 
@@ -118,7 +120,8 @@ const ThemeToggle = ({
     themeOptions.find((option) => option.key === theme) || themeOptions[0];
   const CurrentIcon = currentTheme.icon;
 
-  if (isMobile) {
+  if (isMobile) {
+
     return (
       <div
         className="p-2.5 rounded-lg"
@@ -164,7 +167,8 @@ const ThemeToggle = ({
         </div>
       </div>
     );
-  }
+  }
+
   return (
     <DropdownMenu 
       open={openDropdowns?.theme}
@@ -221,12 +225,14 @@ const ThemeToggle = ({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+};
+
 const MobileCurrencyToggle = () => {
   const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
 
   const handleCurrencyChange = async (newCurrency: string) => {
-    await setCurrency(newCurrency);
+    await setCurrency(newCurrency);
+
   };
 
   return (
@@ -287,7 +293,8 @@ const MobileCurrencyToggle = () => {
       </div>
     </div>
   );
-};
+};
+
 const MobileMenuToggle = ({
   isMenuOpen,
   toggleMenu,
@@ -330,7 +337,8 @@ const MobileMenuToggle = ({
       <MobileSidebar />
     </DropdownMenuContent>
   </DropdownMenu>
-);
+);
+
 const Menu = ({ 
   user, 
   openDropdowns, 
@@ -342,19 +350,21 @@ const Menu = ({
 }) => {
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const isOpen = openDropdowns?.profile || false;
   const setIsOpen = (open: boolean) => handleDropdownChange?.('profile', open);
   const { currency, rate, currentCurrencyData, availableCurrencies } = useCurrency();
   const userData = useSelector((state: any) => state.userDetails);
 
   const closeMenu = () => setIsOpen(false);
-  const enableAuth = true;
+  const enableAuth = true;
+
   const isAdmin =
     user?.role?.toLowerCase() === 'admin' ||
     user?.userType?.toLowerCase() === 'admin' ||
-    user?.isAdmin === true;
+    user?.isAdmin === true;
+
   useEffect(() => {
     const loadUserData = async () => {
       if ((currentUser?.id || user?.id) && !userData?.id) {
@@ -370,15 +380,11 @@ const Menu = ({
     };
 
     loadUserData();
-  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
+  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
+
   const { data: userStatsResponse } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const menuItems = [
     {
@@ -419,7 +425,8 @@ const Menu = ({
       if (enableAuth) {
         const { signOut } = await import('next-auth/react');
         await signOut({ callbackUrl: '/', redirect: true });
-      } else {
+      } else {
+
         window.location.href = '/';
       }
     } catch (error) {
@@ -524,17 +531,13 @@ const Menu = ({
                     <FaChevronDown className="h-2.5 w-2.5 sm:h-4 sm:w-4 opacity-70" />
                   </div>
                   <div className="mt-1.5 sm:mt-2">
-                    {loading ? (
-                      <div className="h-4 sm:h-6 w-16 sm:w-24 bg-white/20 rounded animate-pulse"></div>
-                    ) : (
-                      <div className="text-lg sm:text-2xl font-bold">
-                        <PriceDisplay
-                          amount={balance}
-                          originalCurrency="BDT"
-                          className="text-white"
-                        />
-                      </div>
-                    )}
+                    <div className="text-lg sm:text-2xl font-bold">
+                      <PriceDisplay
+                        amount={balance}
+                        originalCurrency="USD"
+                        className="text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -599,11 +602,13 @@ const Header = () => {
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
   const { currency, setCurrency, rate, isLoading, availableCurrencies, currentCurrencyData } = useCurrency();
-  const userData = useSelector((state: any) => state.userDetails);
+  const userData = useSelector((state: any) => state.userDetails);
+
   const user = userData?.id ? userData : currentUser;
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+
   const [openDropdowns, setOpenDropdowns] = useState({
     notifications: false,
     currency: false,
@@ -611,14 +616,17 @@ const Header = () => {
     plus: false,
     profile: false,
     mobile: false
-  });
+  });
+
   const handleDropdownChange = (dropdownName: string, isOpen: boolean) => {
     setOpenDropdowns(prev => ({
       ...prev,
       [dropdownName]: isOpen
     }));
-  };
-  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
+  };
+
+  const isAnyDropdownOpen = Object.values(openDropdowns).some(Boolean);
+
   useEffect(() => {
     const fetchContactSettings = async () => {
       try {
@@ -628,7 +636,8 @@ const Header = () => {
           setContactSystemEnabled(data.contactSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching contact settings:', error);
+        console.error('Error fetching contact settings:', error);
+
         setContactSystemEnabled(true);
       }
     };
@@ -648,20 +657,27 @@ const Header = () => {
   const formatCurrency = (amount: number) => {
     if (!currentCurrencyData || !availableCurrencies || availableCurrencies.length === 0) {
       return `$${amount.toFixed(2)}`;
-    }
+    }
+
+
     let convertedAmount = amount;
 
-    if (currentCurrencyData.code === userStoredCurrency) {
+    if (currentCurrencyData.code === userStoredCurrency) {
+
       convertedAmount = amount;
-    } else {
+    } else {
+
       const storedCurrencyData = availableCurrencies.find(c => c.code === userStoredCurrency);
 
       if (storedCurrencyData && currentCurrencyData) {
-        if (userStoredCurrency === 'USD') {
+        if (userStoredCurrency === 'USD') {
+
           convertedAmount = amount * currentCurrencyData.rate;
-        } else if (currentCurrencyData.code === 'USD') {
+        } else if (currentCurrencyData.code === 'USD') {
+
           convertedAmount = amount / storedCurrencyData.rate;
-        } else {
+        } else {
+
           const usdAmount = amount / storedCurrencyData.rate;
           convertedAmount = usdAmount * currentCurrencyData.rate;
         }
@@ -694,12 +710,15 @@ const Header = () => {
 
     const intervalId = setInterval(() => {
       fetchUser();
-    }, 30000);
-    const handleCurrencyUpdate = () => {
+    }, 30000);
+
+    const handleCurrencyUpdate = () => {
+
       setTimeout(() => {
         window.location.reload();
       }, 100);
-    };
+    };
+
     const handleAvatarUpdate = () => {
       fetchUser();
     };
@@ -712,20 +731,26 @@ const Header = () => {
       window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
       window.removeEventListener('avatarUpdated', handleAvatarUpdate);
     };
-  }, []);
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const originalOverflow = document.body.style.overflow;
+  }, []);
+
+  useEffect(() => {
+
+    if (typeof document !== 'undefined') {
+
+      const originalOverflow = document.body.style.overflow;
+
       document.body.style.overflowY = 'scroll';
 
-      return () => {
+      return () => {
+
         document.body.style.overflow = originalOverflow;
       };
     }
   }, []);
 
   const handleCurrencyChange = async (newCurrency: string) => {
-    await setCurrency(newCurrency);
+    await setCurrency(newCurrency);
+
   };
 
   return (
@@ -1055,9 +1080,7 @@ const Header = () => {
         {!isAdmin && (
           <Link
             href="/add-funds"
-            className={`hidden sm:flex items-center gap-2 h-10 ${
-              isRefreshing ? 'animate-pulse' : ''
-            } text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 group flex-shrink-0`}
+            className="hidden sm:flex items-center gap-2 h-10 text-white rounded-lg px-4 shadow-lg gradient-button-hover transition-all duration-300 group flex-shrink-0"
             style={{
               background: `linear-gradient(to right, var(--primary), var(--secondary))`,
             }}
@@ -1066,7 +1089,7 @@ const Header = () => {
             <span className="font-bold text-sm">
               <PriceDisplay
                 amount={balance}
-                originalCurrency="BDT"
+                originalCurrency="USD"
                 className="text-white"
               />
             </span>
@@ -1116,8 +1139,10 @@ const Header = () => {
               </h3>
               <button 
                 className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                onClick={() => {
-                  console.log('Marking all notifications as read...');
+                onClick={() => {
+
+                  console.log('Marking all notifications as read...');
+
                 }}
               >
                 Mark all as read
@@ -1327,8 +1352,10 @@ const Header = () => {
             >
               <button
                 className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                onClick={() => {
-                  console.log('Loading more notifications...');
+                onClick={() => {
+
+                  console.log('Loading more notifications...');
+
                 }}
               >
                 See more
