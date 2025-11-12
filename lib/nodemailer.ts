@@ -1,32 +1,39 @@
 import nodemailer, { Transporter } from "nodemailer";
 import { createEmailTransporter, getFromEmailAddress } from './email-config';
 import { getAppName } from './utils/general-settings';
+import crypto from 'crypto';
 
 interface MailOptions {
   sendTo: string;
   subject: string;
   html: string;
-}
+}
+
 export const sendMail = async ({
   sendTo,
   subject,
   html,
 }: MailOptions): Promise<boolean> => {
-  try {
+  try {
+
     const transporter = await createEmailTransporter();
 
     if (!transporter) {
       console.error("❌ Email transporter not available. Please configure email settings in admin panel.");
       return false;
-    }
+    }
+
     const fromEmail = await getFromEmailAddress();
 
     if (!fromEmail) {
       console.error("❌ From email address not configured. Please configure email settings in admin panel.");
       return false;
-    }
-    const appName = await getAppName();
-    const messageId = `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@${fromEmail.split('@')[1]}>`;
+    }
+
+    const appName = await getAppName();
+
+    const randomBytes = crypto.randomBytes(8).toString('hex');
+    const messageId = `<${Date.now()}.${randomBytes}@${fromEmail.split('@')[1]}>`;
 
     await transporter.sendMail({
       from: `"${appName}" <${fromEmail}>`,
@@ -47,7 +54,8 @@ export const sendMail = async ({
 
     console.log(`✅ Email sent successfully to: ${sendTo}`);
     return true;
-  } catch (error) {
+  } catch (error) {
+
     const emailError = error as any;
 
     console.error("❌ Error in sending mail:", {
@@ -55,7 +63,8 @@ export const sendMail = async ({
       message: emailError.message || 'Unknown error occurred',
       to: sendTo,
       subject: subject
-    });
+    });
+
     if (emailError.code === 'EAUTH') {
       console.error("🔐 Authentication failed. Please check:");
       console.error("- SMTP username is correct in admin email settings");
@@ -65,7 +74,8 @@ export const sendMail = async ({
 
     return false;
   }
-};
+};
+
 export const sendVerificationEmail = async (
   email: string,
   token: string,
@@ -95,7 +105,8 @@ export const sendVerificationEmail = async (
     subject: `Verify Your Email - ${appName}`,
     html: html,
   });
-};
+};
+
 export const sendPasswordResetEmail = async (
   email: string,
   token: string,
