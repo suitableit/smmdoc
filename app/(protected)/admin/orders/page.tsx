@@ -790,8 +790,8 @@ const AdminOrdersPage = () => {
             </div>
 
             {}
-            <div className="flex flex-row items-center gap-3">
-              <div className="relative">
+            <div className="flex flex-row items-center gap-3 w-full md:w-auto">
+              <div className="relative w-full md:w-auto">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}

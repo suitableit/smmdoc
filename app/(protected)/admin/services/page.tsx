@@ -172,7 +172,7 @@ const ServicesTableSkeleton = ({ pageSize = '25', currentPage = 1, totalPages = 
   
   return (
     <>
-      <div className="lg:block">
+      <div className="lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
           <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
             <tr>
@@ -2375,8 +2375,8 @@ function AdminServicesPage() {
             </div>
 
             {}
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="relative w-full md:w-auto">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -2592,7 +2592,8 @@ function AdminServicesPage() {
                 )}
 
                 {}
-                <ServicesTable
+                <div className="overflow-x-auto">
+                  <ServicesTable
                   groupedServices={groupedServices}
                   statusFilter={statusFilter}
                   categoriesData={categoriesData}
@@ -2635,6 +2636,7 @@ function AdminServicesPage() {
                   handleServiceDragEnd={handleServiceDragEnd}
                   handleServiceDrop={handleServiceDrop}
                 />
+                </div>
 
                 {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
