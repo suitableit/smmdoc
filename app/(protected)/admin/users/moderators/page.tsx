@@ -224,7 +224,10 @@ const useDebounce = (value: string, delay: number) => {
 const useClickOutside = (ref: React.RefObject<HTMLElement | null>, handler: () => void) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
-      if (!ref.current || !event.target || ref.current.contains(event.target as Node)) {
+      if (!ref.current || !event.target || !(event.target instanceof Node)) {
+        return;
+      }
+      if (ref.current.contains(event.target)) {
         return;
       }
       handler();
