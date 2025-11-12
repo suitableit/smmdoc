@@ -875,8 +875,8 @@ const ChildPanelsPage = () => {
             </div>
 
             {}
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
+            <div className="w-full md:w-auto">
+              <div className="relative w-full md:w-auto">
                 <FaSearch
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
                   style={{ color: 'var(--text-muted)' }}
@@ -891,12 +891,6 @@ const ChildPanelsPage = () => {
                   className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
-
-              <select className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm">
-                <option value="username">Username</option>
-                <option value="email">Email</option>
-                <option value="domain">Domain</option>
-              </select>
             </div>
           </div>
         </div>

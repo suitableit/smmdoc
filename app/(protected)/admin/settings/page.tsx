@@ -1146,6 +1146,14 @@ const GeneralSettingsPage = () => {
                     </label>
                   </div>
                 </div>
+
+                <button
+                  onClick={saveMetaSettings}
+                  disabled={loadingStates.meta}
+                  className="btn btn-primary w-full"
+                >
+                  {loadingStates.meta ? 'Updating...' : 'Save Meta (SEO) Settings'}
+                </button>
               </div>
             </div>
 
@@ -1158,76 +1166,84 @@ const GeneralSettingsPage = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Reset Password</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Allow users to reset their passwords via email
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.resetPasswordEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        resetPasswordEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.resetPasswordEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          resetPasswordEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Sign Up Page</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Enable user registration
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.signUpPageEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        signUpPageEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.signUpPageEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          signUpPageEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Name Field</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Require name field during registration
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.nameFieldEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        nameFieldEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.nameFieldEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          nameFieldEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Email Confirmation</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Require email verification after registration
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.emailConfirmationEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        emailConfirmationEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.emailConfirmationEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          emailConfirmationEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1265,22 +1281,24 @@ const GeneralSettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">User Free Balance</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Enable or disable free balance for new users
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.userFreeBalanceEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        userFreeBalanceEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.userFreeBalanceEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          userFreeBalanceEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1300,22 +1318,24 @@ const GeneralSettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Payment Bonus</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Get a bonus when the user add funds using payment gateway
                     </p>
                   </div>
-                  <Switch
-                    checked={userSettings.paymentBonusEnabled}
-                    onCheckedChange={(checked) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        paymentBonusEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={userSettings.paymentBonusEnabled}
+                      onCheckedChange={(checked) =>
+                        setUserSettings(prev => ({
+                          ...prev,
+                          paymentBonusEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1356,22 +1376,24 @@ const GeneralSettingsPage = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Ticket System</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Enable or disable the support ticket system
                     </p>
                   </div>
-                  <Switch
-                    checked={ticketSettings.ticketSystemEnabled}
-                    onCheckedChange={(checked) =>
-                      setTicketSettings(prev => ({
-                        ...prev,
-                        ticketSystemEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={ticketSettings.ticketSystemEnabled}
+                      onCheckedChange={(checked) =>
+                        setTicketSettings(prev => ({
+                          ...prev,
+                          ticketSystemEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1444,22 +1466,24 @@ const GeneralSettingsPage = () => {
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="flex-1">
                     <label className="form-label mb-1">Contact System</label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Enable or disable the contact form system
                     </p>
                   </div>
-                  <Switch
-                    checked={contactSettings.contactSystemEnabled}
-                    onCheckedChange={(checked) =>
-                      setContactSettings(prev => ({
-                        ...prev,
-                        contactSystemEnabled: checked
-                      }))
-                    }
-                  />
+                  <div className="flex-shrink-0 md:ml-4">
+                    <Switch
+                      checked={contactSettings.contactSystemEnabled}
+                      onCheckedChange={(checked) =>
+                        setContactSettings(prev => ({
+                          ...prev,
+                          contactSystemEnabled: checked
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -1537,22 +1561,24 @@ const GeneralSettingsPage = () => {
                     Affiliate
                   </h4>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
                       <label className="form-label mb-1">Affiliate System</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Enable or disable the affiliate system
                       </p>
                     </div>
-                    <Switch
-                      checked={moduleSettings.affiliateSystemEnabled}
-                      onCheckedChange={(checked) =>
-                        setModuleSettings(prev => ({
-                          ...prev,
-                          affiliateSystemEnabled: checked
-                        }))
-                      }
-                    />
+                    <div className="flex-shrink-0 md:ml-4">
+                      <Switch
+                        checked={moduleSettings.affiliateSystemEnabled}
+                        onCheckedChange={(checked) =>
+                          setModuleSettings(prev => ({
+                            ...prev,
+                            affiliateSystemEnabled: checked
+                          }))
+                        }
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -1595,22 +1621,24 @@ const GeneralSettingsPage = () => {
                     Child Panel
                   </h4>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
                       <label className="form-label mb-1">Child Panel Selling</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Enable or disable child panel selling
                       </p>
                     </div>
-                    <Switch
-                      checked={moduleSettings.childPanelSellingEnabled}
-                      onCheckedChange={(checked) =>
-                        setModuleSettings(prev => ({
-                          ...prev,
-                          childPanelSellingEnabled: checked
-                        }))
-                      }
-                    />
+                    <div className="flex-shrink-0 md:ml-4">
+                      <Switch
+                        checked={moduleSettings.childPanelSellingEnabled}
+                        onCheckedChange={(checked) =>
+                          setModuleSettings(prev => ({
+                            ...prev,
+                            childPanelSellingEnabled: checked
+                          }))
+                        }
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -1635,58 +1663,64 @@ const GeneralSettingsPage = () => {
                     Others
                   </h4>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
                       <label className="form-label mb-1">Service Update Logs</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Enable or disable service update logs
                       </p>
                     </div>
-                    <Switch
-                      checked={moduleSettings.serviceUpdateLogsEnabled}
-                      onCheckedChange={(checked) =>
-                        setModuleSettings(prev => ({
-                          ...prev,
-                          serviceUpdateLogsEnabled: checked
-                        }))
-                      }
-                    />
+                    <div className="flex-shrink-0 md:ml-4">
+                      <Switch
+                        checked={moduleSettings.serviceUpdateLogsEnabled}
+                        onCheckedChange={(checked) =>
+                          setModuleSettings(prev => ({
+                            ...prev,
+                            serviceUpdateLogsEnabled: checked
+                          }))
+                        }
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
                       <label className="form-label mb-1">Mass Order</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Enable or disable mass order functionality
                       </p>
                     </div>
-                    <Switch
-                      checked={moduleSettings.massOrderEnabled}
-                      onCheckedChange={(checked) =>
-                        setModuleSettings(prev => ({
-                          ...prev,
-                          massOrderEnabled: checked
-                        }))
-                      }
-                    />
+                    <div className="flex-shrink-0 md:ml-4">
+                      <Switch
+                        checked={moduleSettings.massOrderEnabled}
+                        onCheckedChange={(checked) =>
+                          setModuleSettings(prev => ({
+                            ...prev,
+                            massOrderEnabled: checked
+                          }))
+                        }
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex-1">
                       <label className="form-label mb-1">Services List</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Make services list public or private for logged-in users
                       </p>
                     </div>
-                    <Switch
-                      checked={moduleSettings.servicesListPublic}
-                      onCheckedChange={(checked) =>
-                        setModuleSettings(prev => ({
-                          ...prev,
-                          servicesListPublic: checked
-                        }))
-                      }
-                    />
+                    <div className="flex-shrink-0 md:ml-4">
+                      <Switch
+                        checked={moduleSettings.servicesListPublic}
+                        onCheckedChange={(checked) =>
+                          setModuleSettings(prev => ({
+                            ...prev,
+                            servicesListPublic: checked
+                          }))
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
 

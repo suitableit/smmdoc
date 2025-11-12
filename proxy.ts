@@ -107,6 +107,17 @@ export default auth(async (req) => {
   );
 
   if (isContactPage && isLoggedIn) {
+    const isAdminContactMessages = nextUrl.pathname.startsWith('/admin/contact-messages');
+    const isAdmin = userRole?.role === 'admin' && !isImpersonating;
+    
+    if (isAdminContactMessages && isAdmin) {
+      return NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+
     console.log('Proxy: Contact page detected:', nextUrl.pathname);
     console.log('Proxy: User role:', userRole?.role);
     try {
@@ -126,20 +137,20 @@ export default auth(async (req) => {
         console.log('Proxy: Contact system enabled:', data.contactSystemEnabled);
         if (!data.contactSystemEnabled) {
 
-          const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+          const redirectPath = isAdmin ? '/admin' : '/dashboard';
           console.log('Proxy: Redirecting to:', redirectPath);
           return NextResponse.redirect(new URL(redirectPath, nextUrl));
         }
       } else {
         console.log('Proxy: API error, redirecting to safe page');
 
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = isAdmin ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
       console.error('Error checking contact system status in proxy:', error);
 
-      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+      const redirectPath = isAdmin ? '/admin' : '/dashboard';
       return NextResponse.redirect(new URL(redirectPath, nextUrl));
     }
   }
