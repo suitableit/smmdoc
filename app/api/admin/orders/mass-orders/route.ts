@@ -18,12 +18,15 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
     const skip = (page - 1) * limit;
+
+    const sanitizedStatus = status && status !== 'all' ? status.trim() : null;
+    const sanitizedSearch = search ? search.trim().slice(0, 100) : null;
 
     const whereClause: any = {};
 
@@ -58,6 +61,27 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    const { Prisma } = await import('@prisma/client');
+    
+    let statusFilter = Prisma.empty;
+    let searchFilter = Prisma.empty;
+
+    if (sanitizedStatus && ['completed', 'failed', 'pending', 'processing'].includes(sanitizedStatus)) {
+      statusFilter = Prisma.sql`AND (
+        CASE 
+          WHEN COUNT(CASE WHEN o.status = 'completed' THEN 1 END) = COUNT(o.id) THEN 'completed'
+          WHEN COUNT(CASE WHEN o.status = 'failed' OR o.status = 'cancelled' THEN 1 END) > 0 THEN 'failed'
+          WHEN COUNT(CASE WHEN o.status = 'processing' THEN 1 END) > 0 THEN 'processing'
+          ELSE 'pending'
+        END
+      ) = ${sanitizedStatus}`;
+    }
+
+    if (sanitizedSearch) {
+      const searchPattern = `%${sanitizedSearch}%`;
+      searchFilter = Prisma.sql`AND (u.email LIKE ${searchPattern} OR u.name LIKE ${searchPattern})`;
+    }
+
     const massOrdersRaw = await db.$queryRaw`
       SELECT 
         u.id as userId,
@@ -78,29 +102,21 @@ export async function GET(req: NextRequest) {
       FROM "neworder" o
       JOIN "User" u ON o.userId = u.id
       WHERE 1=1
-        ${
-          status && status !== 'all'
-            ? `AND (
-          CASE 
-            WHEN COUNT(CASE WHEN o.status = 'completed' THEN 1 END) = COUNT(o.id) THEN 'completed'
-            WHEN COUNT(CASE WHEN o.status = 'failed' OR o.status = 'cancelled' THEN 1 END) > 0 THEN 'failed'
-            WHEN COUNT(CASE WHEN o.status = 'processing' THEN 1 END) > 0 THEN 'processing'
-            ELSE 'pending'
-          END
-        ) = '${status}'`
-            : ''
-        }
-        ${
-          search
-            ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')`
-            : ''
-        }
+        ${statusFilter}
+        ${searchFilter}
       GROUP BY u.id, u.name, u.email, DATE_TRUNC('minute', o.createdAt), o.currency
       HAVING COUNT(o.id) > 1
       ORDER BY MIN(o.createdAt) DESC
       LIMIT ${limit}
       OFFSET ${skip}
     `;
+
+    let countSearchFilter = Prisma.empty;
+
+    if (sanitizedSearch) {
+      const searchPattern = `%${sanitizedSearch}%`;
+      countSearchFilter = Prisma.sql`AND (u.email LIKE ${searchPattern} OR u.name LIKE ${searchPattern})`;
+    }
 
     const totalCountRaw = await db.$queryRaw`
       SELECT COUNT(*) as total
@@ -111,11 +127,7 @@ export async function GET(req: NextRequest) {
         FROM "neworder" o
         JOIN "User" u ON o.userId = u.id
         WHERE 1=1
-          ${
-            search
-              ? `AND (u.email ILIKE '%${search}%' OR u.name ILIKE '%${search}%')`
-              : ''
-          }
+          ${countSearchFilter}
         GROUP BY u.id, DATE_TRUNC('minute', o.createdAt)
         HAVING COUNT(o.id) > 1
       ) as mass_orders
