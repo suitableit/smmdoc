@@ -92,18 +92,23 @@ export async function POST(req: NextRequest) {
           apiSpec,
           provider.api_url,
           provider.api_key,
-          provider.http_method || 'POST'
+          (provider as any).http_method || (provider as any).httpMethod || 'POST'
         );
 
         // Build services request using API specification
         const servicesRequest = apiBuilder.buildServicesRequest();
         
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), ((provider as any).timeout_seconds || 30) * 1000);
+        
         const response = await fetch(servicesRequest.url, {
           method: servicesRequest.method,
           headers: servicesRequest.headers,
           body: servicesRequest.data,
-          timeout: (provider.timeout_seconds || 30) * 1000
+          signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(`Provider API error: ${response.status} ${response.statusText}`);
@@ -112,10 +117,7 @@ export async function POST(req: NextRequest) {
         const responseData = await response.json();
         
         // Parse response using API specification
-        const responseParser = new ApiResponseParser({
-          responseMapping: provider.response_mapping || '',
-          responseFormat: (provider.response_format as 'json' | 'xml') || 'json'
-        });
+        const responseParser = new ApiResponseParser(apiSpec);
         
         const providerServices = responseParser.parseServicesResponse(responseData);
 
@@ -207,13 +209,13 @@ export async function POST(req: NextRequest) {
         // Process each provider service
         for (const providerService of providerServices) {
           try {
-            const providerServiceId = providerService.service || providerService.id;
+            const providerServiceId = providerService.serviceId;
             console.log(`Processing provider service: ${providerService.name} (ID: ${providerServiceId})`);
             
             const existingService = existingServiceMap.get(providerServiceId?.toString());
             console.log(`Found existing service:`, existingService ? `${existingService.id} (${existingService.name})` : 'None');
 
-            const providerRate = parseFloat(providerService.rate) || 0;
+            const providerRate = typeof providerService.rate === 'string' ? parseFloat(providerService.rate) : providerService.rate || 0;
             const markupRate = providerRate * (1 + profitMargin / 100);
             const rateUSD = convertToUSD(markupRate, 'USD', currencies);
 
@@ -250,13 +252,15 @@ export async function POST(req: NextRequest) {
                   hasChanges = true;
                 }
 
-                if (parseInt(providerService.min) !== existingService.min_order) {
-                  updates.min_order = parseInt(providerService.min) || 100;
+                const minValue = typeof providerService.min === 'string' ? parseInt(providerService.min) : providerService.min;
+                if (minValue !== existingService.min_order) {
+                  updates.min_order = minValue || 100;
                   hasChanges = true;
                 }
 
-                if (parseInt(providerService.max) !== existingService.max_order) {
-                  updates.max_order = parseInt(providerService.max) || 10000;
+                const maxValue = typeof providerService.max === 'string' ? parseInt(providerService.max) : providerService.max;
+                if (maxValue !== existingService.max_order) {
+                  updates.max_order = maxValue || 10000;
                   hasChanges = true;
                 }
 
@@ -306,7 +310,7 @@ export async function POST(req: NextRequest) {
           
           // Create a comprehensive set of provider service identifiers
           providerServices.forEach(s => {
-            const serviceId = s.service || s.id;
+            const serviceId = s.serviceId;
             if (serviceId) {
               providerServiceIds.add(serviceId.toString());
               providerServiceIds.add(parseInt(serviceId).toString()); // Handle string/number conversion

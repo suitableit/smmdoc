@@ -1,5 +1,5 @@
 import { Provider } from '@/types/provider';
-import { ApiRequestBuilder, ApiResponseParser } from '@/lib/provider-api-specification';
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 export interface ProviderOrderRequest {
   service: string;
@@ -41,7 +41,13 @@ export class ProviderOrderForwarder {
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const apiSpec = createApiSpecFromProvider(provider);
+      const requestBuilder = new ApiRequestBuilder(
+        apiSpec,
+        provider.api_url,
+        provider.api_key,
+        (provider as any).http_method || (provider as any).httpMethod || 'POST'
+      );
 
       const orderRequest = requestBuilder.buildAddOrderRequest(
         orderData.service,
@@ -67,16 +73,16 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(apiSpec);
       const parsedOrder = responseParser.parseAddOrderResponse(result);
 
       return {
         order: parsedOrder.orderId,
-        charge: parsedOrder.charge,
-        start_count: parsedOrder.startCount,
-        status: this.mapProviderStatus(parsedOrder.status || 'Pending'),
-        remains: parsedOrder.remains,
-        currency: parsedOrder.currency || 'USD'
+        charge: (result as any).charge || 0,
+        start_count: (result as any).start_count || (result as any).startCount || 0,
+        status: this.mapProviderStatus((result as any).status || 'Pending'),
+        remains: (result as any).remains || 0,
+        currency: (result as any).currency || 'USD'
       };
     } catch (error) {
       console.error('Error forwarding order to provider:', error);
@@ -89,7 +95,13 @@ export class ProviderOrderForwarder {
     providerOrderId: string
   ): Promise<ProviderStatusResponse> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const apiSpec = createApiSpecFromProvider(provider);
+      const requestBuilder = new ApiRequestBuilder(
+        apiSpec,
+        provider.api_url,
+        provider.api_key,
+        (provider as any).http_method || (provider as any).httpMethod || 'POST'
+      );
 
       const statusRequest = requestBuilder.buildOrderStatusRequest(providerOrderId);
 
@@ -109,7 +121,7 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(apiSpec);
       const parsedStatus = responseParser.parseOrderStatusResponse(result);
 
       return {
@@ -137,7 +149,13 @@ export class ProviderOrderForwarder {
     cancel?: boolean;
   }>> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const apiSpec = createApiSpecFromProvider(provider);
+      const requestBuilder = new ApiRequestBuilder(
+        apiSpec,
+        provider.api_url,
+        provider.api_key,
+        (provider as any).http_method || (provider as any).httpMethod || 'POST'
+      );
 
       const servicesRequest = requestBuilder.buildServicesRequest();
 
@@ -157,20 +175,20 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
-      const parsedServices = responseParser.parseServicesResponse(result) as Array<{
-        service: string;
-        name: string;
-        category: string;
-        rate: number;
-        min: number;
-        max: number;
-        type: string;
-        refill?: boolean;
-        cancel?: boolean;
-      }>;
+      const responseParser = new ApiResponseParser(apiSpec);
+      const parsedServices = responseParser.parseServicesResponse(result);
 
-      return parsedServices;
+      return parsedServices.map(service => ({
+        service: service.serviceId,
+        name: service.name,
+        category: service.category,
+        rate: service.rate,
+        min: service.min,
+        max: service.max,
+        type: service.type,
+        refill: service.refill,
+        cancel: service.cancel
+      }));
     } catch (error) {
       console.error('Error fetching provider services:', error);
       throw error;
@@ -179,7 +197,13 @@ export class ProviderOrderForwarder {
 
   async getProviderBalance(provider: Provider): Promise<number> {
     try {
-      const requestBuilder = new ApiRequestBuilder(provider.api_url, provider.api_key);
+      const apiSpec = createApiSpecFromProvider(provider);
+      const requestBuilder = new ApiRequestBuilder(
+        apiSpec,
+        provider.api_url,
+        provider.api_key,
+        (provider as any).http_method || (provider as any).httpMethod || 'POST'
+      );
 
       const balanceRequest = requestBuilder.buildBalanceRequest();
 
@@ -199,7 +223,7 @@ export class ProviderOrderForwarder {
         throw new Error(`Provider error: ${result.error}`);
       }
 
-      const responseParser = new ApiResponseParser();
+      const responseParser = new ApiResponseParser(apiSpec);
       const parsedBalance = responseParser.parseBalanceResponse(result);
 
       return parsedBalance.balance;
@@ -228,7 +252,8 @@ export class ProviderOrderForwarder {
   validateProvider(provider: Provider): boolean {
     if (!provider.api_url || !provider.api_key) {
       return false;
-    }
+    }
+
     try {
       new URL(provider.api_url);
     } catch {

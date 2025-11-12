@@ -411,14 +411,7 @@ export async function POST(req: NextRequest) {
       // Ensure service has provider mapping
       if (service.providerId && service.providerServiceId) {
         const apiProvider = await db.api_providers.findUnique({
-          where: { id: service.providerId },
-          select: {
-            id: true,
-            name: true,
-            api_url: true,
-            api_key: true,
-            status: true
-          }
+          where: { id: service.providerId }
         });
 
         if (apiProvider && apiProvider.status === 'active') {
@@ -431,7 +424,15 @@ export async function POST(req: NextRequest) {
             interval: isDripfeed && dripfeedInterval ? parseInt(dripfeedInterval) : undefined
           };
 
-          const providerRes = await forwarder.forwardOrderToProvider(apiProvider, providerOrderData);
+          const providerForApi: any = {
+            id: apiProvider.id,
+            name: apiProvider.name,
+            api_url: apiProvider.api_url,
+            api_key: apiProvider.api_key,
+            status: apiProvider.status
+          };
+
+          const providerRes = await forwarder.forwardOrderToProvider(providerForApi, providerOrderData);
 
           updatedOrder = await db.newOrder.update({
             where: { id: order.id },

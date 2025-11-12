@@ -824,8 +824,6 @@ export async function DELETE(req: NextRequest) {
             await db.category.update({
               where: { id: categoryId },
               data: { 
-                providerId: null,
-                providerName: "Self",
                 updatedAt: new Date()
               }
             });
@@ -856,8 +854,6 @@ export async function DELETE(req: NextRequest) {
             await db.servicetype.update({
               where: { id: serviceTypeId },
               data: { 
-                providerId: null,
-                providerName: "Self",
                 updatedAt: new Date()
               }
             });
@@ -935,8 +931,6 @@ export async function DELETE(req: NextRequest) {
             await db.category.update({
               where: { id: categoryId },
               data: { 
-                providerId: null,
-                providerName: "Self",
                 updatedAt: new Date()
               }
             });
@@ -963,8 +957,6 @@ export async function DELETE(req: NextRequest) {
             await db.servicetype.update({
               where: { id: serviceTypeId },
               data: { 
-                providerId: null,
-                providerName: "Self",
                 updatedAt: new Date()
               }
             });

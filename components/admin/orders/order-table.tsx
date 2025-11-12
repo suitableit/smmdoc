@@ -12,7 +12,8 @@ import {
   FaTimesCircle,
 } from 'react-icons/fa';
 import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
+
 interface Order {
   id: number;
   user: {
@@ -98,9 +99,10 @@ interface OrderTableProps {
   formatID: (id: number) => string;
   formatNumber: (num: number) => string;
   formatPrice: (price: number, decimals?: number) => string;
-  getStatusIcon: (status: string) => JSX.Element;
+  getStatusIcon: (status: string) => React.ReactElement;
   calculateProgress: (qty: number, remains: number) => number;
-}
+}
+
 
 const OrderTable: React.FC<OrderTableProps> = ({
   orders,
@@ -120,7 +122,8 @@ const OrderTable: React.FC<OrderTableProps> = ({
   getStatusIcon: getStatusIconProp,
   calculateProgress: calculateProgressProp,
 }) => {
-  const { availableCurrencies } = useCurrency();
+  const { availableCurrencies } = useCurrency();
+
   const formatCurrency = (amount: number, currency: string) => {
     if (currency === 'USD') {
       return `$${formatPriceProp(amount, 2)}`;
@@ -128,7 +131,8 @@ const OrderTable: React.FC<OrderTableProps> = ({
       return `৳${formatPriceProp(amount, 2)}`;
     } else if (currency === 'XCD') {
       return `$${formatPriceProp(amount, 2)}`;
-    } else {
+    } else {
+
       const currencyData = availableCurrencies?.find(c => c.code === currency);
       const symbol = currencyData?.symbol || '$';
       return `${symbol}${formatPriceProp(amount, 2)}`;

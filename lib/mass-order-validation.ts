@@ -1,6 +1,6 @@
 
 import axiosInstance from './axiosInstance';
-import { convertCurrency, formatCurrencyAmount } from './currency-utils';
+import { convertCurrency, formatCurrencyAmount, Currency, CurrencySettings } from './currency-utils';
 
 export interface ParsedOrder {
   lineNumber: number;
@@ -62,7 +62,8 @@ async function validateOrder(
   userCurrency: string,
   availableCurrencies: Array<{ code: string; rate: number; symbol: string; name: string }>
 ): Promise<ParsedOrder> {
-  const errors: string[] = [];
+  const errors: string[] = [];
+
   if (!order.serviceId) {
     errors.push('Service ID is required');
   }
@@ -73,10 +74,12 @@ async function validateOrder(
 
   if (!order.quantity || order.quantity <= 0) {
     errors.push('Quantity must be greater than 0');
-  }
+  }
+
   if (order.link && !order.link.startsWith('http')) {
     errors.push('Link must start with http or https');
-  }
+  }
+
   if (errors.length > 0) {
     return {
       ...order,
@@ -85,7 +88,8 @@ async function validateOrder(
     };
   }
 
-  try {
+  try {
+
     const serviceResponse = await axiosInstance.get(
       `/api/user/services/serviceById?svId=${order.serviceId}`
     );
@@ -109,16 +113,26 @@ async function validateOrder(
         errors,
         service
       };
-    }
+    }
+
     if (order.quantity < service.min_order) {
       errors.push(`Minimum quantity is ${service.min_order}`);
     }
 
     if (order.quantity > service.max_order) {
       errors.push(`Maximum quantity is ${service.max_order}`);
-    }
+    }
+
     const price = (service.rate * order.quantity) / 1000;
-    const priceInUserCurrency = convertCurrency(price, 'USD', userCurrency, availableCurrencies);
+    const currencies: Currency[] = availableCurrencies.map((c, index) => ({
+      id: index + 1,
+      code: c.code,
+      name: c.name,
+      symbol: c.symbol,
+      rate: c.rate,
+      enabled: true
+    }));
+    const priceInUserCurrency = convertCurrency(price, 'USD', userCurrency, currencies);
 
     return {
       ...order,
@@ -155,13 +169,15 @@ export async function validateMassOrders(
       currency: userCurrency,
       currencyRate: 1
     };
-  }
+  }
+
   const validatedOrders = await Promise.all(
     parsedOrders.map(order => validateOrder(order, userCurrency, availableCurrencies))
   );
 
   const validOrders = validatedOrders.filter(order => order.valid);
-  const invalidOrders = validatedOrders.filter(order => !order.valid);
+  const invalidOrders = validatedOrders.filter(order => !order.valid);
+
   const totalCost = validOrders.reduce((sum, order) => sum + (order.price || 0), 0);
   const totalCostInUserCurrency = validOrders.reduce((sum, order) => sum + (order.priceInUserCurrency || 0), 0);
 
@@ -201,10 +217,27 @@ export function checkSufficientBalance(
 } {
   const required = validationResult.totalCostInUserCurrency;
   const available = userBalance;
-  const sufficient = available >= required;
+  const sufficient = available >= required;
+
   const formatAmount = (amount: number, currency: string) => {
     if (currencySettings && availableCurrencies.length > 0) {
-      return formatCurrencyAmount(amount, currency, availableCurrencies, currencySettings);
+      const currencies: Currency[] = availableCurrencies.map((c, index) => ({
+        id: index + 1,
+        code: c.code,
+        name: c.name,
+        symbol: c.symbol,
+        rate: c.rate,
+        enabled: true
+      }));
+      const settings: CurrencySettings = {
+        id: 1,
+        defaultCurrency: currency,
+        displayDecimals: currencySettings.decimals,
+        currencyPosition: (currencySettings.symbol_position === 'left' ? 'left' : currencySettings.symbol_position === 'right' ? 'right' : 'left_space') as 'left' | 'right' | 'left_space' | 'right_space',
+        thousandsSeparator: currencySettings.thousand_separator,
+        decimalSeparator: currencySettings.decimal_separator
+      };
+      return formatCurrencyAmount(amount, currency, currencies, settings);
     }
     return `${currency} ${amount.toFixed(2)}`;
   };

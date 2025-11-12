@@ -1507,7 +1507,7 @@ const ImportServicesPage = () => {
                                                     title={
                                                       service.refill ? 'Refill Enabled' : 'Refill Disabled'
                                                     }
-                                                    onClick={() => toggleRefill(service)}
+                                                    onClick={() => {}}
                                                   >
                                                     {service.refill ? (
                                                       <FaToggleOn className="h-5 w-5" />
@@ -1528,7 +1528,7 @@ const ImportServicesPage = () => {
                                                     title={
                                                       service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
                                                     }
-                                                    onClick={() => toggleCancel(service)}
+                                                    onClick={() => {}}
                                                   >
                                                     {service.cancel ? (
                                                       <FaToggleOn className="h-5 w-5" />
@@ -1750,7 +1750,7 @@ const ImportServicesPage = () => {
                                               title={
                                                 service.refill ? 'Refill Enabled' : 'Refill Disabled'
                                               }
-                                              onClick={() => toggleRefill(service)}
+                                              onClick={() => {}}
                                             >
                                               {service.refill ? (
                                                 <FaToggleOn className="h-6 w-6" />
@@ -1777,7 +1777,7 @@ const ImportServicesPage = () => {
                                               title={
                                                 service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
                                               }
-                                              onClick={() => toggleCancel(service)}
+                                              onClick={() => {}}
                                             >
                                               {service.cancel ? (
                                                 <FaToggleOn className="h-6 w-6" />

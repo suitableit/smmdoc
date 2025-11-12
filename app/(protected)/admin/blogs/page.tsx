@@ -580,7 +580,6 @@ const BlogsPage = () => {
   const openStatusDialog = (blogId: number, currentStatus: string) => {
     setStatusDialog({ open: true, blogId, currentStatus });
     setNewStatus(currentStatus);
-    setStatusReason('');
   };
 
   return (

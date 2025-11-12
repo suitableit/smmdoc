@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { convertToUSD } from '@/lib/currency-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Configuration constants
@@ -969,6 +970,27 @@ export async function PUT(req: NextRequest) {
 
       console.log('✅ Provider found:', provider.name);
 
+      // Fetch currencies for conversion
+      const currencies = await db.currency.findMany({
+        where: { enabled: true },
+        select: {
+          id: true,
+          code: true,
+          symbol: true,
+          rate: true,
+          name: true,
+          enabled: true
+        }
+      });
+      const formattedCurrencies = currencies.map(c => ({
+        id: c.id,
+        code: c.code,
+        symbol: c.symbol,
+        rate: Number(c.rate),
+        name: c.name,
+        enabled: c.enabled
+      }));
+
       let importedCount = 0;
       let skippedCount = 0;
       const errors: string[] = [];
@@ -1005,7 +1027,7 @@ export async function PUT(req: NextRequest) {
           
           if (service.currency && service.currency !== 'USD') {
             try {
-              baseProviderPrice = await convertToUSD(baseProviderPrice, service.currency);
+              baseProviderPrice = convertToUSD(baseProviderPrice, service.currency, formattedCurrencies);
               console.log(`💱 Converted ${originalProviderPrice} ${service.currency} to ${baseProviderPrice} USD`);
             } catch (conversionError) {
               console.warn(`⚠️ Currency conversion failed for ${service.name}:`, conversionError);

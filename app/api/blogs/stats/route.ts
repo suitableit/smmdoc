@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate status counts
-    const statusCounts = {
+    const statusCounts: Record<string, number> = {
       published: 0,
       draft: 0,
       scheduled: 0,

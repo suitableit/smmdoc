@@ -11,17 +11,20 @@ import {
     FaSync,
     FaTimes,
     FaTrash,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { formatNumber } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -38,7 +41,8 @@ const Toast = ({
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
-);
+);
+
 interface PostTag {
   id: number;
   name: string;
@@ -56,13 +60,16 @@ interface PaginationInfo {
 }
 
 const PostTagsPage = () => {
-  const { appName } = useAppNameWithFallback();
+  const { appName } = useAppNameWithFallback();
+
   useEffect(() => {
     setPageTitle('Post Tags', appName);
-  }, [appName]);
+  }, [appName]);
+
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+
   const fetchTags = async () => {
     try {
       setLoading(true);
@@ -70,8 +77,9 @@ const PostTagsPage = () => {
       const response = await fetch('/api/blogs/tags?includePostCount=true');
       const data = await response.json();
 
-      if (data.success) {
-        const transformedTags = data.data.map(tag => ({
+      if (data.success) {
+
+        const transformedTags = data.data.map((tag: any) => ({
           id: tag.id,
           name: tag.name,
           postCount: tag._count?.posts || 0,
@@ -87,10 +95,12 @@ const PostTagsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, []);
+
   const dummyPostTags: PostTag[] = [
     {
       id: 1,
@@ -212,7 +222,8 @@ const PostTagsPage = () => {
       postCount: 12,
       createdAt: '2023-12-27T09:45:00Z',
     },
-  ];
+  ];
+
   const [postTags, setPostTags] =
     useState<PostTag[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -222,7 +233,8 @@ const PostTagsPage = () => {
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
-  });
+  });
+
   useEffect(() => {
     if (tags.length > 0) {
       setPostTags(tags);
@@ -242,22 +254,29 @@ const PostTagsPage = () => {
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  } | null>(null);
+
+
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingPostTag, setEditingPostTag] =
     useState<PostTag | null>(null);
-  const [editName, setEditName] = useState('');
+  const [editName, setEditName] = useState('');
+
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newPostTagName, setNewPostTagName] = useState('');
+  const [newPostTagName, setNewPostTagName] = useState('');
+
   const formatID = (id: number) => {
     return `PT_${String(id).padStart(3, '0')}`;
-  };
+  };
+
   const filteredPostTags = postTags.filter(
     (postTag) =>
       postTag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       postTag.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  );
+
   useEffect(() => {
     const total = filteredPostTags.length;
     const totalPages = Math.ceil(total / pagination.limit);
@@ -268,12 +287,14 @@ const PostTagsPage = () => {
       hasNext: prev.page < totalPages,
       hasPrev: prev.page > 1,
     }));
-  }, [filteredPostTags.length, pagination.limit]);
+  }, [filteredPostTags.length, pagination.limit]);
+
   const getPaginatedData = () => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
     return filteredPostTags.slice(startIndex, endIndex);
-  };
+  };
+
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -285,7 +306,8 @@ const PostTagsPage = () => {
   const handleRefresh = async () => {
     await fetchTags();
     showToast('Post tags refreshed successfully!', 'success');
-  };
+  };
+
   const handleDeletePostTag = async (postTagId: number) => {
     setDeleteLoading(true);
     try {
@@ -308,7 +330,8 @@ const PostTagsPage = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
+  };
+
   const handleEditPostTag = async () => {
     if (!editingPostTag || !editName.trim()) return;
 
@@ -338,7 +361,8 @@ const PostTagsPage = () => {
       setEditingPostTag(null);
       setEditName('');
     }
-  };
+  };
+
   const handleAddPostTag = async () => {
     if (!newPostTagName.trim()) return;
 
@@ -367,7 +391,8 @@ const PostTagsPage = () => {
       setAddDialogOpen(false);
       setNewPostTagName('');
     }
-  };
+  };
+
   const openEditDialog = (postTag: PostTag) => {
     setEditingPostTag(postTag);
     setEditName(postTag.name);
@@ -585,7 +610,8 @@ const PostTagsPage = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const dropdown = e.currentTarget
-                                    .nextElementSibling as HTMLElement;
+                                    .nextElementSibling as HTMLElement;
+
                                   document
                                     .querySelectorAll('.dropdown-menu')
                                     .forEach((menu) => {

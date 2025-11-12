@@ -749,7 +749,37 @@ const APIProvidersPage = () => {
           name: '',
           apiUrl: '',
           apiKey: '',
+          httpMethod: 'POST',
           syncEnabled: true,
+          apiKeyParam: 'key',
+          actionParam: 'action',
+          servicesAction: 'services',
+          servicesEndpoint: '',
+          addOrderAction: 'add',
+          addOrderEndpoint: '',
+          serviceIdParam: 'service',
+          linkParam: 'link',
+          quantityParam: 'quantity',
+          runsParam: 'runs',
+          intervalParam: 'interval',
+          statusAction: 'status',
+          statusEndpoint: '',
+          orderIdParam: 'order',
+          ordersParam: 'orders',
+          refillAction: 'refill',
+          refillEndpoint: '',
+          refillStatusAction: 'refill_status',
+          refillIdParam: 'refill',
+          refillsParam: 'refills',
+          cancelAction: 'cancel',
+          cancelEndpoint: '',
+          balanceAction: 'balance',
+          balanceEndpoint: '',
+          responseMapping: '',
+          requestFormat: 'form',
+          responseFormat: 'json',
+          rateLimitPerMin: '',
+          timeoutSeconds: 30,
         });
         setShowEditForm(false);
         setEditingProvider(null);
@@ -1308,12 +1338,40 @@ const APIProvidersPage = () => {
               if (e.target === e.currentTarget) {
                 setShowAddForm(false);
                 setFormData({
-                  providerType: 'predefined',
-                  selectedProvider: '',
                   customProviderName: '',
                   apiKey: '',
                   apiUrl: '',
+                  httpMethod: 'POST',
                   syncEnabled: true,
+                  apiKeyParam: 'key',
+                  actionParam: 'action',
+                  servicesAction: 'services',
+                  servicesEndpoint: '',
+                  addOrderAction: 'add',
+                  addOrderEndpoint: '',
+                  serviceIdParam: 'service',
+                  linkParam: 'link',
+                  quantityParam: 'quantity',
+                  runsParam: 'runs',
+                  intervalParam: 'interval',
+                  statusAction: 'status',
+                  statusEndpoint: '',
+                  orderIdParam: 'order',
+                  ordersParam: 'orders',
+                  refillAction: 'refill',
+                  refillEndpoint: '',
+                  refillStatusAction: 'refill_status',
+                  refillIdParam: 'refill',
+                  refillsParam: 'refills',
+                  cancelAction: 'cancel',
+                  cancelEndpoint: '',
+                  balanceAction: 'balance',
+                  balanceEndpoint: '',
+                  responseMapping: '',
+                  requestFormat: 'form',
+                  responseFormat: 'json',
+                  rateLimitPerMin: '',
+                  timeoutSeconds: 30,
                 });
               }
             }}
@@ -1395,7 +1453,7 @@ const APIProvidersPage = () => {
                           <Switch
                             checked={formData.syncEnabled}
                             onCheckedChange={(checked: boolean) => setFormData(prev => ({ ...prev, syncEnabled: checked }))}
-                            onClick={() => formData.selectedProvider && setFormData(prev => ({ ...prev, syncEnabled: !prev.syncEnabled }))}
+                            onClick={() => formData.customProviderName && setFormData(prev => ({ ...prev, syncEnabled: !prev.syncEnabled }))}
                             title={`${formData.syncEnabled ? 'Disable' : 'Enable'} Auto Sync`}
                             disabled={!formData.customProviderName}
                           />
@@ -1410,12 +1468,40 @@ const APIProvidersPage = () => {
                       onClick={() => {
                         setShowAddForm(false);
                         setFormData({
-                          providerType: 'predefined',
-                          selectedProvider: '',
                           customProviderName: '',
                           apiKey: '',
                           apiUrl: '',
+                          httpMethod: 'POST',
                           syncEnabled: true,
+                          apiKeyParam: 'key',
+                          actionParam: 'action',
+                          servicesAction: 'services',
+                          servicesEndpoint: '',
+                          addOrderAction: 'add',
+                          addOrderEndpoint: '',
+                          serviceIdParam: 'service',
+                          linkParam: 'link',
+                          quantityParam: 'quantity',
+                          runsParam: 'runs',
+                          intervalParam: 'interval',
+                          statusAction: 'status',
+                          statusEndpoint: '',
+                          orderIdParam: 'order',
+                          ordersParam: 'orders',
+                          refillAction: 'refill',
+                          refillEndpoint: '',
+                          refillStatusAction: 'refill_status',
+                          refillIdParam: 'refill',
+                          refillsParam: 'refills',
+                          cancelAction: 'cancel',
+                          cancelEndpoint: '',
+                          balanceAction: 'balance',
+                          balanceEndpoint: '',
+                          responseMapping: '',
+                          requestFormat: 'form',
+                          responseFormat: 'json',
+                          rateLimitPerMin: '',
+                          timeoutSeconds: 30,
                         });
                       }}
                       className="btn btn-secondary"
@@ -1424,7 +1510,7 @@ const APIProvidersPage = () => {
                     </button>
                     <button
                       type="submit"
-                      disabled={isLoading || (formData.providerType === 'predefined' ? !formData.selectedProvider : !formData.customProviderName)}
+                      disabled={isLoading || !formData.customProviderName}
                       className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? <ButtonLoader /> : 'Add Provider'}
@@ -1448,7 +1534,37 @@ const APIProvidersPage = () => {
                   name: '',
                   apiUrl: '',
                   apiKey: '',
+                  httpMethod: 'POST',
                   syncEnabled: true,
+                  apiKeyParam: 'key',
+                  actionParam: 'action',
+                  servicesAction: 'services',
+                  servicesEndpoint: '',
+                  addOrderAction: 'add',
+                  addOrderEndpoint: '',
+                  serviceIdParam: 'service',
+                  linkParam: 'link',
+                  quantityParam: 'quantity',
+                  runsParam: 'runs',
+                  intervalParam: 'interval',
+                  statusAction: 'status',
+                  statusEndpoint: '',
+                  orderIdParam: 'order',
+                  ordersParam: 'orders',
+                  refillAction: 'refill',
+                  refillEndpoint: '',
+                  refillStatusAction: 'refill_status',
+                  refillIdParam: 'refill',
+                  refillsParam: 'refills',
+                  cancelAction: 'cancel',
+                  cancelEndpoint: '',
+                  balanceAction: 'balance',
+                  balanceEndpoint: '',
+                  responseMapping: '',
+                  requestFormat: 'form',
+                  responseFormat: 'json',
+                  rateLimitPerMin: '',
+                  timeoutSeconds: 30,
                 });
               }
             }}
@@ -1545,7 +1661,37 @@ const APIProvidersPage = () => {
                           name: '',
                           apiUrl: '',
                           apiKey: '',
+                          httpMethod: 'POST',
                           syncEnabled: true,
+                          apiKeyParam: 'key',
+                          actionParam: 'action',
+                          servicesAction: 'services',
+                          servicesEndpoint: '',
+                          addOrderAction: 'add',
+                          addOrderEndpoint: '',
+                          serviceIdParam: 'service',
+                          linkParam: 'link',
+                          quantityParam: 'quantity',
+                          runsParam: 'runs',
+                          intervalParam: 'interval',
+                          statusAction: 'status',
+                          statusEndpoint: '',
+                          orderIdParam: 'order',
+                          ordersParam: 'orders',
+                          refillAction: 'refill',
+                          refillEndpoint: '',
+                          refillStatusAction: 'refill_status',
+                          refillIdParam: 'refill',
+                          refillsParam: 'refills',
+                          cancelAction: 'cancel',
+                          cancelEndpoint: '',
+                          balanceAction: 'balance',
+                          balanceEndpoint: '',
+                          responseMapping: '',
+                          requestFormat: 'form',
+                          responseFormat: 'json',
+                          rateLimitPerMin: '',
+                          timeoutSeconds: 30,
                         });
                       }}
                       className="btn btn-secondary"

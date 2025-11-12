@@ -287,7 +287,19 @@ export default function MassOrder() {
           result,
           userStats.balance,
           availableCurrencies as Array<{ code: string; rate: number; symbol: string; name: string }>,
-          currencySettings as { format: string; decimals: number; decimal_separator: string; thousand_separator: string; symbol_position: string }
+          currencySettings ? {
+            format: 'standard',
+            decimals: currencySettings.displayDecimals || 2,
+            decimal_separator: currencySettings.decimalSeparator || '.',
+            thousand_separator: currencySettings.thousandsSeparator || ',',
+            symbol_position: currencySettings.currencyPosition === 'left' || currencySettings.currencyPosition === 'left_space' ? 'before' : 'after'
+          } : {
+            format: 'standard',
+            decimals: 2,
+            decimal_separator: '.',
+            thousand_separator: ',',
+            symbol_position: 'before'
+          }
         );
         setBalanceCheck(balanceCheckResult);
       }
@@ -324,7 +336,7 @@ export default function MassOrder() {
       }
 
       const batchId = `MO-${Date.now()}-${(user?.id || Math.random()).toString().slice(-4)}`;
-      const orderArray = convertToApiFormat(validationResult);
+      const orderArray = convertToApiFormat(validationResult, batchId);
 
       const response = await axiosInstance.post('/api/user/mass-orders', {
         orders: orderArray,
@@ -605,7 +617,7 @@ export default function MassOrder() {
                           validationResult?.validOrders.length === 0 || 
                           isSubmitting || 
                           isValidating ||
-                          (balanceCheck && !balanceCheck.sufficient)
+                          (balanceCheck ? !balanceCheck.sufficient : false)
                         }
                         className="btn btn-primary w-full"
                       >

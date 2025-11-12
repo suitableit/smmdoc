@@ -358,7 +358,7 @@ export async function GET(req: NextRequest) {
             console.error(`❌ GET request failed with status ${response.status}`);
           }
         } catch (error) {
-          console.error(`❌ GET balance check failed for ${getBalanceUrl}:`, error);
+          console.error(`❌ GET balance check failed for ${balanceUrl}:`, error);
         }
       }
     }

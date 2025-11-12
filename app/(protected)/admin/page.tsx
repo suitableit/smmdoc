@@ -559,7 +559,7 @@ export default function AdminDashboardPage() {
           setPendingTransactions(transactionsToShow);
         }
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
-      } else if (transactionsResponse.error) {
+      } else if ('error' in transactionsResponse && transactionsResponse.error) {
         console.warn('Transactions data failed to load:', transactionsResponse.error);
 
       }
@@ -637,7 +637,7 @@ export default function AdminDashboardPage() {
 
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
+        setTotalTransactionCount((prev: number) => prev - 1);
 
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
 
@@ -674,7 +674,7 @@ export default function AdminDashboardPage() {
 
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
-        setTotalTransactionCount((prev) => prev - 1);
+        setTotalTransactionCount((prev: number) => prev - 1);
 
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
 
@@ -694,7 +694,7 @@ export default function AdminDashboardPage() {
 
     const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
     setPendingTransactions(updatedTransactions);
-    setTotalTransactionCount((prev) => prev - 1);
+    setTotalTransactionCount((prev: number) => prev - 1);
 
     setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, updatedTransactions);
 
@@ -705,7 +705,7 @@ export default function AdminDashboardPage() {
 
   const handleRefreshTransactions = () => {
     setTransactionsLoading(true);
-    fetchPendingTransactions();
+    fetchAllData();
     showToast('Transactions refreshed successfully!', 'success');
   };
 
