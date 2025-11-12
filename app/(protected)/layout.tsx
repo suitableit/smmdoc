@@ -1,6 +1,6 @@
 'use client';
 
-import Header from '@/components/dashboard/header';
+import Header from '@/components/dashboard/header/page';
 import SideBar from '@/components/dashboard/sideBar';
 import { checkSessionValidity, setupSessionInvalidationListener } from '@/lib/session-invalidation';
 import { signOut, useSession } from 'next-auth/react';

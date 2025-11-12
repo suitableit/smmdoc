@@ -64,7 +64,8 @@ export default function SideBarNav({
   const path = usePathname() || '';
   const isAdmin = session?.user?.role === 'admin';
   const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
-  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+  const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+
   useEffect(() => {
     const fetchTicketSettings = async () => {
       try {
@@ -74,13 +75,15 @@ export default function SideBarNav({
           setTicketSystemEnabled(data.ticketSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching ticket settings:', error);
+        console.error('Error fetching ticket settings:', error);
+
         setTicketSystemEnabled(true);
       }
     };
 
     fetchTicketSettings();
-  }, []);
+  }, []);
+
   useEffect(() => {
     const fetchContactSettings = async () => {
       try {
@@ -90,22 +93,26 @@ export default function SideBarNav({
           setContactSystemEnabled(data.contactSystemEnabled ?? true);
         }
       } catch (error) {
-        console.error('Error fetching contact settings:', error);
+        console.error('Error fetching contact settings:', error);
+
         setContactSystemEnabled(true);
       }
     };
 
     fetchContactSettings();
-  }, []);
+  }, []);
+
   const items = useMemo(() => {
     return isAdmin
       ? adminNavItems
       : userNavItems.filter((item: NavItem) =>
           item.roles.includes(session?.user?.role || 'user')
         );
-  }, [isAdmin, session?.user?.role]);
+  }, [isAdmin, session?.user?.role]);
+
   const sections = useMemo<AdminSections | UserSections>(() => {
-    if (isAdmin) {
+    if (isAdmin) {
+
       return {
         dashboard: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
@@ -188,7 +195,8 @@ export default function SideBarNav({
           ['Account Settings', 'Logout'].includes(item.title)
         ),
       } as AdminSections;
-    } else {
+    } else {
+
       return {
         core: items.filter((item) => ['Dashboard'].includes(item.title)),
         orders: items.filter((item) =>
@@ -230,10 +238,15 @@ export default function SideBarNav({
     }
   }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled]);
 
-  const isActive = (itemPath: string) => {
-    if (path === itemPath) return true;
-    if (itemPath === '/' && path === '/') return true;
-    if (path.startsWith(itemPath + '/')) {
+  const isActive = (itemPath: string) => {
+
+    if (path === itemPath) return true;
+
+    if (itemPath === '/' && path === '/') return true;
+
+
+    if (path.startsWith(itemPath + '/')) {
+
       const allItems = Object.values(sections).flat() as NavItem[];
       const hasMoreSpecificMatch = allItems.some((item) => {
         return (
@@ -247,7 +260,8 @@ export default function SideBarNav({
     }
 
     return false;
-  };
+  };
+
   const renderIcon = useMemo(() => {
     return (iconName: string) => {
       const Icon = (FaIcons as Record<string, React.ComponentType>)[iconName];
@@ -258,11 +272,13 @@ export default function SideBarNav({
   const renderNavSection = (title: string, sectionItems: NavItem[]) => {
     if (!sectionItems || !sectionItems.length) return null;
 
-    if (collapsed) {
+    if (collapsed) {
+
       return (
         <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
-            const active = isActive(item.href);
+            const active = isActive(item.href);
+
             const handleClick = () => {
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
@@ -345,7 +361,8 @@ export default function SideBarNav({
         )}
         <ul className="nav-links space-y-0">
           {sectionItems.map((item, index) => {
-            const active = isActive(item.href);
+            const active = isActive(item.href);
+
             const handleClick = () => {
               if (item.isLogout) {
                 signOut({ callbackUrl: '/' });
@@ -473,8 +490,45 @@ export default function SideBarNav({
         </ul>
       </div>
     );
-  };
-  if (!session?.user) return null;
+  };
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (session?.user) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoading(true);
+    }
+  }, [session]);
+
+  if (!session?.user || isLoading) {
+    return (
+      <div className="sidebar-nav-container">
+        <div className="py-2">
+          {Array.from({ length: 8 }).map((_, sectionIndex) => (
+            <div key={sectionIndex} className="nav-section mb-4 px-0">
+              <div className="h-4 w-20 bg-slate-700/50 animate-pulse rounded mx-4 mt-6 mb-2 ml-6"></div>
+              <ul className="nav-links space-y-0">
+                {Array.from({ length: 3 }).map((_, itemIndex) => (
+                  <li key={itemIndex} className="nav-item relative">
+                    <div className="flex items-center px-8 py-3">
+                      <div className="w-5 h-5 bg-slate-700/50 animate-pulse rounded mr-3"></div>
+                      <div className="h-4 w-32 bg-slate-700/50 animate-pulse rounded"></div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const getSectionItems = (sectionKey: keyof (AdminSections | UserSections)): NavItem[] => {
     return sections[sectionKey] || [];
   };
@@ -513,5 +567,6 @@ export default function SideBarNav({
       </div>
     </div>
   );
-}
+}
+
 SideBarNav.displayName = 'SideBarNav';
