@@ -1,9 +1,11 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
-import { Session } from 'next-auth';
+import { useState, useEffect } from 'react';
+import { Session } from 'next-auth';
+
 const Image = dynamic(() => import('next/image'), { ssr: false });
-const Link = dynamic(() => import('next/link'), { ssr: false });
+const Link = dynamic(() => import('next/link'), { ssr: false });
+
 import SideBarNav from './sideBarNav';
 
 interface SideBarProps {
@@ -21,6 +23,21 @@ function SideBarContent({
   setCollapsed: (value: boolean) => void;
   session: Session | null | undefined;
 }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (session?.user) {
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setIsLoading(true);
+    }
+  }, [session]);
+
+  const showSkeleton = isLoading || !session?.user;
+
   return (
     <div
       className={`h-full bg-slate-800 text-white transition-all duration-300 ${
@@ -35,16 +52,20 @@ function SideBarContent({
       >
         {collapsed ? (
           <>
-            <Link href="/">
-              <Image
-                src="/favicon.png"
-                alt="Favicon"
-                width={50}
-                height={50}
-                className="object-contain cursor-pointer hover:opacity-80 transition-opacity duration-200"
-                priority={true}
-              />
-            </Link>
+            {showSkeleton ? (
+              <div className="w-[50px] h-[50px] rounded bg-slate-700/50 animate-pulse"></div>
+            ) : (
+              <Link href="/">
+                <Image
+                  src="/favicon.png"
+                  alt="Favicon"
+                  width={50}
+                  height={50}
+                  className="object-contain cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                  priority={true}
+                />
+              </Link>
+            )}
             <button
               className="p-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg w-10 h-10 flex items-center justify-center text-white rounded-md transition-all duration-300"
               onClick={() => setCollapsed(!collapsed)}
@@ -57,7 +78,9 @@ function SideBarContent({
           <>
             <div className="flex items-center w-full">
               <div className="logo-container w-full flex items-center">
-                {session?.user?.role === 'admin' ? (
+                {showSkeleton ? (
+                  <div className="w-full h-[40px] bg-slate-700/50 animate-pulse rounded"></div>
+                ) : session?.user?.role === 'admin' ? (
                   <Link href="/">
                     <Image
                       src="/sit_logo-landscape-dark.png"
@@ -68,7 +91,7 @@ function SideBarContent({
                       priority={true}
                     />
                   </Link>
-                ) : session?.user ? (
+                ) : (
                   <Link href="/">
                     <Image
                       src="/logo.png"
@@ -79,8 +102,6 @@ function SideBarContent({
                       priority={true}
                     />
                   </Link>
-                ) : (
-                  <div className="w-full h-[40px] bg-slate-700/50 rounded animate-pulse"></div>
                 )}
               </div>
             </div>
@@ -108,7 +129,8 @@ export default function SideBar({
   setCollapsed: setExternalCollapsed,
   session,
 }: SideBarProps) {
-  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+
   const collapsed =
     externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
   const setCollapsed = (value: boolean) => {
