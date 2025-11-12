@@ -6,7 +6,6 @@ export async function GET() {
   try {
     const session = await requireAuth();
 
-    // Get user with all necessary fields
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -25,17 +24,14 @@ export async function GET() {
       );
     }
     
-    // Use the actual balance field from the database
     const userBalance = user.balance || 0;
     const totalDeposit = user.total_deposit || 0;
     const totalSpent = user.total_spent || 0;
     
-    // Get total orders by user
     const totalOrders = await db.newOrder.count({
       where: { userId: session.user.id }
     });
     
-    // Get orders by status
     const pendingOrders = await db.newOrder.count({
       where: { 
         userId: session.user.id,
@@ -64,7 +60,6 @@ export async function GET() {
       }
     });
     
-    // Get recent orders with service and category details
     const recentOrders = await db.newOrder.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
@@ -83,7 +78,6 @@ export async function GET() {
       }
     });
 
-    // Get favorite categories with services
     const favoriteCategories = await db.category.findMany({
       where: {
         services: {
@@ -108,14 +102,12 @@ export async function GET() {
       take: 5
     });
 
-    // Get recent transactions
     const recentTransactions = await db.addFund.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
       take: 5
     });
     
-    // Return all stats
     return NextResponse.json({
       success: true,
       data: {

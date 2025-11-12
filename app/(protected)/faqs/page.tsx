@@ -220,9 +220,7 @@ const FAQPage = () => {
   return (
     <div className="page-container">
       <div className="page-content">
-        {}
         <div className="card card-padding">
-          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -238,8 +236,6 @@ const FAQPage = () => {
               />
             </div>
           </div>
-
-          {}
           {Object.keys(groupedFAQs).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FaQuestionCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -254,7 +250,6 @@ const FAQPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {Object.entries(groupedFAQs).map(([category, items]) => (
                 <div key={category}>
-                  {}
                   <div className="card-header mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <div className="card-icon">
@@ -269,8 +264,6 @@ const FAQPage = () => {
                       {items.length === 1 ? 'question' : 'questions'}
                     </span>
                   </div>
-
-                  {}
                   <div className="space-y-2">
                     {items.map((item) => (
                       <div key={item.id} className="card">

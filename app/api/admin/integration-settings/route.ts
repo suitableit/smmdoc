@@ -1,43 +1,41 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    console.log('🔍 Integration settings API called');
+    console.log('ðŸ” Integration settings API called');
     const session = await auth();
     
     if (!session?.user?.id) {
-      console.log('❌ Unauthorized - no session or user ID');
+      console.log('âŒ Unauthorized - no session or user ID');
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
     });
 
     if (user?.role !== 'admin') {
-      console.log('❌ Access denied - user is not admin:', user?.role);
+      console.log('âŒ Access denied - user is not admin:', user?.role);
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }
       );
     }
 
-    console.log('✅ User authorized as admin');
+    console.log('âœ… User authorized as admin');
 
-    // Get integration settings
-    console.log('🔍 Querying database for integration settings...');
+    console.log('ðŸ” Querying database for integration settings...');
     const dbSettings = await db.integrationSettings.findFirst();
-    console.log('📦 Database query result:', dbSettings ? 'Found settings' : 'No settings found');
+    console.log('ðŸ“¦ Database query result:', dbSettings ? 'Found settings' : 'No settings found');
     
     if (dbSettings) {
-      console.log('🔐 ReCAPTCHA settings from DB:', {
+      console.log('ðŸ” ReCAPTCHA settings from DB:', {
         enabled: dbSettings.recaptchaEnabled,
         version: dbSettings.recaptchaVersion,
         v2SiteKey: dbSettings.recaptchaV2SiteKey ? '***' : 'empty',
@@ -47,7 +45,6 @@ export async function GET() {
       });
     }
     
-    // Transform the database response to match the new v2/v3 structure
     const integrationSettings = dbSettings ? {
       ...dbSettings,
       v2: {
@@ -60,7 +57,6 @@ export async function GET() {
         threshold: dbSettings.recaptchaThreshold || 0.5,
       },
     } : {
-      // Default values when no settings exist
       recaptchaEnabled: false,
       recaptchaVersion: 'v3',
       v2: {
@@ -77,7 +73,6 @@ export async function GET() {
       recaptchaContact: false,
       recaptchaSupportTicket: false,
       recaptchaContactSupport: false,
-      // Live Chat Settings
       liveChatEnabled: false,
       liveChatHoverTitle: 'Chat with us',
       liveChatSocialEnabled: false,
@@ -90,7 +85,6 @@ export async function GET() {
       liveChatTawkToEnabled: false,
       liveChatTawkToCode: '',
       liveChatVisibility: 'all',
-      // Analytics Settings
       analyticsEnabled: false,
       googleAnalyticsEnabled: false,
       googleAnalyticsCode: '',
@@ -101,18 +95,15 @@ export async function GET() {
       gtmEnabled: false,
       gtmCode: '',
       gtmVisibility: 'all',
-      // Notification Settings
       pushNotificationsEnabled: false,
       oneSignalCode: '',
       oneSignalVisibility: 'all',
       emailNotificationsEnabled: false,
-      // User Notifications
       userNotifWelcome: false,
       userNotifApiKeyChanged: false,
       userNotifOrderStatusChanged: false,
       userNotifNewService: false,
       userNotifServiceUpdates: false,
-      // Admin Notifications
       adminNotifApiBalanceAlerts: false,
       adminNotifSupportTickets: false,
       adminNotifNewMessages: false,
@@ -127,7 +118,7 @@ export async function GET() {
       adminNotifNewChildPanelOrders: false,
     };
 
-    console.log('📤 Returning integration settings:', {
+    console.log('ðŸ“¤ Returning integration settings:', {
       success: true,
       hasSettings: !!dbSettings,
       recaptchaEnabled: integrationSettings.recaptchaEnabled,
@@ -139,7 +130,7 @@ export async function GET() {
       integrationSettings,
     });
   } catch (error) {
-    console.error('💥 Error fetching integration settings:', error);
+    console.error('ðŸ’¥ Error fetching integration settings:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -158,7 +149,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { role: true },
@@ -180,17 +170,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Upsert integration settings
     const updatedSettings = await db.integrationSettings.upsert({
-      where: { id: 1 }, // Assuming single settings record
+      where: { id: 1 },
       update: {
-        // ReCAPTCHA Settings
         recaptchaEnabled: integrationSettings.recaptchaEnabled ?? false,
         recaptchaVersion: integrationSettings.recaptchaVersion ?? 'v3',
-        // Legacy fields (keep for backward compatibility)
         recaptchaSiteKey: integrationSettings.recaptchaSiteKey ?? '',
         recaptchaSecretKey: integrationSettings.recaptchaSecretKey ?? '',
-        // New separate v2 and v3 fields
         recaptchaV2SiteKey: integrationSettings.v2?.siteKey ?? '',
         recaptchaV2SecretKey: integrationSettings.v2?.secretKey ?? '',
         recaptchaV3SiteKey: integrationSettings.v3?.siteKey ?? '',
@@ -201,7 +187,6 @@ export async function POST(request: Request) {
         recaptchaContact: integrationSettings.recaptchaContact ?? false,
         recaptchaSupportTicket: integrationSettings.recaptchaSupportTicket ?? false,
         recaptchaContactSupport: integrationSettings.recaptchaContactSupport ?? false,
-        // Live Chat Settings
         liveChatEnabled: integrationSettings.liveChatEnabled ?? false,
         liveChatHoverTitle: integrationSettings.liveChatHoverTitle ?? 'Chat with us',
         liveChatSocialEnabled: integrationSettings.liveChatSocialEnabled ?? false,
@@ -214,7 +199,6 @@ export async function POST(request: Request) {
         liveChatTawkToEnabled: integrationSettings.liveChatTawkToEnabled ?? false,
         liveChatTawkToCode: integrationSettings.liveChatTawkToCode ?? '',
         liveChatVisibility: integrationSettings.liveChatVisibility ?? 'all',
-        // Analytics Settings
         analyticsEnabled: integrationSettings.analyticsEnabled ?? false,
         googleAnalyticsEnabled: integrationSettings.googleAnalyticsEnabled ?? false,
         googleAnalyticsCode: integrationSettings.googleAnalyticsCode ?? '',
@@ -225,18 +209,15 @@ export async function POST(request: Request) {
         gtmEnabled: integrationSettings.gtmEnabled ?? false,
         gtmCode: integrationSettings.gtmCode ?? '',
         gtmVisibility: integrationSettings.gtmVisibility ?? 'all',
-        // Notification Settings
         pushNotificationsEnabled: integrationSettings.pushNotificationsEnabled ?? false,
         oneSignalCode: integrationSettings.oneSignalCode ?? '',
         oneSignalVisibility: integrationSettings.oneSignalVisibility ?? 'all',
         emailNotificationsEnabled: integrationSettings.emailNotificationsEnabled ?? false,
-        // User Notifications
         userNotifWelcome: integrationSettings.userNotifWelcome ?? false,
         userNotifApiKeyChanged: integrationSettings.userNotifApiKeyChanged ?? false,
         userNotifOrderStatusChanged: integrationSettings.userNotifOrderStatusChanged ?? false,
         userNotifNewService: integrationSettings.userNotifNewService ?? false,
         userNotifServiceUpdates: integrationSettings.userNotifServiceUpdates ?? false,
-        // Admin Notifications
         adminNotifApiBalanceAlerts: integrationSettings.adminNotifApiBalanceAlerts ?? false,
         adminNotifSupportTickets: integrationSettings.adminNotifSupportTickets ?? false,
         adminNotifNewMessages: integrationSettings.adminNotifNewMessages ?? false,
@@ -253,17 +234,14 @@ export async function POST(request: Request) {
       },
       create: {
         id: 1,
-        // ReCAPTCHA Settings
         recaptchaEnabled: integrationSettings.recaptchaEnabled ?? false,
         recaptchaVersion: integrationSettings.recaptchaVersion ?? 'v3',
-        // Legacy fields (keep for backward compatibility)
         recaptchaSiteKey: integrationSettings.recaptchaVersion === 'v2' 
           ? (integrationSettings.v2?.siteKey ?? '') 
           : (integrationSettings.v3?.siteKey ?? ''),
         recaptchaSecretKey: integrationSettings.recaptchaVersion === 'v2' 
           ? (integrationSettings.v2?.secretKey ?? '') 
           : (integrationSettings.v3?.secretKey ?? ''),
-        // New separate v2 and v3 fields
         recaptchaV2SiteKey: integrationSettings.v2?.siteKey ?? '',
         recaptchaV2SecretKey: integrationSettings.v2?.secretKey ?? '',
         recaptchaV3SiteKey: integrationSettings.v3?.siteKey ?? '',
@@ -274,7 +252,6 @@ export async function POST(request: Request) {
         recaptchaContact: integrationSettings.recaptchaContact ?? false,
         recaptchaSupportTicket: integrationSettings.recaptchaSupportTicket ?? false,
         recaptchaContactSupport: integrationSettings.recaptchaContactSupport ?? false,
-        // Live Chat Settings
         liveChatEnabled: integrationSettings.liveChatEnabled ?? false,
         liveChatHoverTitle: integrationSettings.liveChatHoverTitle ?? 'Chat with us',
         liveChatSocialEnabled: integrationSettings.liveChatSocialEnabled ?? false,
@@ -287,7 +264,6 @@ export async function POST(request: Request) {
         liveChatTawkToEnabled: integrationSettings.liveChatTawkToEnabled ?? false,
         liveChatTawkToCode: integrationSettings.liveChatTawkToCode ?? '',
         liveChatVisibility: integrationSettings.liveChatVisibility ?? 'all',
-        // Analytics Settings
         analyticsEnabled: integrationSettings.analyticsEnabled ?? false,
         googleAnalyticsEnabled: integrationSettings.googleAnalyticsEnabled ?? false,
         googleAnalyticsCode: integrationSettings.googleAnalyticsCode ?? '',
@@ -298,18 +274,15 @@ export async function POST(request: Request) {
         gtmEnabled: integrationSettings.gtmEnabled ?? false,
         gtmCode: integrationSettings.gtmCode ?? '',
         gtmVisibility: integrationSettings.gtmVisibility ?? 'all',
-        // Notification Settings
         pushNotificationsEnabled: integrationSettings.pushNotificationsEnabled ?? false,
         oneSignalCode: integrationSettings.oneSignalCode ?? '',
         oneSignalVisibility: integrationSettings.oneSignalVisibility ?? 'all',
         emailNotificationsEnabled: integrationSettings.emailNotificationsEnabled ?? false,
-        // User Notifications
         userNotifWelcome: integrationSettings.userNotifWelcome ?? false,
         userNotifApiKeyChanged: integrationSettings.userNotifApiKeyChanged ?? false,
         userNotifOrderStatusChanged: integrationSettings.userNotifOrderStatusChanged ?? false,
         userNotifNewService: integrationSettings.userNotifNewService ?? false,
         userNotifServiceUpdates: integrationSettings.userNotifServiceUpdates ?? false,
-        // Admin Notifications
         adminNotifApiBalanceAlerts: integrationSettings.adminNotifApiBalanceAlerts ?? false,
         adminNotifSupportTickets: integrationSettings.adminNotifSupportTickets ?? false,
         adminNotifNewMessages: integrationSettings.adminNotifNewMessages ?? false,

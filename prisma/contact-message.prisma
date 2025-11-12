@@ -1,5 +1,3 @@
-// Contact Message Schema
-// This file contains contact message model
 
 generator client {
   provider = "prisma-client-js"
@@ -11,15 +9,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Contact Message Model
 model ContactMessage {
   id          Int      @id @default(autoincrement())
   userId      Int
   subject     String
   message     String   @db.Text
-  status      String   @default("Unread") // Unread, Read, Replied
+  status      String   @default("Unread")
   categoryId  Int
-  attachments String?  @db.Text // JSON string for file paths
+  attachments String?  @db.Text
   adminReply  String?  @db.Text
   repliedAt   DateTime?
   repliedBy   Int?

@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if contact system is enabled
     const { contactDB } = await import('@/lib/contact-db');
     const contactSettings = await contactDB.getContactSettings();
     if (!contactSettings?.contactSystemEnabled) {
@@ -16,11 +15,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Parse request body
     const body = await request.json();
     const { name, email, phone, subject, message, adminEmail, recaptchaToken } = body;
 
-    // Validate required fields
     if (!name || !email || !phone || !subject || !message) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -28,7 +25,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
@@ -37,31 +33,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Verify ReCAPTCHA token if provided
-    // This would typically involve making a request to Google's ReCAPTCHA API
-    // For now, we'll just log it
     if (recaptchaToken) {
       console.log('ReCAPTCHA token received:', recaptchaToken.substring(0, 20) + '...');
     }
 
-    // Create contact message in database
-    // Note: This assumes you have a ContactMessage model in your Prisma schema
-    // If not, you might need to create it or use an existing table
     try {
       const contactMessage = await db.contactMessage.create({
         data: {
           subject,
           message: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage: ${message}`,
           status: 'PENDING',
-          userId: session?.user?.id ? parseInt(session.user.id) : 1, // Default to user ID 1 if no session
-          categoryId: 1, // Default category
+          userId: session?.user?.id ? parseInt(session.user.id) : 1,
+          categoryId: 1,
         },
       });
 
       console.log('Contact message created:', contactMessage.id);
     } catch (dbError) {
       console.error('Database error:', dbError);
-      // If the ContactMessage model doesn't exist, we'll just log the submission
       console.log('Contact form submission (no DB):', {
         name,
         email,
@@ -72,8 +61,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // TODO: Send email notification to admin
-    // This would typically involve using a service like SendGrid, Nodemailer, etc.
     console.log('Contact form submission received:', {
       name,
       email,

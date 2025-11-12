@@ -14,9 +14,7 @@ const iconMap = {
 const HowItWorks: React.FC = () => {
   return (
     <section className="py-0 pb-[30px] lg:pb-[60px] transition-colors duration-200">
-      {}
       <div className="bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] py-20 relative overflow-hidden">
-        {}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-purple-800/10 dark:from-purple-400/5 dark:to-purple-600/5"></div>
 
         <div className="container mx-auto px-4 text-center max-w-7xl relative z-10">
@@ -36,8 +34,6 @@ const HowItWorks: React.FC = () => {
           </p>
         </div>
       </div>
-
-      {}
       <div className="container mx-auto px-4 -mt-16 relative z-10 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {stepsData.map((step, index) => {
@@ -50,15 +46,12 @@ const HowItWorks: React.FC = () => {
                 data-aos-duration="600"
                 data-aos-delay={index * 150}
               >
-                {}
                 <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
                   <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500 rounded-full flex flex-col items-center justify-center text-white border-4 border-white dark:border-gray-800 shadow-lg group-hover:scale-110 transition-all duration-300">
                     <span className="text-lg font-bold">{step.number}</span>
                     <span className="text-xs font-medium">STEP</span>
                   </div>
                 </div>
-
-                {}
                 <div className="text-center mt-12 mb-6">
                   <div className="mx-auto flex justify-center items-center w-16 h-16 group-hover:scale-110 transition-transform duration-300">
                     {IconComponent && (
@@ -66,8 +59,6 @@ const HowItWorks: React.FC = () => {
                     )}
                   </div>
                 </div>
-
-                {}
                 <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-white text-center mb-4 transition-colors duration-200">
                   {step.title}
                 </h3>
@@ -78,8 +69,6 @@ const HowItWorks: React.FC = () => {
             );
           })}
         </div>
-
-        {}
         <div className="text-center -mt-8">
           <Link
             href="/sign-up"

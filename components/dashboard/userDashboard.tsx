@@ -60,9 +60,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-purple-900 dark:to-indigo-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-4">
-        {}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-purple-500/20 hover:shadow-2xl dark:hover:shadow-purple-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-purple-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-purple-500/5 dark:to-blue-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -81,8 +79,6 @@ export default function UserDashboard() {
               </p>
             </CardContent>
           </Card>
-
-          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-blue-500/20 hover:shadow-2xl dark:hover:shadow-blue-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-blue-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-blue-500/5 dark:to-purple-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -106,8 +102,6 @@ export default function UserDashboard() {
               </p>
             </CardContent>
           </Card>
-
-          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-green-500/20 hover:shadow-2xl dark:hover:shadow-green-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-green-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-green-500/5 dark:to-emerald-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -126,8 +120,6 @@ export default function UserDashboard() {
               </p>
             </CardContent>
           </Card>
-
-          {}
           <Card className="relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-orange-500/20 hover:shadow-2xl dark:hover:shadow-orange-500/30 transition-all duration-300 dark:hover:scale-[1.02]">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-orange-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-orange-500/5 dark:to-yellow-500/5 opacity-0 dark:opacity-100 rounded-2xl" />
@@ -147,8 +139,6 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {}
         <div className="grid gap-4 md:grid-cols-2 mt-6">
           <Card className="col-span-1 relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-indigo-500/20 hover:shadow-2xl dark:hover:shadow-indigo-500/30 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-indigo-500/10 dark:to-transparent opacity-50" />
@@ -217,8 +207,6 @@ export default function UserDashboard() {
               )}
             </CardContent>
           </Card>
-
-          {}
           <Card className="col-span-1 relative p-6 rounded-2xl backdrop-blur-lg bg-white/70 dark:bg-gradient-to-br dark:from-slate-800/80 dark:to-slate-900/80 border border-white/20 dark:border-slate-700/50 shadow-xl dark:shadow-2xl dark:shadow-pink-500/20 hover:shadow-2xl dark:hover:shadow-pink-500/30 transition-all duration-300">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent dark:from-pink-500/10 dark:to-transparent opacity-50" />
             <div className="absolute inset-0 dark:bg-gradient-to-br dark:from-pink-500/5 dark:to-purple-500/5 opacity-0 dark:opacity-100 rounded-2xl" />

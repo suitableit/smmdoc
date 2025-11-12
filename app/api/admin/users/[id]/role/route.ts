@@ -1,9 +1,8 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/users/[id]/role - Update user role
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -50,7 +49,6 @@ export async function PUT(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, username: true, role: true, email: true }
@@ -67,7 +65,6 @@ export async function PUT(
       );
     }
 
-    // Prevent changing own role
     if (existingUser.id === session.user.id) {
       return NextResponse.json(
         {
@@ -79,7 +76,6 @@ export async function PUT(
       );
     }
 
-    // Update user role
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: { role },
@@ -92,7 +88,6 @@ export async function PUT(
       }
     });
 
-    // Log the activity
     try {
       const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
       const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
@@ -131,7 +126,6 @@ export async function PUT(
   }
 }
 
-// PATCH /api/admin/users/[id]/role - Update user role (alias for PUT)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -139,7 +133,6 @@ export async function PATCH(
   return PUT(req, { params });
 }
 
-// GET /api/admin/users/[id]/role - Get user role
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Update all users' dollar rate
     await db.user.updateMany({
       data: {
         dollarRate: parseFloat(dollarRate),

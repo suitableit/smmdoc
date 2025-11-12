@@ -3,14 +3,12 @@ import { db } from '@/lib/db';
 import { clearTicketSettingsCache } from '@/lib/utils/ticket-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default ticket settings
 const defaultTicketSettings = {
   ticketSystemEnabled: true,
   maxPendingTickets: '3',
   subjects: [],
 };
 
-// GET - Load ticket settings
 export async function GET() {
   try {
     const session = await auth();
@@ -19,7 +17,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get ticket settings from database (create if not exists)
     let settings: any = await db.ticket_settings.findFirst({
       include: {
         ticket_subjects: true
@@ -60,7 +57,6 @@ export async function GET() {
   }
 }
 
-// POST - Save ticket settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -78,7 +74,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate subjects
     if (!ticketSettings.subjects || !Array.isArray(ticketSettings.subjects)) {
       return NextResponse.json(
         { error: 'Subjects must be an array' },
@@ -93,7 +88,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate each subject
     for (const subject of ticketSettings.subjects) {
       if (!subject.name || !subject.name.trim()) {
         return NextResponse.json(
@@ -103,7 +97,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Update ticket settings
     await db.ticket_settings.upsert({
       where: { id: 1 },
       update: {
@@ -120,7 +113,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Delete existing subjects and create new ones
     await db.ticket_subjects.deleteMany({
       where: { ticketSettingsId: 1 }
     });
@@ -134,7 +126,6 @@ export async function POST(request: NextRequest) {
       }))
     });
 
-    // Clear the cache to ensure immediate updates
     clearTicketSettingsCache();
 
     return NextResponse.json({

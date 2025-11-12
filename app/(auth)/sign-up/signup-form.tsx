@@ -357,8 +357,6 @@ export default function SignUpForm() {
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
-
-            {}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {usernameStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
@@ -371,8 +369,6 @@ export default function SignUpForm() {
           <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-200">
             Only lowercase letters, numbers, dots (.) and underscores (_) are allowed
           </p>
-
-          {}
           {usernameStatus.message && usernameStatus.available === false && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {usernameStatus.message}
@@ -385,8 +381,6 @@ export default function SignUpForm() {
             </p>
           )}
         </div>
-
-        {}
         {(settingsLoading || userSettings?.nameFieldEnabled !== false) && (
           <div>
             <label
@@ -440,8 +434,6 @@ export default function SignUpForm() {
                   : 'border-gray-300 dark:border-gray-600'
               }`}
             />
-
-            {}
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               {emailStatus.checking && (
                 <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
@@ -451,8 +443,6 @@ export default function SignUpForm() {
               )}
             </div>
           </div>
-
-          {}
           {emailStatus.message && emailStatus.available === false && (
             <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
               {emailStatus.message}
@@ -544,8 +534,6 @@ export default function SignUpForm() {
 
         <FormError message={error} />
         <FormSuccess message={success} />
-
-        {}
         {isEnabledForForm('signUp') && recaptchaSettings && (
           <ReCAPTCHA
             siteKey={recaptchaSettings.siteKey}
@@ -571,8 +559,6 @@ export default function SignUpForm() {
           {isPending ? <ButtonLoader /> : 'Sign Up'}
         </button>
       </form>
-
-      {}
       <div className="mt-4">
         <div className="relative mb-4">
           <div className="absolute inset-0 flex items-center">

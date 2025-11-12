@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { fullName, email, username } = body;
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: session.user.id }
     });
@@ -37,7 +36,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if username is being updated and if it's unique
     if (username !== undefined && username !== existingUser.username) {
       const usernameExists = await db.user.findFirst({
         where: {
@@ -58,7 +56,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Check if email is being updated and if it's unique
     if (email !== undefined && email !== existingUser.email) {
       const emailExists = await db.user.findFirst({
         where: {
@@ -79,14 +76,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Prepare update data
     const updateData: any = {};
     
     if (fullName !== undefined) updateData.name = fullName;
     if (email !== undefined) updateData.email = email;
     if (username !== undefined) updateData.username = username;
 
-    // Update user profile
     const updatedUser = await db.user.update({
       where: { id: session.user.id },
       data: updateData,
@@ -100,7 +95,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for profile update
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       await ActivityLogger.profileUpdated(

@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/user/refill-requests - Create a new refill request
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -32,7 +31,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the order and verify it belongs to the user
     const order = await db.newOrder.findUnique({
       where: { id: parseInt(orderId) },
       include: {
@@ -65,7 +63,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify order belongs to the user
     if (order.userId !== session.user.id) {
       return NextResponse.json(
         {
@@ -77,7 +74,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if order is completed
     if (order.status !== 'completed') {
       return NextResponse.json(
         {
@@ -89,7 +85,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if service supports refill
     if (!order.service.refill) {
       return NextResponse.json(
         {
@@ -101,7 +96,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if refill request already exists for this order
     const existingRequest = await db.refillRequest.findFirst({
       where: {
         orderId: parseInt(orderId),
@@ -122,7 +116,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check refill time limit (if refillDays is set)
     if (order.service.refillDays) {
       const daysSinceCompletion = Math.floor(
         (new Date().getTime() - new Date(order.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
@@ -140,7 +133,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Create refill request
     const refillRequest = await db.refillRequest.create({
       data: {
         orderId: parseInt(orderId),
@@ -182,7 +174,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/user/refill-requests - Get user's refill requests
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -203,7 +194,6 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status') || 'all';
 
-    // Build where clause
     const whereClause: any = {
       userId: session.user.id
     };
@@ -212,12 +202,10 @@ export async function GET(req: NextRequest) {
       whereClause.status = status;
     }
 
-    // Get total count
     const totalRequests = await db.refillRequest.count({
       where: whereClause
     });
 
-    // Get refill requests
     const refillRequests = await db.refillRequest.findMany({
       where: whereClause,
       include: {
@@ -245,7 +233,6 @@ export async function GET(req: NextRequest) {
       take: limit
     });
 
-    // Calculate pagination
     const totalPages = Math.ceil(totalRequests / limit);
 
     return NextResponse.json({

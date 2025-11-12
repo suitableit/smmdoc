@@ -361,9 +361,7 @@ const NewPostPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {}
           <div className="lg:col-span-2 space-y-6">
-            {}
             <div className="card card-padding">
               <div className="space-y-4">
                 <div>
@@ -433,8 +431,6 @@ const NewPostPage = () => {
                 </div>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">
@@ -454,8 +450,6 @@ const NewPostPage = () => {
                 </p>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div>
                 <label className="form-label mb-2">Post Excerpt</label>
@@ -471,8 +465,6 @@ const NewPostPage = () => {
                 </p>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
                 SEO Settings

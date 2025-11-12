@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { serviceIds, updateData } = body;
     
-    // Validate input
     if (!serviceIds || !Array.isArray(serviceIds) || serviceIds.length === 0) {
       return NextResponse.json(
         { 
@@ -44,7 +42,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Prepare update data - only include fields that are provided
     const updateFields: any = {};
     
     if (updateData.rate !== undefined && updateData.rate !== null) {
@@ -96,7 +93,6 @@ export async function POST(req: NextRequest) {
       updateFields.status = updateData.status;
     }
     
-    // Validate min_order <= max_order if both are provided
     if (updateFields.min_order && updateFields.max_order && updateFields.min_order > updateFields.max_order) {
       return NextResponse.json(
         { 
@@ -108,10 +104,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Add updatedAt timestamp
     updateFields.updatedAt = new Date();
     
-    // Perform bulk update
     const result = await db.service.updateMany({
       where: {
         id: {
@@ -121,7 +115,6 @@ export async function POST(req: NextRequest) {
       data: updateFields
     });
     
-    // Log the bulk update action
     console.log(`Admin ${session.user.email} performed bulk update on ${result.count} services`, {
       serviceIds,
       updateData: updateFields,
@@ -152,12 +145,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET method to retrieve bulk update history (optional feature)
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -169,8 +160,6 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // This could be extended to return bulk update history from a logs table
-    // For now, just return a success response
     return NextResponse.json({
       success: true,
       message: 'Bulk update endpoint is available',

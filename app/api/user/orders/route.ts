@@ -22,15 +22,11 @@ export async function GET(request: Request) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // Build the where clause
     let whereClause: any = {
       userId: session.user.id,
     };
 
-    // Add status filter if provided
     if (status && status !== 'all') {
-      // If user is filtering by 'pending', include both 'pending' and 'failed' orders
-      // since failed orders appear as pending to users
       if (status === 'pending') {
         whereClause.status = {
           in: ['pending', 'failed']
@@ -40,12 +36,10 @@ export async function GET(request: Request) {
       }
     }
 
-    // Add service filter if provided
     if (serviceId) {
       whereClause.serviceId = serviceId;
     }
 
-    // Add date range filter if provided
     if (startDate && endDate) {
       whereClause.createdAt = {
         gte: new Date(startDate),
@@ -53,9 +47,7 @@ export async function GET(request: Request) {
       };
     }
 
-    // Add search filter if provided
     if (search) {
-      // Convert search to lowercase for case-insensitive matching
       const searchLower = search.toLowerCase();
       whereClause.OR = [
         { 
@@ -75,17 +67,14 @@ export async function GET(request: Request) {
           }
         }
       ].filter(condition => {
-        // Remove undefined conditions
         return Object.values(condition)[0] !== undefined;
       });
     }
 
-    // Get total count for pagination
     const totalOrders = await db.newOrder.count({
       where: whereClause
     });
 
-    // Get orders with pagination and enhanced data
     const orders = await db.newOrder.findMany({
       where: whereClause,
       include: {
@@ -127,13 +116,11 @@ export async function GET(request: Request) {
       take: limit
     });
 
-    // Transform failed orders to pending for user-facing response
     const transformedOrders = orders.map(order => ({
       ...order,
       status: order.status === 'failed' ? 'pending' : order.status
     }));
 
-    // Calculate user order statistics
     const stats = await db.newOrder.aggregate({
       where: { userId: session.user.id },
       _count: {
@@ -144,7 +131,6 @@ export async function GET(request: Request) {
       }
     });
 
-    // Get status breakdown
     const statusCounts = await db.newOrder.groupBy({
       by: ['status'],
       where: { userId: session.user.id },
@@ -153,10 +139,8 @@ export async function GET(request: Request) {
       }
     });
 
-    // Transform status breakdown to show failed orders as pending
     const transformedStatusBreakdown = statusCounts.reduce((acc, item) => {
       if (item.status === 'failed') {
-        // Add failed orders to pending count
         acc['pending'] = (acc['pending'] || 0) + item._count.status;
       } else {
         acc[item.status] = item._count.status;
@@ -164,7 +148,6 @@ export async function GET(request: Request) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Calculate pagination info
     const totalPages = Math.ceil(totalOrders / limit);
 
     return NextResponse.json(

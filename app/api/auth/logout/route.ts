@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     const session = await auth();
 
     if (session?.user) {
-      // Log logout activity before signing out
       try {
         const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
         const ipAddress = getClientIP(request);

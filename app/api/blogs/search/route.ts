@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// GET /api/blogs/search - Search blog posts by title term and return 3 results
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -15,7 +14,6 @@ export async function GET(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Search for published blog posts by title
     const searchResults = await db.blogPost.findMany({
       where: {
         status: 'published',
@@ -45,7 +43,7 @@ export async function GET(req: NextRequest) {
       orderBy: {
         views: 'desc'
       },
-      take: 3 // Limit to 3 results
+      take: 3
     });
 
     return NextResponse.json({

@@ -43,7 +43,6 @@ export default function MobileSidebar() {
         side="left"
         className="p-0 bg-slate-800 text-white w-[280px]"
       >
-        {}
         <SheetHeader className="p-4 flex items-center border-b border-slate-700/50">
           <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <div className="flex items-center w-full">
@@ -65,8 +64,6 @@ export default function MobileSidebar() {
             </div>
           </div>
         </SheetHeader>
-
-        {}
         <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100vh-6rem)]">
           <SideBarNav session={session} setOpen={() => setOpen(false)} />
         </div>

@@ -568,7 +568,6 @@ const ModeratorsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -580,12 +579,9 @@ const ModeratorsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -617,8 +613,6 @@ const ModeratorsPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -638,11 +632,8 @@ const ModeratorsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -735,7 +726,6 @@ const ModeratorsPage = () => {
               </div>
             ) : (
               <>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -844,8 +834,6 @@ const ModeratorsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <Pagination
                   pagination={pagination}
                   onPageChange={handlePageChange}
@@ -855,8 +843,6 @@ const ModeratorsPage = () => {
             )}
           </div>
         </div>
-
-        {}
         <DeleteConfirmationModal
           isOpen={deleteDialogOpen}
           onClose={() => {
@@ -1205,7 +1191,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
         <h3 className="text-lg font-semibold mb-4">Edit Moderator</h3>
 
         <div className="space-y-4">
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Username</label>
             <input
@@ -1218,8 +1203,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               required
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Email</label>
             <input
@@ -1232,8 +1215,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               required
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Full Name</label>
             <input
@@ -1245,8 +1226,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               disabled={isLoading}
             />
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Password</label>
             <div className="relative">
@@ -1272,8 +1251,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               Leave blank to keep current password, or click the refresh icon to generate a new one
             </p>
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Status</label>
             <select
@@ -1286,8 +1263,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               <option value="inactive">Inactive</option>
             </select>
           </div>
-
-          {}
           <div className="mb-4">
             <label className="form-label mb-2">Role</label>
             <select
@@ -1301,13 +1276,10 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               <option value="user">User</option>
             </select>
           </div>
-
-          {}
           {formData.role === 'moderator' && (
             <div className="mb-4">
               <label className="form-label mb-2">Permissions</label>
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                {}
                 <div className="mb-3 pb-3 border-b border-gray-200">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
@@ -1323,8 +1295,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                     <span className="text-sm font-medium text-gray-900">Select All Permissions</span>
                   </label>
                 </div>
-
-                {}
                 <div className="grid grid-cols-2 gap-3">
                   {availablePermissions.map((permission) => (
                     <label
@@ -1342,8 +1312,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                     </label>
                   ))}
                 </div>
-
-                {}
                 {formData.permissions && formData.permissions.length === 0 ? (
                   <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
                     No permissions selected. Moderator will have limited access.

@@ -270,12 +270,10 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
             className="g-recaptcha border border-dashed border-gray-300 p-2"
             style={{ minHeight: '78px' }}
           >
-            {}
             {widgetId === null && (
               <>
                 {!isLoaded && <span className="text-gray-500 text-sm">Loading ReCAPTCHA script...</span>}
                 {isLoaded && !isTestKey && <span className="text-gray-500 text-sm">Rendering widget...</span>}
-                {}
                 {isLoaded && isTestKey && (
                   <div 
                     className="flex items-center justify-center h-16 bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-50"

@@ -80,8 +80,6 @@ const Platforms: React.FC = () => {
             Our budget-friendly and top-notch social media marketing solutions.
           </p>
         </div>
-
-        {}
         <div className="flex justify-center mb-8">
           <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-5 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-w-full overflow-x-auto transition-all duration-200">
             <div className="flex flex-wrap justify-center gap-2 min-w-max">
@@ -106,8 +104,6 @@ const Platforms: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center mt-8">
           <div>
             <h2 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-200">

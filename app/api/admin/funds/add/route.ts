@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Check if user exists
     const user = await db.user.findUnique({
       where: { id: userId },
     });
@@ -36,12 +34,9 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Generate unique invoice ID
     const invoiceId = `ADMIN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Use transaction to create fund record and update user balance
     const result = await db.$transaction(async (prisma) => {
-      // Create the fund record
       const addFund = await prisma.addFund.create({
         data: {
           invoice_id: invoiceId,
@@ -56,23 +51,21 @@ export async function POST(req: NextRequest) {
           order_id: `ADMIN-${Date.now()}`,
           date: new Date(),
           userId: userId,
-          currency: 'USD', // Admin added funds are in USD
+          currency: 'USD',
         },
       });
 
-      // Update user balance (USD amount)
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
-          balance: { increment: parseFloat(amountUSD) }, // Legacy field
-          balanceUSD: { increment: parseFloat(amountUSD) }, // New USD balance field
+          balance: { increment: parseFloat(amountUSD) },
+          balanceUSD: { increment: parseFloat(amountUSD) },
         }
       });
 
       return { addFund, updatedUser };
     });
     
-    // Activity logging removed for now
 
     return NextResponse.json({
       success: true,

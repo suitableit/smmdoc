@@ -3,10 +3,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Count total services
     const totalServices = await db.service.count();
 
-    // Get all services with updateText to extract provider info
     const allServices = await db.service.findMany({
       select: {
         id: true,
@@ -15,7 +13,6 @@ export async function GET() {
       }
     });
 
-    // Count services by provider from updateText
     const providerCounts: Record<string, number> = {};
     let importedServices = 0;
 
@@ -29,7 +26,6 @@ export async function GET() {
             importedServices++;
           }
         } catch (error) {
-          // Skip invalid JSON
         }
       }
     });

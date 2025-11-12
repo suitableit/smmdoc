@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
@@ -11,7 +11,6 @@ export async function POST(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -29,7 +28,6 @@ export async function POST(
       );
     }
 
-    // Find the transaction
     const transaction = await db.addFund.findUnique({
       where: { id: transactionId },
       include: { user: true }
@@ -42,7 +40,6 @@ export async function POST(
       );
     }
     
-    // Check if transaction is already approved
     if (transaction.status === 'Success') {
       return NextResponse.json(
         { error: 'Transaction is already approved' },
@@ -50,7 +47,6 @@ export async function POST(
       );
     }
     
-    // Check if transaction is pending
     if (transaction.admin_status !== 'pending') {
       return NextResponse.json(
         { error: 'Transaction is not pending approval' },
@@ -59,9 +55,7 @@ export async function POST(
     }
     
     try {
-      // Use Prisma transaction to ensure both operations succeed or fail together
       await db.$transaction(async (prisma) => {
-        // Update the payment status
         await prisma.addFund.update({
           where: { id: transactionId },
           data: {
@@ -71,7 +65,6 @@ export async function POST(
           }
         });
         
-        // Update user balance
         const user = await prisma.user.update({
           where: { id: transaction.userId },
           data: {
@@ -83,7 +76,6 @@ export async function POST(
         console.log(`User ${transaction.userId} balance updated. New balance: ${user.balance}`);
       });
 
-      // Send success email to user
       if (transaction.user.email) {
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
@@ -102,7 +94,6 @@ export async function POST(
         });
       }
 
-      // Send admin notification email
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: transaction.user.name || 'Unknown User',

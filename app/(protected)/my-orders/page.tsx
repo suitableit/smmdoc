@@ -565,7 +565,6 @@ export default function OrdersList() {
 
   return (
     <div className="page-container">
-      {}
       <CancelModal
         isOpen={cancelModal.isOpen}
         onClose={handleCancelClose}
@@ -574,8 +573,6 @@ export default function OrdersList() {
         reason={cancelModal.reason}
         setReason={(reason) => setCancelModal(prev => ({ ...prev, reason }))}
       />
-
-      {}
       <RefillModal
         isOpen={refillModal.isOpen}
         onClose={handleRefillClose}
@@ -584,8 +581,6 @@ export default function OrdersList() {
         reason={refillModal.reason}
         setReason={(reason) => setRefillModal(prev => ({ ...prev, reason }))}
       />
-
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -595,9 +590,7 @@ export default function OrdersList() {
       )}
 
       <div className="page-content">
-        {}
         <div className="card card-padding">
-          {}
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -621,8 +614,6 @@ export default function OrdersList() {
               )}
             </div>
           </div>
-
-          {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
               {isLoading ? (
@@ -655,8 +646,6 @@ export default function OrdersList() {
               )}
             </div>
           </div>
-
-          {}
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
@@ -916,8 +905,6 @@ export default function OrdersList() {
               </tbody>
             </table>
           </div>
-
-          {}
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
@@ -937,8 +924,6 @@ export default function OrdersList() {
                 >
                   Previous
                 </button>
-
-                {}
                 <div className="flex gap-1">
                   {Array.from(
                     { length: Math.min(5, pagination.totalPages) },

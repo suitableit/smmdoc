@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { emailTemplates, transactionEmailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,7 +21,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the payment record in the database
     const payment = await db.addFund.findUnique({
       where: { invoice_id },
       include: { user: true },
@@ -34,7 +33,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // If payment is already successful, return success
     if (payment.status === 'Success') {
       return NextResponse.json({
         status: 'COMPLETED',
@@ -48,7 +46,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Live payment gateway verification
     const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
 
     if (!apiKey) {
@@ -59,7 +56,6 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // Call UddoktaPay live verification API
       const verificationResponse = await fetch(
         `https://pay.smmdoc.com/api/verify-payment/${invoice_id}`,
         {
@@ -72,7 +68,6 @@ export async function POST(req: NextRequest) {
         }
       );
 
-      // Handle live API response
       let isSuccessful = false;
       let verificationStatus = 'PENDING';
 
@@ -80,7 +75,6 @@ export async function POST(req: NextRequest) {
         const verificationData = await verificationResponse.json();
         console.log('UddoktaPay verification response:', verificationData);
 
-        // Handle UddoktaPay live API response
         if (
           verificationData.status === 'COMPLETED' ||
           verificationData.status === 'SUCCESS'
@@ -95,7 +89,6 @@ export async function POST(req: NextRequest) {
         ) {
           verificationStatus = 'CANCELLED';
         } else {
-          // Default to pending for unknown statuses
           verificationStatus = 'PENDING';
         }
       } else {
@@ -103,18 +96,14 @@ export async function POST(req: NextRequest) {
           'UddoktaPay verification API error:',
           await verificationResponse.text()
         );
-        // If API call fails, default to pending for manual review
         verificationStatus = 'PENDING';
       }
 
       console.log('Verification result:', { isSuccessful, verificationStatus });
 
-      // If the payment was successful, update the user's balance in a transaction
       if (isSuccessful && payment.user) {
         try {
-          // Use Prisma transaction to ensure both operations succeed or fail together
           await db.$transaction(async (prisma) => {
-            // Update the payment status
             await prisma.addFund.update({
               where: { invoice_id },
               data: {
@@ -125,10 +114,8 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            // Use original amount if available, otherwise calculate from USD amount
             const originalAmount = payment.original_amount || payment.amount;
 
-            // Check user settings for payment bonus
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
 
@@ -142,13 +129,12 @@ export async function POST(req: NextRequest) {
 
             const totalAmountToAdd = originalAmount + bonusAmount;
 
-            // Update user balance with original currency amount plus bonus
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: totalAmountToAdd }, // Add original amount + bonus in user's currency
-                balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
-                total_deposit: { increment: originalAmount }, // Track only actual deposit, not bonus
+                balance: { increment: totalAmountToAdd },
+                balanceUSD: { increment: payment.amount },
+                total_deposit: { increment: originalAmount },
               },
             });
 
@@ -157,7 +143,6 @@ export async function POST(req: NextRequest) {
             );
           });
 
-          // Send success email to user
           if (payment.user.email) {
             const emailData = emailTemplates.paymentSuccess({
               userName: payment.user.name || 'Customer',
@@ -176,7 +161,6 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // Send admin notification email
           const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
           const adminEmailData = transactionEmailTemplates.adminAutoApproved({
             userName: payment.user.name || 'Unknown User',
@@ -215,7 +199,6 @@ export async function POST(req: NextRequest) {
           );
         }
       } else if (verificationStatus === 'PENDING') {
-        // Update payment with transaction ID but keep status as Processing and admin_status as pending
         await db.addFund.update({
           where: { invoice_id },
           data: {
@@ -225,7 +208,6 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Send admin notification for pending transaction
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
         const adminEmailData = emailTemplates.adminPendingReview({
           userName: payment.user?.name || 'Unknown User',
@@ -255,7 +237,6 @@ export async function POST(req: NextRequest) {
           },
         });
       } else {
-        // Payment failed or cancelled
         await db.addFund.update({
           where: { invoice_id },
           data: {

@@ -4,7 +4,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Require user authentication
     const session = await requireAuth();
 
     console.log(`User current API accessed by: ${session.user.email}`);
@@ -47,7 +46,6 @@ export async function GET() {
     } catch (dbError) {
       console.error('Database error in /api/user/current:', dbError);
 
-      // Return session data as fallback
       return NextResponse.json(
         {
           success: true,
@@ -75,7 +73,6 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error in user current API:', error);
 
-    // Handle authentication errors
     if (error.message === 'Authentication required') {
       return NextResponse.json(
         { success: false, data: null, error: 'Authentication required' },

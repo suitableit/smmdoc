@@ -475,7 +475,6 @@ const SupportTicketsPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -487,12 +486,9 @@ const SupportTicketsPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
-              {}
               <select
                 value={pagination.limit}
                 onChange={(e) =>
@@ -522,8 +518,6 @@ const SupportTicketsPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -541,11 +535,8 @@ const SupportTicketsPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -686,7 +677,6 @@ const SupportTicketsPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedTickets.length > 0 && (
               <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
@@ -696,8 +686,6 @@ const SupportTicketsPage = () => {
                   >
                     {selectedTickets.length} selected
                   </span>
-
-                  {}
                   <select 
                     value={selectedBulkOperation}
                     onChange={(e) => setSelectedBulkOperation(e.target.value)}
@@ -710,8 +698,6 @@ const SupportTicketsPage = () => {
                     <option value="delete_selected">Delete Selected</option>
                   </select>
                 </div>
-
-                {}
                 {selectedBulkOperation && (
                   <button
                     onClick={() => {
@@ -747,7 +733,6 @@ const SupportTicketsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -883,7 +868,6 @@ const SupportTicketsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
-                              {}
                               <button
                                 className="btn btn-secondary p-2"
                                 title="View Ticket"
@@ -891,8 +875,6 @@ const SupportTicketsPage = () => {
                               >
                                 <FaEye className="h-3 w-3" />
                               </button>
-
-                              {}
                               <div className="relative">
                                 <button
                                   className="btn btn-secondary p-2"
@@ -913,8 +895,6 @@ const SupportTicketsPage = () => {
                                 >
                                   <FaEllipsisH className="h-3 w-3" />
                                 </button>
-
-                                {}
                                 <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                                   <div className="py-1">
                                     <button
@@ -933,7 +913,6 @@ const SupportTicketsPage = () => {
                                       )}
                                       Mark as {ticket.isRead ? 'Unread' : 'Read'}
                                     </button>
-                                    {}
                                     {ticket.status !== 'Closed' && (
                                       <button
                                         onClick={() => {
@@ -972,8 +951,6 @@ const SupportTicketsPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1033,8 +1010,6 @@ const SupportTicketsPage = () => {
             )}
           </div>
         </div>
-
-        {}
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

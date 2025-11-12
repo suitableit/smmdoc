@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// DELETE /api/admin/blogs/[id] - Delete blog post by ID (Admin only)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +34,6 @@ export async function DELETE(
       );
     }
 
-    // Check if post exists
     const existingPost = await db.blogPost.findUnique({
       where: { id: blogId }
     });
@@ -51,7 +49,6 @@ export async function DELETE(
       );
     }
 
-    // Delete blog post
     await db.blogPost.delete({
       where: { id: blogId }
     });

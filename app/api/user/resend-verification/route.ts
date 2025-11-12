@@ -20,7 +20,6 @@ export async function POST() {
       );
     }
 
-    // Get user details
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -64,7 +63,6 @@ export async function POST() {
       );
     }
 
-    // Generate verification token
     const verificationToken = await generateVerificationToken(user.email);
 
     if (!verificationToken) {
@@ -78,7 +76,6 @@ export async function POST() {
       );
     }
 
-    // Send verification email
     try {
       await sendVerificationEmail(
         verificationToken.email,
@@ -96,7 +93,6 @@ export async function POST() {
       );
     }
 
-    // Log activity for verification email resend
     try {
       const username = user.username || user.email?.split('@')[0] || `user${user.id}`;
       await ActivityLogger.profileUpdated(

@@ -5,8 +5,6 @@ export async function GET() {
   try {
     const session = await requireAuth();
 
-    // TODO: Implement actual notification fetching from database
-    // For now, return empty array to prevent errors
     return NextResponse.json({
       success: true,
       notifications: []

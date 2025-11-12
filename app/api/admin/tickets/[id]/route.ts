@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
 
-// Validation schema for updating tickets
 const updateTicketSchema = z.object({
   status: z.enum(['Open', 'in_progress', 'resolved', 'closed', 'on_hold']).optional(),
   isRead: z.boolean().optional(),
@@ -18,7 +17,6 @@ interface RouteParams {
   }>;
 }
 
-// GET - Fetch single support ticket (admin)
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -33,7 +31,6 @@ export async function GET(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -46,7 +43,6 @@ export async function GET(
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -121,13 +117,10 @@ export async function GET(
       );
     }
 
-    // Calculate user ticket statistics
     const [totalTickets, openTickets] = await Promise.all([
-      // Count total tickets for this user
       db.supportTicket.count({
         where: { userId: ticket.userId }
       }),
-      // Count open tickets for this user (status: 'pending' or 'Open')
       db.supportTicket.count({
         where: {
           userId: ticket.userId,
@@ -139,13 +132,12 @@ export async function GET(
       })
     ]);
 
-    // Transform the ticket data to match frontend expectations
     const transformedTicket = {
       ...ticket,
       id: ticket.id.toString(),
       createdAt: ticket.createdAt.toISOString(),
-      lastUpdated: ticket.updatedAt.toISOString(), // Map updatedAt to lastUpdated
-      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : null, // Parse orderIds JSON
+      lastUpdated: ticket.updatedAt.toISOString(),
+      orderIds: ticket.orderIds ? JSON.parse(ticket.orderIds) : null,
       userInfo: {
         id: ticket.user?.id,
         name: ticket.user?.name,
@@ -156,18 +148,16 @@ export async function GET(
       },
       messages: ticket.messages.map((msg: any) => ({
         id: msg.id,
-        type: msg.messageType, // Map messageType to type
+        type: msg.messageType,
         author: msg.messageType === 'system' ? 'System' : msg.user.name,
         authorRole: msg.messageType === 'system' ? 'system' : (msg.isFromAdmin ? 'admin' : 'user'),
-        content: msg.message, // Map message to content
+        content: msg.message,
         createdAt: msg.createdAt,
         attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
         isEdited: false,
         userImage: msg.user.image,
         user: {
           ...msg.user,
-          // For system messages created by admins, show the admin username
-          // For legacy system messages, fall back to 'system'
           username: msg.messageType === 'system' && msg.isFromAdmin && msg.user.role === 'admin' ? msg.user.username : 
                    msg.messageType === 'system' ? 'system' : msg.user.username
         }
@@ -195,7 +185,6 @@ export async function GET(
   }
 }
 
-// PUT - Update support ticket (admin only)
 export async function PUT(
   request: NextRequest,
   { params }: RouteParams
@@ -210,7 +199,6 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -223,8 +211,6 @@ export async function PUT(
       );
     }
 
-    // Check if ticket system is enabled
-    // Ticket system is always enabled
     const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
@@ -237,7 +223,6 @@ export async function PUT(
       );
     }
 
-    // Check if ticket exists
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId }
     });
@@ -252,7 +237,6 @@ export async function PUT(
     const body = await request.json();
     const validatedData = updateTicketSchema.parse(body);
 
-    // Prepare update data
     const updateData: any = {
       lastUpdated: new Date()
     };
@@ -269,7 +253,6 @@ export async function PUT(
       updateData.priority = validatedData.priority;
     }
 
-    // Update the ticket
     const updatedTicket = await db.supportTicket.update({
       where: { id: ticketId },
       data: updateData,
@@ -313,7 +296,6 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete support ticket (admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: RouteParams
@@ -328,7 +310,6 @@ export async function DELETE(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -341,7 +322,6 @@ export async function DELETE(
       );
     }
 
-    // Ticket system is always enabled
     const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
@@ -354,7 +334,6 @@ export async function DELETE(
       );
     }
 
-    // Check if ticket exists
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId }
     });
@@ -366,7 +345,6 @@ export async function DELETE(
       );
     }
 
-    // Delete related records first (if any)
     await db.supportTicket.delete({
       where: { id: ticketId }
     });

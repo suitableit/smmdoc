@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
@@ -11,7 +11,6 @@ export async function POST(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -29,7 +28,6 @@ export async function POST(
       );
     }
 
-    // Find the transaction
     const transaction = await db.addFund.findUnique({
       where: { id: transactionId },
       include: { user: true }
@@ -42,7 +40,6 @@ export async function POST(
       );
     }
     
-    // Check if transaction is already cancelled
     if (transaction.status === 'Cancelled') {
       return NextResponse.json(
         { error: 'Transaction is already cancelled' },
@@ -50,7 +47,6 @@ export async function POST(
       );
     }
     
-    // Check if transaction is already approved
     if (transaction.status === 'Success') {
       return NextResponse.json(
         { error: 'Cannot cancel an approved transaction' },
@@ -58,7 +54,6 @@ export async function POST(
       );
     }
     
-    // Check if transaction is pending
     if (transaction.admin_status !== 'pending') {
       return NextResponse.json(
         { error: 'Transaction is not pending approval' },
@@ -67,7 +62,6 @@ export async function POST(
     }
     
     try {
-      // Update the payment status to cancelled
       await db.addFund.update({
         where: { id: transactionId },
         data: {
@@ -77,7 +71,6 @@ export async function POST(
         }
       });
 
-      // Send cancellation email to user
       if (transaction.user.email) {
         const emailData = emailTemplates.paymentCancelled({
           userName: transaction.user.name || 'Customer',
@@ -96,7 +89,6 @@ export async function POST(
         });
       }
 
-      // Log admin action for audit trail
       console.log(`Admin ${session.user.id} cancelled transaction ${transactionId} for user ${transaction.userId}`);
       
       return NextResponse.json({

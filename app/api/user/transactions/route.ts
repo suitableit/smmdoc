@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -16,12 +16,10 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search') || '';
 
-    // Build where clause
     const where: any = {
       userId: session.user.id,
     };
 
-    // Add search functionality
     if (search) {
       where.OR = [
         { transaction_id: { contains: search, mode: 'insensitive' } },
@@ -41,10 +39,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Test database connection first
     await db.$queryRaw`SELECT 1`;
 
-    // Fetch transactions from database (using AddFund model)
     const transactions = await db.addFund.findMany({
       where,
       orderBy: {
@@ -62,11 +58,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Transform data to match frontend interface
     const transformedTransactions = transactions.map((transaction) => ({
       id: transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.original_amount || transaction.amount, // Use original amount if available
+      amount: transaction.original_amount || transaction.amount,
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.method || 'uddoktapay',
       payment_method: transaction.payment_method || 'UddoktaPay',
@@ -76,7 +71,7 @@ export async function GET(request: NextRequest) {
       reference_id: transaction.order_id,
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
-      currency: transaction.currency || 'BDT', // Include currency field
+      currency: transaction.currency || 'BDT',
     }));
 
     return NextResponse.json({

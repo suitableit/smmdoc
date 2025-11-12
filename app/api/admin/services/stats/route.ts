@@ -4,20 +4,16 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get total services count
     const totalServices = await db.service.count();
     
-    // Get active services count
     const activeServices = await db.service.count({
       where: { status: 'active' }
     });
     
-    // Get inactive services count
     const inactiveServices = await db.service.count({
       where: { status: 'inactive' }
     });
     
-    // Get popular services (services with most orders)
     const popularServices = await db.service.count({
       where: {
         newOrders: {
@@ -26,7 +22,6 @@ export async function GET() {
       }
     });
     
-    // Get recently added services (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     

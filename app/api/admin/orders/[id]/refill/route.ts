@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/admin/orders/:id/refill - Refill an order
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function POST(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -37,7 +35,6 @@ export async function POST(
       );
     }
     
-    // Get the original order
     const originalOrder = await db.newOrder.findUnique({
       where: { id: Number(id) },
       include: {
@@ -82,7 +79,6 @@ export async function POST(
       );
     }
     
-    // Check if order is eligible for refill
     const eligibleStatuses = ['completed', 'partial'];
     if (!eligibleStatuses.includes(originalOrder.status)) {
       return NextResponse.json(
@@ -95,7 +91,6 @@ export async function POST(
       );
     }
     
-    // Check if service is still active
     if (originalOrder.service.status !== 'active') {
       return NextResponse.json(
         { 
@@ -107,7 +102,6 @@ export async function POST(
       );
     }
     
-    // Calculate refill quantity
     let refillQuantity: number;
     
     switch (refillType) {
@@ -141,7 +135,6 @@ export async function POST(
         );
     }
     
-    // Validate quantity limits
     if (refillQuantity < originalOrder.service.min_order || refillQuantity > originalOrder.service.max_order) {
       return NextResponse.json(
         { 
@@ -153,13 +146,11 @@ export async function POST(
       );
     }
     
-    // Calculate refill cost
     const refillRate = originalOrder.service.rate;
     const refillUsdPrice = (refillRate * refillQuantity) / 1000;
     const refillBdtPrice = refillUsdPrice * (originalOrder.user.dollarRate || 121.52);
     const refillPrice = originalOrder.user.currency === 'USD' ? refillUsdPrice : refillBdtPrice;
     
-    // Check user balance
     if (originalOrder.user.balance < refillPrice) {
       return NextResponse.json(
         { 
@@ -171,9 +162,7 @@ export async function POST(
       );
     }
     
-    // Use transaction to ensure data consistency
     const result = await db.$transaction(async (prisma) => {
-      // Create new refill order
       const refillOrder = await prisma.newOrder.create({
         data: {
           userId: originalOrder.userId,
@@ -186,7 +175,7 @@ export async function POST(
           bdtPrice: refillBdtPrice,
           currency: originalOrder.currency,
           avg_time: originalOrder.service.avg_time,
-          status: 'processing', // Start refill orders as processing
+          status: 'processing',
           remains: refillQuantity,
           startCount: 0
         },
@@ -215,7 +204,6 @@ export async function POST(
         }
       });
       
-      // Deduct balance from user
       await prisma.user.update({
         where: { id: originalOrder.userId },
         data: {
@@ -231,7 +219,6 @@ export async function POST(
       return refillOrder;
     });
     
-    // Log the refill action
     console.log(`Admin ${session.user.email} created refill order for original order ${id}`, {
       originalOrderId: id,
       refillOrderId: result.id,
@@ -276,7 +263,6 @@ export async function POST(
   }
 }
 
-// GET /api/admin/orders/:id/refill - Get refill eligibility and cost estimate
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -284,7 +270,6 @@ export async function GET(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -309,7 +294,6 @@ export async function GET(
       );
     }
     
-    // Get order details
     const order = await db.newOrder.findUnique({
       where: { id: Number(id) },
       include: {
@@ -345,11 +329,9 @@ export async function GET(
       );
     }
     
-    // Check eligibility
     const eligibleStatuses = ['completed', 'partial'];
     const isEligible = eligibleStatuses.includes(order.status) && (order as any).service?.status === 'active';
     
-    // Calculate refill costs
     const refillRate = (order as any).service?.rate || 0;
     const fullRefillUsd = (refillRate * order.qty) / 1000;
     const remainingRefillUsd = (refillRate * order.remains) / 1000;

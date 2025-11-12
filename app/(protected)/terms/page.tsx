@@ -223,7 +223,6 @@ export default function TermsPage() {
   return (
     <div className="page-container">
       <div className="page-content">
-        {}
         <div className="page-header">
           <h1 className="page-title">Terms of Service</h1>
           <p className="page-description">
@@ -231,8 +230,6 @@ export default function TermsPage() {
             marketing services
           </p>
         </div>
-
-        {}
         <div className="card card-padding mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
             <div className="flex items-center mb-2 md:mb-0">
@@ -251,8 +248,6 @@ export default function TermsPage() {
             </div>
           </div>
         </div>
-
-        {}
         <div className="space-y-6">
           {termsData.map((section, index) => (
             <div key={section.id} className="card card-padding">
@@ -276,8 +271,6 @@ export default function TermsPage() {
             </div>
           ))}
         </div>
-
-        {}
         <div className="card card-padding mt-8">
           <div className="card-header">
             <div className="card-icon">
@@ -324,8 +317,6 @@ export default function TermsPage() {
             </div>
           </div>
         </div>
-
-        {}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
           <div className="flex items-start">
             <FaExclamationTriangle className="text-yellow-600 mt-1 mr-3 flex-shrink-0" />

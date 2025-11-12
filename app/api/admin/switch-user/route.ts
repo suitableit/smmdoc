@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
     const adminUser = await prisma.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if target user exists
     const targetUser = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
       select: { id: true, username: true, email: true, role: true }
@@ -50,7 +48,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Don't allow switching to another admin
     if (targetUser.role === 'admin') {
       return NextResponse.json(
         { success: false, error: 'Cannot switch to another admin account' },
@@ -58,26 +55,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create response with session data
     const response = NextResponse.json({
       success: true,
       message: `Switched to user: ${targetUser.username}`,
       user: targetUser
     });
 
-    // Set cookies for user switching
     response.cookies.set('impersonated-user-id', userId.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: 60 * 60 * 24
     });
 
     response.cookies.set('original-admin-id', session.user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 // 24 hours
+      maxAge: 60 * 60 * 24
     });
 
     return response;

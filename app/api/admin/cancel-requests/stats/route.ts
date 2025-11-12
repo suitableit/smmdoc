@@ -2,12 +2,10 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/cancel-requests/stats - Get cancel request statistics
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -21,26 +19,22 @@ export async function GET(req: NextRequest) {
 
     console.log('Admin cancel requests stats API called');
 
-    // Get total requests count using raw SQL since Prisma model might not be available
     const totalRequestsResult = await db.$queryRaw`
       SELECT COUNT(*) as count FROM cancel_requests
     ` as any[];
     const totalRequests = Number(totalRequestsResult[0]?.count || 0);
 
-    // Get status breakdown using raw SQL
     const statusBreakdownResult = await db.$queryRaw`
       SELECT status, COUNT(*) as count
       FROM cancel_requests
       GROUP BY status
     ` as any[];
 
-    // Convert to object format
     const statusCounts = statusBreakdownResult.reduce((acc: any, item: any) => {
       acc[item.status] = Number(item.count);
       return acc;
     }, {});
 
-    // Get total refund amount (approved requests only) using raw SQL
     const totalRefundResult = await db.$queryRaw`
       SELECT SUM(refundAmount) as total
       FROM cancel_requests
@@ -48,7 +42,6 @@ export async function GET(req: NextRequest) {
     ` as any[];
     const totalRefundAmount = Number(totalRefundResult[0]?.total || 0);
 
-    // Get today's requests count using raw SQL
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -82,7 +75,6 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching cancel request stats:', error);
 
-    // Return default stats if database query fails
     const defaultStats = {
       totalRequests: 0,
       pendingRequests: 0,

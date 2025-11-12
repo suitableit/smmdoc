@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    // Convert to integer
     const orderIdInt = parseInt(orderId);
     console.log('Order ID:', orderIdInt, 'Status:', status);
     
@@ -39,7 +38,6 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    // Check if order exists
     const existingOrder = await db.newOrder.findUnique({
       where: { id: orderIdInt }
     });
@@ -53,7 +51,6 @@ export async function POST(req: NextRequest) {
       }, { status: 404 });
     }
     
-    // Update order
     const updatedOrder = await db.newOrder.update({
       where: { id: orderIdInt },
       data: { status }

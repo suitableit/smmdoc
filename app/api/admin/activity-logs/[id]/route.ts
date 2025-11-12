@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// DELETE /api/admin/activity-logs/[id] - Delete specific activity log
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -35,7 +34,6 @@ export async function DELETE(
       );
     }
 
-    // Check if activity log exists
     const existingLog = await db.activitylog.findUnique({
       where: { id: logId }
     });
@@ -51,7 +49,6 @@ export async function DELETE(
       );
     }
 
-    // Delete the activity log
     await db.activitylog.delete({
       where: { id: logId }
     });
@@ -76,7 +73,6 @@ export async function DELETE(
   }
 }
 
-// GET /api/admin/activity-logs/[id] - Get specific activity log
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -109,7 +105,6 @@ export async function GET(
       );
     }
 
-    // Get activity log with user details
     const activityLog = await db.activitylog.findUnique({
       where: { id: logId },
       include: {
@@ -135,7 +130,6 @@ export async function GET(
       );
     }
 
-    // Transform data for frontend
     const transformedLog = {
       id: activityLog.id.toString(),
       username: activityLog.username || activityLog.user?.username || 'Unknown',

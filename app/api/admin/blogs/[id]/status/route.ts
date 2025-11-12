@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/blogs/[id]/status - Update blog post status (Admin only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +37,6 @@ export async function PUT(
     const body = await req.json();
     const { status } = body;
 
-    // Validate status
     if (!status || !['published', 'draft'].includes(status)) {
       return NextResponse.json(
         {
@@ -50,7 +48,6 @@ export async function PUT(
       );
     }
 
-    // Check if post exists
     const existingPost = await db.blogPost.findUnique({
       where: { id: blogId }
     });
@@ -66,7 +63,6 @@ export async function PUT(
       );
     }
 
-    // Update blog post status
     const updatedPost = await db.blogPost.update({
       where: { id: blogId },
       data: {

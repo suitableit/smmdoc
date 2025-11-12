@@ -1,9 +1,8 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Check if user is admin
     const session = await auth();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
@@ -12,14 +11,13 @@ export async function GET() {
       );
     }
 
-    // Get memory usage
     const memoryUsage = process.memoryUsage();
     
     const stats = {
-      rss: Math.round(memoryUsage.rss / 1024 / 1024), // MB
-      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024), // MB
-      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
-      external: Math.round(memoryUsage.external / 1024 / 1024), // MB
+      rss: Math.round(memoryUsage.rss / 1024 / 1024),
+      heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+      heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+      external: Math.round(memoryUsage.external / 1024 / 1024),
       heapUsedPercentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
       timestamp: new Date().toISOString(),
     };

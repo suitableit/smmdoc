@@ -2,23 +2,18 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Default module settings
 const defaultModuleSettings = {
-  // Affiliate
   affiliateSystemEnabled: false,
   commissionRate: 5,
   minimumPayout: 10,
-  // Child Panel
   childPanelSellingEnabled: false,
   childPanelPrice: 10,
-  // Others
   serviceUpdateLogsEnabled: true,
   massOrderEnabled: false,
   servicesListPublic: true,
   updatedAt: new Date(),
 };
 
-// GET - Load module settings
 export async function GET() {
   try {
     const session = await auth();
@@ -27,7 +22,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get module settings from database (create if not exists)
     let settings = await db.moduleSettings.findFirst();
     if (!settings) {
       settings = await db.moduleSettings.create({
@@ -58,7 +52,6 @@ export async function GET() {
   }
 }
 
-// POST - Save module settings
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -76,7 +69,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate numeric fields
     if (moduleSettings.commissionRate && (moduleSettings.commissionRate < 0 || moduleSettings.commissionRate > 100)) {
       return NextResponse.json(
         { error: 'Commission rate must be between 0 and 100' },
@@ -98,7 +90,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update module settings
     await db.moduleSettings.upsert({
       where: { id: 1 },
       update: {

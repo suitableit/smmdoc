@@ -1,14 +1,11 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    // Parse the webhook data
     const webhookData = await req.json();
     console.log("Webhook data received:", webhookData);
     
-    // Validate that this is a legitimate webhook request
-    // In production, you should verify the signature or API key
     const apiKey = req.headers.get('rt-uddoktapay-api-key');
     const expectedApiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
     
@@ -17,7 +14,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    // Extract the necessary data from the webhook
     const { 
       invoice_id, 
       transaction_id, 
@@ -33,7 +29,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing invoice_id" }, { status: 400 });
     }
     
-    // Find the payment record in the database
     const payment = await db.addFund.findUnique({
       where: { invoice_id },
       include: { user: true }
@@ -44,14 +39,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Payment record not found" }, { status: 404 });
     }
     
-    // If the payment is already processed, don't process it again
     if (payment.status === "Success") {
       console.log(`Payment ${invoice_id} is already marked as successful`);
       return NextResponse.json({ message: "Payment already processed" });
     }
     
-    // Update the payment record based on the webhook status
-    // UddoktaPay usually sends COMPLETED for successful payments
     let paymentStatus = "Processing";
     
     if (status === "COMPLETED") {
@@ -65,9 +57,7 @@ export async function POST(req: NextRequest) {
     }
     
     try {
-      // Use a transaction to ensure both payment status and balance update succeed or fail together
       const result = await db.$transaction(async (prisma) => {
-        // Update the payment record in the database
         const updatedPayment = await prisma.addFund.update({
           where: { invoice_id },
           data: {
@@ -80,23 +70,20 @@ export async function POST(req: NextRequest) {
         
         console.log(`Payment ${invoice_id} status updated to ${paymentStatus}`);
         
-        // If the payment was successful, update the user's balance
         if (paymentStatus === "Success" && payment.user) {
-          // Use original amount if available, otherwise calculate from USD amount
           const originalAmount = payment.original_amount || payment.amount;
 
-          // Update user balance with original currency amount
           const user = await prisma.user.update({
             where: { id: payment.userId },
             data: {
               balance: {
-                increment: originalAmount // Add original amount in user's currency
+                increment: originalAmount
               },
               balanceUSD: {
-                increment: payment.amount // USD balance for internal calculations
+                increment: payment.amount
               },
               total_deposit: {
-                increment: originalAmount // Track total deposit in user's currency
+                increment: originalAmount
               }
             }
           });
@@ -107,7 +94,6 @@ export async function POST(req: NextRequest) {
         return { updatedPayment };
       });
       
-      // Return a success response
       return NextResponse.json({
         success: true,
         message: `Payment ${paymentStatus.toLowerCase()}`,
@@ -121,7 +107,6 @@ export async function POST(req: NextRequest) {
     } catch (dbError) {
       console.error("Database error updating payment:", dbError);
       
-      // Return a specific database error response
       return NextResponse.json({
         error: "Database error",
         message: "Failed to update payment record",

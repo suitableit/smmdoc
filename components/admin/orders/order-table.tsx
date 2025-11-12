@@ -141,7 +141,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
 
   return (
     <React.Fragment>
-      {}
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
           <thead className="sticky top-0 bg-white border-b z-10">
@@ -364,7 +363,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       className="font-mono text-xs"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      {}
                       {order.service?.id
                         ? formatIDProp(order.service.id)
                         : 'null'}
@@ -373,20 +371,16 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       className="font-medium text-sm truncate max-w-44"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {}
                       {order.service?.name || 'null'}
                     </div>
                     <div
                       className="text-xs truncate max-w-44"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      {}
                       {order.category?.category_name || 'null'}
                     </div>
                   </div>
                 </td>
-
-                {}
                 <td className="p-3">
                   <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
                     {getStatusIconProp(order.status)}
@@ -466,7 +460,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                 </td>
                 <td className="p-3">
                   <div className="flex items-center">
-                    {}
                     <div className="relative">
                       <button
                         className="btn btn-secondary p-2"
@@ -480,8 +473,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                       >
                         <FaEllipsisH className="h-3 w-3" />
                       </button>
-
-                      {}
                       <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                         <div className="py-1">
                           {(order.status === 'failed' || order.status === 'pending') && (
@@ -554,8 +545,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
           </tbody>
         </table>
       </div>
-
-      {}
       <div className="hidden">
         <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
           {orders.map((order) => (
@@ -563,7 +552,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
               key={order.id}
               className="card card-padding border-l-4 border-blue-500 mb-4"
             >
-              {}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <input
@@ -585,7 +573,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center">
-                  {}
                   <div className="relative">
                     <button
                       className="btn btn-secondary p-2"
@@ -599,8 +586,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                     >
                       <FaEllipsisH className="h-3 w-3" />
                     </button>
-
-                    {}
                     <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                       <div className="py-1">
                         {(order.status === 'failed' || order.status === 'pending') && (
@@ -668,8 +653,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </div>
                 </div>
               </div>
-
-              {}
               <div className="flex items-center justify-between mb-4 pb-4 border-b">
                 <div>
                   <div
@@ -700,14 +683,11 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   {order.mode || 'null'}
                 </div>
               </div>
-
-              {}
               <div className="mb-4">
                 <div
                   className="font-mono text-xs mb-1"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {}
                   {order.service?.id
                     ? formatIDProp(order.service.id)
                     : 'null'}
@@ -716,18 +696,15 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   className="font-medium text-sm mb-1"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  {}
                   {order.service?.name || 'null'}
                 </div>
                 <div
                   className="text-xs"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {}
                   {order.category?.category_name || 'null'} •
                   Provider: {order.seller || 'null'}
                 </div>
-                {}
                 {order.isProviderService && (
                   <div className="mt-2 p-2 bg-gray-50 rounded-lg border">
                     <div className="text-xs font-medium text-gray-600 mb-1">
@@ -785,8 +762,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </span>
                 )}
               </div>
-
-              {}
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div>
                   <div
@@ -828,8 +803,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </div>
                 </div>
               </div>
-
-              {}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <div
@@ -868,8 +841,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   </div>
                 </div>
               </div>
-
-              {}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span
@@ -910,8 +881,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
                   {order.remains ? formatCount(order.remains) : 'null'} remaining
                 </div>
               </div>
-
-              {}
               <div>
                 <div
                   className="text-xs"
@@ -936,8 +905,6 @@ const OrderTable: React.FC<OrderTableProps> = ({
           ))}
         </div>
       </div>
-
-      {}
       <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
         <div
           className="text-sm"

@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Create a test transaction with phone number
     const testTransaction = await db.addFund.create({
       data: {
         invoice_id: `TEST-${Date.now()}`,
@@ -27,10 +25,10 @@ export async function POST(req: NextRequest) {
         admin_status: 'pending',
         order_id: `TEST-ORDER-${Date.now()}`,
         method: 'uddoktapay',
-        sender_number: '01712345678', // Test phone number
+        sender_number: '01712345678',
         transaction_id: `TXN-${Date.now()}`,
-        userId: session.user.id, // Use current admin user for testing
-        currency: 'BDT', // Test transaction in BDT
+        userId: session.user.id,
+        currency: 'BDT',
       },
     });
     

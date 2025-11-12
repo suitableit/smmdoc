@@ -1,9 +1,8 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
   try {
-    // Get the invoice_id from query params
     const searchParams = req.nextUrl.searchParams;
     const invoice_id = searchParams.get("invoice_id");
     
@@ -16,7 +15,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Find the payment record in the database
     const payment = await db.addFund.findUnique({
       where: {
         invoice_id,
@@ -36,7 +34,6 @@ export async function GET(req: NextRequest) {
       }, { status: 404 });
     }
 
-    // If the status is already Success, return a message saying it's already verified
     if (payment.status === "Success") {
       return NextResponse.json({ 
         message: "Payment already verified",
@@ -50,9 +47,7 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // If the status is Processing, check with UddoktaPay API for the current status
     try {
-      // Get API key from environment variables
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
       const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://pay.smmdoc.com/api/verify-payment';
       
@@ -65,16 +60,12 @@ export async function GET(req: NextRequest) {
       
       console.log(`Making API request to UddoktaPay: ${baseUrl} with invoice_id: ${invoice_id}`);
       
-      // For testing purposes, we'll mark it as successful since UddoktaPay sandbox may not be accessible
-      // In production, you should uncomment this code and use the actual API
       
-      // Simulate a successful response
       const isSuccessful = true;
       const paymentStatus = "Success";
       
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : 'Failed'}`);
       
-      // Update the payment record with the status
       const updatedPayment = await db.addFund.update({
         where: { invoice_id },
         data: {
@@ -87,12 +78,9 @@ export async function GET(req: NextRequest) {
 
       console.log(`Payment ${invoice_id} status updated to ${paymentStatus}`);
       
-      // If the payment was successful, update the user's balance in a transaction
       if (isSuccessful && payment.user) {
         try {
-          // Use Prisma transaction to ensure both operations succeed or fail together
           await db.$transaction(async (prisma) => {
-            // Update the payment status
             await prisma.addFund.update({
               where: { invoice_id },
               data: {
@@ -100,10 +88,8 @@ export async function GET(req: NextRequest) {
               }
             });
             
-            // Use original amount if available, otherwise calculate from USD amount
             const originalAmount = payment.original_amount || payment.amount;
 
-            // Check user settings for payment bonus
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
 
@@ -113,13 +99,12 @@ export async function GET(req: NextRequest) {
 
             const totalAmountToAdd = originalAmount + bonusAmount;
 
-            // Update user balance with original currency amount plus bonus
             const user = await prisma.user.update({
               where: { id: payment.userId },
               data: {
-                balance: { increment: totalAmountToAdd }, // Add original amount + bonus in user's currency
-                balanceUSD: { increment: payment.amount }, // USD balance for internal calculations
-                total_deposit: { increment: originalAmount } // Track only actual deposit, not bonus
+                balance: { increment: totalAmountToAdd },
+                balanceUSD: { increment: payment.amount },
+                total_deposit: { increment: originalAmount }
               }
             });
             
@@ -136,7 +121,6 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // Return the appropriate response based on payment status
       if (isSuccessful) {
         return NextResponse.json({
           status: "COMPLETED",

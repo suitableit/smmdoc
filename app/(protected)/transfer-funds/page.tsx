@@ -279,7 +279,6 @@ export default function TransferFund() {
 
   return (
     <div className={`page-container ${className}`}>
-      {}
       <div className="toast-container">
         {toastMessage && (
           <Toast
@@ -292,7 +291,6 @@ export default function TransferFund() {
 
       <div className="page-content">
         <div className="max-w-2xl mx-auto">
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -305,7 +303,6 @@ export default function TransferFund() {
             </p>
 
             <form onSubmit={handleTransfer} className="space-y-6">
-              {}
               <div className="form-group">
                 <label className="form-label">Username</label>
                 <div className="relative">
@@ -323,30 +320,22 @@ export default function TransferFund() {
                     placeholder="Enter friend's username"
                     disabled={isPending}
                   />
-
-                  {}
                   {isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaSpinner className="animate-spin text-gray-400 w-4 h-4" />
                     </div>
                   )}
-
-                  {}
                   {isUserValid && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaCheckCircle className="text-green-500 w-4 h-4" />
                     </div>
                   )}
-
-                  {}
                   {userValidationError && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
                       <FaTimesCircle className="w-4 h-4 text-red-500" />
                     </div>
                   )}
                 </div>
-
-                {}
                 {username.length > 0 && username.length < 3 && (
                   <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
                     Username must be at least 3 characters
@@ -371,8 +360,6 @@ export default function TransferFund() {
                   </p>
                 )}
               </div>
-
-              {}
               <div
                 className="card"
                 style={{
@@ -428,8 +415,6 @@ export default function TransferFund() {
                       </div>
                     </div>
                   )}
-
-                  {}
                   <div className="flex justify-center">
                     <button
                       type="button"
@@ -447,8 +432,6 @@ export default function TransferFund() {
                     </button>
                   </div>
                 </div>
-
-                {}
                 <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
                   <div className="text-sm text-gray-600 mb-2 font-medium">
                     Converted Amount
@@ -482,8 +465,6 @@ export default function TransferFund() {
                   )}
                 </div>
               </div>
-
-              {}
               {currentAmount > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
                   <div className="space-y-3">
@@ -528,8 +509,6 @@ export default function TransferFund() {
                   </div>
                 </div>
               )}
-
-              {}
               <button
                 type="submit"
                 disabled={

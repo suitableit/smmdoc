@@ -4,7 +4,6 @@ import { testProviderConnection } from '@/lib/utils/providerValidator';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get all providers
     const providers = await db.api_providers.findMany({
       select: {
         id: true,
@@ -14,7 +13,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Test connection for each provider
     const connectionResults = await Promise.allSettled(
       providers.map(async (provider) => {
         const result = await testProviderConnection(provider.id);
@@ -27,7 +25,6 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    // Process results
     const results = connectionResults.map((result, index) => {
       if (result.status === 'fulfilled') {
         return result.value;

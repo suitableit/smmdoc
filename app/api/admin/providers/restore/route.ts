@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 
-// POST - Restore provider from trash
 export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -22,7 +20,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { providerId } = body;
 
-    // Validate providerId
     if (!providerId || typeof providerId !== 'number') {
       return NextResponse.json(
         {
@@ -34,7 +31,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if provider exists and is in trash
     const provider = await db.api_providers.findUnique({
       where: { id: providerId }
     });
@@ -61,7 +57,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Restore provider by setting status to active
     await db.api_providers.update({
       where: { id: providerId },
       data: { 

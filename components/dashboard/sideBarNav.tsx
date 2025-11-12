@@ -289,7 +289,6 @@ export default function SideBarNav({
 
             return (
               <li key={index} className="nav-item relative group">
-                {}
                 <div
                   className={cn(
                     'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
@@ -308,7 +307,6 @@ export default function SideBarNav({
                     )}
                     title={item.title}
                   >
-                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg',
@@ -332,7 +330,6 @@ export default function SideBarNav({
                     onClick={handleClick}
                     title={item.title}
                   >
-                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg',
@@ -373,7 +370,6 @@ export default function SideBarNav({
 
             return (
               <li key={index} className="nav-item relative group">
-                {}
                 <div
                   className={cn(
                     'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
@@ -392,7 +388,6 @@ export default function SideBarNav({
                     )}
                     title={collapsed ? item.title : undefined}
                   >
-                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
@@ -401,8 +396,6 @@ export default function SideBarNav({
                     >
                       {renderIcon(item.icon)}
                     </span>
-
-                    {}
                     <span
                       className={cn(
                         'text-sm font-medium transition-all duration-200 opacity-100',
@@ -426,7 +419,6 @@ export default function SideBarNav({
                     onClick={handleClick}
                     title={collapsed ? item.title : undefined}
                   >
-                    {}
                     <span
                       className={cn(
                         'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
@@ -437,8 +429,6 @@ export default function SideBarNav({
                     >
                       {renderIcon(item.icon)}
                     </span>
-
-                    {}
                     <span
                       className={cn(
                         'text-sm font-medium transition-all duration-200 opacity-100',
@@ -449,15 +439,11 @@ export default function SideBarNav({
                     >
                       {item.title}
                     </span>
-
-                    {}
                     {item.badge && (
                       <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
                         {item.badge}
                       </div>
                     )}
-
-                    {}
                     {item.statusColor && (
                       <div className="ml-auto">
                         <div

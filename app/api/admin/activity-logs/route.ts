@@ -27,10 +27,8 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
-    // Search functionality
     if (search) {
       switch (searchBy) {
         case 'username':
@@ -83,12 +81,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Filter by action
     if (action) {
       where.action = action;
     }
 
-    // Filter by user ID
     if (userId) {
       const userIdInt = parseInt(userId);
       if (!isNaN(userIdInt)) {
@@ -96,10 +92,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total count
     const totalCount = await db.activitylog.count({ where });
 
-    // Get activity logs
     const activityLogs = await db.activitylog.findMany({
       where,
       include: {
@@ -119,7 +113,6 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // Transform data for frontend
     const transformedLogs = activityLogs.map((log, index) => ({
       id: log.id.toString(),
       slNo: offset + index + 1,
@@ -162,7 +155,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// DELETE - Bulk delete activity logs
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
@@ -192,7 +184,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Convert string IDs to integers
     const logIds = ids.map(id => parseInt(id)).filter(id => !isNaN(id));
 
     if (logIds.length === 0) {
@@ -206,7 +197,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete activity logs
     const deleteResult = await db.activitylog.deleteMany({
       where: {
         id: {

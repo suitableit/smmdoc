@@ -1,23 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getGeneralSettings } from '@/lib/utils/general-settings';
 import fs from 'fs';
 import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the site icon from general settings
     const generalSettings = await getGeneralSettings();
     
     if (generalSettings.siteIcon) {
-      // If site icon exists, serve it
       const iconPath = path.join(process.cwd(), 'public', generalSettings.siteIcon);
       
-      // Check if the file exists
       if (fs.existsSync(iconPath)) {
         const fileBuffer = fs.readFileSync(iconPath);
         const fileExtension = path.extname(generalSettings.siteIcon).toLowerCase();
         
-        // Determine content type based on file extension
         let contentType = 'image/x-icon';
         switch (fileExtension) {
           case '.png':
@@ -43,13 +39,12 @@ export async function GET(request: NextRequest) {
         return new NextResponse(fileBuffer, {
           headers: {
             'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+            'Cache-Control': 'public, max-age=3600',
           },
         });
       }
     }
     
-    // Fallback to default favicon files if no site icon is set or file doesn't exist
     const defaultFaviconPaths = [
       path.join(process.cwd(), 'app', 'favicon.ico'),
       path.join(process.cwd(), 'public', 'favicon.ico'),
@@ -69,7 +64,6 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // If no favicon exists at all, return 404
     return new NextResponse('Favicon not found', { status: 404 });
     
   } catch (error) {

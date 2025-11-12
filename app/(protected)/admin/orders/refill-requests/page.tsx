@@ -486,7 +486,6 @@ const RefillOrdersPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -498,10 +497,8 @@ const RefillOrdersPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {}
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
@@ -529,8 +526,6 @@ const RefillOrdersPage = () => {
                 Refresh
               </button>
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
@@ -548,11 +543,8 @@ const RefillOrdersPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            {}
             <div className="mb-4">
               <div className="block space-y-2">
                 <button
@@ -625,7 +617,6 @@ const RefillOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {}
             {selectedOrders?.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
                 <div className="flex items-center gap-2">
@@ -825,7 +816,6 @@ const RefillOrdersPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1300px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -911,11 +901,9 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm truncate max-w-44"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {}
                                 {order.service?.name || 'Unknown Service'}
                               </div>
                               <div className="text-xs truncate max-w-44" style={{ color: 'var(--text-muted)' }}>
-                                {}
                                 {order.category?.category_name || 'Unknown Category'}
                               </div>
                             </div>
@@ -1034,8 +1022,6 @@ const RefillOrdersPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="lg:hidden">
                   <div className="space-y-4">
                     {orders?.map((order, index) => (
@@ -1043,7 +1029,6 @@ const RefillOrdersPage = () => {
                         key={`${order.id}-${index}`}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
                       >
-                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <input
@@ -1070,8 +1055,6 @@ const RefillOrdersPage = () => {
                             </button>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4 pb-4 border-b">
                           <div className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>
                             User
@@ -1086,22 +1069,16 @@ const RefillOrdersPage = () => {
                             {order.user?.email || 'No email'}
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <div
                             className="font-medium text-sm mb-1"
                             style={{ color: 'var(--text-primary)' }}
                           >
-                            {}
                             {order.service?.name || 'Unknown Service'}
                           </div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {}
                             {order.category?.category_name || 'Unknown Category'}
                           </div>
-
-                          {}
                           <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
                               Seller:
@@ -1136,8 +1113,6 @@ const RefillOrdersPage = () => {
                             </button>
                           </div>
                         </div>
-
-                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1165,8 +1140,6 @@ const RefillOrdersPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
@@ -1200,8 +1173,6 @@ const RefillOrdersPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <div className="flex justify-between items-center mb-2">
                             <span
@@ -1229,8 +1200,6 @@ const RefillOrdersPage = () => {
                             {order.remains} remaining
                           </div>
                         </div>
-
-                        {}
                         <div className="flex justify-center">
                           <button
                             onClick={() => handleOpenRefillDialog(order)}
@@ -1240,8 +1209,6 @@ const RefillOrdersPage = () => {
                             Create Refill
                           </button>
                         </div>
-
-                        {}
                         <div className="mt-4 pt-4 border-t">
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
                             Date: {new Date(order.createdAt).toLocaleDateString()}
@@ -1254,8 +1221,6 @@ const RefillOrdersPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
                   <div
                     className="text-sm"
@@ -1318,8 +1283,6 @@ const RefillOrdersPage = () => {
           </div>
         </div>
       </div>
-
-      {}
       {refillDialogOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
@@ -1340,7 +1303,6 @@ const RefillOrdersPage = () => {
 
             {refillInfo && (
               <div className="space-y-6">
-                {}
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                   <div>
                     <div
@@ -1387,8 +1349,6 @@ const RefillOrdersPage = () => {
                     </div>
                   </div>
                 </div>
-
-                {}
                 <div className="space-y-4">
                   <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Refill Type
@@ -1455,8 +1415,6 @@ const RefillOrdersPage = () => {
                     </div>
                   </div>
                 </div>
-
-                {}
                 <div className="space-y-2">
                   <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                     Reason (Optional)

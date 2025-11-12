@@ -52,7 +52,6 @@ export default function RootLayout({
   
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
 
-  // Fetch live chat settings
   useEffect(() => {
     const fetchLiveChatSettings = async () => {
       try {
@@ -75,16 +74,13 @@ export default function RootLayout({
     fetchLiveChatSettings();
   }, []);
 
-  // Load Tawk.to script dynamically
   useEffect(() => {
     if (isSettingsLoaded && liveChatSettings.tawkToEnabled && liveChatSettings.tawkToWidgetCode) {
       console.log('✅ Loading Tawk.to widget dynamically');
       
-      // Check user authentication status
       const isAuthenticated = !!(status === 'authenticated' && session?.user);
       const isLoading = status === 'loading';
       
-      // Check visibility setting based on authentication status
       let shouldShow = false;
       
       if (liveChatSettings.visibility === 'all') {
@@ -109,7 +105,6 @@ export default function RootLayout({
       
       if (!shouldShow) {
         console.log('❌ Tawk.to widget hidden due to visibility setting:', liveChatSettings.visibility);
-        // Remove existing script if visibility conditions are not met
         const existingScript = document.querySelector('script[src*="embed.tawk.to"]');
         if (existingScript) {
           existingScript.remove();
@@ -118,13 +113,11 @@ export default function RootLayout({
         return;
       }
       
-      // Remove existing Tawk.to script if any
       const existingScript = document.querySelector('script[src*="embed.tawk.to"]');
       if (existingScript) {
         existingScript.remove();
       }
       
-      // Create script element
       const script = document.createElement('script');
       script.type = 'text/javascript';
       script.async = true;
@@ -132,19 +125,16 @@ export default function RootLayout({
       script.charset = 'UTF-8';
       script.setAttribute('crossorigin', '*');
       
-      // Initialize Tawk_API
       if (!(window as any).Tawk_API) {
         (window as any).Tawk_API = {};
         (window as any).Tawk_LoadStart = new Date();
       }
       
-      // Append script to head
       document.head.appendChild(script);
       
       console.log('✅ Tawk.to script loaded successfully');
       
       return () => {
-        // Cleanup function to remove script when component unmounts
         const existingScript = document.querySelector('script[src*="embed.tawk.to"]');
         if (existingScript) {
           existingScript.remove();
@@ -159,7 +149,6 @@ export default function RootLayout({
     }
   }, [isSettingsLoaded, liveChatSettings.tawkToEnabled, liveChatSettings.tawkToWidgetCode, liveChatSettings.visibility, session, status]);
 
-  // Show/hide button based on scroll position
   useEffect(() => {
     const toggleVisibility = () => {
       if (window.pageYOffset > 300) {
@@ -173,7 +162,6 @@ export default function RootLayout({
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -181,12 +169,10 @@ export default function RootLayout({
     });
   };
 
-  // Toggle chat menu
   const toggleChat = () => {
     setIsChatExpanded(!isChatExpanded);
   };
 
-  // Handle contact actions
   const handleWhatsApp = () => {
     const whatsappUrl = liveChatSettings.whatsappNumber 
       ? `https://wa.me/${liveChatSettings.whatsappNumber.replace(/[^0-9]/g, '')}`

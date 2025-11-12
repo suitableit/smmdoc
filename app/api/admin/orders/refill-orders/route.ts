@@ -1,13 +1,11 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/orders/refill-orders - Get orders eligible for refill
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -27,19 +25,16 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for refill-eligible orders
     const whereClause: any = {
       status: {
-        in: ['completed', 'partial'] // Only completed or partial orders can be refilled
+        in: ['completed', 'partial']
       }
     };
 
-    // Add status filter if specified
     if (status && status !== 'all') {
       whereClause.status = status;
     }
 
-    // Add search filter
     if (search) {
       whereClause.OR = [
         {
@@ -75,7 +70,6 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Get refill-eligible orders
     const [orders, totalCount] = await Promise.all([
       db.newOrder.findMany({
         where: whereClause,
@@ -117,15 +111,11 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    // Filter orders that are actually eligible for refill
     const eligibleOrders = orders.filter(order => {
-      // Check if service is still active
       if (order.service.status !== 'active') return false;
       
-      // For partial orders, check if there are remaining items
       if (order.status === 'partial' && order.remains > 0) return true;
       
-      // For completed orders, allow refill (business logic decision)
       if (order.status === 'completed') return true;
       
       return false;
@@ -133,7 +123,6 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Calculate stats
     const stats = await db.newOrder.aggregate({
       where: {
         status: {

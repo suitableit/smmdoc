@@ -1,18 +1,15 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Auto-sync configuration
 const SYNC_INTERVALS = {
-  prices: 30 * 60 * 1000, // 30 minutes
-  services: 6 * 60 * 60 * 1000, // 6 hours
-  status: 60 * 60 * 1000, // 1 hour
+  prices: 30 * 60 * 1000,
+  services: 6 * 60 * 60 * 1000,
+  status: 60 * 60 * 1000,
 };
 
-// In-memory store for sync schedules (in production, use Redis or database)
 const syncSchedules = new Map();
 
-// GET - Get auto-sync status and schedules
 export async function GET() {
   try {
     const session = await auth();
@@ -21,7 +18,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get sync settings from database (if you have a syncSettings table)
     const syncSettings = {
       priceSyncEnabled: false,
       serviceSyncEnabled: false,
@@ -34,7 +30,6 @@ export async function GET() {
       lastStatusSync: null
     };
 
-    // Get active schedules
     const activeSchedules = Array.from(syncSchedules.keys());
 
     return NextResponse.json({
@@ -43,7 +38,7 @@ export async function GET() {
         settings: syncSettings,
         activeSchedules: activeSchedules,
         intervals: {
-          prices: SYNC_INTERVALS.prices / 60000, // Convert to minutes
+          prices: SYNC_INTERVALS.prices / 60000,
           services: SYNC_INTERVALS.services / 60000,
           status: SYNC_INTERVALS.status / 60000
         }
@@ -60,7 +55,6 @@ export async function GET() {
   }
 }
 
-// POST - Configure auto-sync
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -73,19 +67,17 @@ export async function POST(req: NextRequest) {
       enablePriceSync = false,
       enableServiceSync = false,
       enableStatusSync = false,
-      priceSyncInterval = 30, // minutes
-      serviceSyncInterval = 360, // minutes
-      statusSyncInterval = 60, // minutes
+      priceSyncInterval = 30,
+      serviceSyncInterval = 360,
+      statusSyncInterval = 60,
       profitMargin = 20
     } = await req.json();
 
-    // Clear existing schedules
     for (const [key, intervalId] of syncSchedules) {
       clearInterval(intervalId);
       syncSchedules.delete(key);
     }
 
-    // Setup price sync
     if (enablePriceSync) {
       const priceInterval = setInterval(async () => {
         try {
@@ -99,7 +91,6 @@ export async function POST(req: NextRequest) {
       syncSchedules.set('prices', priceInterval);
     }
 
-    // Setup service sync
     if (enableServiceSync) {
       const serviceInterval = setInterval(async () => {
         try {
@@ -113,7 +104,6 @@ export async function POST(req: NextRequest) {
       syncSchedules.set('services', serviceInterval);
     }
 
-    // Setup status sync
     if (enableStatusSync) {
       const statusInterval = setInterval(async () => {
         try {
@@ -155,7 +145,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE - Stop auto-sync
 export async function DELETE() {
   try {
     const session = await auth();
@@ -164,7 +153,6 @@ export async function DELETE() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Clear all schedules
     let clearedCount = 0;
     for (const [key, intervalId] of syncSchedules) {
       clearInterval(intervalId);
@@ -194,7 +182,6 @@ export async function DELETE() {
   }
 }
 
-// PUT - Manual trigger sync
 export async function PUT(req: NextRequest) {
   try {
     const session = await auth();
@@ -229,7 +216,6 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// Helper function to perform sync
 async function performSync(syncType: string, profitMargin: number) {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/providers/sync`, {

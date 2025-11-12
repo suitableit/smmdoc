@@ -1,16 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
-// Helper function to capitalize status for display
 const capitalizeStatus = (status: string): string => {
   if (status === 'closed') return 'Closed';
   return status;
 };
 
-// Validation schema for updating support tickets
 const updateTicketSchema = z.object({
   status: z.enum(['pending', 'in_progress', 'resolved', 'closed']).optional(),
   adminReply: z.string().optional(),
@@ -23,7 +21,6 @@ interface RouteParams {
   }>;
 }
 
-// GET - Fetch single support ticket
 export async function GET(
   request: NextRequest,
   { params }: RouteParams
@@ -38,7 +35,6 @@ export async function GET(
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -57,7 +53,6 @@ export async function GET(
       );
     }
 
-    // Check if user is admin or ticket owner
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -65,7 +60,6 @@ export async function GET(
 
     const whereClause: any = { id: ticketId };
     
-    // If not admin, only show user's own tickets
     if (user?.role !== 'admin') {
       whereClause.userId = parseInt(session.user.id);
     }
@@ -125,17 +119,13 @@ export async function GET(
       );
     }
 
-    // Transform the ticket data to match frontend expectations
-    // For user-facing API, hide admin names and show generic labels
     let messages = ticket.messages.map((msg: any) => {
       let authorName;
       if (msg.messageType === 'system') {
         authorName = 'System';
       } else if (msg.isFromAdmin) {
-        // Hide admin names for users - show generic 'Support Admin' label
         authorName = 'Support Admin';
       } else {
-        // Show user's own name
         authorName = msg.user.name || msg.user.email;
       }
       
@@ -147,11 +137,10 @@ export async function GET(
         content: msg.message,
         createdAt: msg.createdAt.toISOString(),
         attachments: msg.attachments ? JSON.parse(msg.attachments) : [],
-        userImage: msg.isFromAdmin ? null : msg.user.image // Hide admin images too
+        userImage: msg.isFromAdmin ? null : msg.user.image
       };
     });
 
-    // If no messages exist but ticket has initial message, create initial message entry
     if (messages.length === 0 && ticket.message) {
       messages = [{
         id: 'initial',
@@ -179,10 +168,8 @@ export async function GET(
       notes: ticket.notes.map((note: any) => {
         let authorName;
        if (note.user.role === 'admin') {
-         // Hide admin names for users - show generic 'Support Admin' label
          authorName = 'Support Admin';
        } else {
-         // Show user's own name
          authorName = note.user.name || note.user.email;
        }
         
@@ -208,7 +195,6 @@ export async function GET(
   }
 }
 
-// PUT - Update support ticket (admin only for status/reply, user for additional info)
 export async function PUT(
   request: NextRequest,
   { params }: RouteParams
@@ -223,7 +209,6 @@ export async function PUT(
       );
     }
 
-    // Ticket system is always enabled
     const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
@@ -236,13 +221,11 @@ export async function PUT(
       );
     }
 
-    // Check if user is admin or ticket owner
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
 
-    // Check if ticket exists and get ownership info
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId },
       select: { id: true, userId: true, status: true }
@@ -261,10 +244,8 @@ export async function PUT(
     const body = await request.json();
     const { generateSystemMessage = true, ...validatedData } = body;
     
-    // Validate the data using the schema (excluding generateSystemMessage)
     const parsedData = updateTicketSchema.parse(validatedData);
 
-    // Check permissions based on what's being updated
     if (!isAdmin && !isOwner) {
       return NextResponse.json(
         { error: 'Access denied' },
@@ -272,16 +253,13 @@ export async function PUT(
       );
     }
 
-    // Users can only close their own tickets, admins can do everything
     if (!isAdmin && isOwner) {
-      // Users can only update status to 'closed'
       if (parsedData.status && parsedData.status !== 'closed') {
         return NextResponse.json(
           { error: 'Users can only close their own tickets' },
           { status: 403 }
         );
       }
-      // Users cannot update adminReply or priority
       if (parsedData.adminReply || parsedData.priority) {
         return NextResponse.json(
           { error: 'Only admins can update admin reply or priority' },
@@ -290,7 +268,6 @@ export async function PUT(
       }
     }
 
-    // Prepare update data
     const updateData: any = {};
     
     if (parsedData.status) {
@@ -307,7 +284,6 @@ export async function PUT(
       updateData.repliedBy = parseInt(session.user.id);
     }
 
-    // Update the ticket
     const updatedTicket = await db.supportTicket.update({
       where: { id: ticketId },
       data: updateData,
@@ -328,7 +304,6 @@ export async function PUT(
       }
     });
 
-    // Create a system message for status change only if explicitly requested
     if (parsedData.status && existingTicket && parsedData.status !== existingTicket.status && generateSystemMessage) {
       await db.ticketMessage.create({
         data: {
@@ -364,7 +339,6 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete support ticket (admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: RouteParams
@@ -379,7 +353,6 @@ export async function DELETE(
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -392,7 +365,6 @@ export async function DELETE(
       );
     }
 
-    // Ticket system is always enabled
     const ticketSystemEnabled = true;
 
     const resolvedParams = await params;
@@ -405,7 +377,6 @@ export async function DELETE(
       );
     }
 
-    // Check if ticket exists
     const existingTicket = await db.supportTicket.findUnique({
       where: { id: ticketId }
     });
@@ -417,7 +388,6 @@ export async function DELETE(
       );
     }
 
-    // Delete the ticket
     await db.supportTicket.delete({
       where: { id: ticketId }
     });

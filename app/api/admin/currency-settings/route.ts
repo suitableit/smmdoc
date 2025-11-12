@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// Default currency settings
 const defaultCurrencySettings = {
   defaultCurrency: 'USD',
   displayDecimals: 2,
@@ -12,7 +11,6 @@ const defaultCurrencySettings = {
   updatedAt: new Date(),
 };
 
-// Default currencies to seed database
 const defaultCurrencies = [
   {
     code: 'USD',
@@ -65,7 +63,6 @@ const defaultCurrencies = [
   },
 ];
 
-// GET - Load currency settings and currencies from database
 export async function GET() {
   try {
     const session = await auth();
@@ -74,7 +71,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get currency settings (create if not exists)
     let currencySettings = await db.currencySettings.findFirst();
     if (!currencySettings) {
       currencySettings = await db.currencySettings.create({
@@ -82,13 +78,11 @@ export async function GET() {
       });
     }
 
-    // Get all currencies (seed if empty)
     let currencies = await db.currency.findMany({
       orderBy: { code: 'asc' }
     });
 
     if (currencies.length === 0) {
-      // Seed default currencies using upsert to avoid duplicates
       for (const currency of defaultCurrencies) {
         await db.currency.upsert({
           where: { code: currency.code },
@@ -109,7 +103,6 @@ export async function GET() {
       });
     }
 
-    // Convert Decimal to number for JSON serialization
     const formattedCurrencies = currencies.map(currency => ({
       ...currency,
       rate: Number(currency.rate)
@@ -136,7 +129,6 @@ export async function GET() {
   }
 }
 
-// POST - Save currency settings and currencies to database
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -147,7 +139,6 @@ export async function POST(request: Request) {
 
     const { currencySettings, currencies } = await request.json();
 
-    // Update currency settings
     if (currencySettings) {
       await db.currencySettings.upsert({
         where: { id: 1 },
@@ -156,9 +147,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Update currencies - First get existing currencies to find deleted ones
     if (currencies && Array.isArray(currencies)) {
-      // Get current currencies from database
       const existingCurrencies = await db.currency.findMany({
         select: { code: true }
       });
@@ -166,10 +155,8 @@ export async function POST(request: Request) {
       const existingCodes = existingCurrencies.map(c => c.code);
       const newCodes = currencies.map(c => c.code);
 
-      // Find currencies to delete (exist in DB but not in new list)
       const codesToDelete = existingCodes.filter(code => !newCodes.includes(code));
 
-      // Delete removed currencies (except core currencies)
       const coreCurrencies = ['USD', 'BDT'];
       for (const codeToDelete of codesToDelete) {
         if (!coreCurrencies.includes(codeToDelete)) {
@@ -179,7 +166,6 @@ export async function POST(request: Request) {
         }
       }
 
-      // Upsert remaining currencies
       for (const currency of currencies) {
         await db.currency.upsert({
           where: { code: currency.code },

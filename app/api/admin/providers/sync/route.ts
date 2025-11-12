@@ -1,11 +1,10 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 import { validateProvider } from '@/lib/utils/providerValidator';
 
-// Get valid providers function
 const getValidProviders = async () => {
   try {
     return await db.api_providers.findMany({
@@ -21,13 +20,11 @@ const getValidProviders = async () => {
   }
 };
 
-// Default endpoints for custom providers
 const DEFAULT_ENDPOINTS = {
   services: "/services",
   balance: "/balance"
 };
 
-// POST - Sync services from providers
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -38,14 +35,13 @@ export async function POST(req: NextRequest) {
 
     const { 
       providerId, 
-      syncType = 'all', // 'all', 'prices', 'status', 'new_services'
+      syncType = 'all',
       profitMargin = 20 
     } = await req.json();
 
     let providersToSync = [];
 
     if (providerId) {
-      // Sync specific provider with validation
       const validation = await validateProvider(parseInt(providerId));
       if (validation.isValid && validation.provider) {
         providersToSync.push(validation.provider);
@@ -56,7 +52,6 @@ export async function POST(req: NextRequest) {
         );
       }
     } else {
-      // Sync all valid providers (active with API URL and key)
       providersToSync = await getValidProviders();
     }
 
@@ -70,7 +65,6 @@ export async function POST(req: NextRequest) {
     const syncResults = [];
     const errors = [];
 
-    // Get enabled currencies for price conversion
     const currenciesData = await db.currency.findMany({
       where: { enabled: true }
     });
@@ -84,10 +78,8 @@ export async function POST(req: NextRequest) {
       try {
         console.log(`Starting sync for provider: ${provider.name}`);
         
-        // Create API specification from provider configuration
         const apiSpec = createApiSpecFromProvider(provider);
         
-        // Create API request builder with provider's API specification
         const apiBuilder = new ApiRequestBuilder(
           apiSpec,
           provider.api_url,
@@ -95,7 +87,6 @@ export async function POST(req: NextRequest) {
           (provider as any).http_method || (provider as any).httpMethod || 'POST'
         );
 
-        // Build services request using API specification
         const servicesRequest = apiBuilder.buildServicesRequest();
         
         const controller = new AbortController();
@@ -116,7 +107,6 @@ export async function POST(req: NextRequest) {
 
         const responseData = await response.json();
         
-        // Parse response using API specification
         const responseParser = new ApiResponseParser(apiSpec);
         
         const providerServices = responseParser.parseServicesResponse(responseData);
@@ -127,7 +117,6 @@ export async function POST(req: NextRequest) {
 
         console.log(`Fetched ${providerServices.length} services from ${provider.name}`);
 
-        // Get existing services for this provider - try multiple approaches
         let existingServices = await db.service.findMany({
           where: {
             updateText: {
@@ -136,11 +125,9 @@ export async function POST(req: NextRequest) {
           }
         });
 
-        // If no services found with exact providerId match, try broader search
         if (existingServices.length === 0) {
           console.log(`No services found with exact providerId:${provider.id}, trying broader search...`);
           
-          // Try searching for provider name in updateText
           const servicesByProviderName = await db.service.findMany({
             where: {
               updateText: {
@@ -149,14 +136,13 @@ export async function POST(req: NextRequest) {
             }
           });
 
-          // Also get all services to check their updateText structure
           const allServices = await db.service.findMany({
             where: {
               updateText: {
                 not: null
               }
             },
-            take: 10 // Just a sample to debug
+            take: 10
           });
 
           console.log(`Found ${servicesByProviderName.length} services by provider name`);
@@ -183,18 +169,15 @@ export async function POST(req: NextRequest) {
           errors: [] as any[]
         };
 
-        // Create a map of existing services by provider service ID
         const existingServiceMap = new Map();
         existingServices.forEach(service => {
           try {
             const providerInfo = JSON.parse(service.updateText || '{}');
             console.log(`Service ${service.id} (${service.name}) updateText:`, providerInfo);
             
-            // Try multiple ways to match services
             const serviceId = providerInfo.providerServiceId || providerInfo.id || providerInfo.serviceId;
             if (serviceId) {
               existingServiceMap.set(serviceId.toString(), service);
-              // Also add numeric version if it's a string
               if (typeof serviceId === 'string' && !isNaN(parseInt(serviceId))) {
                 existingServiceMap.set(parseInt(serviceId).toString(), service);
               }
@@ -206,7 +189,6 @@ export async function POST(req: NextRequest) {
 
         console.log(`Created service map with ${existingServiceMap.size} entries`);
 
-        // Process each provider service
         for (const providerService of providerServices) {
           try {
             const providerServiceId = providerService.serviceId;
@@ -220,19 +202,14 @@ export async function POST(req: NextRequest) {
             const rateUSD = convertToUSD(markupRate, 'USD', currencies);
 
             if (existingService) {
-              // Update existing service
               const updates: any = {};
               let hasChanges = false;
 
-              // Parse existing provider info
               const existingProviderInfo = JSON.parse(existingService.updateText || '{}');
               const existingProviderRate = existingProviderInfo.originalRate || 0;
 
-              // Check for price changes - only update provider pricing info, not website service pricing
               if (syncType === 'all' || syncType === 'prices') {
                 if (Math.abs(providerRate - existingProviderRate) > 0.01) {
-                  // Only update provider pricing information in updateText
-                  // Do NOT update rate as this is website service pricing
                   updates.updateText = JSON.stringify({
                     ...existingProviderInfo,
                     originalRate: providerRate,
@@ -245,7 +222,6 @@ export async function POST(req: NextRequest) {
                 }
               }
 
-              // Check for service details changes
               if (syncType === 'all') {
                 if (providerService.name !== existingService.name) {
                   updates.name = providerService.name;
@@ -264,7 +240,6 @@ export async function POST(req: NextRequest) {
                   hasChanges = true;
                 }
 
-                // Update provider information in updateText
                 const currentProviderInfo = JSON.parse(existingService.updateText || '{}');
                 const updatedProviderInfo = {
                   ...currentProviderInfo,
@@ -275,7 +250,6 @@ export async function POST(req: NextRequest) {
                   lastSynced: new Date().toISOString()
                 };
 
-                // Always update provider info to ensure it's current
                 updates.updateText = JSON.stringify(updatedProviderInfo);
                 hasChanges = true;
               }
@@ -289,8 +263,6 @@ export async function POST(req: NextRequest) {
               }
 
             } else {
-              // Service doesn't exist - skip creation during sync
-              // Services should only be imported through the Import page
               console.log(`Skipping service ${providerService.name} - not found in database. Use Import page to add new services.`);
             }
 
@@ -303,22 +275,17 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Check for services that are no longer available from provider
-        // Only disable services if we have a substantial response and the service is clearly missing
         if ((syncType === 'all' || syncType === 'status') && providerServices.length > 0) {
           const providerServiceIds = new Set();
           
-          // Create a comprehensive set of provider service identifiers
           providerServices.forEach(s => {
             const serviceId = s.serviceId;
             if (serviceId) {
               providerServiceIds.add(serviceId.toString());
-              providerServiceIds.add(parseInt(serviceId).toString()); // Handle string/number conversion
+              providerServiceIds.add(parseInt(serviceId).toString());
             }
           });
 
-          // Only disable services if we have a reasonable number of services from provider
-          // This prevents mass disabling due to API errors or temporary issues
           if (providerServices.length >= 10) {
             for (const [providerServiceId, existingService] of existingServiceMap) {
               if (!providerServiceIds.has(providerServiceId.toString()) && 
@@ -327,7 +294,6 @@ export async function POST(req: NextRequest) {
                 
                 console.log(`Service ${existingService.name} (ID: ${providerServiceId}) not found in provider response, marking as inactive`);
                 
-                // Service no longer available from provider, disable it
                 await db.service.update({
                   where: { id: existingService.id },
                   data: { 
@@ -362,7 +328,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Calculate totals
     const totals = syncResults.reduce((acc, result) => ({
       totalFetched: acc.totalFetched + result.totalFetched,
       updated: acc.updated + result.updated,

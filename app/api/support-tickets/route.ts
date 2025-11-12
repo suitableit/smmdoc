@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
-// Helper function to process refill requests
 async function processRefillRequest(orderIds: string[], userId: number) {
   try {
     let successCount = 0;
@@ -13,7 +12,6 @@ async function processRefillRequest(orderIds: string[], userId: number) {
 
     for (const orderId of orderIds) {
       try {
-        // Check if order exists and belongs to the user
         const order = await db.newOrder.findUnique({
           where: { id: parseInt(orderId) },
           include: {
@@ -46,7 +44,6 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        // Check if refill request already exists
         const existingRequest = await db.refillRequest.findFirst({
           where: {
             orderId: parseInt(orderId),
@@ -60,7 +57,6 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        // Create refill request
         await db.refillRequest.create({
           data: {
             orderId: parseInt(orderId),
@@ -70,7 +66,6 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           }
         });
 
-        // Update order status to Refill Started
         await db.newOrder.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Refill Started' }
@@ -96,7 +91,6 @@ async function processRefillRequest(orderIds: string[], userId: number) {
   }
 }
 
-// Helper function to process cancel requests
 async function processCancelRequest(orderIds: string[], userId: number) {
   try {
     let successCount = 0;
@@ -105,7 +99,6 @@ async function processCancelRequest(orderIds: string[], userId: number) {
 
     for (const orderId of orderIds) {
       try {
-        // Check if order exists and belongs to the user
         const order = await db.newOrder.findUnique({
           where: { id: parseInt(orderId) },
           include: {
@@ -137,7 +130,6 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        // Check if cancel request already exists
         const existingRequest = await db.cancelRequest.findFirst({
           where: {
             orderId: parseInt(orderId),
@@ -151,7 +143,6 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        // Create cancel request
         await db.cancelRequest.create({
           data: {
             orderId: parseInt(orderId),
@@ -161,7 +152,6 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           }
         });
 
-        // Update order status to Canceled
         await db.newOrder.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Canceled' }
@@ -187,13 +177,11 @@ async function processCancelRequest(orderIds: string[], userId: number) {
   }
 }
 
-// Process Speed Up request
 async function processSpeedUpRequest(orderIds: string[], userId: number) {
   try {
     const results = [];
     
     for (const orderId of orderIds) {
-      // Check if order exists and belongs to user
       const order = await db.newOrder.findFirst({
         where: {
           id: parseInt(orderId),
@@ -209,13 +197,11 @@ async function processSpeedUpRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-      // Check if order status allows speed up (not completed, cancelled, or refunded)
       if (['Completed', 'Cancelled', 'Refunded'].includes(order.status)) {
         results.push({ orderId, success: false, message: 'Order cannot be sped up in current status' });
         continue;
       }
       
-      // Update order status to Speed Up Approved
         await db.newOrder.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Speed Up Approved' }
@@ -239,13 +225,11 @@ async function processSpeedUpRequest(orderIds: string[], userId: number) {
   }
 }
 
-// Process Restart request
 async function processRestartRequest(orderIds: string[], userId: number) {
   try {
     const results = [];
     
     for (const orderId of orderIds) {
-      // Check if order exists and belongs to user
       const order = await db.newOrder.findFirst({
         where: {
           id: parseInt(orderId),
@@ -261,13 +245,11 @@ async function processRestartRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-      // Check if order can be restarted (partial, processing, or in progress)
       if (!['Partial', 'Processing', 'In progress'].includes(order.status)) {
         results.push({ orderId, success: false, message: 'Order cannot be restarted in current status' });
         continue;
       }
       
-      // Update order status to Restarted
         await db.newOrder.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Restarted' }
@@ -291,13 +273,11 @@ async function processRestartRequest(orderIds: string[], userId: number) {
   }
 }
 
-// Process Fake Complete request
 async function processFakeCompleteRequest(orderIds: string[], userId: number) {
   try {
     const results = [];
     
     for (const orderId of orderIds) {
-      // Check if order exists and belongs to user
       const order = await db.newOrder.findFirst({
         where: {
           id: parseInt(orderId),
@@ -313,26 +293,21 @@ async function processFakeCompleteRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-      // Check if order is not already completed
       if (order.status === 'Completed') {
         results.push({ orderId, success: false, message: 'Order is already completed' });
         continue;
       }
       
-      // Check admin rules - for now, allow fake complete for orders that are stuck
       const allowedStatuses = ['Pending', 'Processing', 'In progress', 'Partial'];
       if (!allowedStatuses.includes(order.status)) {
         results.push({ orderId, success: false, message: 'Order cannot be marked as fake complete' });
         continue;
       }
       
-      // Update order status to Completed with fake complete flag
         await db.newOrder.update({
           where: { id: parseInt(orderId) },
           data: { 
             status: 'Marked as Completed (Fake Complete)',
-            // Add a note or flag to indicate this was fake completed
-            // This might require a schema update to add a 'fakeComplete' boolean field
           }
         });
       
@@ -355,7 +330,6 @@ async function processFakeCompleteRequest(orderIds: string[], userId: number) {
 }
 
 
-// Validation schema for creating support tickets
 const createTicketSchema = z.object({
   subject: z.string().min(1, 'Subject is required').max(200, 'Subject too long'),
   message: z.string().min(1, 'Message is required').max(5000, 'Message too long'),
@@ -367,7 +341,6 @@ const createTicketSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
   attachments: z.array(z.string()).optional(),
 }).refine((data) => {
-  // Order IDs are required for all tickets (both Human and AI)
   if (!data.orderIds || data.orderIds.length === 0) {
     throw new z.ZodError([{
       code: 'custom',
@@ -376,7 +349,6 @@ const createTicketSchema = z.object({
     }]);
   }
     
-    // Validate order ID format
     const orderIds = data.orderIds.map(id => id.trim()).filter(id => id);
     
     if (orderIds.length === 0) {
@@ -407,7 +379,6 @@ const createTicketSchema = z.object({
   return true;
 });
 
-// POST - Create new support ticket
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -419,7 +390,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -428,7 +398,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check user's pending tickets limit
     const pendingTicketsCount = await db.supportTicket.count({
       where: {
         userId: parseInt(session.user.id),
@@ -449,11 +418,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createTicketSchema.parse(body);
 
-    // Validate order ownership for all tickets
     const orderIds = validatedData.orderIds ? validatedData.orderIds.map(id => id.trim()).filter(id => id) : [];
     
     if (orderIds.length > 0) {
-      // Check if all order IDs belong to the current user
       const userOrders = await db.newOrder.findMany({
         where: {
           id: { in: orderIds.map(id => parseInt(id)) },
@@ -473,7 +440,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Process AI tickets automatically
     let systemMessage = '';
     let ticketStatus = 'Open';
     
@@ -481,31 +447,26 @@ export async function POST(request: NextRequest) {
       if (orderIds.length > 0) {
         try {
           if (validatedData.aiSubcategory === 'Refill') {
-            // Process refill request
             const refillResult = await processRefillRequest(orderIds, parseInt(session.user.id));
             systemMessage = refillResult.success 
               ? '✅ Refill Request successful.'
               : '❌ Refill request failed. Because the service is not allowed to refill.';
           } else if (validatedData.aiSubcategory === 'Cancel') {
-            // Process cancel request
             const cancelResult = await processCancelRequest(orderIds, parseInt(session.user.id));
             systemMessage = cancelResult.success 
               ? '✅ Cancel Request successful.'
               : '❌ Cancel request failed. Order may not be eligible for cancellation.';
           } else if (validatedData.aiSubcategory === 'Speed Up') {
-            // Process speed up request
             const speedUpResult = await processSpeedUpRequest(orderIds, parseInt(session.user.id));
             systemMessage = speedUpResult.success 
               ? '⚡ Speed Up Approved. Your order processing has been prioritized.'
               : '❌ Speed Up Not Available. Order may not be eligible for speed up.';
           } else if (validatedData.aiSubcategory === 'Restart') {
-            // Process restart request
             const restartResult = await processRestartRequest(orderIds, parseInt(session.user.id));
             systemMessage = restartResult.success 
               ? '🔁 Restarted. Your order has been restarted and will be processed again.'
               : '❌ Restart Failed. Order may not be eligible for restart.';
           } else if (validatedData.aiSubcategory === 'Fake Complete') {
-            // Process fake complete request
             const fakeCompleteResult = await processFakeCompleteRequest(orderIds, parseInt(session.user.id));
             systemMessage = fakeCompleteResult.success 
               ? '🎭 Marked as Completed (Fake Complete). This action has been logged for admin review.'
@@ -520,7 +481,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the support ticket
     const ticket = await db.supportTicket.create({
       data: {
         userId: parseInt(session.user.id),
@@ -547,7 +507,6 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create initial message record for the ticket
     await db.ticketMessage.create({
       data: {
         ticketId: ticket.id,
@@ -589,7 +548,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET - Fetch user's support tickets
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -601,7 +559,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -618,7 +575,6 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       userId: parseInt(session.user.id),
     };
@@ -631,7 +587,6 @@ export async function GET(request: NextRequest) {
       where.category = category;
     }
 
-    // Get tickets with pagination
     const [tickets, totalCount] = await Promise.all([
       db.supportTicket.findMany({
         where,
@@ -654,7 +609,6 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Transform tickets to match frontend expectations
     const transformedTickets = tickets.map(ticket => ({
       id: ticket.id,
       subject: ticket.subject,

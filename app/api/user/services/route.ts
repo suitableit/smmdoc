@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// Helper function to fetch currency data
 async function fetchCurrencyData() {
   try {
     const currencies = await db.currency.findMany({
@@ -20,7 +19,6 @@ async function fetchCurrencyData() {
   }
 }
 
-// Helper function to convert from USD to target currency
 function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: any[]) {
   if (targetCurrency === 'USD') {
     return usdAmount;
@@ -28,7 +26,7 @@ function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: a
 
   const targetCurrencyData = currencies.find(c => c.code === targetCurrency);
   if (!targetCurrencyData) {
-    return usdAmount; // Fallback to USD if currency not found
+    return usdAmount;
   }
 
   return usdAmount * targetCurrencyData.rate;
@@ -36,11 +34,9 @@ function convertFromUSD(usdAmount: number, targetCurrency: string, currencies: a
 
 export async function GET(request: Request) {
   try {
-    // Check module settings for services list access control
     const moduleSettings = await db.moduleSettings.findFirst();
     const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
 
-    // If services list is private, require authentication
     if (!servicesListPublic) {
       const session = await auth();
       if (!session?.user) {
@@ -56,14 +52,12 @@ export async function GET(request: Request) {
     const limitParam = searchParams.get('limit') || '50';
     const searchRaw = searchParams.get('search') || '';
     const search = searchRaw ? decodeURIComponent(searchRaw).trim() : '';
-    const currency = searchParams.get('currency') || 'USD'; // Get user's preferred currency
+    const currency = searchParams.get('currency') || 'USD';
     const provider = searchParams.get('provider') || '';
 
-    // Categories pagination - limit categories, not services
     const categoryLimit = parseInt(limitParam);
     const categorySkip = (page - 1) * categoryLimit;
 
-    // Get currency data for conversion
     const { currencies } = await fetchCurrencyData();
 
     let services;
@@ -71,28 +65,23 @@ export async function GET(request: Request) {
     let totalCategories;
 
     if (search) {
-      // Search across all services when search term is provided
-      // Check if search is purely numeric for ID search
       const isNumericSearch = /^\d+$/.test(search);
       
       const searchQuery = {
         where: {
           status: 'active',
           category: {
-            hideCategory: 'no', // Only include services from visible categories
+            hideCategory: 'no',
           },
           AND: [
-            // Provider filter
             ...(provider && provider !== 'All' ? [{
               OR: [
                 { providerName: { contains: provider } },
                 { providerId: provider === 'Self' ? null : parseInt(provider) || undefined }
               ]
             }] : []),
-            // Search filters
             {
               OR: [
-                // If search is numeric, prioritize exact ID match
                 ...(isNumericSearch 
                   ? [{
                       id: {
@@ -101,13 +90,11 @@ export async function GET(request: Request) {
                     }] 
                   : []
                 ),
-                // Search by service name (partial match)
                 {
                   name: {
                     contains: search,
                   },
                 },
-                // Search by category name (partial match)
                 {
                   category: {
                     category_name: {
@@ -120,7 +107,6 @@ export async function GET(request: Request) {
           ].filter(Boolean),
         },
         orderBy: [
-          // If numeric search, prioritize exact ID matches first
           ...(isNumericSearch 
             ? [{ id: 'asc' as any }] 
             : []
@@ -155,22 +141,19 @@ export async function GET(request: Request) {
       
       services = await db.service.findMany(searchQuery);
       
-      // For search results, we don't need category pagination
       paginatedCategories = [];
       totalCategories = 0;
     } else {
-      // Check if we should show all categories (when limit is 'all')
       const showAllCategories = limitParam === 'all';
       
       if (showAllCategories) {
-        // When showing all, get ALL categories (including empty ones)
         [paginatedCategories, totalCategories] = await Promise.all([
           db.category.findMany({
             where: {
-              hideCategory: 'no', // Only show categories that are not hidden
+              hideCategory: 'no',
             },
             orderBy: [
-              { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
+              { id: 'asc' as any },
               { position: 'asc' as any },
               { createdAt: 'asc' as any },
             ],
@@ -182,12 +165,10 @@ export async function GET(request: Request) {
           }),
         ]);
 
-        // Get ALL services (not limited by category pagination)
         services = await db.service.findMany({
           where: {
             status: 'active',
             AND: [
-              // Provider filter
               ...(provider && provider !== 'All' ? [{
                 ...(provider === 'Self' ? {
                   AND: [
@@ -203,7 +184,7 @@ export async function GET(request: Request) {
               }] : []),
               {
                 category: {
-                  hideCategory: 'no', // Only include services from visible categories
+                  hideCategory: 'no',
                 },
               },
             ].filter(Boolean),
@@ -239,16 +220,15 @@ export async function GET(request: Request) {
           },
         });
       } else {
-        // Normal pagination: First get paginated categories
         [paginatedCategories, totalCategories] = await Promise.all([
           db.category.findMany({
             where: {
-              hideCategory: 'no', // Only show categories that are not hidden
+              hideCategory: 'no',
             },
             skip: categorySkip,
             take: categoryLimit,
             orderBy: [
-              { id: 'asc' as any }, // Order by ID first (1, 2, 3...)
+              { id: 'asc' as any },
               { position: 'asc' as any },
               { createdAt: 'asc' as any },
             ],
@@ -260,14 +240,12 @@ export async function GET(request: Request) {
           }),
         ]);
 
-        // Get all services for the paginated categories
         const categoryIds = paginatedCategories.map((cat: any) => cat.id);
 
         services = await db.service.findMany({
           where: {
             status: 'active',
             AND: [
-              // Provider filter
               ...(provider && provider !== 'All' ? [{
                 ...(provider === 'Self' ? {
                   AND: [
@@ -323,20 +301,17 @@ export async function GET(request: Request) {
 
 
 
-    // Convert service prices to user's preferred currency
     const servicesWithConvertedPrices = services.map(service => {
-      // Use service.rate as the base USD price
       const priceUSD = service.rate;
       const convertedPrice = convertFromUSD(priceUSD, currency, currencies);
 
       return {
         ...service,
-        rate: convertedPrice, // Converted price in user's currency
-        displayCurrency: currency, // Currency being displayed
+        rate: convertedPrice,
+        displayCurrency: currency,
       };
     });
 
-    // Get unique providers for dropdown filter
     const uniqueProviders = await db.service.findMany({
       where: {
         status: 'active',
@@ -351,7 +326,6 @@ export async function GET(request: Request) {
       distinct: ['providerId', 'providerName'],
     });
 
-    // Format providers for dropdown
     const providerOptions = [
       { id: 'All', name: 'All Providers' },
       { id: 'Self', name: 'Self' },
@@ -367,21 +341,20 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         data: servicesWithConvertedPrices || [],
-        total: services.length, // Total services in current page/search
-        page: search ? 1 : page, // For search, always show as page 1
-        totalPages: search ? 1 : Math.ceil(totalCategories / categoryLimit), // For search, only 1 page
-        totalCategories: search ? 0 : totalCategories, // For search, categories don't matter
-        currency: currency, // Include currency info in response
+        total: services.length,
+        page: search ? 1 : page,
+        totalPages: search ? 1 : Math.ceil(totalCategories / categoryLimit),
+        totalCategories: search ? 0 : totalCategories,
+        currency: currency,
         limit: limitParam,
-        allCategories: paginatedCategories || [], // Include paginated categories (empty for search)
-        isSearch: !!search, // Flag to indicate if this is a search result
-        providers: providerOptions, // Include provider options for dropdown
+        allCategories: paginatedCategories || [],
+        isSearch: !!search,
+        providers: providerOptions,
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error in services API:", error);
-    // Return empty data array instead of error to avoid crashing the client
     return NextResponse.json(
       {
         data: [],

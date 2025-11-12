@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/users/[id]/balance - Update user balance
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,7 +35,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { balance, action } = body; // action can be 'set', 'add', or 'subtract'
+    const { balance, action } = body;
 
     if (balance === undefined || isNaN(parseFloat(balance))) {
       return NextResponse.json(
@@ -49,7 +48,6 @@ export async function PUT(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, balance: true, username: true }
@@ -75,7 +73,7 @@ export async function PUT(
         break;
       case 'subtract':
         newBalance = (existingUser.balance || 0) - amount;
-        if (newBalance < 0) newBalance = 0; // Prevent negative balance
+        if (newBalance < 0) newBalance = 0;
         break;
       case 'set':
       default:
@@ -83,7 +81,6 @@ export async function PUT(
         break;
     }
 
-    // Update user balance
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: { balance: newBalance },
@@ -115,7 +112,6 @@ export async function PUT(
   }
 }
 
-// GET /api/admin/users/[id]/balance - Get user balance
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

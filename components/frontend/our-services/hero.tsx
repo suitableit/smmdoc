@@ -8,7 +8,6 @@ const Hero: React.FC = () => {
     <section className="pt-[60px] lg:pt-[120px] pb-[30px] lg:pb-[60px] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
-          {}
           <div>
             <h1 className="text-3xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight transition-colors duration-200">
               Services & Pricing
@@ -39,8 +38,6 @@ const Hero: React.FC = () => {
               </Link>
             </div>
           </div>
-
-          {}
           <div className="text-center lg:text-right">
             <div className="relative">
               <Image

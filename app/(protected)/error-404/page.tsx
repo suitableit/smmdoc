@@ -16,7 +16,6 @@ export default function GlobalError() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
-        {}
         <div className="page-header text-center">
           <div className="flex justify-center mb-4">
             <div
@@ -48,7 +47,6 @@ export default function GlobalError() {
 
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <h3 className="card-title">What would you like to do?</h3>
@@ -72,8 +70,6 @@ export default function GlobalError() {
                 </button>
               </div>
             </div>
-
-            {}
             <div className="card card-padding mt-6">
               <div className="card-header">
                 <h3 className="card-title">Quick Links</h3>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Header from '@/components/dashboard/header/page';
 import SideBar from '@/components/dashboard/sideBar';
@@ -15,14 +15,12 @@ export default function ProtectedLayout({
   const isDashboard = pathname === '/dashboard';
   const { data: session } = useSession();
 
-  // Setup session invalidation listener
   useEffect(() => {
     if (!session?.user?.id) return;
 
     const cleanup = setupSessionInvalidationListener(
       session.user.id,
       () => {
-        // Force logout when session is invalidated
         signOut({ callbackUrl: '/sign-in' });
       }
     );
@@ -30,7 +28,6 @@ export default function ProtectedLayout({
     return cleanup;
   }, [session?.user?.id]);
 
-  // Periodic session validity check (fallback)
   useEffect(() => {
     if (!session?.user?.id) return;
 
@@ -40,7 +37,7 @@ export default function ProtectedLayout({
         console.log('Session is no longer valid, logging out...');
         signOut({ callbackUrl: '/sign-in' });
       }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(checkInterval);
   }, [session?.user?.id]);

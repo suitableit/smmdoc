@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/user/orders/:id/refill-request - Customer refill request
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string   }> }
@@ -10,7 +9,6 @@ export async function POST(
   try {
     const session = await auth();
     
-    // Check if user is authenticated
     if (!session || !session.user) {
       return NextResponse.json(
         { 
@@ -37,7 +35,6 @@ export async function POST(
       );
     }
 
-    // Find the order and verify ownership
     const order = await db.newOrder.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -70,7 +67,6 @@ export async function POST(
       );
     }
 
-    // Verify order ownership
     if (order.userId !== session.user.id) {
       return NextResponse.json(
         { 
@@ -82,7 +78,6 @@ export async function POST(
       );
     }
 
-    // Check if service supports refill
     if (!order.service.refill) {
       return NextResponse.json(
         { 
@@ -94,7 +89,6 @@ export async function POST(
       );
     }
 
-    // Check if order is eligible for refill (completed or partial)
     if (!['completed', 'partial'].includes(order.status)) {
       return NextResponse.json(
         { 
@@ -106,7 +100,6 @@ export async function POST(
       );
     }
 
-    // Check refill time limit
     const refillDays = order.service.refillDays || 30;
     const orderDate = new Date(order.createdAt);
     const currentDate = new Date();
@@ -123,7 +116,6 @@ export async function POST(
       );
     }
 
-    // Check if refill request already exists
     const existingRequest = await db.refillRequest.findFirst({
       where: {
         orderId: parseInt(id),
@@ -142,7 +134,6 @@ export async function POST(
       );
     }
 
-    // Create refill request
     const refillRequest = await db.refillRequest.create({
       data: {
         orderId: parseInt(id),

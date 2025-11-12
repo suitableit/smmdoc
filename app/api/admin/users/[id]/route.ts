@@ -1,16 +1,14 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/users/[id] - Get specific user details
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
-    // Require admin authentication
     const session = await requireAdmin();
 
     console.log(`Admin user details API accessed by: ${session.user.email}`);
@@ -63,7 +61,6 @@ export async function GET(
       );
     }
 
-    // Get user's order count
     const orderCount = await db.newOrder.count({
       where: { userId: user.id }
     });
@@ -92,7 +89,6 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/users/[id] - Update user details
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -128,7 +124,6 @@ export async function PUT(
     const body = await req.json();
     const { username, name, email, balance, emailVerified, password, role, status } = body;
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId }
     });
@@ -144,7 +139,6 @@ export async function PUT(
       );
     }
 
-    // Check for unique constraint violations before updating
     if (username !== undefined && username !== existingUser.username) {
       const usernameExists = await db.user.findUnique({
         where: { username: username },
@@ -181,7 +175,6 @@ export async function PUT(
       }
     }
 
-    // Prepare update data
     const updateData: any = {};
 
     if (username !== undefined) updateData.username = username;
@@ -189,19 +182,16 @@ export async function PUT(
     if (email !== undefined) updateData.email = email;
     if (balance !== undefined) updateData.balance = parseFloat(balance);
     if (emailVerified !== undefined) {
-      // Convert boolean to DateTime or null
       updateData.emailVerified = emailVerified ? new Date() : null;
     }
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
     
-    // Handle password update if provided
     if (password && password.trim()) {
       const bcrypt = require('bcryptjs');
       updateData.password = await bcrypt.hash(password, 12);
     }
 
-    // Update user
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: updateData,
@@ -238,7 +228,6 @@ export async function PUT(
   }
 }
 
-// PATCH /api/admin/users/[id] - Update user details (alias for PUT)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -246,7 +235,6 @@ export async function PATCH(
   return PUT(req, { params });
 }
 
-// DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -279,7 +267,6 @@ export async function DELETE(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId }
     });
@@ -295,7 +282,6 @@ export async function DELETE(
       );
     }
 
-    // Prevent deleting admin users
     if (existingUser.role === 'admin') {
       return NextResponse.json(
         {
@@ -307,7 +293,6 @@ export async function DELETE(
       );
     }
 
-    // Log the activity before deletion
     try {
       const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
       const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
@@ -324,38 +309,29 @@ export async function DELETE(
       console.error('Failed to log user deletion activity:', logError);
     }
 
-    // Complete user deletion with cascading deletes for all associated data
     try {
-      // Use transaction to ensure all deletions succeed or fail together
       await db.$transaction(async (tx) => {
-        // Delete all user-associated data in proper order (child records first)
         
-        // 1. Delete activity logs
         await tx.activitylog.deleteMany({
           where: { userId: userId }
         });
 
-        // 2. Delete fund transactions (addFund)
         await tx.addFund.deleteMany({
           where: { userId: userId }
         });
 
-        // 3. Delete orders and related data
         await tx.newOrder.deleteMany({
           where: { userId: userId }
         });
 
-        // 4. Delete cancel requests
         await tx.cancelRequest.deleteMany({
           where: { userId: userId }
         });
 
-        // 5. Delete refill requests
         await tx.refillRequest.deleteMany({
           where: { userId: userId }
         });
 
-        // 6. Delete favorite services and categories
         await tx.favoriteService.deleteMany({
           where: { userId: userId }
         });
@@ -364,7 +340,6 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        // 7. Delete support tickets and related messages/notes
         const userTickets = await tx.supportTicket.findMany({
           where: { userId: userId },
           select: { id: true }
@@ -383,7 +358,6 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        // 8. Delete contact messages and notes
         const userContactMessages = await tx.contactMessage.findMany({
           where: { userId: userId },
           select: { id: true }
@@ -399,14 +373,12 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        // 9. Delete affiliate data (if user is an affiliate)
         const userAffiliate = await tx.affiliates.findUnique({
           where: { userId: userId },
           select: { id: true }
         });
         
         if (userAffiliate) {
-          // Delete affiliate commissions, payouts, and referrals
           await tx.affiliate_commissions.deleteMany({
             where: { affiliateId: userAffiliate.id }
           });
@@ -424,7 +396,6 @@ export async function DELETE(
           });
         }
 
-        // 10. Delete child panel data (if user has a child panel)
         const userChildPanel = await tx.child_panels.findUnique({
           where: { userId: userId },
           select: { id: true }
@@ -440,7 +411,6 @@ export async function DELETE(
           });
         }
 
-        // 11. Delete user-created services and categories
         await tx.service.deleteMany({
           where: { userId: userId }
         });
@@ -449,7 +419,6 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        // 12. Delete authentication-related data
         await tx.session.deleteMany({
           where: { userId: userId }
         });
@@ -462,7 +431,6 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        // 13. Finally, delete the user record
         await tx.user.delete({
           where: { id: userId }
         });

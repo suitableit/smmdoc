@@ -1,17 +1,14 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-// Custom providers only - no predefined providers
 
-// GET - Get all available providers
 export async function GET(req: NextRequest) {
   try {
     console.log('API /admin/providers called');
     const session = await getCurrentUser();
     console.log('Session:', session?.user?.email, session?.user?.role);
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       console.log('No session found or user is not admin:', session?.user?.role);
       return NextResponse.json(
@@ -25,12 +22,10 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const filter = searchParams.get('filter') || 'active'; // 'active', 'trash', 'all', 'with-services'
+    const filter = searchParams.get('filter') || 'active';
 
-    // Get configured providers from database
     let configuredProviders: any[] = [];
     try {
-      // First ensure api_providers table exists and rename if needed
       await db.$executeRaw`
         CREATE TABLE IF NOT EXISTS \`api_providers\` (
           \`id\` int NOT NULL AUTO_INCREMENT,
@@ -48,9 +43,7 @@ export async function GET(req: NextRequest) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `;
       
-      // Columns api_url and is_custom already exist in schema, no need to add them
 
-      // Build where clause based on filter
       let whereClause: any = {};
       
       if (filter === 'active') {
@@ -66,16 +59,13 @@ export async function GET(req: NextRequest) {
       } else if (filter === 'trash') {
         whereClause.deletedAt = { not: null };
       } else if (filter === 'all') {
-        // Include all providers regardless of deletedAt status
         whereClause = {};
       } else if (filter === 'with-services') {
-        // For providers with imported services, we'll filter after getting service counts
         whereClause = {
           deletedAt: null,
           status: 'active'
         };
       }
-      // For no filter, return everything
 
       configuredProviders = await db.api_providers.findMany({
         where: whereClause,
@@ -94,7 +84,7 @@ export async function GET(req: NextRequest) {
           balance_last_updated: true
         },
         orderBy: {
-          createdAt: 'desc'  // Order by newest first (new to old)
+          createdAt: 'desc'
         }
       });
 
@@ -105,40 +95,32 @@ export async function GET(req: NextRequest) {
       configuredProviders = [];
     }
 
-    // Get service and order counts for each provider
     const providerStats = await Promise.all(
       configuredProviders.map(async (cp: any) => {
         try {
-          // Count total services for this provider (including soft-deleted for trash providers)
           const totalServices = await db.service.count({
             where: { 
               providerId: cp.id,
-              // For trash providers, include all services; for others, exclude soft-deleted
               ...(cp.deletedAt ? {} : { deletedAt: null })
             }
           });
 
-          // Count active services for this provider
           const activeServices = await db.service.count({
             where: { 
               providerId: cp.id,
               status: 'active',
-              // For trash providers, include all services; for others, exclude soft-deleted
               ...(cp.deletedAt ? {} : { deletedAt: null })
             }
           });
 
-          // Count inactive/deactive services for this provider
           const inactiveServices = await db.service.count({
             where: { 
               providerId: cp.id,
               status: 'inactive',
-              // For trash providers, include all services; for others, exclude soft-deleted
               ...(cp.deletedAt ? {} : { deletedAt: null })
             }
           });
 
-          // Count orders for services from this provider
           const orderCount = await db.newOrder.count({
             where: {
               service: {
@@ -167,10 +149,8 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    // Create a map for quick lookup
     const statsMap = new Map(providerStats.map(stat => [stat.providerId, stat]));
 
-    // Map all providers as custom providers with dynamic stats
     let allProviders = configuredProviders.map((cp: any) => {
       const stats = statsMap.get(cp.id) || { totalServices: 0, activeServices: 0, inactiveServices: 0, orderCount: 0 };
       
@@ -188,10 +168,9 @@ export async function GET(req: NextRequest) {
         isCustom: true,
         createdAt: cp.createdAt,
         updatedAt: cp.updatedAt,
-        deletedAt: cp.deletedAt, // Include deletedAt field in response
+        deletedAt: cp.deletedAt,
         currentBalance: cp.current_balance || 0,
         balanceLastUpdated: cp.balance_last_updated,
-        // Add dynamic stats
         services: stats.totalServices,
         importedServices: stats.totalServices,
         activeServices: stats.activeServices,
@@ -200,7 +179,6 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Filter providers with imported services if requested
     if (filter === 'with-services') {
       allProviders = allProviders.filter(provider => provider.importedServices > 0);
     }
@@ -232,12 +210,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// PATCH - Restore provider from trash
 export async function PATCH(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -253,7 +229,6 @@ export async function PATCH(req: NextRequest) {
     const id = searchParams.get('id');
     const action = searchParams.get('action');
 
-    // Validate parameters
     if (!id || !action || action !== 'restore') {
       return NextResponse.json(
         {
@@ -265,7 +240,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Parse and validate numeric ID
     const providerId = parseInt(id);
     if (isNaN(providerId) || providerId <= 0) {
       return NextResponse.json(
@@ -278,7 +252,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Check if provider exists and is in trash
     const provider = await db.api_providers.findUnique({
       where: { id: providerId }
     });
@@ -294,7 +267,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Restore provider
     await db.api_providers.update({
       where: { id: providerId },
       data: { 
@@ -303,7 +275,6 @@ export async function PATCH(req: NextRequest) {
       }
     });
 
-    // Get all soft-deleted services associated with this provider
     const providerServices = await db.service.findMany({
       where: { 
         providerId: providerId,
@@ -317,7 +288,6 @@ export async function PATCH(req: NextRequest) {
     const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
     if (serviceIds.length > 0) {
-      // Restore the services
       await db.service.updateMany({
         where: { 
           providerId: providerId,
@@ -326,7 +296,6 @@ export async function PATCH(req: NextRequest) {
         data: { deletedAt: null }
       });
 
-      // Restore categories that were soft-deleted due to having no own services
       for (const categoryId of categoryIds) {
         const category = await db.category.findUnique({
           where: { id: categoryId }
@@ -340,7 +309,6 @@ export async function PATCH(req: NextRequest) {
         }
       }
 
-      // Restore service types that were marked as deleted due to having no own services
       for (const serviceTypeId of serviceTypeIds) {
         const serviceType = await db.servicetype.findUnique({
           where: { id: serviceTypeId }
@@ -378,12 +346,10 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// POST - Add new provider
 export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -400,7 +366,6 @@ export async function POST(req: NextRequest) {
       apiKey, 
       apiUrl, 
       httpMethod, 
-      // API Specification Fields
       apiKeyParam,
       actionParam,
       servicesAction,
@@ -439,7 +404,6 @@ export async function POST(req: NextRequest) {
       httpMethod
     });
 
-    // All providers are custom providers
     const providerName = customProviderName;
 
     if (!providerName || !apiKey) {
@@ -453,17 +417,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // All providers are custom providers
     const providerConfig = {
       value: providerName,
       label: providerName,
       description: `Custom provider: ${providerName}`
     };
 
-    // Check if provider already exists and create new provider
     let newProvider: any;
     try {
-      // Check if provider name already exists
       const existingProviderByName = await db.api_providers.findUnique({
         where: { name: providerName }
       });
@@ -479,7 +440,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Check if API URL already exists (if provided)
       if (apiUrl && apiUrl.trim() !== '') {
         const existingProviderByUrl = await db.api_providers.findFirst({
           where: { 
@@ -499,7 +459,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Create new provider
       newProvider = await db.api_providers.create({
         data: {
           name: providerName,
@@ -508,7 +467,6 @@ export async function POST(req: NextRequest) {
           http_method: httpMethod || 'POST',
           status: 'inactive',
           is_custom: true,
-          // API Specification Fields
           api_key_param: apiKeyParam || 'key',
           action_param: actionParam || 'action',
           services_action: servicesAction || 'services',
@@ -586,12 +544,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT - Update provider status
 export async function PUT(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -627,7 +583,6 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Prepare update data
     const updateData: any = {};
     if (status !== undefined) updateData.status = status;
     if (name !== undefined) updateData.name = name;
@@ -635,7 +590,6 @@ export async function PUT(req: NextRequest) {
     if (apiUrl !== undefined) updateData.api_url = apiUrl;
     if (httpMethod !== undefined) updateData.http_method = httpMethod;
 
-    // If activating provider, validate required fields first
     if (status === 'active') {
       const provider = await db.api_providers.findUnique({
         where: { id: parseInt(id) }
@@ -652,7 +606,6 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      // Check if API URL and key will be available after update
       const finalApiUrl = updateData.api_url !== undefined ? updateData.api_url : provider.api_url;
       const finalApiKey = updateData.api_key !== undefined ? updateData.api_key : provider.api_key;
 
@@ -678,7 +631,6 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      // Validate URL format
       try {
         new URL(finalApiUrl);
       } catch (error) {
@@ -693,7 +645,6 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Update provider
     const updatedProvider = await db.api_providers.update({
       where: { id: parseInt(id) },
       data: updateData
@@ -728,12 +679,10 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE - Delete provider
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -749,7 +698,6 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     const deleteType = searchParams.get('type') || 'permanent';
 
-    // Validate ID parameter
     if (!id || id === 'null' || id === 'undefined') {
       return NextResponse.json(
         {
@@ -761,7 +709,6 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Parse and validate numeric ID
     const providerId = parseInt(id);
     if (isNaN(providerId) || providerId <= 0) {
       return NextResponse.json(
@@ -777,7 +724,6 @@ export async function DELETE(req: NextRequest) {
     let message = '';
     
     if (deleteType === 'trash') {
-      // Move to trash - soft delete provider and its services
       await db.api_providers.update({
         where: { id: providerId },
         data: { 
@@ -786,7 +732,6 @@ export async function DELETE(req: NextRequest) {
         }
       });
 
-      // Get all services associated with this provider
       const providerServices = await db.service.findMany({
         where: { providerId: providerId },
         select: { id: true, categoryId: true, serviceTypeId: true }
@@ -797,30 +742,26 @@ export async function DELETE(req: NextRequest) {
       const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
       if (serviceIds.length > 0) {
-        // Soft delete the provider services
         await db.service.updateMany({
           where: { providerId: providerId },
           data: { deletedAt: new Date() }
         });
 
-        // Handle categories - check if they have self-created services
         for (const categoryId of categoryIds) {
           const selfCreatedServices = await db.service.count({
             where: { 
               categoryId: categoryId,
-              providerId: null, // Self-created services have null providerId
+              providerId: null,
               deletedAt: null
             }
           });
 
           if (selfCreatedServices === 0) {
-            // No self-created services, move category to trash
             await db.category.update({
               where: { id: categoryId },
               data: { deletedAt: new Date() }
             });
           } else {
-            // Has self-created services, change provider to "Self"
             await db.category.update({
               where: { id: categoryId },
               data: { 
@@ -830,18 +771,16 @@ export async function DELETE(req: NextRequest) {
           }
         }
 
-        // Handle service types - check if they have self-created services
         for (const serviceTypeId of serviceTypeIds) {
           const selfCreatedServicesInType = await db.service.count({
             where: { 
               serviceTypeId: serviceTypeId,
-              providerId: null, // Self-created services have null providerId
+              providerId: null,
               deletedAt: null
             }
           });
 
           if (selfCreatedServicesInType === 0) {
-            // No self-created services, move service type to trash
             await db.servicetype.update({
               where: { id: serviceTypeId },
               data: { 
@@ -850,7 +789,6 @@ export async function DELETE(req: NextRequest) {
               }
             });
           } else {
-            // Has self-created services, change provider to "Self"
             await db.servicetype.update({
               where: { id: serviceTypeId },
               data: { 
@@ -863,9 +801,7 @@ export async function DELETE(req: NextRequest) {
 
       message = 'Provider moved to trash. Categories and service types with self-created services preserved and changed to "Self" provider';
     } else {
-      // Permanent delete - remove provider and its services
       
-      // Get all services associated with this provider
       const providerServices = await db.service.findMany({
         where: { providerId: providerId },
         select: { id: true, categoryId: true, serviceTypeId: true }
@@ -876,14 +812,11 @@ export async function DELETE(req: NextRequest) {
       const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
       if (serviceIds.length > 0) {
-        // Delete dependent records first to avoid foreign key constraint violations
         
-        // Delete favorite services
         await db.favoriteService.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 
-        // Delete cancel requests for orders related to these services
         await db.cancelRequest.deleteMany({
           where: { 
             order: { 
@@ -892,7 +825,6 @@ export async function DELETE(req: NextRequest) {
           }
         });
 
-        // Delete refill requests for orders related to these services
         await db.refillRequest.deleteMany({
           where: { 
             order: { 
@@ -901,33 +833,28 @@ export async function DELETE(req: NextRequest) {
           }
         });
 
-        // Delete orders related to these services
         await db.newOrder.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 
-        // Delete the provider services
         await db.service.deleteMany({
           where: { providerId: providerId }
         });
 
-        // Handle categories - check if they have self-created services
         for (const categoryId of categoryIds) {
           const selfCreatedServices = await db.service.count({
             where: { 
               categoryId: categoryId,
-              providerId: null, // Self-created services have null providerId
+              providerId: null,
               deletedAt: null
             }
           });
 
           if (selfCreatedServices === 0) {
-            // No self-created services, permanently delete category
             await db.category.delete({
               where: { id: categoryId }
             });
           } else {
-            // Has self-created services, change provider to "Self"
             await db.category.update({
               where: { id: categoryId },
               data: { 
@@ -937,23 +864,20 @@ export async function DELETE(req: NextRequest) {
           }
         }
 
-        // Handle service types - check if they have self-created services
         for (const serviceTypeId of serviceTypeIds) {
           const selfCreatedServicesInType = await db.service.count({
             where: { 
               serviceTypeId: serviceTypeId,
-              providerId: null, // Self-created services have null providerId
+              providerId: null,
               deletedAt: null
             }
           });
 
           if (selfCreatedServicesInType === 0) {
-            // No self-created services, permanently delete service type
             await db.servicetype.delete({
               where: { id: serviceTypeId }
             });
           } else {
-            // Has self-created services, change provider to "Self"
             await db.servicetype.update({
               where: { id: serviceTypeId },
               data: { 
@@ -964,7 +888,6 @@ export async function DELETE(req: NextRequest) {
         }
       }
 
-      // Finally delete the provider
       await db.api_providers.delete({
         where: { id: providerId }
       });

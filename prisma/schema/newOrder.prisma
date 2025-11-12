@@ -19,21 +19,20 @@ model NewOrder {
   profit         Float           @default(0)
   serviceName    String?
   categoryName   String?
-  // Service type specific fields
-  packageType    Int?            @default(1) // Service package type (1-15)
-  comments       String?         @db.Text // For comment services
-  username       String?         // For username-based services
-  posts          Int?            // For post-based services
-  delay          Int?            // For delayed services (in minutes)
-  minQty         Int?            // For subscription services
-  maxQty         Int?            // For subscription services
+  packageType    Int?            @default(1)
+  comments       String?         @db.Text
+  username       String?
+  posts          Int?
+  delay          Int?
+  minQty         Int?
+  maxQty         Int?
   isDripfeed     Boolean         @default(false)
-  dripfeedRuns   Int?            // Number of dripfeed runs
-  dripfeedInterval Int?          // Interval between runs (in minutes)
-  apiOrderId     String?         // External API order ID
-  apiResponse    String?         @db.Text // API response data
+  dripfeedRuns   Int?
+  dripfeedInterval Int?
+  apiOrderId     String?
+  apiResponse    String?         @db.Text
   isSubscription Boolean         @default(false)
-  subscriptionStatus String?     // For subscription orders
+  subscriptionStatus String?
   cancelRequests CancelRequest[]
   category       Category?       @relation(fields: [categoryId], references: [id])
   service        Service?        @relation(fields: [serviceId], references: [id])

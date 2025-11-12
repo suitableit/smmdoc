@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/blogs/bulk - Handle bulk operations on blog posts (Admin only)
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { operation, blogIds } = body;
 
-    // Validate required fields
     if (!operation || !blogIds || !Array.isArray(blogIds) || blogIds.length === 0) {
       return NextResponse.json(
         {
@@ -33,7 +31,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert string IDs to numbers
     const numericIds = blogIds.map(id => parseInt(id)).filter(id => !isNaN(id));
 
     if (numericIds.length === 0) {

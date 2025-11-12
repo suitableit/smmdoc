@@ -1,10 +1,9 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db as prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Check if user is admin
     const session = await auth();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
@@ -13,7 +12,6 @@ export async function GET() {
       );
     }
 
-    // Get database statistics
     const [
       totalServices,
       totalCategories,
@@ -31,7 +29,7 @@ export async function GET() {
       totalCategories,
       totalOrders,
       totalUsers,
-      activeConnections: 1, // This would need to be implemented based on your DB setup
+      activeConnections: 1,
       timestamp: new Date().toISOString(),
     };
 

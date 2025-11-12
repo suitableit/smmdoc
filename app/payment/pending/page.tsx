@@ -108,7 +108,6 @@ function PaymentPendingContent() {
 
   return (
     <div className="page-container min-h-screen flex items-center justify-center">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -120,22 +119,16 @@ function PaymentPendingContent() {
       </div>
 
       <div className="page-content max-w-2xl mx-auto w-full px-0 lg:px-4">
-        {}
         <div className="card-mobile card card-padding">
           <div className="text-center">
-            {}
             <div className="flex justify-center mb-6">
               <FaClock className="lg:w-20 w-16 lg:h-20 h-16 text-orange-500" />
             </div>
-
-            {}
             <h2 className="card-title text-center mb-2">Payment Under Review</h2>
             <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Your payment is being processed and requires manual verification.
               You will be notified once approved.
             </p>
-
-            {}
             {(invoice_id || amount || transaction_id || phone) && (
               <div className="space-y-4 mb-6">
                 <div className="card-header">
@@ -184,8 +177,6 @@ function PaymentPendingContent() {
                 </div>
               </div>
             )}
-
-            {}
             <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 mb-6">
               <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
                 What happens next?
@@ -197,8 +188,6 @@ function PaymentPendingContent() {
                 <p>• This usually takes 1-24 hours</p>
               </div>
             </div>
-
-            {}
             <div className="space-y-3">
               <button
                 onClick={handleViewTransactions}

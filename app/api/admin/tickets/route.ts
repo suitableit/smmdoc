@@ -5,13 +5,11 @@ import { z } from 'zod';
 import { getTicketSettings } from '@/lib/utils/ticket-settings';
 
 
-// Validation schema for bulk operations
 const bulkOperationSchema = z.object({
   ticketIds: z.array(z.string()),
   operation: z.enum(['mark_read', 'mark_unread', 'delete_selected'])
 });
 
-// Helper function to map database status to frontend status
 function mapDatabaseStatusToFrontend(dbStatus: string): string {
   const statusMap: { [key: string]: string } = {
     'pending': 'Open',
@@ -21,7 +19,6 @@ function mapDatabaseStatusToFrontend(dbStatus: string): string {
     'on_hold': 'On Hold'
   };
   
-  // If the status is already in the correct frontend format, return it directly
   const frontendStatuses = ['Open', 'Answered', 'Customer Reply', 'On Hold', 'In Progress', 'Closed'];
   if (frontendStatuses.includes(dbStatus)) {
     return dbStatus;
@@ -30,7 +27,6 @@ function mapDatabaseStatusToFrontend(dbStatus: string): string {
   return statusMap[dbStatus] || 'Open';
 }
 
-// GET - Fetch all support tickets (admin only)
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -42,7 +38,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -55,7 +50,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -72,11 +66,9 @@ export async function GET(request: NextRequest) {
     
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {};
 
     if (status && status !== 'all') {
-      // Map frontend status to database status
       const statusMap: { [key: string]: string } = {
         'open': 'pending',
         'answered': 'in_progress',
@@ -123,7 +115,6 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Get tickets with pagination
     const [tickets, totalCount] = await Promise.all([
       db.supportTicket.findMany({
         where,
@@ -154,7 +145,6 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Transform tickets to match frontend interface
     const transformedTickets = tickets.map(ticket => ({
       id: ticket.id.toString(),
       userId: ticket.userId.toString(),
@@ -187,7 +177,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH - Handle bulk operations (admin only)
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
@@ -199,7 +188,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
     const user = await db.user.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
@@ -212,7 +200,6 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Check if ticket system is enabled
     const ticketSettings = await getTicketSettings();
     if (!ticketSettings.ticketSystemEnabled) {
       return NextResponse.json(
@@ -252,7 +239,6 @@ export async function PATCH(request: NextRequest) {
         });
     }
 
-    // Update tickets
     await db.supportTicket.updateMany({
       where: {
         id: {

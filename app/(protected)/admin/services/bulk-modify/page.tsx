@@ -422,7 +422,6 @@ const BulkModifyPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -434,12 +433,9 @@ const BulkModifyPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            {}
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mb-2 md:mb-0">
-              {}
               <select 
                 value={pagination.limit === filteredServices.length ? 'all' : pagination.limit}
                 onChange={(e) => {
@@ -500,8 +496,6 @@ const BulkModifyPage = () => {
                 </button>
               )}
             </div>
-
-            {}
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full">
                 <FaSearch
@@ -519,8 +513,6 @@ const BulkModifyPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card">
           <div className="px-6 py-6">
             {selectedCategory && (
@@ -588,7 +580,6 @@ const BulkModifyPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                {}
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
@@ -707,8 +698,6 @@ const BulkModifyPage = () => {
                     </tbody>
                   </table>
                 </div>
-
-                {}
                 <div className="lg:hidden">
                   <div className="space-y-4 pt-6">
                     {getPaginatedData().map((service) => (
@@ -718,7 +707,6 @@ const BulkModifyPage = () => {
                           editedServices[service.id] ? 'bg-yellow-50' : ''
                         }`}
                       >
-                        {}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -737,8 +725,6 @@ const BulkModifyPage = () => {
                             </span>
                           )}
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <label className="form-label mb-2">Service Name</label>
                           <input
@@ -748,8 +734,6 @@ const BulkModifyPage = () => {
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
-
-                        {}
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="form-label mb-2">Min Order</label>
@@ -772,8 +756,6 @@ const BulkModifyPage = () => {
                             />
                           </div>
                         </div>
-
-                        {}
                         <div className="mb-4">
                           <label className="form-label mb-2">Price (USD)</label>
                           <input
@@ -785,8 +767,6 @@ const BulkModifyPage = () => {
                             step="0.01"
                           />
                         </div>
-
-                        {}
                         <div>
                           <label className="form-label mb-2">Description</label>
                           <textarea
@@ -800,8 +780,6 @@ const BulkModifyPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {}
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t">
                   <div
                     className="text-sm"
@@ -866,8 +844,6 @@ const BulkModifyPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         {categoryModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">

@@ -2,12 +2,10 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/admin/refill-requests - Get all refill requests
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -25,7 +23,6 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || 'all';
     const search = searchParams.get('search') || '';
 
-    // Build where clause
     const whereClause: any = {};
 
     if (status !== 'all') {
@@ -41,12 +38,10 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Get total count
     const totalRequests = await db.refillRequest.count({
       where: whereClause,
     });
 
-    // Get refill requests with pagination - safe approach without relations
     let refillRequests: any[] = [];
 
     try {
@@ -59,9 +54,7 @@ export async function GET(req: NextRequest) {
         take: limit
       });
 
-      // Manually fetch related data to avoid relation errors
       for (const request of refillRequests) {
-        // Fetch order data with service information
         if (request.orderId) {
           try {
             const order = await db.newOrder.findUnique({
@@ -79,7 +72,6 @@ export async function GET(req: NextRequest) {
               }
             });
 
-            // Fetch service data for the order
             if (order && order.serviceId) {
               try {
                 const service = await db.service.findUnique({
@@ -105,7 +97,6 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Fetch user data
         if (request.userId) {
           try {
             const user = await db.user.findUnique({
@@ -124,7 +115,6 @@ export async function GET(req: NextRequest) {
           }
         }
 
-        // Fetch processed by user data
         if (request.processedBy) {
           try {
             const processedByUser = await db.user.findUnique({
@@ -147,12 +137,10 @@ export async function GET(req: NextRequest) {
       refillRequests = [];
     }
 
-    // Remove duplicates based on order ID to prevent React key conflicts
     const uniqueRefillRequests = refillRequests.filter((request, index, self) =>
       index === self.findIndex(r => r.orderId === request.orderId)
     );
 
-    // Calculate pagination info
     const totalPages = Math.ceil(totalRequests / limit);
 
     return NextResponse.json({
@@ -182,12 +170,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin/refill-requests - Create refill request (for admin)
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -213,7 +199,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find the order
     const order = await db.newOrder.findUnique({
       where: { id: parseInt(orderId) },
       include: {
@@ -246,7 +231,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create refill request
     const refillRequest = await db.refillRequest.create({
       data: {
         orderId: parseInt(orderId),

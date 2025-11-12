@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// Helper function to get client IP
 function getClientIP(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
@@ -35,7 +34,6 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Check if service update logs are enabled
     const moduleSettings = await db.moduleSettings.findFirst();
     const serviceUpdateLogsEnabled = moduleSettings?.serviceUpdateLogsEnabled ?? true;
 
@@ -67,7 +65,6 @@ export async function PUT(request: Request) {
       serviceSpeed,
       mode,
       orderLink,
-      // Service type specific fields
       packageType,
       providerServiceId,
       dripfeedEnabled,
@@ -88,7 +85,6 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Get current service data for logging
     const currentService = await db.service.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -104,7 +100,6 @@ export async function PUT(request: Request) {
         success: false,
       });
     }
-    // Helper function to convert string boolean to actual boolean
     const toBool = (value: unknown): boolean => {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
@@ -113,7 +108,6 @@ export async function PUT(request: Request) {
       return Boolean(value);
     };
 
-    // Helper function to convert string number to actual number
     const toNumber = (value: unknown, defaultValue: number = 0): number => {
       if (typeof value === 'number') return value;
       if (typeof value === 'string' && value.trim() !== '') {
@@ -123,7 +117,6 @@ export async function PUT(request: Request) {
       return defaultValue;
     };
 
-    // Helper function to convert string to integer for IDs
     const toInt = (value: unknown): number | undefined => {
       if (typeof value === 'number') return value;
       if (typeof value === 'string' && value.trim() !== '') {
@@ -133,7 +126,6 @@ export async function PUT(request: Request) {
       return undefined;
     };
 
-    // Prepare update data - only include fields that are provided
     const updateData: any = {};
 
     if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
@@ -188,7 +180,6 @@ export async function PUT(request: Request) {
       updateData.orderLink = orderLink;
     }
 
-    // Service type specific fields
     if (packageType !== undefined && packageType !== null && packageType !== '') {
       updateData.packageType = toNumber(packageType, 1);
     }
@@ -223,7 +214,6 @@ export async function PUT(request: Request) {
       updateData.isSecret = toBool(isSecret);
     }
 
-    // Prepare changes data for updateText
     const changes: any = {};
     Object.keys(updateData).forEach(key => {
       const oldValue = (currentService as any)[key];
@@ -236,7 +226,6 @@ export async function PUT(request: Request) {
       }
     });
 
-    // Add updateText with change information if there are changes
     if (Object.keys(changes).length > 0) {
       updateData.updateText = JSON.stringify({
         action: 'updated',
@@ -246,7 +235,6 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Update the service in the database with proper type conversion
     const updatedService = await db.service.update({
       where: {
         id: parseInt(id),
@@ -254,18 +242,15 @@ export async function PUT(request: Request) {
       data: updateData,
     });
 
-    // Log service update if enabled
     if (serviceUpdateLogsEnabled) {
       try {
         const clientIP = getClientIP(request);
         const userAgent = request.headers.get('user-agent') || 'unknown';
 
-        // Prepare changes data
         const changes: any = {};
         const oldValues: any = {};
         const newValues: any = {};
 
-        // Track what changed
         Object.keys(updateData).forEach(key => {
           const oldValue = (currentService as any)[key];
           const newValue = (updateData as any)[key];
@@ -298,7 +283,6 @@ export async function PUT(request: Request) {
         console.log(`Service update logged: Admin ${session.user.email} updated service ${currentService.name} (ID: ${id})`);
       } catch (logError) {
         console.error('Failed to log service update:', logError);
-        // Don't fail the main operation if logging fails
       }
     }
 

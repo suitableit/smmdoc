@@ -10,7 +10,6 @@ const Hero: React.FC = () => {
     <section className="pt-[60px] pb-[60px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
-          {}
           <div>
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               Contact Us
@@ -38,8 +37,6 @@ const Hero: React.FC = () => {
               <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
-
-          {}
           <div className="text-center lg:text-right">
             <div className="relative">
               <Image

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -14,25 +14,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create response
     const response = NextResponse.json({
       success: true,
       message: 'Switched back to admin account'
     });
 
-    // Clear the impersonation cookies
     response.cookies.set('impersonated-user-id', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 0 // Expire immediately
+      maxAge: 0
     });
 
     response.cookies.set('original-admin-id', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 0 // Expire immediately
+      maxAge: 0
     });
 
     return response;

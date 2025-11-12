@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// PUT /api/admin/users/[id]/discount - Update user services discount
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +50,6 @@ export async function PUT(
 
     const discountValue = parseFloat(discount);
 
-    // Validate discount range (0-100%)
     if (discountValue < 0 || discountValue > 100) {
       return NextResponse.json(
         {
@@ -63,7 +61,6 @@ export async function PUT(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, username: true, servicesDiscount: true }
@@ -80,7 +77,6 @@ export async function PUT(
       );
     }
 
-    // Update user services discount
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: { servicesDiscount: discountValue },
@@ -113,7 +109,6 @@ export async function PUT(
   }
 }
 
-// GET /api/admin/users/[id]/discount - Get user discount
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
-// POST /api/orders/place-to-provider - Forward order to external provider
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -26,7 +25,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get order details
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -53,7 +51,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get provider details
     const provider = await db.api_providers.findUnique({
       where: { id: providerId }
     });
@@ -72,10 +69,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create API specification from provider configuration
     const apiSpec = createApiSpecFromProvider(provider);
     
-    // Prepare provider API request using API specification system
     const requestBuilder = new ApiRequestBuilder(
       apiSpec,
       provider.api_url,
@@ -96,7 +91,6 @@ export async function POST(req: NextRequest) {
       requestConfig: orderRequest
     });
 
-    // Send request to provider
     let providerResponse;
     try {
       const response = await axios({
@@ -104,13 +98,12 @@ export async function POST(req: NextRequest) {
         url: orderRequest.url,
         data: orderRequest.data,
         headers: orderRequest.headers,
-        timeout: 30000, // 30 seconds timeout
+        timeout: 30000,
       });
       providerResponse = response.data;
     } catch (error: any) {
       console.error('Provider API error:', error);
       
-      // Log the failed attempt
       await db.providerOrderLog.create({
         data: {
           orderId: order.id,
@@ -132,7 +125,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check provider response using API specification system
     const responseParser = new ApiResponseParser(apiSpec);
     let parsedOrder;
     
@@ -180,7 +172,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update order with provider information
     const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: {
@@ -190,7 +181,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log successful forwarding
     await db.providerOrderLog.create({
       data: {
         orderId: order.id,

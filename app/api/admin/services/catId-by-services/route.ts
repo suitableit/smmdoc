@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // cat id by service
     const body = await request.json();
     const { categoryId } = body;
     console.log('categoryId', categoryId);

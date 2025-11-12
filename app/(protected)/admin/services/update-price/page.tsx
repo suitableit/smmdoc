@@ -222,7 +222,6 @@ const UpdatePricePage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -236,7 +235,6 @@ const UpdatePricePage = () => {
       <div className="page-content">
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
-            {}
             <div className="card card-padding">
               <div className="card-header">
                 <div className="card-icon">
@@ -267,8 +265,6 @@ const UpdatePricePage = () => {
                     ))}
                   </select>
                 </div>
-
-                {}
                 {priceSettings.serviceType === 'provider-services' && (
                   <div className="form-group">
                     <label className="form-label">Provider</label>

@@ -296,7 +296,6 @@ axios.post(url, payload)
 
   return (
     <div className="page-container">
-        {}
         {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -307,7 +306,6 @@ axios.post(url, payload)
 
       <div className="page-content">
         <div className="space-y-6">
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -396,8 +394,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -433,8 +429,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -493,8 +487,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -504,7 +496,6 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-6">
-              {}
               <div className="form-group">
                 <label className="form-label">Service Type</label>
                 <div className="relative">
@@ -521,8 +512,6 @@ axios.post(url, payload)
                   </select>
                 </div>
               </div>
-
-              {}
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -567,8 +556,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -629,8 +616,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -703,8 +688,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -761,8 +744,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -832,8 +813,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -890,8 +869,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -961,8 +938,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1028,8 +1003,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1081,8 +1054,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">
@@ -1092,7 +1063,6 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-6">
-              {}
               <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
                 <button
                   onClick={() => setActiveTab('php')}
@@ -1125,8 +1095,6 @@ axios.post(url, payload)
                   Node.js
                 </button>
               </div>
-
-              {}
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900">
@@ -1165,8 +1133,6 @@ axios.post(url, payload)
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-header">
               <div className="card-icon">

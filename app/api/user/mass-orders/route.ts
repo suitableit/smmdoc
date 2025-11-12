@@ -1,9 +1,8 @@
-import { requireAuth } from '@/lib/auth-helpers';
+﻿import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 
-// POST /api/user/mass-orders - Create multiple orders at once
 export async function POST(request: Request) {
   try {
     const session = await requireAuth();
@@ -30,7 +29,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if mass order is enabled in module settings
     const moduleSettings = await db.moduleSettings.findFirst();
     const massOrderEnabled = moduleSettings?.massOrderEnabled ?? false;
 
@@ -48,7 +46,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { orders, validateOnly = false, batchId } = body;
 
-    // Validate that orders is an array
     if (!Array.isArray(orders) || orders.length === 0) {
       return NextResponse.json(
         {
@@ -60,7 +57,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Limit Mass Orderss to prevent abuse
     if (orders.length > 100) {
       return NextResponse.json(
         {
@@ -72,7 +68,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate all orders and calculate total cost
     const validatedOrders: any[] = [];
     let totalCost = 0;
     const validationErrors = [];
@@ -97,7 +92,6 @@ export async function POST(request: Request) {
       } = orderData;
 
       try {
-        // Validate required fields
         if (!categoryId || !serviceId || !link || !qty) {
           validationErrors.push(
             `Order ${
@@ -107,7 +101,6 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Validate service exists and is active
         const service = await db.service.findUnique({
           where: { id: serviceId },
           select: {
@@ -136,7 +129,6 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Validate quantity limits
         const quantity = parseInt(qty);
         if (
           isNaN(quantity) ||
@@ -175,14 +167,12 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Calculate prices
         const usdPrice = (service.rate * quantity) / 1000;
         const bdtPrice = usdPrice * (user.dollarRate || 121.52);
         const finalPrice = user.currency === 'USD' ? usdPrice : bdtPrice;
         
-        // Calculate charge (service cost) and profit
-        const charge = usdPrice; // Service cost in USD
-        const profit = finalPrice - charge; // Profit = selling price - service cost
+        const charge = usdPrice;
+        const profit = finalPrice - charge;
 
         totalCost += finalPrice;
 
@@ -203,9 +193,8 @@ export async function POST(request: Request) {
           status: 'pending',
           remains: quantity,
           startCount: 0,
-          isMassOrder: true, // Mark as Mass Orders
-          batchId: batchId || `MO-${Date.now()}-${(session.user.id as any).toString().slice(-4)}`, // Mass Orders batch ID
-          // Service type specific fields
+          isMassOrder: true,
+          batchId: batchId || `MO-${Date.now()}-${(session.user.id as any).toString().slice(-4)}`,
           packageType: service.packageType || 1,
           comments: comments || null,
           username: username || null,
@@ -232,7 +221,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // If there are validation errors, return them
     if (validationErrors.length > 0) {
       return NextResponse.json(
         {
@@ -247,7 +235,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if user has enough balance
     if (user.balance < totalCost) {
       return NextResponse.json(
         {
@@ -267,7 +254,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // If validateOnly is true, return validation results without creating orders
     if (validateOnly) {
       return NextResponse.json(
         {
@@ -286,18 +272,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create all orders in a transaction
     const result = await db.$transaction(async (prisma) => {
       const createdOrders = [];
 
-      // Create each order
       for (const orderData of validatedOrders) {
         const { orderIndex, service, ...createData } = orderData;
 
         const order = await prisma.newOrder.create({
           data: {
             ...createData,
-            // Service type specific fields
             packageType: orderData.packageType,
             comments: orderData.comments,
             username: orderData.username,
@@ -334,7 +317,6 @@ export async function POST(request: Request) {
         });
       }
 
-      // Deduct total cost from user balance and update total spent
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
@@ -350,7 +332,6 @@ export async function POST(request: Request) {
       return createdOrders;
     });
 
-    // Log the Mass Orders creation
     console.log(
       `User ${session.user.email} created ${result.length} Mass Orderss`,
       {
@@ -389,12 +370,10 @@ export async function POST(request: Request) {
   }
 }
 
-// GET /api/user/mass-orders - Get Mass Orders templates or history
 export async function GET(request: Request) {
   try {
     const session = await requireAuth();
 
-    // Check if mass order is enabled in module settings before proceeding
     const moduleSettings = await db.moduleSettings.findFirst();
     const massOrderEnabled = moduleSettings?.massOrderEnabled ?? false;
     if (!massOrderEnabled) {
@@ -409,15 +388,14 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'recent'; // 'recent', 'templates', 'stats'
+    const type = searchParams.get('type') || 'recent';
 
     if (type === 'stats') {
-      // Get Mass Orders statistics
       const stats = await db.newOrder.aggregate({
         where: {
           userId: session.user.id,
           createdAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
           },
         },
         _count: {
@@ -443,12 +421,11 @@ export async function GET(request: Request) {
     }
 
     if (type === 'recent') {
-      // Get recent orders grouped by creation time (potential Mass Orderss)
       const recentOrders = await db.newOrder.findMany({
         where: {
           userId: session.user.id,
           createdAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Last 7 days
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           },
         },
         include: {
@@ -489,7 +466,6 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching Mass Orders data:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
-    // Return 401 if auth is missing/invalid
     if (message === 'Authentication required') {
       return NextResponse.json(
         {

@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/blogs/[slug] - Get single blog post by slug
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -35,7 +34,6 @@ export async function GET(
       );
     }
 
-    // Check if post is published or user is admin
     const session = await auth();
     const isAdmin = session?.user?.role === 'admin';
     
@@ -50,7 +48,6 @@ export async function GET(
       );
     }
 
-    // Increment view count for published posts
     if (post.status === 'published') {
       await db.blogPost.update({
         where: { id: post.id },
@@ -76,7 +73,6 @@ export async function GET(
   }
 }
 
-// PUT /api/blogs/[slug] - Update blog post (Admin only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -111,7 +107,6 @@ export async function PUT(
       seoKeywords
     } = body;
 
-    // Check if post exists
     const existingPost = await db.blogPost.findUnique({
       where: { slug }
     });
@@ -127,7 +122,6 @@ export async function PUT(
       );
     }
 
-    // If slug is being changed, check if new slug already exists
     if (newSlug && newSlug !== slug) {
       const slugExists = await db.blogPost.findUnique({
         where: { slug: newSlug }
@@ -145,14 +139,12 @@ export async function PUT(
       }
     }
 
-    // Calculate reading time if content is updated
     let readingTime = existingPost.readingTime;
     if (content) {
       const wordCount = content.split(/\s+/).length;
       readingTime = Math.ceil(wordCount / 200);
     }
 
-    // Prepare update data
     const updateData: any = {};
     
     if (title !== undefined) updateData.title = title;
@@ -175,7 +167,6 @@ export async function PUT(
     if (seoDescription !== undefined) updateData.seoDescription = seoDescription;
     if (seoKeywords !== undefined) updateData.seoKeywords = seoKeywords;
 
-    // Update blog post
     const updatedPost = await db.blogPost.update({
       where: { slug },
       data: updateData,
@@ -208,7 +199,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/blogs/[slug] - Delete blog post (Admin only)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -229,7 +219,6 @@ export async function DELETE(
 
     const { slug } = await params;
 
-    // Check if post exists
     const existingPost = await db.blogPost.findUnique({
       where: { slug }
     });
@@ -245,7 +234,6 @@ export async function DELETE(
       );
     }
 
-    // Delete blog post
     await db.blogPost.delete({
       where: { slug }
     });

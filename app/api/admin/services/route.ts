@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
@@ -7,7 +7,6 @@ export async function GET(request: Request) {
   try {
     const session = await getCurrentUser();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         {
@@ -23,25 +22,23 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limitParam = searchParams.get('limit') || '10';
     const search = searchParams.get('search') || '';
-    const filter = searchParams.get('filter') || 'all'; // Add filter parameter
-    const serviceTypeFilter = searchParams.get('serviceType') || ''; // Add service type filter
-    const packageTypeFilter = searchParams.get('packageType') || ''; // Add package type filter
+    const filter = searchParams.get('filter') || 'all';
+    const serviceTypeFilter = searchParams.get('serviceType') || '';
+    const packageTypeFilter = searchParams.get('packageType') || '';
     const limit = parseInt(limitParam);
 
-    // Determine deletedAt filter based on filter parameter
     let deletedAtFilter;
     if (filter === 'trash') {
-      deletedAtFilter = { not: null }; // Show only soft-deleted services
+      deletedAtFilter = { not: null };
     } else if (filter === 'all_with_trash') {
-      deletedAtFilter = undefined; // Show all services including trash
+      deletedAtFilter = undefined;
     } else {
-      deletedAtFilter = null; // Show only non-deleted services
+      deletedAtFilter = null;
     }
 
-    // If limit is high (>=500), return all services (for bulk modify or "All" view)
     if (limit >= 500) {
       const whereClause = {
-        ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
+        ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }),
         ...(serviceTypeFilter && serviceTypeFilter.trim() && {
           serviceType: {
             name: {
@@ -56,33 +53,28 @@ export async function GET(request: Request) {
         ...(search && search.trim()
           ? {
               OR: [
-                // Search by service name
                 {
                   name: {
                     contains: search.trim(),
                     mode: 'insensitive',
                   },
                 },
-                // Search by service description
                 {
                   description: {
                     contains: search.trim(),
                     mode: 'insensitive',
                   },
                 },
-                // Search by service ID (if search term is a number)
                 ...(isNaN(Number(search.trim())) ? [] : [{
                   id: {
                     equals: Number(search.trim()),
                   },
                 }]),
-                // Search by category ID (if search term is a number)
                 ...(isNaN(Number(search.trim())) ? [] : [{
                   categoryId: {
                     equals: Number(search.trim()),
                   },
                 }]),
-                // Search by category name
                 {
                   category: {
                     category_name: {
@@ -96,7 +88,6 @@ export async function GET(request: Request) {
           : {})
       };
 
-      // Get all services
       const services = await db.service.findMany({
         where: whereClause,
         orderBy: {
@@ -108,13 +99,12 @@ export async function GET(request: Request) {
         },
       });
 
-      // Get all categories (including empty ones) for "All" view
       const allCategories = await db.category.findMany({
         where: {
-          hideCategory: 'no', // Only show categories that are not hidden
+          hideCategory: 'no',
         },
         orderBy: [
-          { id: 'asc' }, // Order by ID first (1, 2, 3...)
+          { id: 'asc' },
           { position: 'asc' },
           { createdAt: 'asc' },
         ],
@@ -128,7 +118,7 @@ export async function GET(request: Request) {
           limit: services.length,
           totalPages: 1,
           totalCategories: allCategories.length,
-          allCategories: allCategories, // Include all categories (including empty ones)
+          allCategories: allCategories,
           hasNext: false,
           hasPrev: false,
           success: true,
@@ -137,16 +127,14 @@ export async function GET(request: Request) {
       );
     }
 
-    // Categories pagination - limit categories, not services (for regular pagination)
     const categoryLimit = limit;
     const categorySkip = (page - 1) * categoryLimit;
-    // First get paginated categories
     const [paginatedCategories, totalCategories] = await Promise.all([
       db.category.findMany({
         skip: categorySkip,
         take: categoryLimit,
         orderBy: [
-          { id: 'asc' }, // Order by ID first (1, 2, 3...)
+          { id: 'asc' },
           { position: 'asc' },
           { createdAt: 'asc' },
         ],
@@ -154,11 +142,10 @@ export async function GET(request: Request) {
       db.category.count(),
     ]);
 
-    // Get all services for the paginated categories
     const categoryIds = paginatedCategories.map(cat => cat.id);
 
     const whereClause = {
-      ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }), // Use dynamic filter based on request
+      ...(deletedAtFilter !== undefined && { deletedAt: deletedAtFilter }),
       categoryId: {
         in: categoryIds,
       },
@@ -176,33 +163,28 @@ export async function GET(request: Request) {
       ...(search && search.trim()
         ? {
             OR: [
-              // Search by service name
               {
                 name: {
                   contains: search.trim(),
                   mode: 'insensitive',
                 },
               },
-              // Search by service description
               {
                 description: {
                   contains: search.trim(),
                   mode: 'insensitive',
                 },
               },
-              // Search by service ID (if search term is a number)
               ...(isNaN(Number(search.trim())) ? [] : [{
                 id: {
                   equals: Number(search.trim()),
                 },
               }]),
-              // Search by category ID (if search term is a number)
               ...(isNaN(Number(search.trim())) ? [] : [{
                 categoryId: {
                   equals: Number(search.trim()),
                 },
               }]),
-              // Search by category name
               {
                 category: {
                   category_name: {
@@ -211,7 +193,6 @@ export async function GET(request: Request) {
                   },
                 },
               },
-              // Search by provider
               {
                 provider: {
                   contains: search.trim(),
@@ -237,18 +218,17 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         data: services || [],
-        total: services.length, // Total services in current page
+        total: services.length,
         page,
         totalPages: Math.ceil(totalCategories / categoryLimit),
         totalCategories,
         limit: limitParam,
-        allCategories: paginatedCategories || [], // Include paginated categories
+        allCategories: paginatedCategories || [],
       },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error in services API:", error);
-    // Return empty data array instead of error to avoid crashing the client
     return NextResponse.json(
       {
         data: [],
@@ -269,7 +249,6 @@ export async function POST(request: Request) {
     const session = await getCurrentUser();
     console.log('Session:', session ? `${session.user.email} ${session.user.role}` : 'Not found');
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       console.log('Unauthorized access attempt - Session:', session ? 'exists but not admin' : 'not found');
       return NextResponse.json(
@@ -313,7 +292,6 @@ export async function POST(request: Request) {
       serviceSpeed,
       mode,
       orderLink,
-      // Service type specific fields
       packageType,
       providerServiceId,
       dripfeedEnabled,
@@ -327,9 +305,7 @@ export async function POST(request: Request) {
       isSecret,
     } = body;
 
-    // Allow empty fields for service creation
 
-    // Helper function to convert string boolean to actual boolean
     const toBool = (value: unknown): boolean => {
       if (typeof value === 'boolean') return value;
       if (typeof value === 'string') {
@@ -338,7 +314,6 @@ export async function POST(request: Request) {
       return Boolean(value);
     };
 
-    // Helper function to convert string number to actual number
     const toNumber = (value: unknown, defaultValue: number = 0): number => {
       if (typeof value === 'number') return value;
       if (typeof value === 'string' && value.trim() !== '') {
@@ -348,7 +323,6 @@ export async function POST(request: Request) {
       return defaultValue;
     };
 
-    // Helper function to convert string to integer for IDs
     const toInt = (value: unknown): number | undefined => {
       if (typeof value === 'number') return value;
       if (typeof value === 'string' && value.trim() !== '') {
@@ -358,7 +332,6 @@ export async function POST(request: Request) {
       return undefined;
     };
 
-    // Prepare create data - only include fields that are provided and valid
     const createData: any = {
       name: name || '',
       description: description || '',
@@ -376,7 +349,6 @@ export async function POST(request: Request) {
       mode: mode || 'manual',
       orderLink: orderLink || 'link',
       userId: session.user.id,
-      // Service type specific fields
       packageType: toNumber(packageType, 1),
       providerServiceId: providerServiceId || null,
       dripfeedEnabled: toBool(dripfeedEnabled),
@@ -390,18 +362,15 @@ export async function POST(request: Request) {
       isSecret: toBool(isSecret),
     };
 
-    // Add categoryId if provided and valid
     const categoryIdInt = toInt(categoryId);
     if (categoryIdInt !== undefined) {
       createData.categoryId = categoryIdInt;
     }
 
-    // Add serviceTypeId if provided and valid, otherwise use Default service type
     const serviceTypeIdInt = toInt(serviceTypeId);
     if (serviceTypeIdInt !== undefined) {
       createData.serviceTypeId = serviceTypeIdInt;
     } else {
-      // If no service type is specified, assign the Default service type
       const defaultServiceType = await db.servicetype.findFirst({
         where: { name: 'Default' }
       });
@@ -411,7 +380,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create the service in the database with proper type conversion
     console.log('Creating service with data:', JSON.stringify(createData, null, 2));
     const newService = await db.service.create({
       data: createData,

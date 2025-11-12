@@ -16,7 +16,6 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch user data on client side
     const fetchUser = async () => {
       try {
         setLoading(true);
@@ -38,17 +37,13 @@ export default function DashboardLayout({
     fetchUser();
   }, []);
 
-  // If we're on the root dashboard path and the user is loaded
   if (isDashboard && !loading && user) {
-    // If user is admin, render admin dashboard, otherwise render user dashboard
     if (user.role === 'ADMIN' || user.role === 'admin') {
-      // Import is done dynamically to avoid server/client mismatch
       const AdminDashboard = require('../admin/page').default;
       return <AdminDashboard />;
     }
   }
 
-  // For all other cases, render the children
   return (
     <div className="h-full">
       <main className="h-full">

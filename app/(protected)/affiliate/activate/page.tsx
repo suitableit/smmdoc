@@ -418,7 +418,6 @@ export default function ActivateAffiliatePage() {
     return (
       <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
         <div className="space-y-6">
-          {}
           <div className="card card-padding">
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -447,7 +446,6 @@ export default function ActivateAffiliatePage() {
   return (
     <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
       <div className="space-y-6">
-        {}
         {toastMessage && (
           <Toast
             message={toastMessage.message}
@@ -455,8 +453,6 @@ export default function ActivateAffiliatePage() {
             onClose={() => setToastMessage(null)}
           />
         )}
-
-        {}
         <div className="card card-padding">
           <div className="text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -470,10 +466,7 @@ export default function ActivateAffiliatePage() {
             </p>
           </div>
         </div>
-
-        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -487,8 +480,6 @@ export default function ActivateAffiliatePage() {
               </p>
             </div>
           </div>
-
-          {}
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -502,8 +493,6 @@ export default function ActivateAffiliatePage() {
               </p>
             </div>
           </div>
-
-          {}
           <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -518,8 +507,6 @@ export default function ActivateAffiliatePage() {
             </div>
           </div>
         </div>
-
-        {}
         <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">
@@ -529,7 +516,6 @@ export default function ActivateAffiliatePage() {
           </div>
 
           <form onSubmit={handleActivateAccount} className="space-y-6">
-            {}
             <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-4 border border-gray-200 dark:border-gray-600">
               <div className="flex items-center gap-3 mb-2">
                 <FaUser className="w-4 h-4 text-gray-500" />
@@ -542,8 +528,6 @@ export default function ActivateAffiliatePage() {
                 <strong>Email:</strong> {user?.email || 'Not available'}
               </p>
             </div>
-
-            {}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -558,8 +542,6 @@ export default function ActivateAffiliatePage() {
                   Add Payment Method
                 </button>
               </div>
-
-              {}
               {formData.paymentMethods.length > 0 ? (
                 <div className="space-y-3 mb-4">
                   {formData.paymentMethods.map((paymentMethod) => (
@@ -620,8 +602,6 @@ export default function ActivateAffiliatePage() {
                 <p className="text-red-500 text-sm mt-1">{String((errors as any).paymentMethods)}</p>
               )}
             </div>
-
-            {}
             {showAddForm && (
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -650,7 +630,6 @@ export default function ActivateAffiliatePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {}
                   <div>
                     <label htmlFor="newPaymentMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Payment Method *
@@ -676,8 +655,6 @@ export default function ActivateAffiliatePage() {
                       <p className="text-red-500 text-sm mt-1">{(errors as any).method}</p>
                     )}
                   </div>
-
-                  {}
                   {newPaymentMethod.method && newPaymentMethod.method !== 'bank' && (
                     <div>
                       <label htmlFor="newMobileNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -703,8 +680,6 @@ export default function ActivateAffiliatePage() {
                       </p>
                     </div>
                   )}
-
-                  {}
                   {newPaymentMethod.method === 'bank' && (
                     <div className="space-y-4">
                       <div>
@@ -813,8 +788,6 @@ export default function ActivateAffiliatePage() {
                       </div>
                     </div>
                   )}
-
-                  {}
                   <div className="flex flex-col md:flex-row gap-3">
                     <button
                       type="button"
@@ -846,8 +819,6 @@ export default function ActivateAffiliatePage() {
                 </div>
               </div>
             )}
-
-            {}
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <input
@@ -868,8 +839,6 @@ export default function ActivateAffiliatePage() {
                 </div>
               </div>
             </div>
-
-            {}
             <div className="flex gap-4">
               <button
                 type="submit"
@@ -891,8 +860,6 @@ export default function ActivateAffiliatePage() {
             </div>
           </form>
         </div>
-
-        {}
         <div className="bg-white dark:bg-[#2a2b40] rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-6">
@@ -905,7 +872,6 @@ export default function ActivateAffiliatePage() {
             </div>
 
             <div className="space-y-6">
-              {}
               <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
@@ -921,8 +887,6 @@ export default function ActivateAffiliatePage() {
                   on their order.
                 </p>
               </div>
-
-              {}
               <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">
@@ -937,8 +901,6 @@ export default function ActivateAffiliatePage() {
                   payment. Payments are processed monthly.
                 </p>
               </div>
-
-              {}
               <div className="bg-gray-50 dark:bg-[#1e1f2e] rounded-lg p-5 border border-gray-200 dark:border-gray-600 shadow-sm transition-colors duration-200">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-lg flex items-center justify-center">

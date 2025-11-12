@@ -834,7 +834,6 @@ const IntegrationPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -849,7 +848,6 @@ const IntegrationPage = () => {
         <div className="justify-center">
           <div className="page-content">
             <div className="columns-1 md:columns-3 gap-6 space-y-6">
-              {}
               <div className="card card-padding h-fit break-inside-avoid mb-6">
                 <div className="card-header">
                   <div className="card-icon">
@@ -859,10 +857,8 @@ const IntegrationPage = () => {
                 </div>
 
             <div className="space-y-4">
-              {}
               <>
                 <div className="space-y-6">
-                    {}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -887,7 +883,6 @@ const IntegrationPage = () => {
 
                       {liveChatSettings.socialMediaEnabled && (
                         <div className="space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                          {}
                           <div className="form-group">
                             <label className="form-label">Hover Title</label>
                             <input
@@ -900,8 +895,6 @@ const IntegrationPage = () => {
                               placeholder="Chat with us"
                             />
                           </div>
-
-                          {}
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <div>
@@ -936,8 +929,6 @@ const IntegrationPage = () => {
                               </div>
                             )}
                           </div>
-
-                          {}
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <div>
@@ -972,8 +963,6 @@ const IntegrationPage = () => {
                               </div>
                             )}
                           </div>
-
-                          {}
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <div>
@@ -1011,8 +1000,6 @@ const IntegrationPage = () => {
                         </div>
                       )}
                     </div>
-
-                    {}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1052,8 +1039,6 @@ const IntegrationPage = () => {
                         </div>
                       )}
                     </div>
-
-                    {}
                     <div className="space-y-4">
                       <div className="form-group">
                         <label className="form-label">Visibility</label>
@@ -1077,8 +1062,6 @@ const IntegrationPage = () => {
                       </div>
                     </div>
                   </div>
-
-                  {}
                   <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                     <button
                       onClick={saveLiveChatSettings}
@@ -1099,8 +1082,6 @@ const IntegrationPage = () => {
                 </>
             </div>
           </div>
-
-          {}
           <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
@@ -1110,10 +1091,8 @@ const IntegrationPage = () => {
             </div>
 
             <div className="space-y-4">
-              {}
               <>
                 <div className="space-y-6">
-                  {}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -1170,8 +1149,6 @@ const IntegrationPage = () => {
                       </div>
                     )}
                   </div>
-
-                  {}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -1228,8 +1205,6 @@ const IntegrationPage = () => {
                       </div>
                     )}
                   </div>
-
-                  {}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -1287,8 +1262,6 @@ const IntegrationPage = () => {
                     )}
                   </div>
                 </div>
-
-                {}
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                   <button
                     onClick={saveAnalyticsSettings}
@@ -1309,8 +1282,6 @@ const IntegrationPage = () => {
               </>
             </div>
           </div>
-
-          {}
           <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
@@ -1338,8 +1309,6 @@ const IntegrationPage = () => {
                   title="Toggle ReCAPTCHA"
                 />
               </div>
-
-              {}
               <>
                 <div className="form-group">
                     <label className="form-label">ReCAPTCHA Version</label>
@@ -1357,8 +1326,6 @@ const IntegrationPage = () => {
                       <option value="v3">reCAPTCHA v3</option>
                     </select>
                   </div>
-
-                  {}
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white">ReCAPTCHA v2 Configuration</h4>
@@ -1403,8 +1370,6 @@ const IntegrationPage = () => {
                       />
                     </div>
                   </div>
-
-                  {}
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-semibold text-gray-900 dark:text-white">ReCAPTCHA v3 Configuration</h4>
@@ -1478,7 +1443,6 @@ const IntegrationPage = () => {
                       Select which forms should have ReCAPTCHA protection
                     </p>
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
-                      {}
                       <div className="flex items-center space-x-3 pb-2 border-b border-gray-200 dark:border-gray-600">
                         <input
                           type="checkbox"
@@ -1503,8 +1467,6 @@ const IntegrationPage = () => {
                           Select All Forms
                         </label>
                       </div>
-
-                      {}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                         <div className="flex items-center space-x-3">
                           <input
@@ -1596,8 +1558,6 @@ const IntegrationPage = () => {
                           </label>
                         </div>
                       </div>
-
-                      {}
                       {!Object.values(recaptchaSettings.enabledForms).some(Boolean) && (
                         <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1607,8 +1567,6 @@ const IntegrationPage = () => {
                       )}
                     </div>
                   </div>
-
-                  {}
                   <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                     <button
                       onClick={saveRecaptchaSettings}
@@ -1630,8 +1588,6 @@ const IntegrationPage = () => {
                 </>
             </div>
           </div>
-
-          {}
           <div className="card card-padding h-fit break-inside-avoid mb-6">
             <div className="card-header">
               <div className="card-icon">
@@ -1719,7 +1675,6 @@ const IntegrationPage = () => {
                 </div>
                 {notificationSettings.emailNotificationsEnabled && (
                   <div className="space-y-6 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                    {}
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white">User Notifications</h4>
@@ -1728,7 +1683,6 @@ const IntegrationPage = () => {
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
-                        {}
                         <div className="flex items-center space-x-3 pb-2 border-b border-gray-200 dark:border-gray-600">
                           <input
                             type="checkbox"
@@ -1753,8 +1707,6 @@ const IntegrationPage = () => {
                             Select All User Notifications
                           </label>
                         </div>
-
-                        {}
                         <div className="space-y-3 pt-2">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-3">
@@ -1881,8 +1833,6 @@ const IntegrationPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         {!Object.values(notificationSettings.userNotifications).some(Boolean) && (
                           <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1892,8 +1842,6 @@ const IntegrationPage = () => {
                         )}
                       </div>
                     </div>
-
-                    {}
                     <div className="space-y-4">
                       <div>
                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Admin Notifications</h4>
@@ -1902,7 +1850,6 @@ const IntegrationPage = () => {
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
-                        {}
                         <div className="flex items-center space-x-3 pb-2 border-b border-gray-200 dark:border-gray-600">
                           <input
                             type="checkbox"
@@ -1934,8 +1881,6 @@ const IntegrationPage = () => {
                             Select All Admin Notifications
                           </label>
                         </div>
-
-                        {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-3">
@@ -2237,8 +2182,6 @@ const IntegrationPage = () => {
                             </div>
                           </div>
                         </div>
-
-                        {}
                         {!Object.values(notificationSettings.adminNotifications).some(Boolean) && (
                           <div className="pt-2 border-t border-gray-200 dark:border-gray-600">
                             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -2250,8 +2193,6 @@ const IntegrationPage = () => {
                     </div>
                   </div>
                 )}
-
-                {}
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                   <button
                     onClick={saveNotificationSettings}

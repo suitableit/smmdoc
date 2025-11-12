@@ -1,5 +1,4 @@
-// app/api/uddoktapay/route.ts
-
+﻿
 import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
 import {
@@ -10,9 +9,7 @@ import {
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// CORS middleware for handling preflight requests
 export async function OPTIONS(req: NextRequest) {
-  // Get the origin from request headers or default to NEXT_PUBLIC_APP_URL
   const requestOrigin =
     req.headers.get('origin') ||
     process.env.NEXT_PUBLIC_APP_URL ||
@@ -40,7 +37,6 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    // Authenticate the user
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -52,11 +48,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse the request body
     const body = await req.json();
     console.log('Request body:', body);
 
-    // Validate required fields
     if (!body.amount || !body.phone) {
       return NextResponse.json(
         { error: 'Amount and phone number are required' },
@@ -64,18 +58,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate a unique invoice ID and order ID
     const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const order_id = `ORD-${Date.now()}`;
 
-    // Get currency data for conversion
     const { currencies } = await fetchCurrencyData();
 
-    // Parse the amount value and currency
     const amount = parseFloat(body.amount);
-    const currency = body.currency || 'BDT'; // Default to BDT if not specified
+    const currency = body.currency || 'BDT';
 
-    // Log the amount for debugging
     console.log(
       'Parsed amount:',
       amount,
@@ -93,10 +83,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert amount to USD for storage (base currency)
     const amountUSD = convertToUSD(amount, currency, currencies);
 
-    // For payment gateway, we need BDT amount (UddoktaPay works with BDT)
     const amountBDT =
       currency === 'BDT'
         ? amount
@@ -109,30 +97,28 @@ export async function POST(req: NextRequest) {
       amountBDT: amountBDT,
     });
 
-    // Create a payment record in the database
     try {
       const payment = await db.addFund.create({
         data: {
           invoice_id,
-          amount: amountUSD, // Store USD amount as base currency
-          original_amount: amount, // Store original amount in user's currency
+          amount: amountUSD,
+          original_amount: amount,
           spent_amount: 0,
           fee: 0,
           email: session.user.email || '',
           name: session.user.name || '',
-          status: 'Processing', // Initial status
-          admin_status: 'pending', // Set admin status to pending
+          status: 'Processing',
+          admin_status: 'pending',
           order_id,
           method: body.method || 'uddoktapay',
-          sender_number: body.phone, // Store phone number
+          sender_number: body.phone,
           userId: session.user.id,
-          currency: currency, // Store original currency for reference
+          currency: currency,
         },
       });
 
       console.log('Payment record created:', payment);
 
-      // Log activity for payment creation
       try {
         const username =
           session.user.username ||
@@ -141,7 +127,7 @@ export async function POST(req: NextRequest) {
         await ActivityLogger.fundAdded(
           session.user.id,
           username,
-          amountUSD, // Log USD amount
+          amountUSD,
           'USD',
           'uddoktapay'
         );
@@ -149,16 +135,13 @@ export async function POST(req: NextRequest) {
         console.error('Failed to log payment creation activity:', error);
       }
 
-      // Get API key and app URL from environment variables
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-      // Create payment data object according to UddoktaPay documentation
-      // UddoktaPay requires BDT amount
       const paymentData = {
         full_name: session.user.name || 'User',
         email: session.user.email || 'user@example.com',
-        amount: Math.round(amountBDT).toString(), // Use BDT amount for payment gateway
+        amount: Math.round(amountBDT).toString(),
         phone: body.phone,
         metadata: {
           user_id: session.user.id,
@@ -187,9 +170,8 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        // Make API request to UddoktaPay Live with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         const response = await fetch('https://pay.smmdoc.com/api/checkout-v2', {
           method: 'POST',
@@ -214,14 +196,11 @@ export async function POST(req: NextRequest) {
           }),
         });
 
-        // Clear timeout
         clearTimeout(timeoutId);
 
-        // Get response as text first for better debugging
         const responseText = await response.text();
         console.log('Raw response:', responseText);
 
-        // Try to parse the response as JSON
         let data;
         try {
           data = JSON.parse(responseText);
@@ -253,11 +232,9 @@ export async function POST(req: NextRequest) {
       } catch (fetchError) {
         console.error('Fetch error:', fetchError);
 
-        // Clear timeout if it exists
         let timeoutId: NodeJS.Timeout | null = null;
         if (timeoutId) clearTimeout(timeoutId);
 
-        // Check if it's a timeout error
         if ((fetchError as any)?.name === 'AbortError') {
           return NextResponse.json(
             { error: 'Payment gateway timeout. Please try again.' },

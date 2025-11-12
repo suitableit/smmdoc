@@ -408,13 +408,8 @@ const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </nav>
-
-      {}
       <div className={`lg:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        {}
         <div className="absolute inset-0 bg-black/20 dark:bg-black/40" onClick={closeMenu}></div>
-
-        {}
         <div className={`relative w-[80%] h-full bg-white dark:bg-[var(--header-bg)] shadow-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Link href="/" className="flex items-center">

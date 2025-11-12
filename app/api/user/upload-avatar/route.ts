@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -47,8 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         {
@@ -60,26 +58,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create upload directory if it doesn't exist
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'avatars');
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (error) {
-      // Directory might already exist
     }
 
-    // Generate unique filename
     const timestamp = Date.now();
     const extension = file.name.split('.').pop();
     const filename = `avatar_${session.user.id}_${timestamp}.${extension}`;
     const filepath = path.join(uploadDir, filename);
 
-    // Save file
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
-    // Update user profile with new image path
     const imagePath = `/uploads/avatars/${filename}`;
     const updatedUser = await db.user.update({
       where: { id: session.user.id },
@@ -94,7 +87,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for profile picture update
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       await ActivityLogger.profileUpdated(

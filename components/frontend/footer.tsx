@@ -60,7 +60,6 @@ const Footer = () => {
 
   return (
     <footer className="bg-slate-900 relative pt-16 pb-8">
-      {}
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="w-20 h-20 bg-slate-900 border-2 border-[var(--primary)] dark:border-[var(--secondary)] rounded-full flex items-center justify-center transition-colors duration-200">
           <Image
@@ -75,7 +74,6 @@ const Footer = () => {
 
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {}
           <div className="lg:col-span-4 pr-8">
             <div className="footer_txt">
               <Link href="/">
@@ -93,8 +91,6 @@ const Footer = () => {
                 Panel with more then 3 years on the market and 21 Orders
                 processed successfully until now!
               </p>
-
-              {}
               <ul className="social_media_links flex gap-2 list-none p-0 m-0">
                 {socialLinks.map((social, index) => {
                   const IconComponent = social.icon;
@@ -113,11 +109,8 @@ const Footer = () => {
               </ul>
             </div>
           </div>
-
-          {}
           <div className="lg:col-span-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {}
               <div className="footer_link_wrap">
                 <h4 className="text-xl font-bold text-white mb-4">Company</h4>
                 <ul className="footer_menu list-none p-0 m-0">
@@ -133,8 +126,6 @@ const Footer = () => {
                   ))}
                 </ul>
               </div>
-
-              {}
               <div className="footer_link_wrap">
                 <h4 className="text-xl font-bold text-white mb-4">Support</h4>
                 <ul className="footer_menu list-none p-0 m-0">
@@ -152,8 +143,6 @@ const Footer = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="lg:col-span-3">
             <div className="footer_link_wrap">
               <h4 className="text-xl font-bold text-white mb-4">Reach Out</h4>
@@ -186,11 +175,8 @@ const Footer = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="border-t border-white/20 mt-8 pt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center">
-            {}
             <div className="order-2 lg:order-1">
               <p className="text-white text-sm text-center lg:text-left">
                 © {currentYear} All Rights Reserved by{' '}
@@ -203,7 +189,6 @@ const Footer = () => {
                 .
               </p>
             </div>
-            {}
             <div className="order-1 lg:order-2 flex flex-wrap justify-center lg:justify-end gap-4 text-sm">
               {bottomLinks.map((link, index) => (
                 <React.Fragment key={index}>

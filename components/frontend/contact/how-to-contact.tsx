@@ -152,7 +152,6 @@ const ContactForm: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        {}
         <div>
           <label
             htmlFor="name"
@@ -181,10 +180,7 @@ const ContactForm: React.FC = () => {
             </p>
           )}
         </div>
-
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {}
           <div>
             <label
               htmlFor="email"
@@ -213,8 +209,6 @@ const ContactForm: React.FC = () => {
               </p>
             )}
           </div>
-
-          {}
           <div>
             <label
               htmlFor="phone"
@@ -244,8 +238,6 @@ const ContactForm: React.FC = () => {
             )}
           </div>
         </div>
-
-        {}
         <div>
           <label
             htmlFor="subject"
@@ -274,8 +266,6 @@ const ContactForm: React.FC = () => {
             </p>
           )}
         </div>
-
-        {}
         <div>
           <label
             htmlFor="message"
@@ -299,8 +289,6 @@ const ContactForm: React.FC = () => {
             </p>
           )}
         </div>
-
-        {}
         {isEnabledForForm('contact') && recaptchaSettings && (
           <ReCAPTCHA
             siteKey={recaptchaSettings.siteKey}
@@ -324,15 +312,11 @@ const ContactForm: React.FC = () => {
               }}
             />
         )}
-
-        {}
         {errors.recaptcha && (
           <p className="text-red-500 dark:text-red-400 text-sm text-center transition-colors duration-200">
             {errors.recaptcha}
           </p>
         )}
-
-        {}
         <button
           type="submit"
           disabled={isSubmitting}
@@ -349,8 +333,6 @@ const ContactForm: React.FC = () => {
             </>
           )}
         </button>
-
-        {}
         {submitStatus === 'success' && (
           <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-400">
             <FaCheckCircle className="w-5 h-5 flex-shrink-0" />
@@ -390,10 +372,8 @@ const HowToContact: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          {}
           <div>
             <div className="space-y-6 mb-8">
-              {}
               <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
@@ -415,8 +395,6 @@ const HowToContact: React.FC = () => {
                   responses.
                 </p>
               </div>
-
-              {}
               <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-xl dark:shadow-lg dark:shadow-black/20 hover:dark:shadow-purple-500/10 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="mb-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
@@ -456,8 +434,6 @@ const HowToContact: React.FC = () => {
               </Link>
             </div>
           </div>
-
-          {}
           <div>
             <ContactForm />
           </div>

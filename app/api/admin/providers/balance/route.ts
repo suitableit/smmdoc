@@ -2,12 +2,10 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Configuration constants
-const API_TIMEOUT = 15000; // 15 seconds for balance check
+const API_TIMEOUT = 15000;
 const MAX_RETRIES = 2;
-const RETRY_DELAY = 1000; // 1 second
+const RETRY_DELAY = 1000;
 
-// Utility function to fetch with timeout
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout: number = API_TIMEOUT): Promise<Response> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -28,7 +26,6 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout:
   }
 };
 
-// Utility function to retry API calls
 const retryApiCall = async <T>(
   apiCall: () => Promise<T>,
   maxRetries: number = MAX_RETRIES,
@@ -47,7 +44,6 @@ const retryApiCall = async <T>(
         throw lastError;
       }
       
-      // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -55,36 +51,28 @@ const retryApiCall = async <T>(
   throw lastError!;
 };
 
-// Utility function to sanitize provider URLs
 function sanitizeProviderUrl(raw: string | null | undefined): string {
   try {
     let url = (raw || '').trim();
 
-    // Remove surrounding quotes or backticks
     if ((url.startsWith('`') && url.endsWith('`')) || (url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
       url = url.substring(1, url.length - 1);
     }
 
-    // Remove stray backticks and backslashes anywhere
     url = url.replace(/[`\\]/g, '');
 
-    // Remove whitespace inside the URL
     url = url.replace(/\s+/g, '');
 
-    // If protocol missing, default to https
     if (!/^https?:\/\//i.test(url) && url.length > 0) {
       url = `https://${url}`;
     }
 
-    // Normalize multiple slashes (but keep https://)
     url = url.replace(/^(https?:)\/+/i, '$1//').replace(/([^:])\/\/+/, '$1/');
 
-    // Final validation
     try {
       const u = new URL(url);
       return u.toString();
     } catch {
-      // If still invalid, try prefixing https:// as last resort
       const fallback = `https://${url.replace(/^https?:\/\//i, '')}`;
       const u2 = new URL(fallback);
       return u2.toString();
@@ -94,7 +82,6 @@ function sanitizeProviderUrl(raw: string | null | undefined): string {
   }
 }
 
-// GET - Check provider balance
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -115,7 +102,6 @@ export async function GET(req: NextRequest) {
 
     console.log('🔍 Checking balance for provider:', providerId);
 
-    // Get provider configuration
     const provider = await db.api_providers.findUnique({
       where: { id: parseInt(providerId) }
     });
@@ -136,7 +122,6 @@ export async function GET(req: NextRequest) {
 
     console.log('✅ Provider found:', provider.name);
 
-    // Use balance_endpoint if available, otherwise use main api_url (sanitized)
     const apiUrlSan = sanitizeProviderUrl(provider.api_url);
     const balanceEndpointSan = sanitizeProviderUrl(provider.balance_endpoint || '');
     const balanceUrl = balanceEndpointSan || apiUrlSan;
@@ -147,9 +132,7 @@ export async function GET(req: NextRequest) {
 
     let balanceData = null;
 
-    // Use the provider's configured HTTP method
     if (provider.http_method === 'POST') {
-      // Try POST method first (standard SMM panel format)
       try {
         console.log(`🌐 Checking balance using POST method with standard SMM panel format`);
         
@@ -169,11 +152,9 @@ export async function GET(req: NextRequest) {
         console.log(`📄 POST Response (${response.status}):`, responseText.substring(0, 200));
         
         try {
-          // Check if response is HTML (common issue with ATTPanel)
           if (responseText.trim().startsWith('<!DOCTYPE html') || responseText.trim().startsWith('<html')) {
             console.error(`❌ Received HTML response instead of JSON from ${provider.name}. This usually means the API endpoint is incorrect.`);
             
-            // For ATTPanel, try with HTTPS instead of HTTP
             if (provider.name === 'ATTPanel' && balanceUrl.startsWith('http://')) {
               const httpsUrl = balanceUrl.replace('http://', 'https://');
               console.log(`🔄 Trying HTTPS URL for ATTPanel: ${httpsUrl}`);
@@ -219,7 +200,6 @@ export async function GET(req: NextRequest) {
     } catch (error) {
       console.error(`❌ POST balance check failed for sanitized URL ${balanceUrl}:`, error);
       
-      // Provide more specific error information
       if (error instanceof Error) {
         if (error.message.includes('fetch failed') || error.message.includes('ENOTFOUND')) {
           console.error(`🌐 Network error: Unable to connect to ${balanceUrl}. Please check if the API URL is correct and the server is accessible.`);
@@ -232,7 +212,6 @@ export async function GET(req: NextRequest) {
     }
 
     } else if (provider.http_method === 'GET') {
-      // Use GET method with query parameters
       try {
         const balanceAction = provider.balance_action || 'balance';
         const getBalanceUrl = `${balanceUrl}?key=${encodeURIComponent(apiKey)}&action=${balanceAction}`;
@@ -269,7 +248,6 @@ export async function GET(req: NextRequest) {
       } catch (error) {
         console.error(`❌ GET balance check failed for ${balanceUrl}:`, error);
         
-        // Provide more specific error information
         if (error instanceof Error) {
           if (error.message.includes('fetch failed') || error.message.includes('ENOTFOUND')) {
             console.error(`🌐 Network error: Unable to connect to ${balanceUrl}. Please check if the API URL is correct and the server is accessible.`);
@@ -281,10 +259,8 @@ export async function GET(req: NextRequest) {
         }
       }
     } else {
-      // Fallback: try both methods if no specific method is configured
       console.log(`⚠️ No HTTP method configured, trying both POST and GET methods`);
       
-      // Try POST first
       try {
         console.log(`🌐 Trying POST method as fallback`);
         
@@ -322,7 +298,6 @@ export async function GET(req: NextRequest) {
         console.error(`❌ POST balance check failed for ${balanceUrl}:`, error);
       }
 
-      // If POST failed, try GET method
       if (!balanceData) {
         try {
           const balanceAction = provider.balance_action || 'balance';
@@ -392,7 +367,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Format balance response according to standard SMM panel format
     const formattedBalance = {
       balance: parseFloat(balanceData.balance || '0'),
       currency: balanceData.currency || 'USD',
@@ -401,7 +375,6 @@ export async function GET(req: NextRequest) {
       lastChecked: new Date().toISOString()
     };
 
-    // Store the balance in database for persistence
     try {
       await db.api_providers.update({
         where: { id: provider.id },
@@ -413,7 +386,6 @@ export async function GET(req: NextRequest) {
       console.log(`💾 Balance cached in database for ${provider.name}: $${formattedBalance.balance}`);
     } catch (dbError) {
       console.error(`❌ Failed to cache balance in database for ${provider.name}:`, dbError);
-      // Don't fail the request if database update fails
     }
 
     console.log(`✅ Balance check completed for ${provider.name}:`, formattedBalance);

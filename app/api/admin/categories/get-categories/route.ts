@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -6,13 +6,13 @@ export async function GET() {
     const result = await db.category.findMany({
       orderBy: [
         {
-          position: 'asc', // 'top' comes before 'bottom' (top = 0, bottom = 1 in enum order)
+          position: 'asc',
         },
         {
-          updatedAt: 'desc', // Within same position, most recently updated first
+          updatedAt: 'desc',
         },
         {
-          createdAt: 'desc', // Then by creation date
+          createdAt: 'desc',
         },
       ],
       include: {

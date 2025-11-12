@@ -8,7 +8,6 @@ export async function GET() {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -16,7 +15,6 @@ export async function GET() {
       );
     }
 
-    // Get email settings from database
     const emailSettings = await prisma.emailSettings.findFirst();
     
     return NextResponse.json({
@@ -44,7 +42,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -55,7 +52,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, smtp_username, smtp_password, smtp_host, smtp_port, smtp_protocol } = body;
 
-    // Validate required fields
     if (!email || !smtp_username || !smtp_password || !smtp_host || !smtp_port) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -63,7 +59,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update or create email settings
     const emailSettings = await prisma.emailSettings.upsert({
       where: { id: 1 },
       update: {

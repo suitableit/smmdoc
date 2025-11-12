@@ -19,10 +19,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate a secure API key
     const apiKey = `smm_${crypto.randomBytes(32).toString('hex')}`;
 
-    // Update user with new API key
     const updatedUser = await db.user.update({
       where: { id: session.user.id },
       data: { 
@@ -36,7 +34,6 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Log activity for API key generation
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       const ipAddress = getClientIP(req);

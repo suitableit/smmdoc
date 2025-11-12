@@ -1,5 +1,3 @@
-// Shared Email Layout Components
-// These templates provide consistent header and footer across all email types
 
 export interface EmailLayoutData {
   title: string;
@@ -8,9 +6,7 @@ export interface EmailLayoutData {
   userEmail?: string;
 }
 
-// Header template with primary color gradient
 export const emailHeader = (data: EmailLayoutData) => {
-  // Use CSS variables for primary color gradient
   const gradient = 'linear-gradient(135deg, var(--primary, #5f1de8) 0%, var(--secondary, #b131f8) 100%)';
   
   return `
@@ -36,7 +32,6 @@ export const emailHeader = (data: EmailLayoutData) => {
   `;
 };
 
-// Footer template with consistent styling
 export const emailFooter = (data: EmailLayoutData) => {
   const defaultMessage = "This is an automated message. Please do not reply to this email.";
   const footerMessage = data.footerMessage || defaultMessage;
@@ -62,21 +57,16 @@ export const emailFooter = (data: EmailLayoutData) => {
   `;
 };
 
-// Complete email wrapper function
 export const createEmailTemplate = (layoutData: EmailLayoutData, content: string) => {
   return emailHeader(layoutData) + content + emailFooter(layoutData);
 };
 
-// Common content sections
 export const emailContentSections = {
-  // Standard greeting
   greeting: (userName: string) => `
     <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px;">Dear ${userName},</h2>
   `,
   
-  // Call to action buttons - all using purple gradient for consistency
   actionButtons: (buttons: Array<{text: string, url: string}>) => {
-    // Use primary color gradient for all buttons
     const primaryStyle = 'background: linear-gradient(135deg, var(--primary, #5f1de8) 0%, var(--secondary, #b131f8) 100%); box-shadow: 0 4px 12px rgba(95, 29, 232, 0.3);';
     
     const buttonHtml = buttons.map(button => {
@@ -95,7 +85,6 @@ export const emailContentSections = {
     `;
   },
 
-  // CTA Button - single button with primary styling
   ctaButton: (text: string, url: string) => {
     const primaryStyle = 'background: linear-gradient(135deg, var(--primary, #5f1de8) 0%, var(--secondary, #b131f8) 100%); box-shadow: 0 4px 12px rgba(95, 29, 232, 0.3);';
     
@@ -109,7 +98,6 @@ export const emailContentSections = {
     `;
   },
   
-  // Information table
   infoTable: (rows: Array<{label: string, value: string, valueColor?: string}>) => {
     const tableRows = rows.map(row => `
       <tr>
@@ -127,9 +115,7 @@ export const emailContentSections = {
     `;
   },
   
-  // Alert boxes with primary color styling
   alertBox: (content: string) => {
-    // Use primary color for all alert boxes
     const primaryStyle = 'background-color: rgba(95, 29, 232, 0.1); border-left: 4px solid var(--primary, #5f1de8);';
     
     return `

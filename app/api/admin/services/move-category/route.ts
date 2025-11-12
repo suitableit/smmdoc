@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(request: NextRequest) {
   try {
-    // Check authentication
     const session = await auth();
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
@@ -31,7 +30,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Convert string IDs to integers
     const fromCatId = parseInt(fromCategoryId);
     const toCatId = parseInt(toCategoryId);
 
@@ -46,7 +44,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Check if both categories exist
     const [fromCategory, toCategory] = await Promise.all([
       db.category.findUnique({ where: { id: fromCatId } }),
       db.category.findUnique({ where: { id: toCatId } })
@@ -74,7 +71,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Move all services from source category to target category
     const updateResult = await db.service.updateMany({
       where: { categoryId: fromCatId },
       data: { categoryId: toCatId }

@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/blogs/id/[id] - Get single blog post by ID
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -47,7 +46,6 @@ export async function GET(
       );
     }
 
-    // Check if post is published or user is admin
     const session = await auth();
     const isAdmin = session?.user?.role === 'admin';
     
@@ -79,7 +77,6 @@ export async function GET(
   }
 }
 
-// PUT /api/blogs/id/[id] - Update blog post by ID (Admin only)
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -127,7 +124,6 @@ export async function PUT(
       seoKeywords
     } = body;
 
-    // Check if post exists
     const existingPost = await db.blogPost.findUnique({
       where: { id: blogId }
     });
@@ -143,7 +139,6 @@ export async function PUT(
       );
     }
 
-    // If slug is being changed, check if new slug already exists
     if (slug && slug !== existingPost.slug) {
       const slugExists = await db.blogPost.findUnique({
         where: { slug }
@@ -161,7 +156,6 @@ export async function PUT(
       }
     }
 
-    // Calculate reading time if content is provided
     let readingTime = existingPost.readingTime;
     if (content) {
       const wordsPerMinute = 200;
@@ -169,7 +163,6 @@ export async function PUT(
       readingTime = Math.ceil(wordCount / wordsPerMinute);
     }
 
-    // Update blog post
     const updatedPost = await db.blogPost.update({
       where: { id: blogId },
       data: {

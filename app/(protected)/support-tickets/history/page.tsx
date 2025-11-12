@@ -454,7 +454,6 @@ export default function TicketsHistory() {
   return (
     <TicketSystemGuard>
       <div className="page-container">
-        {}
         {toastMessage && (
           <Toast
             message={toastMessage.message}
@@ -465,7 +464,6 @@ export default function TicketsHistory() {
 
         <div className="page-content">
         <div className="md:card md:card-padding">
-          {}
           <div className="card mb-6" style={{ padding: '8px' }}>
           <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
             <button
@@ -515,10 +513,7 @@ export default function TicketsHistory() {
             </button>
           </div>
         </div>
-
-        {}
         <div className="card card-padding">
-          {}
           <div className="mb-6">
             <div className="relative w-full" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
@@ -541,8 +536,6 @@ export default function TicketsHistory() {
                 autoComplete="off"
                 style={{ width: '100%', minWidth: '0' }}
               />
-
-              {}
               {showDropdown && searchResults.length > 0 && (
                 <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                   {searchResults.map((ticket) => (
@@ -590,8 +583,6 @@ export default function TicketsHistory() {
               )}
             </div>
           </div>
-
-          {}
           <div className="mb-6">
             <div className="flex flex-wrap gap-3">
               {isLoading ? (
@@ -627,8 +618,6 @@ export default function TicketsHistory() {
               )}
             </div>
           </div>
-
-          {}
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full border-collapse">
               <thead>
@@ -799,8 +788,6 @@ export default function TicketsHistory() {
               </tbody>
             </table>
           </div>
-
-          {}
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
@@ -820,8 +807,6 @@ export default function TicketsHistory() {
                 >
                   Previous
                 </button>
-
-                {}
                 <div className="flex gap-1">
                   {Array.from(
                     { length: Math.min(5, pagination.totalPages) },

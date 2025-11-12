@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Check if test payment already exists
     const existingPayment = await db.addFund.findUnique({
       where: { invoice_id }
     });
@@ -36,7 +34,6 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Create a test user if needed (for testing purposes)
     let testUser = await db.user.findFirst({
       where: { email: 'test@example.com' }
     });
@@ -46,14 +43,13 @@ export async function POST(req: NextRequest) {
         data: {
           name: 'Test User',
           email: 'test@example.com',
-          password: 'test123', // In real app, this should be hashed
+          password: 'test123',
           role: 'user',
           emailVerified: new Date(),
         }
       });
     }
     
-    // Create test payment record
     const testPayment = await db.addFund.create({
       data: {
         invoice_id,

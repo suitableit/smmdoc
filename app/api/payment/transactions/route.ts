@@ -4,13 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    // Authenticate the user
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get the user's transactions from the database
     try {
       const transactions = await db.addFund.findMany({
         where: {
@@ -37,18 +35,15 @@ export async function GET(req: NextRequest) {
         },
       });
   
-      // Check if transactions is an array before returning
       if (!Array.isArray(transactions)) {
         console.error("Transactions is not an array:", transactions);
         return NextResponse.json({ error: "Invalid data format" }, { status: 500 });
       }
   
-      // Return the transactions as an array
       return NextResponse.json(transactions);
     } catch (dbError) {
       console.error("Database error fetching transactions:", dbError);
       
-      // Return empty array with error to avoid UI crash
       return NextResponse.json([], { status: 200 });
     }
   } catch (error) {

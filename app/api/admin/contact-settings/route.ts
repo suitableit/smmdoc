@@ -11,10 +11,8 @@ export async function GET() {
 
     console.log('🔍 GET Request - Starting database query...');
     
-    // Get contact settings
     const settings = await contactDB.getContactSettings();
 
-    // Get contact categories
     const categories = await contactDB.getContactCategories();
 
     const formattedSettings = {
@@ -67,7 +65,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Upsert contact settings
     const settingsData = {
       contactSystemEnabled: contactSettings.contactSystemEnabled ?? true,
       maxPendingContacts: contactSettings.maxPendingContacts
@@ -76,7 +73,6 @@ export async function POST(request: NextRequest) {
     
     await contactDB.upsertContactSettings(settingsData);
 
-    // Handle categories using contactDB
     console.log('📋 Processing categories:', contactSettings.categories);
 
     const existingCategories = await contactDB.getContactCategories();
@@ -86,7 +82,6 @@ export async function POST(request: NextRequest) {
 
     console.log('📂 Existing categories:', existingCategories);
 
-    // Update or create categories
     for (const category of contactSettings.categories) {
       console.log('🔄 Processing category:', category);
 
@@ -102,7 +97,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Delete removed categories
     const newCategoryIds = contactSettings.categories
       .filter((cat: any) => cat.id)
       .map((cat: any) => cat.id);

@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Get custom codes settings (public endpoint, no auth required)
     const customCodesSettings = await db.customCodesSettings.findFirst({
       select: {
         headerCodes: true,

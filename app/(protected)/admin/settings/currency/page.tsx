@@ -622,7 +622,6 @@ const PaymentCurrencyPage = () => {
 
   return (
     <div className="page-container">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -635,7 +634,6 @@ const PaymentCurrencyPage = () => {
 
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">
@@ -645,7 +643,6 @@ const PaymentCurrencyPage = () => {
             </div>
 
             <div className="space-y-4">
-              {}
               <div className="flex justify-between items-center">
                 <div className="flex flex-wrap-reverse md:flex-nowrap gap-2">
                   <button
@@ -683,11 +680,8 @@ const PaymentCurrencyPage = () => {
                 </div>
 
               </div>
-
-              {}
               <div className="overflow-x-auto">
                 <div className="min-w-[600px]">
-                  {}
                   <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">
                     <div className="grid grid-cols-12 gap-3 flex-1">
                       <span className="text-left col-span-2">Status</span>
@@ -698,8 +692,6 @@ const PaymentCurrencyPage = () => {
                     </div>
                     <div className="w-20 text-center">Action</div>
                   </div>
-
-                  {}
                   <div className="space-y-2 max-h-96 overflow-y-auto mt-2">
                     {currencies.map((currency) => (
                       <CurrencyItem
@@ -713,8 +705,6 @@ const PaymentCurrencyPage = () => {
                   </div>
                 </div>
               </div>
-
-              {}
               <div className="border-t pt-4">
                 <h4 className="text-sm font-medium mb-3">Add New Currency</h4>
                 <div className="grid grid-cols-2 gap-3">
@@ -790,8 +780,6 @@ const PaymentCurrencyPage = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding h-fit">
             <div className="card-header">
               <div className="card-icon">

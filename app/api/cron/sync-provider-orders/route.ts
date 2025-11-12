@@ -1,14 +1,12 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
-// GET /api/cron/sync-provider-orders - Sync provider order statuses
 export async function GET(req: NextRequest) {
   try {
     console.log('Starting provider order sync...');
 
-    // Get all pending provider orders
     const pendingOrders = await db.newOrder.findMany({
       where: {
         providerOrderId: { not: null },
@@ -23,7 +21,7 @@ export async function GET(req: NextRequest) {
           }
         }
       },
-      take: 50 // Limit to 50 orders per sync to avoid timeout
+      take: 50
     });
 
     console.log(`Found ${pendingOrders.length} pending provider orders to sync`);
@@ -39,12 +37,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Group orders by provider to minimize API calls
     const ordersByProvider = new Map();
     
     for (const order of pendingOrders) {
-      // Extract provider ID from service or order data
-      // This assumes we have a way to identify which provider an order belongs to
       const providerId = await getProviderIdForOrder(order);
       
       if (providerId) {
@@ -58,7 +53,6 @@ export async function GET(req: NextRequest) {
     let totalSynced = 0;
     const syncResults = [];
 
-    // Sync orders for each provider
     for (const [providerId, orders] of ordersByProvider) {
       try {
         const provider = await db.api_providers.findUnique({
@@ -79,7 +73,6 @@ export async function GET(req: NextRequest) {
 
         console.log(`Syncing ${orders.length} orders for provider: ${provider.name}`);
 
-        // Sync each order with the provider
         for (const order of orders) {
           try {
             const syncResult = await syncSingleOrder(order, provider);
@@ -130,10 +123,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Helper function to get provider ID for an order
 async function getProviderIdForOrder(order: any): Promise<string | null> {
   try {
-    // First, try to get provider from service
     const service = await db.service.findUnique({
       where: { id: order.serviceId },
       select: { providerId: true }
@@ -143,7 +134,6 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
       return service.providerId.toString();
     }
 
-    // If no provider in service, try to get from provider order logs
     const lastLog = await db.providerOrderLog.findFirst({
       where: { orderId: order.id },
       orderBy: { createdAt: 'desc' },
@@ -157,13 +147,10 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
   }
 }
 
-// Helper function to sync a single order with provider
 async function syncSingleOrder(order: any, provider: any) {
   try {
-    // Create API specification from provider configuration
     const apiSpec = createApiSpecFromProvider(provider);
     
-    // Create API request builder with provider's API specification
     const apiBuilder = new ApiRequestBuilder(
       apiSpec,
       provider.api_url,
@@ -171,12 +158,10 @@ async function syncSingleOrder(order: any, provider: any) {
       (provider as any).http_method || (provider as any).httpMethod || 'POST'
     );
 
-    // Build status check request using API specification
     const statusRequest = apiBuilder.buildOrderStatusRequest(order.providerOrderId);
 
     console.log(`Checking status for order ${order.id} (provider order: ${order.providerOrderId})`);
 
-    // Make API call to provider using the built request
     const response = await axios({
       method: statusRequest.method,
       url: statusRequest.url,
@@ -191,34 +176,28 @@ async function syncSingleOrder(order: any, provider: any) {
       throw new Error('Empty response from provider');
     }
 
-    // Parse response using API specification
     const responseParser = new ApiResponseParser(apiSpec);
     
     const parsedStatus = responseParser.parseOrderStatusResponse(responseData);
     
-    // Map provider status to our system status
     const mappedStatus = mapProviderStatus(parsedStatus.status);
     const currentStatus = order.providerStatus;
 
-    // Only update if status has changed
     if (mappedStatus !== currentStatus) {
       console.log(`Status changed for order ${order.id}: ${currentStatus} -> ${mappedStatus}`);
 
-      // Update order in database
       await db.newOrder.update({
         where: { id: order.id },
         data: {
           providerStatus: mappedStatus,
-          status: mappedStatus, // Also update main status
+          status: mappedStatus,
           apiResponse: JSON.stringify(responseData),
           lastSyncAt: new Date(),
-          // Update additional fields based on parsed response
           ...(parsedStatus.startCount && { startCount: parsedStatus.startCount }),
           ...(parsedStatus.remains && { remains: parsedStatus.remains })
         }
       });
 
-      // Log the status update
       await db.providerOrderLog.create({
         data: {
           orderId: order.id,
@@ -237,7 +216,6 @@ async function syncSingleOrder(order: any, provider: any) {
         newStatus: mappedStatus
       };
     } else {
-      // Status unchanged, just update sync time
       await db.newOrder.update({
         where: { id: order.id },
         data: {
@@ -256,7 +234,6 @@ async function syncSingleOrder(order: any, provider: any) {
   } catch (error) {
     console.error(`Error syncing order ${order.id}:`, error);
 
-    // Log the failed sync attempt
     await db.providerOrderLog.create({
       data: {
         orderId: order.id,
@@ -271,7 +248,6 @@ async function syncSingleOrder(order: any, provider: any) {
   }
 }
 
-// Helper function to map provider status to our system status
 function mapProviderStatus(providerStatus: string): string {
   const statusMap: { [key: string]: string } = {
     'pending': 'pending',
@@ -287,7 +263,6 @@ function mapProviderStatus(providerStatus: string): string {
   return statusMap[providerStatus?.toLowerCase()] || 'pending';
 }
 
-// POST endpoint for manual sync trigger
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -300,7 +275,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get specific order
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
       include: {
@@ -328,7 +302,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get provider for this order
     const providerId = await getProviderIdForOrder(order);
     if (!providerId) {
       return NextResponse.json(
@@ -355,7 +328,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Sync the specific order
     const syncResult = await syncSingleOrder(order, provider);
 
     return NextResponse.json(

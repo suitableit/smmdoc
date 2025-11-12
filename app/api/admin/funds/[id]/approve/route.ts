@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { emailTemplates } from '@/lib/email-templates';
 import { sendMail } from '@/lib/nodemailer';
@@ -11,7 +11,6 @@ export async function POST(
   try {
     const session = await auth();
 
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -22,7 +21,6 @@ export async function POST(
     const { id } = await params;
     const transactionId = parseInt(id);
 
-    // Get request body
     const body = await req.json();
     const { modifiedTransactionId, transactionType } = body;
 
@@ -33,7 +31,6 @@ export async function POST(
       );
     }
 
-    // For deposit transactions, require modified transaction ID
     if (transactionType === 'deposit' && !modifiedTransactionId?.trim()) {
       return NextResponse.json(
         { error: 'Transaction ID is required for deposit approval' },
@@ -41,7 +38,6 @@ export async function POST(
       );
     }
 
-    // Find the transaction
     const transaction = await db.addFund.findUnique({
       where: { id: transactionId },
       include: { user: true }
@@ -54,7 +50,6 @@ export async function POST(
       );
     }
 
-    // Check if transaction is in pending status
     if (transaction.admin_status !== 'Pending' && transaction.admin_status !== 'pending') {
       return NextResponse.json(
         { error: 'Transaction is not in pending status' },
@@ -63,15 +58,12 @@ export async function POST(
     }
     
     try {
-      // Use Prisma transaction to ensure both operations succeed or fail together
       await db.$transaction(async (prisma) => {
-        // Update the transaction status and transaction ID if provided
         const updateData: any = {
           status: "Success",
           admin_status: "Success",
         };
 
-        // If modified transaction ID is provided, update it
         if (modifiedTransactionId?.trim()) {
           updateData.transaction_id = modifiedTransactionId.trim();
         }
@@ -81,7 +73,6 @@ export async function POST(
           data: updateData
         });
 
-        // Update user balance
         const user = await prisma.user.update({
           where: { id: transaction.userId },
           data: {
@@ -93,7 +84,6 @@ export async function POST(
         console.log(`User ${transaction.userId} balance updated. New balance: ${user.balance}`);
       });
 
-      // Send approval email to user
       if (transaction.user.email) {
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',

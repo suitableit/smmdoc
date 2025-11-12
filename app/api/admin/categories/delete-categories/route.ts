@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+﻿import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(request: NextRequest) {
@@ -20,7 +20,6 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Parse and validate the ID
     const categoryId = parseInt(id);
     if (isNaN(categoryId)) {
       console.log('Category ID is not a valid number:', id);
@@ -36,7 +35,6 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Parsed category ID:', categoryId);
 
-    // Get category before deletion for response
     const category = await db.category.findUnique({
       where: {
         id: categoryId,
@@ -65,7 +63,6 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Found category to delete:', category.category_name);
 
-    // Delete the category
     await db.category.delete({
       where: {
         id: categoryId,
@@ -78,7 +75,7 @@ export async function DELETE(request: NextRequest) {
       {
         error: null,
         message: 'Category deleted successfully',
-        data: category, // Return the deleted category for UI updates
+        data: category,
         success: true,
       },
       { status: 200 }

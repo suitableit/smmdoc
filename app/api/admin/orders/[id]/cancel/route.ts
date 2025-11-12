@@ -1,8 +1,7 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// POST /api/admin/orders/:id/cancel - Cancel an order
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -10,7 +9,6 @@ export async function POST(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -37,7 +35,6 @@ export async function POST(
       );
     }
     
-    // Get the order to be cancelled
     const order = await db.newOrder.findUnique({
       where: { id: Number(id) },
       include: {
@@ -78,7 +75,6 @@ export async function POST(
       );
     }
     
-    // Check if order can be cancelled
     const cancellableStatuses = ['pending', 'processing', 'in_progress', 'partial'];
     if (!cancellableStatuses.includes(order.status)) {
       return NextResponse.json(
@@ -91,7 +87,6 @@ export async function POST(
       );
     }
     
-    // Calculate refund amount
     let refundAmount: number;
     const orderPrice = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
     
@@ -100,7 +95,6 @@ export async function POST(
         refundAmount = orderPrice;
         break;
       case 'partial':
-        // Refund based on remaining quantity
         const deliveredPercentage = order.qty > 0 ? (order.qty - order.remains) / order.qty : 0;
         refundAmount = orderPrice * (order.remains / order.qty);
         break;
@@ -141,9 +135,7 @@ export async function POST(
         );
     }
     
-    // Use transaction to ensure data consistency
     const result = await db.$transaction(async (prisma) => {
-      // Update order status to cancelled
       const cancelledOrder = await prisma.newOrder.update({
         where: { id: Number(id) },
         data: {
@@ -176,10 +168,8 @@ export async function POST(
         }
       });
       
-      // Process refund if amount > 0
       let updatedUser = null;
       if (refundAmount > 0) {
-        // Calculate how much was actually spent (for total_spent adjustment)
         const spentAmount = order.status === 'pending' ? 0 : orderPrice;
         const spentAdjustment = Math.min(spentAmount, refundAmount);
         
@@ -204,7 +194,6 @@ export async function POST(
       return { cancelledOrder, updatedUser, refundAmount };
     });
     
-    // Log the cancellation
     console.log(`Admin ${session.user.email} cancelled order ${id}`, {
       orderId: id,
       userId: order.userId,
@@ -253,7 +242,6 @@ export async function POST(
   }
 }
 
-// GET /api/admin/orders/:id/cancel - Get cancellation eligibility and refund estimate
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -261,7 +249,6 @@ export async function GET(
   try {
     const session = await auth();
     
-    // Check if user is authenticated and is an admin
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json(
         { 
@@ -286,7 +273,6 @@ export async function GET(
       );
     }
     
-    // Get order details
     const order = await db.newOrder.findUnique({
       where: { id: Number(id) },
       include: {
@@ -318,11 +304,9 @@ export async function GET(
       );
     }
     
-    // Check cancellation eligibility
     const cancellableStatuses = ['pending', 'processing', 'in_progress', 'partial'];
     const isCancellable = cancellableStatuses.includes(order.status);
     
-    // Calculate refund estimates
     const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.bdtPrice;
     const deliveredQuantity = order.qty - order.remains;
     const deliveredPercentage = order.qty > 0 ? deliveredQuantity / order.qty : 0;

@@ -212,8 +212,6 @@ export default function SignInForm() {
                 </p>
               )}
             </div>
-
-            {}
             {isEnabledForForm('signIn') && recaptchaSettings && (
               <ReCAPTCHA
                 siteKey={recaptchaSettings.siteKey}
@@ -245,7 +243,6 @@ export default function SignInForm() {
                   Remember me
                 </label>
               </div>
-              {}
               {(!settingsLoading && userSettings?.resetPasswordEnabled !== false) && (
                 <Link
                   href="/reset-password"
@@ -337,8 +334,6 @@ export default function SignInForm() {
           </button>
         </div>
       </form>
-
-      {}
       {!showTwoFactor && (
         <div className="mt-4">
           <div className="relative mb-4">

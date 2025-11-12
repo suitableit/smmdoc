@@ -1,4 +1,3 @@
-// app/api/user/services/servicefav/route.ts
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -13,7 +12,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if the service exists
     const serviceExists = await db.service.findUnique({
       where: { id: serviceId },
     });
@@ -25,7 +23,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if the user exists
     const userExists = await db.user.findUnique({
       where: { id: userId },
     });
@@ -37,7 +34,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if the service is already favorited
     const existingFavorite = await db.favoriteService.findUnique({
       where: {
         userId_serviceId: {
@@ -55,7 +51,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Add to favorites
       await db.favoriteService.create({
         data: {
           userId,
@@ -75,7 +70,6 @@ export async function POST(req: Request) {
         );
       }
 
-      // Remove from favorites
       await db.favoriteService.delete({
         where: {
           userId_serviceId: {

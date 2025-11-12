@@ -199,7 +199,6 @@ const DashboardPage = () => {
 
   return (
     <div className="px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]">
-      {}
       <div className="toast-container">
         {toast && (
           <Toast
@@ -211,9 +210,7 @@ const DashboardPage = () => {
       </div>
 
       <div className="page-content">
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -231,8 +228,6 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -250,8 +245,6 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -270,10 +263,7 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -300,8 +290,6 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -319,8 +307,6 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="card card-padding">
             <div className="card-content">
               <div className="card-icon">
@@ -341,9 +327,7 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {}
           <div className="lg:col-span-2 space-y-6">
-            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -353,7 +337,6 @@ const DashboardPage = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                {}
                 <Link
                   href="/my-orders?status=completed"
                   className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200 cursor-pointer"
@@ -374,8 +357,6 @@ const DashboardPage = () => {
                     <FaCheckCircle className="text-green-500 w-5 h-5" />
                   </div>
                 </Link>
-
-                {}
                 <Link
                   href="/my-orders?status=processing"
                   className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200 cursor-pointer"
@@ -396,8 +377,6 @@ const DashboardPage = () => {
                     <FaClock className="text-blue-500 w-5 h-5" />
                   </div>
                 </Link>
-
-                {}
                 <Link
                   href="/my-orders?status=pending"
                   className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors duration-200 cursor-pointer"
@@ -418,8 +397,6 @@ const DashboardPage = () => {
                     <FaExclamationTriangle className="text-yellow-500 w-5 h-5" />
                   </div>
                 </Link>
-
-                {}
                 <Link
                   href="/my-orders?status=cancelled"
                   className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200 cursor-pointer"
@@ -442,8 +419,6 @@ const DashboardPage = () => {
                 </Link>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -640,10 +615,7 @@ const DashboardPage = () => {
               )}
             </div>
           </div>
-
-          {}
           <div className="space-y-6">
-            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">
@@ -694,8 +666,6 @@ const DashboardPage = () => {
                 </Link>
               </div>
             </div>
-
-            {}
             <div className="card card-padding">
               <div className="card-header mb-4">
                 <div className="card-icon">

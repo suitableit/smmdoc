@@ -1,9 +1,8 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// DELETE /api/admin/users/admins/[id] - Delete admin user
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,7 +35,6 @@ export async function DELETE(
       );
     }
 
-    // Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId }
     });
@@ -52,7 +50,6 @@ export async function DELETE(
       );
     }
 
-    // Only allow deletion of admin/moderator users
     if (!['admin', 'moderator'].includes(existingUser.role)) {
       return NextResponse.json(
         {
@@ -64,7 +61,6 @@ export async function DELETE(
       );
     }
 
-    // Prevent self-deletion
     if (existingUser.id === parseInt(session.user.id)) {
       return NextResponse.json(
         {
@@ -76,7 +72,6 @@ export async function DELETE(
       );
     }
 
-    // Log the activity before deletion
     try {
       const adminUsername = session.user.username || session.user.email?.split('@')[0] || `admin${session.user.id}`;
       const targetUsername = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
@@ -93,9 +88,7 @@ export async function DELETE(
       console.error('Failed to log admin deletion activity:', logError);
     }
 
-    // Soft delete approach - mark user as deleted first, then cleanup
     try {
-      // First, mark user as deleted to prevent login
       await db.user.update({
         where: { id: userId },
         data: {
@@ -103,7 +96,6 @@ export async function DELETE(
           email: `deleted_${userId}_${Date.now()}@deleted.com`,
           name: `Deleted Admin ${userId}`,
           username: `deleted_${userId}`,
-          // Clear sensitive data
           password: null,
           emailVerified: null,
           image: null,
@@ -111,12 +103,10 @@ export async function DELETE(
         }
       });
 
-      // Then delete sessions to log them out immediately
       await db.session.deleteMany({
         where: { userId: userId }
       });
 
-      // Delete OAuth accounts (optional cleanup)
       try {
         await db.account.deleteMany({
           where: { userId: userId }

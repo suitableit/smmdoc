@@ -12,7 +12,6 @@ export async function GET(req: Request) {
     );
   }
 
-  // Convert string to number
   const userId = parseInt(userIdParam);
   if (isNaN(userId)) {
     return NextResponse.json(

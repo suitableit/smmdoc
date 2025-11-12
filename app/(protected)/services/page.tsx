@@ -502,7 +502,6 @@ const UserServiceTable: React.FC = () => {
 
   return (
     <div className="page-container">
-      {}
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -512,12 +511,9 @@ const UserServiceTable: React.FC = () => {
       )}
 
       <div className="page-content">
-        {}
         <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-4 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
-          {}
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              {}
               <div className="flex items-center gap-4 h-12">
                 <div className="relative">
                   <select
@@ -542,8 +538,6 @@ const UserServiceTable: React.FC = () => {
                   </select>
                 </div>
               </div>
-
-              {}
               <div className="w-full md:w-100 h-12 items-center">
                 <div className="form-group mb-0 w-full">
                   <div className="relative flex items-center h-12">
@@ -568,10 +562,7 @@ const UserServiceTable: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {}
           <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-            {}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
@@ -663,7 +654,6 @@ const UserServiceTable: React.FC = () => {
                   ) : Object.keys(groupedServices).length > 0 ? (
                     Object.entries(groupedServices).map(([categoryName, categoryServices]) => (
                       <React.Fragment key={categoryName}>
-                        {}
                         <tr>
                           <td colSpan={10} className="p-0">
                             <div
@@ -685,8 +675,6 @@ const UserServiceTable: React.FC = () => {
                             </div>
                           </td>
                         </tr>
-
-                        {}
                         {expandedCategories[categoryName] && categoryServices.length > 0 && (
                             categoryServices.map((service) => (
                               <tr
@@ -758,8 +746,6 @@ const UserServiceTable: React.FC = () => {
                                         </>
                                       )}
                                     </div>
-
-                                    {}
                                     {service.refill && (
                                       <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
                                         {service.refillDays && (
@@ -830,8 +816,6 @@ const UserServiceTable: React.FC = () => {
                 </table>
               </div>
             </div>
-
-          {}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">
@@ -857,12 +841,8 @@ const UserServiceTable: React.FC = () => {
               </div>
             </div>
           )}
-
-          {}
         </div>
       </div>
-
-      {}
       {isOpen && selected && (
         <ServiceViewModal
           isOpen={isOpen}

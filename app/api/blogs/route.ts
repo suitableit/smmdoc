@@ -1,31 +1,26 @@
-import { auth } from '@/auth';
+﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
-// GET /api/blogs - Get blog posts with pagination (admin gets all, public gets published only)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search');
-    const status = searchParams.get('status'); // For admin filtering
+    const status = searchParams.get('status');
     
     const skip = (page - 1) * limit;
     
-    // Check if user is admin
     const session = await auth();
     const isAdmin = session?.user?.role === 'admin';
     
-    // Build where clause for filtering
     const whereClause: any = {};
     
-    // For non-admin users, only show published posts
     if (!isAdmin) {
       whereClause.status = 'published';
       whereClause.publishedAt = { lte: new Date() };
     } else if (status && status !== 'all') {
-      // Admin can filter by specific status
       whereClause.status = status;
     }
     
@@ -37,7 +32,6 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Get blog posts with pagination
     const [posts, totalCount] = await Promise.all([
       db.blogPost.findMany({
         where: whereClause,
@@ -91,7 +85,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/blogs - Create new blog post (Admin only)
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -122,7 +115,6 @@ export async function POST(req: NextRequest) {
       seoKeywords
     } = body;
 
-    // Validate required fields
     if (!title || !content) {
       return NextResponse.json(
         {
@@ -134,7 +126,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate slug if not provided
     let finalSlug = slug;
     if (!finalSlug) {
       finalSlug = title
@@ -143,7 +134,6 @@ export async function POST(req: NextRequest) {
         .replace(/(^-|-$)/g, '');
     }
 
-    // Check if slug already exists
     const existingPost = await db.blogPost.findUnique({
       where: { slug: finalSlug }
     });
@@ -159,28 +149,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Calculate reading time (average 200 words per minute)
     const wordCount = content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200);
 
-    // Auto-fill empty fields
-    // Strip HTML tags from content for auto-fill purposes
     const stripHtml = (html: string) => {
       return html.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
     };
     
     const plainTextContent = stripHtml(content);
     
-    // Auto-fill Meta Title from Post Title (first 60 characters)
     const finalSeoTitle = seoTitle || (title.length > 60 ? title.substring(0, 60) + '...' : title);
     
-    // Auto-fill Meta Description from Post Content (first 160 characters)
     const finalSeoDescription = seoDescription || (plainTextContent.length > 160 ? plainTextContent.substring(0, 160) + '...' : plainTextContent);
     
-    // Auto-fill Post Excerpt from Post Content (first 160 characters)
     const finalExcerpt = excerpt || (plainTextContent.length > 160 ? plainTextContent.substring(0, 160) + '...' : plainTextContent);
 
-    // Create blog post
     const post = await db.blogPost.create({
       data: {
         title,
@@ -208,12 +191,11 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // Return response with original empty values for fields that were auto-filled
     const responsePost = {
       ...post,
-      excerpt: excerpt || null, // Return original empty value if it was empty
-      seoTitle: seoTitle || null, // Return original empty value if it was empty
-      seoDescription: seoDescription || null // Return original empty value if it was empty
+      excerpt: excerpt || null,
+      seoTitle: seoTitle || null,
+      seoDescription: seoDescription || null
     };
 
     return NextResponse.json({
