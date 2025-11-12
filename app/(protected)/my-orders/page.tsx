@@ -327,7 +327,10 @@ export default function OrdersList() {
     let filteredOrders = data?.data || [];
 
     if (status !== 'all') {
-      filteredOrders = filteredOrders.filter((order: any) => order.status === status);
+      filteredOrders = filteredOrders.filter((order: any) => {
+        const displayStatus = order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status;
+        return displayStatus === status;
+      });
     }
 
     if (search) {
@@ -828,10 +831,12 @@ export default function OrdersList() {
                         <td className="py-3 px-4">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(
-                              order.status
+                              order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status
                             )}`}
                           >
-                            {formatStatusDisplay(order.status)}
+                            {formatStatusDisplay(
+                              order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status
+                            )}
                           </span>
                         </td>
                         <td

@@ -354,12 +354,29 @@ export async function POST(request: Request) {
           });
 
           if (!forwardResponse.ok) {
-            console.error(`Failed to forward order ${order.id} to provider:`, await forwardResponse.text());
+            const errorText = await forwardResponse.text();
+            console.error(`Failed to forward order ${order.id} to provider:`, errorText);
+            
+            await db.newOrder.update({
+              where: { id: order.id },
+              data: {
+                status: 'failed',
+                providerStatus: 'forward_failed',
+              },
+            });
           } else {
             console.log(`Successfully forwarded order ${order.id} to provider`);
           }
         } catch (error) {
           console.error(`Error forwarding order ${order.id} to provider:`, error);
+          
+          await db.newOrder.update({
+            where: { id: order.id },
+            data: {
+              status: 'failed',
+              providerStatus: 'forward_failed',
+            },
+          });
         }
       }
     }

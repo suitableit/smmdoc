@@ -2,6 +2,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 export async function GET(req: NextRequest) {
   try {
@@ -180,33 +181,59 @@ export async function POST(req: NextRequest) {
 
     if (syncAll) {
       const whereClause: any = {
-        isProviderOrder: true,
-        providerOrderId: { not: null },
-        providerStatus: { in: ['pending', 'processing', 'in_progress'] }
+        AND: [
+          { providerOrderId: { not: null } },
+          {
+            service: {
+              providerId: { not: null },
+              providerServiceId: { not: null }
+            }
+          },
+          {
+            OR: [
+              { providerStatus: { in: ['pending', 'processing', 'in_progress', 'partial'] } },
+              { status: { in: ['pending', 'processing', 'in_progress', 'partial'] } }
+            ]
+          }
+        ]
       };
 
       if (providerId) {
-        const services = await db.service.findMany({
-          where: { providerId },
-          select: { id: true }
+        whereClause.AND.push({
+          service: {
+            providerId: parseInt(providerId)
+          }
         });
-        const serviceIds = services.map(s => s.id);
-        whereClause.serviceId = { in: serviceIds };
       }
 
-      ordersToSync = await db.newOrder.findMany({
-        where: whereClause,
-        include: {
-          service: {
-            select: {
-              id: true,
-              name: true,
-              providerServiceId: true
+      console.log('Fetching orders to sync with whereClause:', JSON.stringify(whereClause, null, 2));
+
+      try {
+        ordersToSync = await db.newOrder.findMany({
+          where: whereClause,
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                providerServiceId: true,
+                providerId: true
+              }
             }
-          }
-        },
-        take: 100
-      });
+          },
+          take: 200
+        });
+
+        console.log(`Found ${ordersToSync.length} orders to sync`);
+      } catch (queryError) {
+        console.error('Error querying orders to sync:', queryError);
+        return NextResponse.json({
+          success: false,
+          message: 'Error querying orders for sync',
+          error: queryError instanceof Error ? queryError.message : 'Unknown error',
+          data: null
+        }, { status: 500 });
+      }
     } else if (orderIds && orderIds.length > 0) {
       ordersToSync = await db.newOrder.findMany({
         where: {
@@ -245,28 +272,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`Starting manual sync for ${ordersToSync.length} orders`);
+    const MAX_SYNC_TIME_MS = 25000;
+    const MAX_ORDERS_TO_SYNC = 100;
+    const startTime = Date.now();
+
+    const limitedOrders = ordersToSync.slice(0, MAX_ORDERS_TO_SYNC);
+    console.log(`Starting manual sync for ${limitedOrders.length} orders (limited from ${ordersToSync.length})`);
 
     const ordersByProvider = new Map();
     
-    for (const order of ordersToSync) {
-      const orderProviderId = await getProviderIdForOrder(order);
+    for (const order of limitedOrders) {
+      if (Date.now() - startTime > MAX_SYNC_TIME_MS) {
+        console.log('Sync time limit reached, stopping early');
+        break;
+      }
+
+      const orderProviderId = order.service?.providerId 
+        ? order.service.providerId.toString() 
+        : await getProviderIdForOrder(order);
       
       if (orderProviderId) {
         if (!ordersByProvider.has(orderProviderId)) {
           ordersByProvider.set(orderProviderId, []);
         }
         ordersByProvider.get(orderProviderId).push(order);
+      } else {
+        console.log(`Order ${order.id} has no provider ID, skipping sync`);
       }
     }
+
+    console.log(`Grouped ${limitedOrders.length} orders into ${ordersByProvider.size} provider(s)`);
 
     let totalSynced = 0;
     const syncResults = [];
 
     for (const [providerIdKey, orders] of ordersByProvider) {
+      if (Date.now() - startTime > MAX_SYNC_TIME_MS) {
+        console.log('Sync time limit reached, stopping provider sync');
+        break;
+      }
+
       try {
+        const providerIdInt = typeof providerIdKey === 'string' ? parseInt(providerIdKey) : providerIdKey;
         const provider = await db.api_providers.findUnique({
-          where: { id: providerIdKey },
+          where: { id: providerIdInt },
           select: {
             id: true,
             name: true,
@@ -276,14 +325,24 @@ export async function POST(req: NextRequest) {
           }
         });
 
-        if (!provider || provider.status !== 'active') {
-          console.log(`Skipping inactive provider: ${providerIdKey}`);
+        if (!provider) {
+          console.log(`Provider not found: ${providerIdKey}`);
           continue;
         }
 
-        console.log(`Syncing ${orders.length} orders for provider: ${provider.name}`);
+        if (provider.status !== 'active') {
+          console.log(`Skipping inactive provider: ${provider.name} (ID: ${provider.id})`);
+          continue;
+        }
+
+        console.log(`Syncing ${orders.length} orders for provider: ${provider.name} (ID: ${provider.id})`);
 
         for (const order of orders) {
+          if (Date.now() - startTime > MAX_SYNC_TIME_MS) {
+            console.log('Sync time limit reached, stopping order sync');
+            break;
+          }
+
           try {
             const syncResult = await syncSingleOrder(order, provider);
             if (syncResult.updated) {
@@ -305,7 +364,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log(`Manual sync completed. Updated ${totalSynced} orders.`);
+    const elapsedTime = Date.now() - startTime;
+    console.log(`Manual sync completed in ${elapsedTime}ms. Updated ${totalSynced} orders.`);
 
     return NextResponse.json(
       {
@@ -359,43 +419,76 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
 
 async function syncSingleOrder(order: any, provider: any) {
   try {
-    const statusRequest = {
-      key: provider.api_key,
-      action: 'status',
-      order: order.providerOrderId
-    };
+    const apiSpec = createApiSpecFromProvider(provider);
+    
+    const apiBuilder = new ApiRequestBuilder(
+      apiSpec,
+      provider.api_url,
+      provider.api_key,
+      (provider as any).http_method || (provider as any).httpMethod || 'POST'
+    );
+
+    const statusRequest = apiBuilder.buildOrderStatusRequest(order.providerOrderId);
 
     console.log(`Checking status for order ${order.id} (provider order: ${order.providerOrderId})`);
 
-    const response = await axios.post(provider.api_url, statusRequest, {
-      timeout: 15000,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+    const response = await axios({
+      method: statusRequest.method,
+      url: statusRequest.url,
+      data: statusRequest.data,
+      headers: statusRequest.headers,
+      timeout: (provider.timeout_seconds || 30) * 1000
     });
 
-    const providerData = response.data;
+    const responseData = response.data;
 
-    if (!providerData) {
+    if (!responseData) {
       throw new Error('Empty response from provider');
     }
 
-    const mappedStatus = mapProviderStatus(providerData.status);
+    const responseParser = new ApiResponseParser(apiSpec);
+    
+    const parsedStatus = responseParser.parseOrderStatusResponse(responseData);
+    
+    const mappedStatus = mapProviderStatus(parsedStatus.status);
     const currentStatus = order.providerStatus;
 
-    if (mappedStatus !== currentStatus) {
-      console.log(`Status changed for order ${order.id}: ${currentStatus} -> ${mappedStatus}`);
+    const updateData: any = {
+      providerStatus: mappedStatus,
+      status: mappedStatus,
+      apiResponse: JSON.stringify(responseData),
+      lastSyncAt: new Date(),
+    };
+
+    if (parsedStatus.startCount !== undefined && parsedStatus.startCount !== null) {
+      updateData.startCount = parsedStatus.startCount;
+    }
+    
+    if (parsedStatus.remains !== undefined && parsedStatus.remains !== null) {
+      updateData.remains = parsedStatus.remains;
+    }
+
+    if (parsedStatus.charge !== undefined && parsedStatus.charge !== null) {
+      updateData.charge = parsedStatus.charge;
+    }
+
+    const hasChanges = 
+      mappedStatus !== currentStatus ||
+      (parsedStatus.startCount !== undefined && parsedStatus.startCount !== order.startCount) ||
+      (parsedStatus.remains !== undefined && parsedStatus.remains !== order.remains) ||
+      (parsedStatus.charge !== undefined && parsedStatus.charge !== order.charge);
+
+    if (hasChanges) {
+      console.log(`Order data updated for order ${order.id}:`, {
+        status: `${currentStatus} -> ${mappedStatus}`,
+        startCount: parsedStatus.startCount,
+        remains: parsedStatus.remains,
+        charge: parsedStatus.charge
+      });
 
       await db.newOrder.update({
         where: { id: order.id },
-        data: {
-          providerStatus: mappedStatus,
-          status: mappedStatus,
-          providerResponse: JSON.stringify(providerData),
-          lastSyncAt: new Date(),
-          ...(providerData.start_count && { startCount: parseInt(providerData.start_count) }),
-          ...(providerData.remains && { remains: parseInt(providerData.remains) })
-        }
+        data: updateData
       });
 
       await db.providerOrderLog.create({
@@ -404,7 +497,7 @@ async function syncSingleOrder(order: any, provider: any) {
           providerId: provider.id,
           action: 'manual_sync',
           status: 'success',
-          response: JSON.stringify(providerData),
+          response: JSON.stringify(responseData),
           createdAt: new Date()
         }
       });
@@ -414,7 +507,11 @@ async function syncSingleOrder(order: any, provider: any) {
         updated: true,
         oldStatus: currentStatus,
         newStatus: mappedStatus,
-        providerData
+        data: {
+          startCount: parsedStatus.startCount,
+          remains: parsedStatus.remains,
+          charge: parsedStatus.charge
+        }
       };
     } else {
       await db.newOrder.update({
@@ -428,7 +525,7 @@ async function syncSingleOrder(order: any, provider: any) {
         orderId: order.id,
         updated: false,
         status: currentStatus,
-        message: 'Status unchanged'
+        message: 'Data unchanged'
       };
     }
 

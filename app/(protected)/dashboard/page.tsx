@@ -577,10 +577,10 @@ const DashboardPage = () => {
                             >
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusBadge(
-                                  order.status
+                                  order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status
                                 )}`}
                               >
-                                {order.status}
+                                {order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status}
                               </span>
                             </td>
                           </tr>

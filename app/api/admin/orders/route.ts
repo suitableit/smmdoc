@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -53,23 +56,19 @@ export async function GET(req: NextRequest) {
     }
     
     if (search) {
-      whereClause.OR = [
-        { link: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        { service: { name: { contains: search, mode: 'insensitive' } } }
-      ];
+      const searchTrimmed = search.trim();
+      if (searchTrimmed.length > 0) {
+        whereClause.OR = [
+          { link: { contains: searchTrimmed, mode: 'insensitive' } },
+          { user: { name: { contains: searchTrimmed, mode: 'insensitive' } } },
+          { user: { email: { contains: searchTrimmed, mode: 'insensitive' } } },
+          { service: { name: { contains: searchTrimmed, mode: 'insensitive' } } }
+        ];
+      }
     }
     
-    console.log('Fetching orders with whereClause:', whereClause);
-
-    try {
-      await db.$connect();
-      console.log('Database connected successfully');
-    } catch (dbError) {
-      console.error('Database connection failed:', dbError);
-      throw new Error('Database connection failed');
-    }
+    const queryStartTime = Date.now();
+    console.log('Fetching orders with whereClause:', JSON.stringify(whereClause, null, 2));
 
     const [orders, totalCount] = await Promise.all([
       db.newOrder.findMany({
@@ -112,13 +111,12 @@ export async function GET(req: NextRequest) {
       db.newOrder.count({ where: whereClause })
     ]);
 
-    console.log('Orders found:', orders.length, 'Total count:', totalCount);
+    const queryTime = Date.now() - queryStartTime;
+    console.log(`Orders query completed in ${queryTime}ms. Found: ${orders.length}, Total count: ${totalCount}`);
 
     const uniqueOrders = orders.filter((order, index, self) =>
       index === self.findIndex(o => o.id === order.id)
     );
-
-    console.log('Unique orders after deduplication:', uniqueOrders.length);
 
     const totalPages = Math.ceil(totalCount / limit);
 
