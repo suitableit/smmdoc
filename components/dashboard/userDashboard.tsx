@@ -12,26 +12,32 @@ import { FaDollarSign, FaShoppingCart, FaWallet } from 'react-icons/fa';
 
 export default function UserDashboard() {
   const { data: response, error, isLoading } = useGetUserStatsQuery(undefined);
-  const { currency, rate } = useCurrency();
-  const formatCurrency = (amount: number) => {
+  const { currency, rate } = useCurrency();
+
+  const formatCurrency = (amount: number) => {
+
     let convertedAmount = amount;
     let symbol = '$';
 
-    if (currency === 'USD') {
+    if (currency === 'USD') {
+
       convertedAmount = amount;
       symbol = '$';
-    } else if (currency === 'BDT') {
+    } else if (currency === 'BDT') {
+
       const usdToBdtRate = 110;
       convertedAmount = amount * usdToBdtRate;
       symbol = '৳';
-    } else {
+    } else {
+
       convertedAmount = amount * (rate || 1);
       symbol = '$';
     }
 
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
-  const stats = response?.data;
+  const stats = response?.data;
+
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -168,19 +174,24 @@ export default function UserDashboard() {
                         </p>
                       </div>
                       <div className="flex flex-col items-end">
-                        <Badge
-                          className={
-                            order.status === 'pending'
-                              ? 'bg-yellow-500 dark:bg-yellow-600 dark:shadow-lg dark:shadow-yellow-500/30'
-                              : order.status === 'processing'
-                              ? 'bg-blue-500 dark:bg-blue-600 dark:shadow-lg dark:shadow-blue-500/30'
-                              : order.status === 'completed'
-                              ? 'bg-green-500 dark:bg-green-600 dark:shadow-lg dark:shadow-green-500/30'
-                              : 'bg-red-500 dark:bg-red-600 dark:shadow-lg dark:shadow-red-500/30'
-                          }
-                        >
-                          {order.status}
-                        </Badge>
+                        {(() => {
+                          const displayStatus = order.providerStatus === 'forward_failed' && order.status === 'failed' ? 'pending' : order.status;
+                          return (
+                            <Badge
+                              className={
+                                displayStatus === 'pending'
+                                  ? 'bg-yellow-500 dark:bg-yellow-600 dark:shadow-lg dark:shadow-yellow-500/30'
+                                  : displayStatus === 'processing'
+                                  ? 'bg-blue-500 dark:bg-blue-600 dark:shadow-lg dark:shadow-blue-500/30'
+                                  : displayStatus === 'completed'
+                                  ? 'bg-green-500 dark:bg-green-600 dark:shadow-lg dark:shadow-green-500/30'
+                                  : 'bg-red-500 dark:bg-red-600 dark:shadow-lg dark:shadow-red-500/30'
+                              }
+                            >
+                              {displayStatus}
+                            </Badge>
+                          );
+                        })()}
                         <span className="text-sm mt-1 dark:text-white">
                           {stats?.currency === 'USD'
                             ? `$${order.usdPrice.toFixed(2)}`

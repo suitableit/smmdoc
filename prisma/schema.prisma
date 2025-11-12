@@ -132,6 +132,8 @@ model NewOrder {
   @@index([userId], map: "NewOrder_userId_fkey")
   @@index([packageType], map: "NewOrder_packageType_idx")
   @@index([status], map: "NewOrder_status_idx")
+  @@index([status, createdAt], map: "NewOrder_status_createdAt_idx")
+  @@index([createdAt], map: "NewOrder_createdAt_idx")
   @@map("new_orders")
 }
 

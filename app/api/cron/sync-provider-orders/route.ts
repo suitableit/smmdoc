@@ -183,19 +183,42 @@ async function syncSingleOrder(order: any, provider: any) {
     const mappedStatus = mapProviderStatus(parsedStatus.status);
     const currentStatus = order.providerStatus;
 
-    if (mappedStatus !== currentStatus) {
-      console.log(`Status changed for order ${order.id}: ${currentStatus} -> ${mappedStatus}`);
+    const updateData: any = {
+      providerStatus: mappedStatus,
+      status: mappedStatus,
+      apiResponse: JSON.stringify(responseData),
+      lastSyncAt: new Date(),
+    };
+
+    if (parsedStatus.startCount !== undefined && parsedStatus.startCount !== null) {
+      updateData.startCount = parsedStatus.startCount;
+    }
+    
+    if (parsedStatus.remains !== undefined && parsedStatus.remains !== null) {
+      updateData.remains = parsedStatus.remains;
+    }
+
+    if (parsedStatus.charge !== undefined && parsedStatus.charge !== null) {
+      updateData.charge = parsedStatus.charge;
+    }
+
+    const hasChanges = 
+      mappedStatus !== currentStatus ||
+      (parsedStatus.startCount !== undefined && parsedStatus.startCount !== order.startCount) ||
+      (parsedStatus.remains !== undefined && parsedStatus.remains !== order.remains) ||
+      (parsedStatus.charge !== undefined && parsedStatus.charge !== order.charge);
+
+    if (hasChanges) {
+      console.log(`Order data updated for order ${order.id}:`, {
+        status: `${currentStatus} -> ${mappedStatus}`,
+        startCount: parsedStatus.startCount,
+        remains: parsedStatus.remains,
+        charge: parsedStatus.charge
+      });
 
       await db.newOrder.update({
         where: { id: order.id },
-        data: {
-          providerStatus: mappedStatus,
-          status: mappedStatus,
-          apiResponse: JSON.stringify(responseData),
-          lastSyncAt: new Date(),
-          ...(parsedStatus.startCount && { startCount: parsedStatus.startCount }),
-          ...(parsedStatus.remains && { remains: parsedStatus.remains })
-        }
+        data: updateData
       });
 
       await db.providerOrderLog.create({
@@ -213,7 +236,12 @@ async function syncSingleOrder(order: any, provider: any) {
         orderId: order.id,
         updated: true,
         oldStatus: currentStatus,
-        newStatus: mappedStatus
+        newStatus: mappedStatus,
+        data: {
+          startCount: parsedStatus.startCount,
+          remains: parsedStatus.remains,
+          charge: parsedStatus.charge
+        }
       };
     } else {
       await db.newOrder.update({
@@ -227,7 +255,7 @@ async function syncSingleOrder(order: any, provider: any) {
         orderId: order.id,
         updated: false,
         status: currentStatus,
-        message: 'Status unchanged'
+        message: 'Data unchanged'
       };
     }
 

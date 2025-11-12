@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   FaBox,
   FaCheckCircle,
@@ -17,12 +17,16 @@ import {
   FaTimes,
   FaTimesCircle,
 } from 'react-icons/fa';
+import useSWR from 'swr';
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
+import axiosInstance from '@/lib/axiosInstance';
+
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 
 const ChangeAllStatusModal = dynamic(() => import('@/components/admin/orders/modals/change-all-status'), {
   ssr: false,
@@ -40,7 +44,7 @@ const UpdateOrderStatusModal = dynamic(() => import('@/components/admin/orders/m
   ssr: false,
 });
 
-const OrderTable = dynamic(() => import('@/components/admin/orders/order-table'), {
+const OrdersTableContent = dynamic(() => import('@/components/admin/orders/orders-table'), {
   ssr: false,
 });
 
@@ -185,32 +189,12 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-let statsCache: { data: OrderStats; timestamp: number } | null = null;
-const STATS_CACHE_DURATION = 30000;
-
 const AdminOrdersPage = () => {
   const { appName } = useAppNameWithFallback();
 
   useEffect(() => {
     setPageTitle('All Orders', appName);
   }, [appName]);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-
-      const navigationKey = 'orders_page_visited';
-      const hasVisited = typeof window !== 'undefined' && sessionStorage.getItem(navigationKey);
-
-      const isReload = !hasVisited;
-
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(navigationKey, 'true');
-      }
-
-      setIsPageReload(isReload);
-      isInitialMount.current = false;
-    }
-  }, []);
 
   const { availableCurrencies } = useCurrency();
 
@@ -243,12 +227,6 @@ const AdminOrdersPage = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
-
-  const isInitialMount = useRef(true);
-  const [isPageReload, setIsPageReload] = useState(false);
-
-  const [statsLoading, setStatsLoading] = useState(false);
-  const [ordersLoading, setOrdersLoading] = useState(false);
 
   const [editStartCountDialog, setEditStartCountDialog] = useState<{
     open: boolean;
@@ -311,7 +289,6 @@ const AdminOrdersPage = () => {
     };
   };
 
-  const latestRequestIdRef = useRef<number>(0);
   const isMountedRef = useRef<boolean>(true);
 
   useEffect(() => {
@@ -320,138 +297,83 @@ const AdminOrdersPage = () => {
     };
   }, []);
 
-  const fetchDataOptimized = async (showLoadingState = true) => {
-    const requestId = Date.now();
-    latestRequestIdRef.current = requestId;
-    const REQUEST_TIMEOUT_MS = 10000;
+  // Build API URL for orders
+  const ordersUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      page: pagination.page.toString(),
+      limit: pagination.limit.toString(),
+      ...(statusFilter !== 'all' && { status: statusFilter }),
+      ...(searchTerm && { search: searchTerm }),
+    });
+    return `/api/admin/orders?${params.toString()}`;
+  }, [pagination.page, pagination.limit, statusFilter, searchTerm]);
 
-    if (showLoadingState) {
-      setOrdersLoading(true);
-      setStatsLoading(true);
-    }
+  // Fetch orders using SWR
+  const {
+    data: ordersData,
+    error: ordersError,
+    isLoading: ordersLoading,
+    mutate: refreshOrders,
+  } = useSWR(ordersUrl, fetcher, {
+    revalidateOnFocus: false,
+    refreshInterval: 0,
+    dedupingInterval: 60000,
+    keepPreviousData: true,
+    errorRetryCount: 3,
+    errorRetryInterval: 1000,
+    onError: (error) => {
+      console.error('SWR orders fetch error:', error);
+      showToast('Failed to fetch orders', 'error');
+    },
+  });
 
-    const ordersController = new AbortController();
-    let statsController: AbortController | null = null;
-    const ordersTimeout = setTimeout(() => ordersController.abort(), REQUEST_TIMEOUT_MS);
-    let statsTimeout: ReturnType<typeof setTimeout> | null = null;
+  // Fetch stats using SWR
+  const {
+    data: statsData,
+    error: statsError,
+    isLoading: statsLoading,
+    mutate: refreshStats,
+  } = useSWR('/api/admin/orders/stats?period=all', fetcher, {
+    revalidateOnFocus: false,
+    refreshInterval: 0,
+    dedupingInterval: 30000,
+    keepPreviousData: true,
+    errorRetryCount: 3,
+    errorRetryInterval: 1000,
+    onError: (error) => {
+      console.error('SWR stats fetch error:', error);
+    },
+  });
 
-    try {
-      const queryParams = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(statusFilter !== 'all' && { status: statusFilter }),
-        ...(searchTerm && { search: searchTerm }),
+  // Process orders data
+  useEffect(() => {
+    if (ordersData?.success && ordersData.data) {
+      const transformed = (ordersData.data || []).map((o: any) => ({
+        ...o,
+        mode:
+          o?.service?.providerId && o?.service?.providerServiceId
+            ? 'Auto'
+            : 'Manual',
+      }));
+      setOrders(transformed);
+      setPagination(ordersData.pagination || {
+        page: 1,
+        limit: 20,
+        total: 0,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
       });
 
-      const now = Date.now();
-      const useCache = statsCache && (now - statsCache.timestamp) < STATS_CACHE_DURATION;
-
-      const ordersPromise = fetch(`/api/admin/orders?${queryParams}`, { signal: ordersController.signal })
-        .then(res => res.json())
-        .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Orders request timed out' : 'Failed to fetch orders' }));
-
-      let statsPromise: Promise<any>;
-      if (useCache && statsCache) {
-        statsPromise = Promise.resolve({ success: true, data: statsCache.data });
-      } else {
-        statsController = new AbortController();
-        statsTimeout = setTimeout(() => statsController?.abort(), REQUEST_TIMEOUT_MS);
-        statsPromise = fetch('/api/admin/orders/stats?period=all', { signal: statsController.signal })
-          .then(res => res.json())
-          .catch(err => ({ success: false, error: err?.name === 'AbortError' ? 'Stats request timed out' : 'Failed to fetch stats' }));
-      }
-
-      const [ordersResult, statsResult] = await Promise.allSettled([ordersPromise, statsPromise]);
-
-      clearTimeout(ordersTimeout);
-      if (statsTimeout) clearTimeout(statsTimeout);
-
-      if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
-        return;
-      }
-
-      if (ordersResult.status === 'fulfilled' && ordersResult.value && ordersResult.value.success) {
-        const ordersData = ordersResult.value;
-        const transformed = (ordersData.data || []).map((o: any) => ({
-          ...o,
-          mode:
-            o?.service?.providerId && o?.service?.providerServiceId
-              ? 'Auto'
-              : 'Manual',
-        }));
-        setOrders(transformed);
-        setPagination(ordersData.pagination || {
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        });
-
-        const statusCounts = calculateStatusCounts(ordersData.data || []);
-
-        if (!useCache) {
-          setStats(prev => ({
-            ...prev,
-            pendingOrders: statusCounts.pending,
-            processingOrders: statusCounts.processing,
-            completedOrders: statusCounts.completed,
-            totalOrders: ordersData.pagination?.total || prev.totalOrders,
-          }));
-        }
-      } else {
-        setOrders([]);
-        setPagination({
-          page: 1,
-          limit: 20,
-          total: 0,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        });
-        if (ordersResult.status === 'fulfilled') {
-          showToast(ordersResult.value.error || 'Failed to fetch orders', 'error');
-        } else {
-          showToast('Failed to fetch orders', 'error');
-        }
-      }
-
-      if (statsResult.status === 'fulfilled' && statsResult.value && statsResult.value.success && !useCache) {
-        const data = statsResult.value.data;
-
-        const statusBreakdown: Record<string, number> = {};
-        if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
-          data.statusBreakdown.forEach((item: any) => {
-            statusBreakdown[item.status] = item.count || 0;
-          });
-        }
-
-        const processedStats = {
-          totalOrders: data.overview?.totalOrders || pagination.total,
-          pendingOrders: statusBreakdown.pending || 0,
-          processingOrders: statusBreakdown.processing || 0,
-          completedOrders: statusBreakdown.completed || 0,
-          totalRevenue: data.overview?.totalRevenue || 0,
-          todayOrders: data.dailyTrends?.[0]?.orders || 0,
-          statusBreakdown: statusBreakdown,
-        };
-
-        setStats(processedStats);
-
-        statsCache = {
-          data: processedStats,
-          timestamp: now
-        };
-      } else if (useCache && statsResult.status === 'fulfilled') {
-        setStats(statsCache!.data);
-      } else if (statsResult.status === 'rejected') {
-        showToast('Failed to fetch stats', 'error');
-      }
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      showToast('Error fetching data', 'error');
+      const statusCounts = calculateStatusCounts(ordersData.data || []);
+      setStats(prev => ({
+        ...prev,
+        pendingOrders: statusCounts.pending,
+        processingOrders: statusCounts.processing,
+        completedOrders: statusCounts.completed,
+        totalOrders: ordersData.pagination?.total || prev.totalOrders,
+      }));
+    } else if (ordersError) {
       setOrders([]);
       setPagination({
         page: 1,
@@ -461,28 +383,78 @@ const AdminOrdersPage = () => {
         hasNext: false,
         hasPrev: false,
       });
-    } finally {
-      if (!isMountedRef.current || latestRequestIdRef.current !== requestId) {
-        return;
-      }
-      setOrdersLoading(false);
-      setStatsLoading(false);
     }
-  };
+  }, [ordersData, ordersError]);
+
+  // Process stats data
+  useEffect(() => {
+    if (statsData?.success && statsData.data) {
+      const data = statsData.data;
+      const statusBreakdown: Record<string, number> = {};
+      if (data.statusBreakdown && Array.isArray(data.statusBreakdown)) {
+        data.statusBreakdown.forEach((item: any) => {
+          statusBreakdown[item.status] = item.count || 0;
+        });
+      }
+
+      const processedStats = {
+        totalOrders: data.overview?.totalOrders || pagination.total,
+        pendingOrders: statusBreakdown.pending || 0,
+        processingOrders: statusBreakdown.processing || 0,
+        completedOrders: statusBreakdown.completed || 0,
+        totalRevenue: data.overview?.totalRevenue || 0,
+        todayOrders: data.dailyTrends?.[0]?.orders || 0,
+        statusBreakdown: statusBreakdown,
+      };
+
+      setStats(processedStats);
+    }
+  }, [statsData, statsError, pagination.total]);
 
   useEffect(() => {
-    fetchDataOptimized(false);
-  }, [searchTerm]);
+    if (!isMountedRef.current) return;
 
-  useEffect(() => {
+    let syncInProgress = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let initialDelayTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    fetchDataOptimized(false);
-  }, [pagination.page, pagination.limit, statusFilter]);
+    const syncProviderOrders = async () => {
+      if (!isMountedRef.current || syncInProgress) return;
+      syncInProgress = true;
 
-  useEffect(() => {
+      try {
+        const syncResponse = await fetch('/api/admin/provider-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ syncAll: true }),
+        });
 
-    fetchDataOptimized(isPageReload);
-  }, [isPageReload]);
+        const syncResult = await syncResponse.json();
+        if (syncResult.success && isMountedRef.current) {
+          refreshOrders();
+          refreshStats();
+        }
+      } catch (error) {
+        console.error('Error syncing provider orders:', error);
+      } finally {
+        syncInProgress = false;
+      }
+    };
+
+    initialDelayTimeout = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      intervalId = setInterval(() => {
+        syncProviderOrders();
+      }, 30000);
+    }, 10000);
+
+    return () => {
+      if (initialDelayTimeout) clearTimeout(initialDelayTimeout);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   const renderCountRef = useRef(0);
   useEffect(() => {
@@ -491,14 +463,6 @@ const AdminOrdersPage = () => {
       console.warn('[AdminOrdersPage] high render count:', renderCountRef.current);
     }
   });
-
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToastNotification({ message, type });
-    setTimeout(() => setToastNotification(null), 4000);
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -556,13 +520,61 @@ const AdminOrdersPage = () => {
     );
   };
 
-  const handleRefresh = () => {
+  const showToast = useCallback(
+    (
+      message: string,
+      type: 'success' | 'error' | 'info' | 'pending' = 'success'
+    ) => {
+      setToastNotification({ message, type });
+      setTimeout(() => setToastNotification(null), 4000);
+    },
+    []
+  );
 
-    statsCache = null;
+  const handleRefresh = useCallback(async () => {
+    try {
+      // Refresh orders and stats immediately with revalidation
+      await Promise.all([
+        refreshOrders(undefined, { revalidate: true }),
+        refreshStats(undefined, { revalidate: true })
+      ]);
+      showToast('Orders refreshed', 'success');
 
-    fetchDataOptimized(true);
-    showToast('Orders refreshed successfully!', 'success');
-  };
+      // Sync provider orders in background
+      const syncPromise = fetch('/api/admin/provider-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ syncAll: true }),
+      }).then(res => res.json()).catch(err => {
+        console.error('Error syncing provider orders on refresh:', err);
+        return { success: false, error: err.message };
+      });
+
+      const syncTimeout = new Promise((resolve) => {
+        setTimeout(() => resolve({ success: false, timeout: true }), 5000);
+      });
+
+      Promise.race([syncPromise, syncTimeout]).then((syncResult: any) => {
+        if (syncResult.timeout) {
+          // Sync is still running, but we already refreshed
+          console.log('Provider sync is running in background');
+        } else if (syncResult.success) {
+          const syncedCount = syncResult.data?.syncedCount || 0;
+          if (syncedCount > 0) {
+            showToast(`Synced ${syncedCount} order(s)`, 'success');
+            // Refresh again after sync
+            refreshOrders(undefined, { revalidate: true });
+            refreshStats(undefined, { revalidate: true });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+      showToast('Error refreshing orders', 'error');
+    }
+  }, [refreshOrders, refreshStats, showToast]);
 
   const handleDeleteOrder = async (orderId: number) => {
     try {
@@ -574,7 +586,8 @@ const AdminOrdersPage = () => {
 
       if (result.success) {
         showToast('Order deleted successfully', 'success');
-        fetchDataOptimized();
+        refreshOrders();
+        refreshStats();
         setDeleteDialogOpen(false);
         setOrderToDelete(null);
       } else {
@@ -606,7 +619,8 @@ const AdminOrdersPage = () => {
           `${selectedOrders.length} orders status updated to ${newStatus}`,
           'success'
         );
-        fetchDataOptimized();
+        refreshOrders();
+        refreshStats();
         setSelectedOrders([]);
         setBulkStatusDialog({ open: false });
         setBulkStatus('');
@@ -647,11 +661,17 @@ const AdminOrdersPage = () => {
 
       const result = await response.json();
 
-      if (result.success) {
-        showToast('Order resent successfully', 'success');
-        fetchDataOptimized();
-      } else {
-        showToast(result.error || 'Failed to resend order', 'error');
+        if (result.success) {
+          showToast('Order resent successfully', 'success');
+          refreshOrders();
+          refreshStats();
+        } else {
+        if (result.errorType === 'insufficient_balance' || 
+            (result.error && result.error.toLowerCase().includes('insufficient balance'))) {
+          showToast('Insufficient balance', 'error');
+        } else {
+          showToast(result.error || 'Failed to resend order', 'error');
+        }
       }
     } catch (error) {
       console.error('Error resending order:', error);
@@ -982,32 +1002,82 @@ const AdminOrdersPage = () => {
                 </p>
               </div>
             ) : (
-              <OrderTable
-                orders={orders}
-                selectedOrders={selectedOrders}
-                onSelectOrder={handleSelectOrder}
-                onSelectAll={handleSelectAll}
-                onResendOrder={handleResendOrder}
-                onEditStartCount={(orderId: number, currentCount: number) => {
-                  openEditStartCountDialog(orderId, currentCount);
-                }}
-                onMarkPartial={(orderId: number) => {
-                  openMarkPartialDialog(orderId);
-                }}
-                onUpdateStatus={(orderId: number, currentStatus: string) => {
-                  openUpdateStatusDialog(orderId, currentStatus);
-                }}
-                pagination={pagination}
-                onPageChange={(newPage: number) => {
-                  setPagination(prev => ({ ...prev, page: newPage }));
-                }}
-                isLoading={ordersLoading}
-                formatID={formatID}
-                formatNumber={formatNumber}
-                formatPrice={formatPrice}
-                getStatusIcon={getStatusIcon}
-                calculateProgress={calculateProgress}
-              />
+              <>
+                <OrdersTableContent
+                  orders={orders}
+                  selectedOrders={selectedOrders}
+                  onSelectOrder={handleSelectOrder}
+                  onSelectAll={handleSelectAll}
+                  onResendOrder={handleResendOrder}
+                  onEditStartCount={(orderId: number, currentCount: number) => {
+                    openEditStartCountDialog(orderId, currentCount);
+                  }}
+                  onMarkPartial={(orderId: number) => {
+                    openMarkPartialDialog(orderId);
+                  }}
+                  onUpdateStatus={(orderId: number, currentStatus: string) => {
+                    openUpdateStatusDialog(orderId, currentStatus);
+                  }}
+                  formatID={formatID}
+                  formatNumber={formatNumber}
+                  formatPrice={formatPrice}
+                  getStatusIcon={getStatusIcon}
+                  calculateProgress={calculateProgress}
+                />
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t px-6">
+                  <div
+                    className="text-sm mb-4 md:mb-0"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {ordersLoading ? (
+                      <div className="flex items-center gap-2">
+                        <span>Loading pagination...</span>
+                      </div>
+                    ) : (
+                      `Showing ${formatNumber(
+                        (pagination.page - 1) * pagination.limit + 1
+                      )} to ${formatNumber(
+                        Math.min(
+                          pagination.page * pagination.limit,
+                          pagination.total
+                        )
+                      )} of ${formatNumber(pagination.total)} orders`
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))
+                      }
+                      disabled={!pagination.hasPrev || ordersLoading}
+                      className="btn btn-secondary"
+                    >
+                      Previous
+                    </button>
+                    <span
+                      className="text-sm px-4"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {ordersLoading ? (
+                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        `Page ${formatNumber(
+                          pagination.page
+                        )} of ${formatNumber(pagination.totalPages)}`
+                      )}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))
+                      }
+                      disabled={!pagination.hasNext || ordersLoading}
+                      className="btn btn-secondary"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -1026,7 +1096,8 @@ const AdminOrdersPage = () => {
         orderId={markPartialDialog.orderId}
         onSuccess={() => {
           setMarkPartialDialog({ open: false, orderId: '' });
-          fetchDataOptimized();
+          refreshOrders();
+          refreshStats();
           showToast('Order marked as partial successfully');
         }}
         showToast={showToast}
@@ -1038,7 +1109,8 @@ const AdminOrdersPage = () => {
         currentCount={editStartCountDialog.currentCount}
         onSuccess={() => {
           setEditStartCountDialog({ open: false, orderId: '', currentCount: 0 });
-          fetchDataOptimized();
+          refreshOrders();
+          refreshStats();
           showToast('Start count updated successfully');
         }}
         showToast={showToast}
@@ -1050,7 +1122,8 @@ const AdminOrdersPage = () => {
         currentStatus={updateStatusDialog.currentStatus}
         onSuccess={() => {
           setUpdateStatusDialog({ open: false, orderId: '', currentStatus: '' });
-          fetchDataOptimized();
+          refreshOrders();
+          refreshStats();
           showToast('Order status updated successfully');
         }}
         showToast={showToast}

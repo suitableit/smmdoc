@@ -83,7 +83,7 @@ export async function POST(
       );
     }
 
-    if (order.status !== 'failed') {
+    if (order.status !== 'failed' && order.providerStatus !== 'forward_failed') {
       return NextResponse.json(
         {
           error: 'Only failed orders can be resent',
@@ -120,6 +120,17 @@ export async function POST(
           { status: 404 }
         );
       }
+
+      if (!order.service.providerServiceId) {
+        return NextResponse.json(
+          {
+            error: 'Service provider service ID is missing. Cannot resend to provider.',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
       const providerForBalance: any = {
         id: apiProvider.id,
         name: apiProvider.name,
@@ -144,14 +155,15 @@ export async function POST(
 
         try {
           const providerBalance = await providerForwarder.getProviderBalance(providerForBalance);
-          const orderCost = order.charge || order.price;
+          const orderCost = order.charge || (order.service.rate * order.qty) / 1000;
 
           if (providerBalance < orderCost) {
             console.log(`Provider ${apiProvider.name} has insufficient balance. Required: ${orderCost}, Available: ${providerBalance}`);
             
             return NextResponse.json(
               {
-                error: 'Failed to resend order. Please try again.',
+                error: `Provider has insufficient balance. Required: ${orderCost.toFixed(2)}, Available: ${providerBalance.toFixed(2)}`,
+                errorType: 'insufficient_balance',
                 success: false,
                 data: null
               },
@@ -160,13 +172,14 @@ export async function POST(
           }
         } catch (balanceError) {
           console.error('Error checking provider balance:', balanceError);
+          const errorMessage = balanceError instanceof Error ? balanceError.message : 'Unknown error';
           return NextResponse.json(
             {
-              error: 'Failed to resend order. Please try again.',
+              error: `Failed to check provider balance: ${errorMessage}`,
               success: false,
               data: null
             },
-            { status: 400 }
+            { status: 500 }
           );
         }
 
@@ -187,7 +200,8 @@ export async function POST(
           data: {
             status: newStatus,
             providerOrderId: resendResult.order,
-            providerStatus: resendResult.status,
+            providerStatus: resendResult.status || 'pending',
+            charge: resendResult.charge || order.charge,
             lastSyncAt: new Date(),
             updatedAt: new Date()
           }
@@ -199,10 +213,12 @@ export async function POST(
         console.error('Error resending order to provider:', providerError);
         
         const errorMessage = providerError instanceof Error ? providerError.message : String(providerError);
+        
         if (errorMessage.toLowerCase().includes('balance') || errorMessage.toLowerCase().includes('insufficient')) {
           return NextResponse.json(
             {
-              error: 'Failed to resend order. Please try again.',
+              error: 'Provider has insufficient balance to process this order',
+              errorType: 'insufficient_balance',
               success: false,
               data: null
             },
@@ -210,9 +226,20 @@ export async function POST(
           );
         }
 
+        if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
+          return NextResponse.json(
+            {
+              error: 'Provider API timeout. Please try again later',
+              success: false,
+              data: null
+            },
+            { status: 500 }
+          );
+        }
+
         return NextResponse.json(
           {
-            error: 'Failed to resend order to provider. Please try again.',
+            error: `Failed to resend order to provider: ${errorMessage}`,
             success: false,
             data: null
           },
