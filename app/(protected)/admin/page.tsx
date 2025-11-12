@@ -946,28 +946,30 @@ export default function AdminDashboardPage() {
       <div className="mb-6">
         <div className="card">
           <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 lg:justify-between lg:w-full">
+              <div className="flex items-center gap-2 lg:flex-1">
                 <div className="card-icon">
                   <FaClock />
                 </div>
                 <h3 className="card-title">Pending Transactions</h3>
               </div>
-              <Link
-                href="/admin/transactions"
-                className={`btn btn-secondary flex items-center gap-2`}
-              >
-                <FaEye className="w-4 h-4" />
-                View More
-              </Link>
+              <div className="hidden lg:block">
+                <Link
+                  href="/admin/transactions"
+                  className="btn btn-secondary flex items-center gap-2"
+                >
+                  <FaEye className="w-4 h-4" />
+                  View More
+                </Link>
+              </div>
             </div>
           </div>
 
-          <div style={{ padding: '0 24px 24px' }} className="min-h-[300px]">
+          <div style={{ padding: '0 24px 24px' }} className="min-h-[300px] flex flex-col lg:block">
             {transactionsLoading ? (
               <TransactionsTableSkeleton />
             ) : pendingTransactions.length === 0 ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 flex-1 flex flex-col justify-center items-center lg:flex-none lg:block lg:py-12">
                 <FaCheckCircle
                   className="h-16 w-16 mx-auto mb-4"
                   style={{ color: 'var(--text-muted)', opacity: 0.5 }}
@@ -990,6 +992,15 @@ export default function AdminDashboardPage() {
               />
             )}
           </div>
+          <div style={{ padding: '0 24px 24px' }} className="lg:hidden">
+            <Link
+              href="/admin/transactions"
+              className="btn btn-secondary flex items-center justify-center gap-2 w-full"
+            >
+              <FaEye className="w-4 h-4" />
+              View More
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -997,20 +1008,22 @@ export default function AdminDashboardPage() {
       <div className="mb-6">
         <div className="card card-padding">
           <div className="card-header mb-4">
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 lg:justify-between lg:w-full">
+              <div className="flex items-center gap-2 lg:flex-1">
                 <div className="card-icon">
                   <FaUsers />
                 </div>
                 <h3 className="card-title">Latest Users</h3>
               </div>
-              <Link
-                href="/admin/users"
-                className={`btn btn-secondary flex items-center gap-2`}
-              >
-                <FaUsers className="w-4 h-4" />
-                View All Users
-              </Link>
+              <div className="hidden lg:block">
+                <Link
+                  href="/admin/users"
+                  className="btn btn-secondary flex items-center gap-2"
+                >
+                  <FaUsers className="w-4 h-4" />
+                  View All Users
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -1041,6 +1054,15 @@ export default function AdminDashboardPage() {
                 formatCurrency={formatCurrency}
               />
             )}
+          </div>
+          <div className="lg:hidden mt-4">
+            <Link
+              href="/admin/users"
+              className="btn btn-secondary flex items-center justify-center gap-2 w-full"
+            >
+              <FaUsers className="w-4 h-4" />
+              View All Users
+            </Link>
           </div>
         </div>
       </div>
