@@ -129,6 +129,7 @@ const ProfilePage = () => {
   const [isGeneratingApiKey, setIsGeneratingApiKey] = useState(false);
   const [isSavingTimezone, setIsSavingTimezone] = useState(false);
   const [isSavingLanguage, setIsSavingLanguage] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
 
   const [validationErrors, setValidationErrors] = useState<{
     fullName?: string;
@@ -281,6 +282,12 @@ const ProfilePage = () => {
       });
     }
   }, [userDetails, apiKey]);
+
+  useEffect(() => {
+    if (userDetails?.image || currentUser?.image) {
+      setProfileImageError(false);
+    }
+  }, [userDetails?.image, currentUser?.image]);
 
   const showToast = (
     message: string,
@@ -1127,17 +1134,20 @@ const ProfilePage = () => {
                     <img
                       src={avatarPreview}
                       alt="Profile Preview"
-                      className="profile-picture opacity-75"
+                      className="profile-picture opacity-75 object-cover"
                     />
-                  ) : user?.image ? (
+                  ) : user?.image && !profileImageError ? (
                     <img
                       src={user.image}
                       alt="Profile"
-                      className="profile-picture"
+                      className="profile-picture object-cover"
+                      onError={() => {
+                        setProfileImageError(true);
+                      }}
                     />
                   ) : (
-                    <div className="profile-picture">
-                      {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                    <div className="profile-picture bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-2xl">
+                      {user?.username?.charAt(0)?.toUpperCase() || user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
                   )}
                   <label htmlFor="avatar-upload" className="profile-picture-edit cursor-pointer">

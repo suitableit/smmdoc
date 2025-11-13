@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
+import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
+
 const useSafeSession = () => {
   const [sessionData, setSessionData] = useState({
     data: null,
@@ -11,8 +12,11 @@ const useSafeSession = () => {
   });
 
   useEffect(() => {
-    try {
-      import('next-auth/react').then(({ useSession }) => {
+    try {
+
+      import('next-auth/react').then(({ useSession }) => {
+
+
         setTimeout(() => {
           setSessionData({
             data: null,
@@ -30,7 +34,8 @@ const useSafeSession = () => {
   }, []);
 
   return sessionData;
-};
+};
+
 interface HeaderProps {
   session?: any;
   status?: 'loading' | 'authenticated' | 'unauthenticated';
@@ -44,7 +49,9 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileImageError, setMobileImageError] = useState(false);
+
   let session = propSession;
   let status = propStatus;
 
@@ -58,9 +65,11 @@ const Header: React.FC<HeaderProps> = ({
       console.warn('NextAuth not available, using fallback');
       status = 'unauthenticated';
     }
-  }
+  }
+
   const isAuthenticated = status === 'authenticated' && session?.user;
-  const isLoading = status === 'loading';
+  const isLoading = status === 'loading';
+
   const userRole = session?.user?.role?.toUpperCase() || '';
   const isAdmin = userRole === 'ADMIN';
   const dashboardRoute = isAdmin ? '/admin' : '/dashboard';
@@ -75,7 +84,8 @@ const Header: React.FC<HeaderProps> = ({
       if (enableAuth) {
         const { signOut } = await import('next-auth/react');
         await signOut({ callbackUrl: '/', redirect: true });
-      } else {
+      } else {
+
         window.location.href = '/';
       }
     } catch (error) {
@@ -83,7 +93,8 @@ const Header: React.FC<HeaderProps> = ({
       setIsLoggingOut(false);
       window.location.href = '/';
     }
-  };
+  };
+
   const Avatar = ({
     className,
     children,
@@ -119,7 +130,8 @@ const Header: React.FC<HeaderProps> = ({
     <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-white font-semibold text-lg">
       {children}
     </div>
-  );
+  );
+
   const ThemeToggle = ({ inMenu = false }: { inMenu?: boolean }) => {
     const [theme, setTheme] = useState('system');
     const [mounted, setMounted] = useState(false);
@@ -233,10 +245,13 @@ const Header: React.FC<HeaderProps> = ({
         )}
       </div>
     );
-  };
+  };
+
   const UserMenu = ({ user }: { user: any }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [imageError, setImageError] = useState(false);
+    const [dropdownImageError, setDropdownImageError] = useState(false);
 
     const username = user?.username || user?.email?.split('@')[0] || user?.name || 'User';
     const balance = 0;
@@ -245,6 +260,13 @@ const Header: React.FC<HeaderProps> = ({
       const timer = setTimeout(() => setLoading(false), 1000);
       return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+      if (user?.photo || user?.image) {
+        setImageError(false);
+        setDropdownImageError(false);
+      }
+    }, [user?.photo, user?.image]);
 
     const handleLogoutClick = () => {
       setIsOpen(false);
@@ -260,8 +282,17 @@ const Header: React.FC<HeaderProps> = ({
           disabled={isLoggingOut}
         >
           <Avatar className="h-12 w-12">
-            <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
-            {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
+            {(user?.photo || user?.image) && !imageError ? (
+              <img
+                src={user?.photo || user?.image || ''}
+                alt={user?.name || 'User'}
+                className="w-full h-full object-cover relative z-10"
+                onError={() => {
+                  setImageError(true);
+                }}
+              />
+            ) : null}
+            <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
           </Avatar>
         </button>
 
@@ -272,8 +303,17 @@ const Header: React.FC<HeaderProps> = ({
               <div className="p-3 sm:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
-                    <AvatarImage src={user?.photo || user?.image} alt={user?.name || 'User'} />
-                    {!(user?.photo || user?.image) && <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>}
+                    {(user?.photo || user?.image) && !dropdownImageError ? (
+                      <img
+                        src={user?.photo || user?.image || ''}
+                        alt={user?.name || 'User'}
+                        className="w-full h-full object-cover relative z-10"
+                        onError={() => {
+                          setDropdownImageError(true);
+                        }}
+                      />
+                    ) : null}
+                    <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm sm:text-xl font-bold truncate text-gray-900 dark:text-white">{username}</h3>
@@ -350,6 +390,12 @@ const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (propSession?.user?.photo || propSession?.user?.image) {
+      setMobileImageError(false);
+    }
+  }, [propSession?.user?.photo, propSession?.user?.image]);
 
   if (!mounted) return null;
 
@@ -432,8 +478,17 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="px-4 py-3">
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={session.user?.photo || session.user?.image} alt={session.user?.name || 'User'} />
-                      {!(session.user?.photo || session.user?.image) && <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>}
+                      {(session.user?.photo || session.user?.image) && !mobileImageError ? (
+                        <img
+                          src={session.user?.photo || session.user?.image || ''}
+                          alt={session.user?.name || 'User'}
+                          className="w-full h-full object-cover relative z-10"
+                          onError={() => {
+                            setMobileImageError(true);
+                          }}
+                        />
+                      ) : null}
+                      <AvatarFallback>{(session.user?.username || session.user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{session.user?.username || session.user?.name}</h3>
