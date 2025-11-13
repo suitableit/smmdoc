@@ -137,10 +137,10 @@ export async function POST(request: NextRequest) {
       availableCurrencies: availableCurrencies.map(c => ({ code: c.code, rate: c.rate }))
     });
 
-    if (adminCurrency === 'BDT') {
+    if (adminCurrency === 'USD') {
       amountToAdd = amount;
     } else {
-      amountToAdd = serverConvertCurrency(amount, adminCurrency, 'BDT', availableCurrencies);
+      amountToAdd = serverConvertCurrency(amount, adminCurrency, 'USD', availableCurrencies);
       console.log('Converted amount:', { original: amount, converted: amountToAdd });
     }
 
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
           payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
           sender_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
-          currency: 'BDT'
+          currency: 'USD'
         }
       });
 
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
            user.id,
            targetUsername,
            amountToAdd,
-           'BDT',
+           'USD',
            clientIP
          );
        } else {
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
            user.id,
            targetUsername,
            amountToAdd,
-           'BDT',
+           'USD',
            clientIP
          );
        }

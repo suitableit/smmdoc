@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
               userEmail: payment.user.email,
               transactionId: transaction_id,
               amount: payment.amount.toString(),
-              currency: 'BDT',
+              currency: payment.currency || 'USD',
               date: new Date().toLocaleDateString(),
               userId: payment.userId.toString()
             });

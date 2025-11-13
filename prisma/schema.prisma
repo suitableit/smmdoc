@@ -459,7 +459,7 @@ model AddFunds {
   admin_status     String?                   @default("Pending")
   transaction_type addfund_transaction_type? @default(deposit)
   reference_id     String?                   @db.VarChar(255)
-  currency         String?                   @default("BDT") @db.VarChar(3)
+  currency         String?                   @default("USD") @db.VarChar(3)
   original_amount  Float?
   user             Users                      @relation(fields: [userId], references: [id])
 

@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { convertFromUSD, fetchCurrencyData } from '@/lib/currency-utils';
 
 export async function PUT(
   req: NextRequest,
@@ -111,10 +112,13 @@ export async function PUT(
         const refillQuantity = order.remains || order.qty;
         const refillPrice = (refillQuantity / order.qty) * order.price;
         const refillUsdPrice = (refillQuantity / order.qty) * order.usdPrice;
-        const refillBdtPrice = refillUsdPrice * (order.user.dollarRate || 121.52);
-
-        const userBalance = order.user.currency === 'USD' ? order.user.balance : order.user.balance;
-        const requiredAmount = order.user.currency === 'USD' ? refillUsdPrice : refillBdtPrice;
+        const { currencies } = await fetchCurrencyData();
+        
+        const requiredAmount = order.user.currency === 'USD' || order.user.currency === 'USDT' 
+          ? refillUsdPrice 
+          : convertFromUSD(refillUsdPrice, order.user.currency, currencies);
+        
+        const userBalance = order.user.balance;
 
         if (userBalance < requiredAmount) {
           return NextResponse.json(

@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     const { currencies } = await fetchCurrencyData();
 
     const amount = parseFloat(body.amount);
-    const currency = body.currency || 'BDT';
+    const currency = body.currency || 'USD';
 
     console.log(
       'Parsed amount:',
@@ -85,16 +85,10 @@ export async function POST(req: NextRequest) {
 
     const amountUSD = convertToUSD(amount, currency, currencies);
 
-    const amountBDT =
-      currency === 'BDT'
-        ? amount
-        : convertCurrency(amount, currency, 'BDT', currencies);
-
     console.log('Currency conversion:', {
       original: amount,
       currency: currency,
       amountUSD: amountUSD,
-      amountBDT: amountBDT,
     });
 
     try {
@@ -138,10 +132,13 @@ export async function POST(req: NextRequest) {
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+      const paymentCurrency = currency || 'USD';
+      const paymentAmount = currency === 'USD' ? amountUSD : convertCurrency(amountUSD, 'USD', paymentCurrency, currencies);
+      
       const paymentData = {
         full_name: session.user.name || 'User',
         email: session.user.email || 'user@example.com',
-        amount: Math.round(amountBDT).toString(),
+        amount: Math.round(paymentAmount).toString(),
         phone: body.phone,
         metadata: {
           user_id: session.user.id,
@@ -151,7 +148,7 @@ export async function POST(req: NextRequest) {
           usd_amount: amountUSD,
         },
         redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
-          amountBDT
+          paymentAmount
         )}`,
         cancel_url: `${appUrl}/transactions?status=cancelled`,
         webhook_url: `${appUrl}/api/payment/webhook`,
@@ -188,7 +185,7 @@ export async function POST(req: NextRequest) {
             phone: paymentData.phone,
             metadata: paymentData.metadata,
             redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
-              amountBDT
+              paymentAmount
             )}`,
             return_type: 'GET',
             cancel_url: `${appUrl}/transactions?status=cancelled`,

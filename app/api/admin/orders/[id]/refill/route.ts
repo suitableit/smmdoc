@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { convertFromUSD, fetchCurrencyData } from '@/lib/currency-utils';
 
 export async function POST(
   req: NextRequest,
@@ -146,9 +147,13 @@ export async function POST(
       );
     }
     
+    const { currencies } = await fetchCurrencyData();
+    
     const refillRate = originalOrder.service.rate;
     const refillUsdPrice = (refillRate * refillQuantity) / 1000;
-    const refillPrice = originalOrder.user.currency === 'USD' ? refillUsdPrice : refillUsdPrice * (originalOrder.user.dollarRate || 121.52);
+    const refillPrice = originalOrder.user.currency === 'USD' || originalOrder.user.currency === 'USDT' 
+      ? refillUsdPrice 
+      : convertFromUSD(refillUsdPrice, originalOrder.user.currency, currencies);
     
     if (originalOrder.user.balance < refillPrice) {
       return NextResponse.json(
@@ -330,13 +335,19 @@ export async function GET(
     const eligibleStatuses = ['completed', 'partial'];
     const isEligible = eligibleStatuses.includes(order.status) && (order as any).service?.status === 'active';
     
+    const { currencies } = await fetchCurrencyData();
+    
     const refillRate = (order as any).service?.rate || 0;
     const fullRefillUsd = (refillRate * order.qty) / 1000;
     const remainingRefillUsd = (refillRate * order.remains) / 1000;
     
-    const dollarRate = (order as any).user?.dollarRate || 121.52;
-    const fullRefillBdt = fullRefillUsd * dollarRate;
-    const remainingRefillBdt = remainingRefillUsd * dollarRate;
+    const userCurrency = order.user.currency || 'USD';
+    const fullRefillInUserCurrency = userCurrency === 'USD' || userCurrency === 'USDT' 
+      ? fullRefillUsd 
+      : convertFromUSD(fullRefillUsd, userCurrency, currencies);
+    const remainingRefillInUserCurrency = userCurrency === 'USD' || userCurrency === 'USDT' 
+      ? remainingRefillUsd 
+      : convertFromUSD(remainingRefillUsd, userCurrency, currencies);
     
     const refillInfo = {
       eligible: isEligible,
@@ -368,16 +379,14 @@ export async function GET(
         full: {
           quantity: order.qty,
           costUsd: fullRefillUsd,
-          costBdt: fullRefillBdt,
-          cost: order.user.currency === 'USD' ? fullRefillUsd : fullRefillBdt,
-          affordable: order.user.balance >= (order.user.currency === 'USD' ? fullRefillUsd : fullRefillBdt)
+          cost: fullRefillInUserCurrency,
+          affordable: order.user.balance >= fullRefillInUserCurrency
         },
         remaining: {
           quantity: order.remains,
           costUsd: remainingRefillUsd,
-          costBdt: remainingRefillBdt,
-          cost: order.user.currency === 'USD' ? remainingRefillUsd : remainingRefillBdt,
-          affordable: order.user.balance >= (order.user.currency === 'USD' ? remainingRefillUsd : remainingRefillBdt)
+          cost: remainingRefillInUserCurrency,
+          affordable: order.user.balance >= remainingRefillInUserCurrency
         }
       }
     };

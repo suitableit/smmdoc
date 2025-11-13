@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
 import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import { convertFromUSD, convertToUSD, fetchCurrencyData } from '@/lib/currency-utils';
 
 export async function POST(request: Request) {
   try {
@@ -150,6 +151,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const { currencies } = await fetchCurrencyData();
+    
     let totalCost = 0;
     const processedOrders: any[] = [];
 
@@ -183,14 +186,10 @@ export async function POST(request: Request) {
       const calculatedUsdPrice = usdPrice || (service!.rate * qty) / 1000;
 
       let finalPrice;
-      if (user.currency === 'USD') {
-        finalPrice = calculatedUsdPrice;
-      } else if (user.currency === 'BDT') {
-        finalPrice = calculatedUsdPrice * (user.dollarRate || 121.52);
-      } else if (user.currency === 'USDT') {
+      if (user.currency === 'USD' || user.currency === 'USDT') {
         finalPrice = calculatedUsdPrice;
       } else {
-        finalPrice = price || calculatedUsdPrice;
+        finalPrice = convertFromUSD(calculatedUsdPrice, user.currency, currencies);
       }
 
       totalCost += finalPrice;
@@ -235,9 +234,12 @@ export async function POST(request: Request) {
       originalOrders: orders.map(o => ({ currency: o.currency, price: o.price }))
     });
 
+    const userCurrencyData = currencies.find(c => c.code === user.currency);
+    const userCurrencyRate = userCurrencyData?.rate || 1;
+    
     let availableBalance = user.balance;
-    if (user.currency === 'USD' || user.currency === 'USDT') {
-      availableBalance = user.balance / (user.dollarRate || 121.52);
+    if (user.currency !== 'USD' && user.currency !== 'USDT') {
+      availableBalance = convertFromUSD(user.balance, user.currency, currencies);
     }
 
     if (availableBalance < totalCost) {
@@ -590,10 +592,16 @@ export async function POST(request: Request) {
         createdOrders.push(order);
       }
 
-      let balanceDeductionAmount = totalCost;
-      const currentRate = user.dollarRate && user.dollarRate > 1 ? user.dollarRate : 121.52;
-      if (user.currency === 'USD' || user.currency === 'USDT') {
-        balanceDeductionAmount = totalCost * currentRate;
+      let totalUsdCost = 0;
+      for (const orderData of processedOrders) {
+        totalUsdCost += orderData.usdPrice || 0;
+      }
+      
+      let balanceDeductionAmountUSD = totalUsdCost;
+      if (user.currency !== 'USD' && user.currency !== 'USDT') {
+        balanceDeductionAmountUSD = convertToUSD(totalCost, user.currency, currencies);
+      } else {
+        balanceDeductionAmountUSD = totalCost;
       }
 
       console.log('About to deduct balance:', {
@@ -601,9 +609,7 @@ export async function POST(request: Request) {
         userCurrency: user.currency,
         currentBalance: user.balance,
         totalCostInUserCurrency: totalCost,
-        balanceDeductionAmountInBDT: balanceDeductionAmount,
-        userDollarRate: user.dollarRate,
-        usedRate: currentRate,
+        balanceDeductionAmountUSD: balanceDeductionAmountUSD,
         willDeduct: true
       });
 
@@ -611,10 +617,10 @@ export async function POST(request: Request) {
         where: { id: parseInt(session.user.id) },
         data: {
           balance: {
-            decrement: balanceDeductionAmount,
+            decrement: balanceDeductionAmountUSD,
           },
           total_spent: {
-            increment: balanceDeductionAmount,
+            increment: balanceDeductionAmountUSD,
           },
         },
       });
