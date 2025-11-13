@@ -168,8 +168,7 @@ export async function POST(request: Request) {
         }
 
         const usdPrice = (service.rate * quantity) / 1000;
-        const bdtPrice = usdPrice * (user.dollarRate || 121.52);
-        const finalPrice = user.currency === 'USD' ? usdPrice : bdtPrice;
+        const finalPrice = user.currency === 'USD' ? usdPrice : usdPrice * (user.dollarRate || 121.52);
         
         const charge = usdPrice;
         const profit = finalPrice - charge;
@@ -187,7 +186,6 @@ export async function POST(request: Request) {
           charge: charge,
           profit: profit,
           usdPrice,
-          bdtPrice,
           currency: user.currency,
           avg_time: service.avg_time,
           status: 'pending',

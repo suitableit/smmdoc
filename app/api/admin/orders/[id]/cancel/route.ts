@@ -88,7 +88,7 @@ export async function POST(
     }
     
     let refundAmount: number;
-    const orderPrice = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+    const orderPrice = order.user.currency === 'USD' ? order.usdPrice : order.usdPrice * (order.user.dollarRate || 121.52);
     
     switch (refundType) {
       case 'full':
@@ -307,7 +307,7 @@ export async function GET(
     const cancellableStatuses = ['pending', 'processing', 'in_progress', 'partial'];
     const isCancellable = cancellableStatuses.includes(order.status);
     
-    const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+    const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.usdPrice * ((order as any).user?.dollarRate || 121.52);
     const deliveredQuantity = order.qty - order.remains;
     const deliveredPercentage = order.qty > 0 ? deliveredQuantity / order.qty : 0;
     const partialRefundAmount = orderPrice * (order.remains / order.qty);

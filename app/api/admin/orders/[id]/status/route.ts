@@ -110,7 +110,7 @@ export async function PUT(
     console.log('Found order:', { id: currentOrder.id, status: currentOrder.status });
     
     const user = currentOrder.user;
-    const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.bdtPrice;
+    const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.usdPrice * (user.dollarRate || 121.52);
     
     let balanceUpdate = null;
     

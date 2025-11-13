@@ -2,6 +2,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 export async function POST(
   req: NextRequest,
@@ -48,7 +49,18 @@ export async function POST(
 
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
-      include: {
+      select: {
+        id: true,
+        status: true,
+        providerStatus: true,
+        providerOrderId: true,
+        link: true,
+        qty: true,
+        charge: true,
+        startCount: true,
+        remains: true,
+        dripfeedRuns: true,
+        dripfeedInterval: true,
         user: {
           select: {
             id: true,
@@ -99,6 +111,9 @@ export async function POST(
       userId: order.user.id,
       serviceId: order.service.id,
       isProviderService: !!order.service.providerId,
+      providerOrderId: order.providerOrderId,
+      status: order.status,
+      providerStatus: order.providerStatus,
       timestamp: new Date().toISOString()
     });
 
@@ -183,6 +198,8 @@ export async function POST(
           );
         }
 
+        console.log(`Resending order ${order.id} to provider - creating new order to API`);
+        
         const orderData = {
           service: order.service.providerServiceId,
           link: order.link,
@@ -193,21 +210,34 @@ export async function POST(
 
         resendResult = await providerForwarder.forwardOrderToProvider(providerForBalance, orderData);
 
-        newStatus = resendResult.status || 'pending';
+        if (!resendResult.order) {
+          throw new Error('Failed to create order: Provider did not return order ID');
+        }
+
+        console.log(`Order created with provider order ID: ${resendResult.order}. Fetching status and charge...`);
+
+        const statusResult = await providerForwarder.checkProviderOrderStatus(providerForBalance, resendResult.order);
+        
+        const apiCharge = statusResult.charge || resendResult.charge || 0;
+        newStatus = statusResult.status || resendResult.status || 'pending';
+        const profit = order.charge - apiCharge;
         
         await db.newOrder.update({
           where: { id: orderId },
           data: {
             status: newStatus,
             providerOrderId: resendResult.order,
-            providerStatus: resendResult.status || 'pending',
-            charge: resendResult.charge || order.charge,
+            providerStatus: newStatus,
+            charge: apiCharge,
+            profit: profit,
+            startCount: statusResult.start_count || order.startCount,
+            remains: statusResult.remains || order.remains,
             lastSyncAt: new Date(),
             updatedAt: new Date()
           }
         });
 
-        console.log(`Order ${order.id} successfully resent to provider. New provider order ID: ${resendResult.order}, Status: ${newStatus}`);
+        console.log(`Order ${order.id} successfully resent to provider. New provider order ID: ${resendResult.order}, Status: ${newStatus}, Charge: ${apiCharge}, Profit: ${profit}`);
 
       } catch (providerError) {
         console.error('Error resending order to provider:', providerError);

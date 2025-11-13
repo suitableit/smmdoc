@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
+import { broadcastOrderUpdate, broadcastSyncProgress } from '@/lib/utils/realtime-sync';
 
 export async function GET(req: NextRequest) {
   try {
@@ -188,15 +189,12 @@ export async function POST(req: NextRequest) {
               providerId: { not: null },
               providerServiceId: { not: null }
             }
-          },
-          {
-            OR: [
-              { providerStatus: { in: ['pending', 'processing', 'in_progress', 'partial'] } },
-              { status: { in: ['pending', 'processing', 'in_progress', 'partial'] } }
-            ]
           }
         ]
       };
+      
+      // Sync all orders with providerOrderId, but prioritize active statuses
+      // We'll sync all provider orders regardless of status to catch status changes
 
       if (providerId) {
         whereClause.AND.push({
@@ -287,8 +285,8 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      const orderProviderId = order.service?.providerId 
-        ? order.service.providerId.toString() 
+      const orderProviderId = (order.service as any)?.providerId 
+        ? (order.service as any).providerId.toString() 
         : await getProviderIdForOrder(order);
       
       if (orderProviderId) {
@@ -305,6 +303,13 @@ export async function POST(req: NextRequest) {
 
     let totalSynced = 0;
     const syncResults = [];
+    let totalProcessed = 0;
+
+    broadcastSyncProgress({
+      total: limitedOrders.length,
+      processed: 0,
+      synced: 0
+    });
 
     for (const [providerIdKey, orders] of ordersByProvider) {
       if (Date.now() - startTime > MAX_SYNC_TIME_MS) {
@@ -344,17 +349,81 @@ export async function POST(req: NextRequest) {
           }
 
           try {
+            totalProcessed++;
             const syncResult = await syncSingleOrder(order, provider);
             if (syncResult.updated) {
               totalSynced++;
+              
+              const updatedOrder = await db.newOrder.findUnique({
+                where: { id: order.id },
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      email: true,
+                      name: true,
+                      username: true,
+                      currency: true
+                    }
+                  },
+                  service: {
+                    select: {
+                      id: true,
+                      name: true,
+                      rate: true,
+                      min_order: true,
+                      max_order: true,
+                      providerId: true,
+                      providerName: true,
+                      providerServiceId: true
+                    }
+                  },
+                  category: {
+                    select: {
+                      id: true,
+                      category_name: true
+                    }
+                  }
+                }
+              });
+
+              if (updatedOrder) {
+                broadcastOrderUpdate(order.id, {
+                  id: updatedOrder.id,
+                  status: updatedOrder.status,
+                  providerStatus: updatedOrder.providerStatus,
+                  startCount: updatedOrder.startCount,
+                  remains: updatedOrder.remains,
+                  charge: updatedOrder.charge,
+                  lastSyncAt: updatedOrder.lastSyncAt,
+                  user: updatedOrder.user,
+                  service: updatedOrder.service,
+                  category: updatedOrder.category
+                });
+              }
             }
             syncResults.push(syncResult);
+
+            broadcastSyncProgress({
+              total: limitedOrders.length,
+              processed: totalProcessed,
+              synced: totalSynced,
+              currentOrderId: order.id
+            });
           } catch (error) {
             console.error(`Failed to sync order ${order.id}:`, error);
+            totalProcessed++;
             syncResults.push({
               orderId: order.id,
               updated: false,
               error: error instanceof Error ? error.message : 'Unknown error'
+            });
+
+            broadcastSyncProgress({
+              total: limitedOrders.length,
+              processed: totalProcessed,
+              synced: totalSynced,
+              currentOrderId: order.id
             });
           }
         }
@@ -365,7 +434,7 @@ export async function POST(req: NextRequest) {
     }
 
     const elapsedTime = Date.now() - startTime;
-    console.log(`Manual sync completed in ${elapsedTime}ms. Updated ${totalSynced} orders.`);
+    console.log(`Manual sync completed in ${elapsedTime}ms. Updated ${totalSynced} of ${limitedOrders.length} orders.`);
 
     return NextResponse.json(
       {
@@ -373,6 +442,7 @@ export async function POST(req: NextRequest) {
         message: `Manually synced ${totalSynced} provider orders`,
         data: {
           syncedCount: totalSynced,
+          totalProcessed: limitedOrders.length,
           totalChecked: ordersToSync.length,
           results: syncResults
         }
@@ -451,7 +521,17 @@ async function syncSingleOrder(order: any, provider: any) {
     const parsedStatus = responseParser.parseOrderStatusResponse(responseData);
     
     const mappedStatus = mapProviderStatus(parsedStatus.status);
-    const currentStatus = order.providerStatus;
+    const currentProviderStatus = order.providerStatus || order.status;
+    const currentStatus = order.status;
+
+    console.log(`Order ${order.id} status comparison:`, {
+      providerStatus: parsedStatus.status,
+      mappedStatus,
+      currentProviderStatus,
+      currentStatus,
+      orderProviderStatus: order.providerStatus,
+      orderStatus: order.status
+    });
 
     const updateData: any = {
       providerStatus: mappedStatus,
@@ -472,15 +552,21 @@ async function syncSingleOrder(order: any, provider: any) {
       updateData.charge = parsedStatus.charge;
     }
 
+    const statusChanged = 
+      mappedStatus !== currentProviderStatus ||
+      mappedStatus !== currentStatus;
+
     const hasChanges = 
-      mappedStatus !== currentStatus ||
+      statusChanged ||
       (parsedStatus.startCount !== undefined && parsedStatus.startCount !== order.startCount) ||
       (parsedStatus.remains !== undefined && parsedStatus.remains !== order.remains) ||
       (parsedStatus.charge !== undefined && parsedStatus.charge !== order.charge);
 
     if (hasChanges) {
       console.log(`Order data updated for order ${order.id}:`, {
-        status: `${currentStatus} -> ${mappedStatus}`,
+        oldProviderStatus: currentProviderStatus,
+        oldStatus: currentStatus,
+        newStatus: mappedStatus,
         startCount: parsedStatus.startCount,
         remains: parsedStatus.remains,
         charge: parsedStatus.charge
@@ -506,6 +592,7 @@ async function syncSingleOrder(order: any, provider: any) {
         orderId: order.id,
         updated: true,
         oldStatus: currentStatus,
+        oldProviderStatus: currentProviderStatus,
         newStatus: mappedStatus,
         data: {
           startCount: parsedStatus.startCount,
@@ -549,16 +636,34 @@ async function syncSingleOrder(order: any, provider: any) {
 }
 
 function mapProviderStatus(providerStatus: string): string {
+  if (!providerStatus) return 'pending';
+  
+  const normalizedStatus = providerStatus.toLowerCase().trim().replace(/\s+/g, '_');
+  
   const statusMap: { [key: string]: string } = {
     'pending': 'pending',
     'in_progress': 'processing',
+    'inprogress': 'processing',
     'processing': 'processing',
     'completed': 'completed',
+    'complete': 'completed',
     'partial': 'partial',
-    'canceled': 'canceled',
-    'cancelled': 'canceled',
-    'refunded': 'refunded'
+    'canceled': 'cancelled',
+    'cancelled': 'cancelled',
+    'refunded': 'refunded',
+    'failed': 'failed',
+    'fail': 'failed'
   };
 
-  return statusMap[providerStatus?.toLowerCase()] || 'pending';
+  if (statusMap[normalizedStatus]) {
+    return statusMap[normalizedStatus];
+  }
+
+  const originalLower = providerStatus.toLowerCase().trim();
+  if (statusMap[originalLower]) {
+    return statusMap[originalLower];
+  }
+
+  console.warn(`Unknown provider status: "${providerStatus}", defaulting to pending`);
+  return 'pending';
 }

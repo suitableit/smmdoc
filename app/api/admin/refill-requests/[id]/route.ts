@@ -109,7 +109,6 @@ export async function PUT(
           qty: refillRequest.order.qty,
           price: 0,
           usdPrice: 0,
-          bdtPrice: 0,
           currency: 'USD',
           avg_time: 'Instant',
           status: 'processing',

@@ -171,7 +171,6 @@ export async function POST(req: NextRequest) {
       qty, 
       price, 
       usdPrice, 
-      bdtPrice, 
       currency, 
       avg_time,
       status = 'pending',
@@ -294,11 +293,10 @@ export async function POST(req: NextRequest) {
     }
     
     const calculatedUsdPrice = usdPrice || (service.rate * qty) / 1000;
-    const calculatedBdtPrice = bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
-    const finalPrice = price || (user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice);
+    const finalPrice = price || (user.currency === 'USD' ? calculatedUsdPrice : calculatedUsdPrice * (user.dollarRate || 121.52));
     
     if (!skipBalanceCheck) {
-      const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
+      const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedUsdPrice * (user.dollarRate || 121.52);
 
       if (user.balance < orderPrice) {
         return NextResponse.json(
@@ -321,7 +319,6 @@ export async function POST(req: NextRequest) {
         qty: parseInt(qty),
         price: finalPrice,
         usdPrice: calculatedUsdPrice,
-        bdtPrice: calculatedBdtPrice,
         currency: user.currency,
         avg_time: avg_time || service.avg_time,
         status,
@@ -365,7 +362,7 @@ export async function POST(req: NextRequest) {
     });
     
     if (!skipBalanceCheck && status !== 'pending') {
-      const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedBdtPrice;
+      const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedUsdPrice * (user.dollarRate || 121.52);
 
       await db.user.update({
         where: { id: userId },
@@ -413,7 +410,6 @@ export async function POST(req: NextRequest) {
               status: providerRes.status || 'pending',
               providerOrderId: providerRes.order,
               providerStatus: providerRes.status,
-              apiOrderId: providerRes.order,
               charge: providerRes.charge,
               lastSyncAt: new Date(),
               updatedAt: new Date()

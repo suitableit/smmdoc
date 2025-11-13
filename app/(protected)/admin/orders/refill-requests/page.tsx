@@ -65,7 +65,6 @@ interface Order {
   price: number;
   charge: number;
   usdPrice: number;
-  bdtPrice: number;
   currency: string;
   status: 'completed' | 'partial';
   createdAt: string;
@@ -239,7 +238,6 @@ const RefillOrdersPage = () => {
         qty: request.order?.qty || 0,
         price: request.order?.price || 0,
         usdPrice: request.order?.usdPrice || 0,
-        bdtPrice: request.order?.bdtPrice || 0,
         link: request.order?.link || '',
         status: request.order?.status || 'unknown',
         createdAt: request.order?.createdAt || new Date(),

@@ -536,7 +536,6 @@ const DashboardPage = () => {
                                 {(() => {
 
                                   const usdPrice = order.usdPrice || 0;
-                                  const bdtPrice = order.bdtPrice || 0;
 
                                   if (!currentCurrencyData) {
                                     return `$${formatPrice(usdPrice, 2)}`;
@@ -547,7 +546,7 @@ const DashboardPage = () => {
                                   if (currentCurrencyData.code === 'USD') {
                                     displayAmount = usdPrice;
                                   } else if (currentCurrencyData.code === 'BDT') {
-                                    displayAmount = bdtPrice;
+                                    displayAmount = usdPrice * (order.user?.dollarRate || 121.52);
                                   } else {
 
                                     displayAmount = usdPrice * currentCurrencyData.rate;
