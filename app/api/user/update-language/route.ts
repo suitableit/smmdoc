@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: session.user.id }
     });
 
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: session.user.id },
       data: { 
         language: language,

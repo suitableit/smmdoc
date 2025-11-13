@@ -30,7 +30,7 @@ export async function PUT(
     }
 
     if (position === 'top') {
-      await db.category.updateMany({
+      await db.categories.updateMany({
         where: {
           position: 'top',
           userId: user.id,
@@ -57,7 +57,7 @@ export async function PUT(
       updateData.hideCategory = hideCategory;
     }
 
-    const updatedCategory = await db.category.update({
+    const updatedCategory = await db.categories.update({
       where: {
         id: parseInt(id),
         userId: user.id,
@@ -103,7 +103,7 @@ export async function GET(
       });
     }
     
-    const result = await db.category.findUnique({
+    const result = await db.categories.findUnique({
       where: {
         id: parseInt(id),
       },
@@ -167,7 +167,7 @@ export async function DELETE(
       }, { status: 400 });
     }
 
-    const category = await db.category.findUnique({
+    const category = await db.categories.findUnique({
       where: { id: categoryId },
       include: {
         _count: {
@@ -188,7 +188,7 @@ export async function DELETE(
 
     let deleteRefillRequestsResult = { count: 0 };
     try {
-      deleteRefillRequestsResult = await db.refillRequest.deleteMany({
+      deleteRefillRequestsResult = await db.refillRequests.deleteMany({
         where: {
           order: {
             categoryId: categoryId
@@ -203,7 +203,7 @@ export async function DELETE(
 
     let deleteCancelRequestsResult = { count: 0 };
     try {
-      deleteCancelRequestsResult = await db.cancelRequest.deleteMany({
+      deleteCancelRequestsResult = await db.cancelRequests.deleteMany({
         where: {
           order: {
             categoryId: categoryId
@@ -216,19 +216,19 @@ export async function DELETE(
 
     console.log(`Deleted ${deleteCancelRequestsResult.count} cancel requests in category ${categoryId}`);
 
-    const deleteOrdersResult = await db.newOrder.deleteMany({
+    const deleteOrdersResult = await db.newOrders.deleteMany({
       where: { categoryId: categoryId }
     });
 
     console.log(`Deleted ${deleteOrdersResult.count} orders in category ${categoryId}`);
 
-    const deleteServicesResult = await db.service.deleteMany({
+    const deleteServicesResult = await db.services.deleteMany({
       where: { categoryId: categoryId }
     });
 
     console.log(`Deleted ${deleteServicesResult.count} services in category ${categoryId}`);
 
-    await db.category.delete({
+    await db.categories.delete({
       where: { id: categoryId }
     });
 

@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const testTransaction = await db.addFund.create({
+    const testTransaction = await db.addFunds.create({
       data: {
         invoice_id: `TEST-${Date.now()}`,
         amount: 100.00,

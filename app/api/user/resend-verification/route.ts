@@ -20,7 +20,7 @@ export async function POST() {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: session.user.id },
       select: {
         id: true,

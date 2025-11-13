@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { category_name, position, hideCategory } = validedFields.data;
 
     if (position === 'top') {
-      await db.category.updateMany({
+      await db.categories.updateMany({
         where: {
           position: 'top' as any,
           userId: user?.id ?? 0,
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       userId: user?.id ?? '',
     };
 
-    const newCategory = await db.category.create({
+    const newCategory = await db.categories.create({
       data: categoryData,
       include: {
         user: {

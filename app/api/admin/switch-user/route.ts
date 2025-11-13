@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const adminUser = await prisma.user.findUnique({
+    const adminUser = await prisma.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const targetUser = await prisma.user.findUnique({
+    const targetUser = await prisma.users.findUnique({
       where: { id: parseInt(userId) },
       select: { id: true, username: true, email: true, role: true }
     });

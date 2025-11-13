@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    const existingOrder = await db.newOrder.findUnique({
+    const existingOrder = await db.newOrders.findUnique({
       where: { id: orderIdInt }
     });
     
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       }, { status: 404 });
     }
     
-    const updatedOrder = await db.newOrder.update({
+    const updatedOrder = await db.newOrders.update({
       where: { id: orderIdInt },
       data: { status }
     });

@@ -35,7 +35,7 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Parsed category ID:', categoryId);
 
-    const category = await db.category.findUnique({
+    const category = await db.categories.findUnique({
       where: {
         id: categoryId,
       },
@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Found category to delete:', category.category_name);
 
-    await db.category.delete({
+    await db.categories.delete({
       where: {
         id: categoryId,
       },

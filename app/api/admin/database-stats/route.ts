@@ -18,10 +18,10 @@ export async function GET() {
       totalOrders,
       totalUsers
     ] = await Promise.all([
-      prisma.service.count(),
-      prisma.category.count(),
-      prisma.newOrder.count(),
-      prisma.user.count()
+      prisma.services.count(),
+      prisma.categories.count(),
+      prisma.newOrders.count(),
+      prisma.users.count()
     ]);
 
     const stats = {

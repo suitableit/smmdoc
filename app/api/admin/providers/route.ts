@@ -813,7 +813,7 @@ export async function DELETE(req: NextRequest) {
 
       if (serviceIds.length > 0) {
         
-        await db.favoriteService.deleteMany({
+        await db.favoriteServices.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 

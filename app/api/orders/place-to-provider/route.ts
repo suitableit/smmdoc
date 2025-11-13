@@ -40,8 +40,7 @@ export async function POST(req: NextRequest) {
           select: {
             id: true,
             name: true,
-            providerServiceId: true,
-            overflow: true
+            providerServiceId: true
           }
         },
         user: {
@@ -87,7 +86,7 @@ export async function POST(req: NextRequest) {
       (provider as any).http_method || (provider as any).httpMethod || 'POST'
     );
     
-    const serviceOverflow = order.service.overflow || 0;
+    const serviceOverflow = 0;
     const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * order.qty);
     const quantityWithOverflow = order.qty + serviceOverflowAmount;
 
@@ -262,7 +261,7 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    await db.providerOrderLog.create({
+    await db.providerOrderLogs.create({
       data: {
         orderId: order.id,
         providerId: provider.id,

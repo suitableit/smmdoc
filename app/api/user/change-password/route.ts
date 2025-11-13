@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: session.user.id },
       select: {
         id: true,
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-    await db.user.update({
+    await db.users.update({
       where: { id: session.user.id },
       data: { 
         password: hashedNewPassword,
