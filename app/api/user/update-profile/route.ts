@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { fullName, email, username } = body;
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: session.user.id }
     });
 
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (username !== undefined && username !== existingUser.username) {
-      const usernameExists = await db.user.findFirst({
+      const usernameExists = await db.users.findFirst({
         where: {
           username: username,
           id: { not: session.user.id }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (email !== undefined && email !== existingUser.email) {
-      const emailExists = await db.user.findFirst({
+      const emailExists = await db.users.findFirst({
         where: {
           email: email,
           id: { not: session.user.id }
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     if (email !== undefined) updateData.email = email;
     if (username !== undefined) updateData.username = username;
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: session.user.id },
       data: updateData,
       select: {

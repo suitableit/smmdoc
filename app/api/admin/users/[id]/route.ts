@@ -431,7 +431,7 @@ export async function DELETE(
           where: { userId: userId }
         });
 
-        await tx.user.delete({
+        await tx.users.delete({
           where: { id: userId }
         });
       });

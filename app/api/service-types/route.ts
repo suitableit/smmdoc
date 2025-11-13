@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const includeServices = searchParams.get('includeServices') === 'true';
 
-    const serviceTypes = await db.servicetype.findMany({
+    const serviceTypes = await db.serviceTypes.findMany({
       where: {
         status: 'active',
       },

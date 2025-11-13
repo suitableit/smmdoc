@@ -22,7 +22,7 @@ export async function getTicketSettings(bypassCache = false): Promise<TicketSett
   }
 
   try {
-    const settings = await db.ticket_settings.findFirst();
+    const settings = await db.ticketSettings.findFirst();
     if (settings) {
       cachedTicketSettings = {
         ticketSystemEnabled: settings.ticketSystemEnabled ?? DEFAULT_TICKET_SETTINGS.ticketSystemEnabled,

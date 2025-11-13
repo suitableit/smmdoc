@@ -14,8 +14,9 @@ export interface ProviderValidationResult {
 }
 
 export async function validateProvider(providerId: number): Promise<ProviderValidationResult> {
-  try {
-    const provider = await db.api_providers.findUnique({
+  try {
+
+    const provider = await db.apiProviders.findUnique({
       where: { id: providerId },
       select: {
         id: true,
@@ -31,25 +32,29 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
         isValid: false,
         error: 'Provider not found'
       };
-    }
+    }
+
     if (provider.status !== 'active') {
       return {
         isValid: false,
         error: 'Provider is not active'
       };
-    }
+    }
+
     if (!provider.api_key || provider.api_key.trim() === '') {
       return {
         isValid: false,
         error: 'Provider API key is missing or empty'
       };
-    }
+    }
+
     if (!provider.api_url || provider.api_url.trim() === '') {
       return {
         isValid: false,
         error: 'API URL is missing or empty'
       };
-    }
+    }
+
     try {
       new URL(provider.api_url);
     } catch {
@@ -74,8 +79,9 @@ export async function validateProvider(providerId: number): Promise<ProviderVali
 }
 
 export async function validateProviderByName(providerName: string): Promise<ProviderValidationResult> {
-  try {
-    const provider = await db.api_providers.findUnique({
+  try {
+
+    const provider = await db.apiProviders.findUnique({
       where: { name: providerName },
       select: {
         id: true,
@@ -114,7 +120,7 @@ export async function getValidProviders(): Promise<Array<{
   updatedAt: Date;
 }>> {
   try {
-    const providers = await db.api_providers.findMany({
+    const providers = await db.apiProviders.findMany({
       where: {
         status: 'active',
         api_key: {
@@ -133,7 +139,8 @@ export async function getValidProviders(): Promise<Array<{
         createdAt: true,
         updatedAt: true
       }
-    });
+    });
+
     const validProviders = providers.filter(provider => {
       try {
         new URL(provider.api_url);
@@ -163,21 +170,25 @@ export async function testProviderConnection(providerId: number): Promise<{succe
       };
     }
 
-    const provider = validation.provider!;
+    const provider = validation.provider!;
+
     const isTestProvider = provider.api_url.includes('samplesmm.com') || 
                           provider.api_url.includes('api.com') ||
                           provider.api_key.startsWith('sample_') ||
                           provider.api_key.startsWith('sp_api_') ||
                           provider.name.toLowerCase().includes('sample') ||
-                          provider.name.toLowerCase().includes('test');
+                          provider.name.toLowerCase().includes('test');
+
     if (isTestProvider) {
       console.log(`Skipping real API test for test provider: ${provider.name}`);
       return { 
         success: true,
         error: undefined
       };
-    }
-    try {
+    }
+
+    try {
+
       const { DEFAULT_SMM_API_SPEC } = await import('@/lib/provider-api-specification');
       const requestBuilder = new ApiRequestBuilder(DEFAULT_SMM_API_SPEC, provider.api_url, provider.api_key);
       const servicesRequest = requestBuilder.buildServicesRequest();

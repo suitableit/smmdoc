@@ -68,13 +68,13 @@ export async function GET(request: Request) {
     }
 
     const [logs, total] = await Promise.all([
-      db.service_update_logs.findMany({
+      db.serviceUpdateLogs.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
-      db.service_update_logs.count({ where }),
+      db.serviceUpdateLogs.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -123,7 +123,7 @@ export async function DELETE(request: Request) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-    const result = await db.service_update_logs.deleteMany({
+    const result = await db.serviceUpdateLogs.deleteMany({
       where: {
         createdAt: {
           lt: cutoffDate,

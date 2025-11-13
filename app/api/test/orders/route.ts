@@ -5,10 +5,10 @@ export async function GET() {
   try {
     console.log('Testing database connection...');
     
-    const orderCount = await db.newOrder.count();
+    const orderCount = await db.newOrders.count();
     console.log('Total orders in database:', orderCount);
     
-    const orders = await db.newOrder.findMany({
+    const orders = await db.newOrders.findMany({
       take: 5,
       select: {
         id: true,

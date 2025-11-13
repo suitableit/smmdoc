@@ -27,7 +27,7 @@ export async function PUT(request: Request) {
       updateData.hideCategory = hideCategory;
     }
 
-    await db.category.update({
+    await db.categories.update({
       where: {
         id: Number(id),
       },
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
         success: false,
       });
     }
-    const result = await db.category.findUnique({
+    const result = await db.categories.findUnique({
       where: {
         id: Number(id),
       },

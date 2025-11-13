@@ -45,7 +45,8 @@ export async function POST(
             email: true,
             balance: true,
             currency: true,
-            total_spent: true
+            total_spent: true,
+            dollarRate: true
           }
         },
         service: {

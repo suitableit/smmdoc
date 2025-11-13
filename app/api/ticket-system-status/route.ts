@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export async function GET() {
   try {
-    const settings = await db.ticket_settings.findFirst({
+    const settings = await db.ticketSettings.findFirst({
       select: {
         ticketSystemEnabled: true
       }

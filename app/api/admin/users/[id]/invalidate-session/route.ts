@@ -61,7 +61,7 @@ export async function POST(
       );
     }
 
-    await db.session.deleteMany({
+    await db.sessions.deleteMany({
       where: { userId: userId }
     });
 

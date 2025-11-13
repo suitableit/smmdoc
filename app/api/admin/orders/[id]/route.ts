@@ -355,7 +355,8 @@ export async function DELETE(
         user: {
           select: {
             id: true,
-            currency: true
+            currency: true,
+            dollarRate: true
           }
         }
       }

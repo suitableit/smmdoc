@@ -9,13 +9,13 @@ export const generateTwoFactorToken = async (email: string) => {
   const expires = new Date(new Date().getTime() + 1000 * 60 * 5);
   const existingToken = await getTwoFactorTokenByEmail(email);
   if (existingToken) {
-    await db.twoFactorToken.delete({
+    await db.twoFactorTokens.delete({
       where: {
         id: existingToken.id,
       },
     });
   }
-  const twoFactorToken = await db.twoFactorToken.create({
+  const twoFactorToken = await db.twoFactorTokens.create({
     data: {
       token,
       email,
@@ -25,15 +25,17 @@ export const generateTwoFactorToken = async (email: string) => {
   return twoFactorToken;
 };
 
-export const generatePasswordResetToken = async (email: string) => {
+export const generatePasswordResetToken = async (email: string) => {
+
   const userSettings = await db.userSettings.findFirst();
-  const resetLinkMax = userSettings?.resetLinkMax || 3;
+  const resetLinkMax = userSettings?.resetLinkMax || 3;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const todayResetCount = await db.passwordResetToken.count({
+  const todayResetCount = await db.passwordResetTokens.count({
     where: {
       email,
       createdAt: {
@@ -48,8 +50,9 @@ export const generatePasswordResetToken = async (email: string) => {
   }
 
   const token = uuidv4();
-  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
-  const passwordResetToken = await db.passwordResetToken.create({
+  const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
+
+  const passwordResetToken = await db.passwordResetTokens.create({
     data: {
       token,
       email,
@@ -64,13 +67,13 @@ export const generateVerificationToken = async (email: string) => {
   const expires = new Date(new Date().getTime() + 1000 * 60 * 60 * 24);
   const existingToken = await getVerificationTokenByEmail(email);
   if (existingToken) {
-    await db.verificationToken.delete({
+    await db.verificationTokens.delete({
       where: {
         id: existingToken.id,
       },
     });
   }
-  const verificationToken = await db.verificationToken.create({
+  const verificationToken = await db.verificationTokens.create({
     data: {
       token,
       email,

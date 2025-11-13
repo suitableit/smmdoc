@@ -285,8 +285,7 @@ export async function POST(request: Request) {
             name: true,
             rate: true,
             providerId: true,
-            providerServiceId: true,
-            overflow: true
+            providerServiceId: true
           }
         });
 
@@ -343,7 +342,7 @@ export async function POST(request: Request) {
           }
 
           if (shouldForward) {
-            const serviceOverflow = service.overflow || 0;
+            const serviceOverflow = 0;
             const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * orderData.qty);
             const quantityWithOverflow = orderData.qty + serviceOverflowAmount;
             

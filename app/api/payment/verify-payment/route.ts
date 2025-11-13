@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const payment = await db.addFund.findUnique({
+    const payment = await db.addFunds.findUnique({
       where: {
         invoice_id,
       },
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
       
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : 'Failed'}`);
       
-      const updatedPayment = await db.addFund.update({
+      const updatedPayment = await db.addFunds.update({
         where: { invoice_id },
         data: {
           status: paymentStatus,
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
       if (isSuccessful && payment.user) {
         try {
           await db.$transaction(async (prisma) => {
-            await prisma.addFund.update({
+            await prisma.addFunds.update({
               where: { invoice_id },
               data: {
                 status: "Success",
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
 
             const totalAmountToAdd = originalAmount + bonusAmount;
 
-            const user = await prisma.user.update({
+            const user = await prisma.users.update({
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },

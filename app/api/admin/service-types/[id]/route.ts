@@ -21,7 +21,7 @@ export async function GET(
     }
 
     const { id } = await params;
-    const serviceType = await db.servicetype.findUnique({
+    const serviceType = await db.serviceTypes.findUnique({
       where: { id: Number(id) },
       include: {
         services: {
@@ -135,7 +135,7 @@ export async function PUT(
       );
     }
 
-    const existingType = await db.servicetype.findUnique({
+    const existingType = await db.serviceTypes.findUnique({
       where: { id: Number((await params).id) }
     });
 
@@ -150,7 +150,7 @@ export async function PUT(
       );
     }
 
-    const duplicateType = await db.servicetype.findFirst({
+    const duplicateType = await db.serviceTypes.findFirst({
       where: { 
         name: name.trim(),
         id: { not: Number((await params).id) }
@@ -168,7 +168,7 @@ export async function PUT(
       );
     }
 
-    const updatedServiceType = await db.servicetype.update({
+    const updatedServiceType = await db.serviceTypes.update({
       where: { id: Number((await params).id) },
       data: {
         name: name.trim(),
@@ -231,7 +231,7 @@ export async function DELETE(
       );
     }
 
-    const serviceType = await db.servicetype.findUnique({
+    const serviceType = await db.serviceTypes.findUnique({
       where: { id: Number((await params).id) },
       include: {
         _count: {
@@ -275,7 +275,7 @@ export async function DELETE(
       );
     }
 
-    await db.servicetype.delete({
+    await db.serviceTypes.delete({
       where: { id: Number((await params).id) }
     });
 

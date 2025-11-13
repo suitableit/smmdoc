@@ -1,16 +1,20 @@
 import { db } from '@/lib/db';
-import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
+
 export function getClientIP(request?: NextRequest): string {
-  if (!request) return 'unknown';
+  if (!request) return 'unknown';
+
   const middlewareIP = request.headers.get('x-client-ip');
   if (middlewareIP) {
     return middlewareIP;
-  }
+  }
+
   const forwarded = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
   const cfConnectingIP = request.headers.get('cf-connecting-ip');
 
-  if (forwarded) {
+  if (forwarded) {
+
     return forwarded.split(',')[0].trim();
   }
 
@@ -20,9 +24,11 @@ export function getClientIP(request?: NextRequest): string {
 
   if (cfConnectingIP) {
     return cfConnectingIP;
-  }
+  }
+
   return 'unknown';
-}
+}
+
 export function getUserAgent(request?: NextRequest): string {
   if (!request) return 'unknown';
   return request.headers.get('user-agent') || 'unknown';
@@ -40,7 +46,7 @@ interface ActivityLogData {
 
 export async function logActivity(data: ActivityLogData) {
   try {
-    await db.activitylog.create({
+    await db.activityLogs.create({
       data: {
         userId: data.userId,
         username: data.username,

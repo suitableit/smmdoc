@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     console.log('Starting provider order sync...');
 
-    const pendingOrders = await db.newOrder.findMany({
+    const pendingOrders = await db.newOrders.findMany({
       where: {
         providerOrderId: { not: null },
         providerStatus: { in: ['pending', 'processing', 'in_progress'] }
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
     for (const [providerId, orders] of ordersByProvider) {
       try {
-        const provider = await db.api_providers.findUnique({
+        const provider = await db.apiProviders.findUnique({
           where: { id: providerId },
           select: {
             id: true,
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
 
 async function getProviderIdForOrder(order: any): Promise<string | null> {
   try {
-    const service = await db.service.findUnique({
+    const service = await db.services.findUnique({
       where: { id: order.serviceId },
       select: { providerId: true }
     });
@@ -134,7 +134,7 @@ async function getProviderIdForOrder(order: any): Promise<string | null> {
       return service.providerId.toString();
     }
 
-    const lastLog = await db.providerOrderLog.findFirst({
+    const lastLog = await db.providerOrderLogs.findFirst({
       where: { orderId: order.id },
       orderBy: { createdAt: 'desc' },
       select: { providerId: true }
@@ -216,12 +216,12 @@ async function syncSingleOrder(order: any, provider: any) {
         charge: parsedStatus.charge
       });
 
-      await db.newOrder.update({
+      await db.newOrders.update({
         where: { id: order.id },
         data: updateData
       });
 
-      await db.providerOrderLog.create({
+      await db.providerOrderLogs.create({
         data: {
           orderId: order.id,
           providerId: provider.id,
@@ -244,7 +244,7 @@ async function syncSingleOrder(order: any, provider: any) {
         }
       };
     } else {
-      await db.newOrder.update({
+      await db.newOrders.update({
         where: { id: order.id },
         data: {
           lastSyncAt: new Date()
@@ -262,7 +262,7 @@ async function syncSingleOrder(order: any, provider: any) {
   } catch (error) {
     console.error(`Error syncing order ${order.id}:`, error);
 
-    await db.providerOrderLog.create({
+    await db.providerOrderLogs.create({
       data: {
         orderId: order.id,
         providerId: provider.id,
@@ -303,7 +303,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: orderId },
       include: {
         service: {
@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: parseInt(providerId) },
       select: {
         id: true,

@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const totalServices = await db.service.count();
+    const totalServices = await db.services.count();
 
-    const allServices = await db.service.findMany({
+    const allServices = await db.services.findMany({
       select: {
         id: true,
         name: true,

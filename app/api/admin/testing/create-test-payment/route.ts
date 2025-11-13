@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const existingPayment = await db.addFund.findUnique({
+    const existingPayment = await db.addFunds.findUnique({
       where: { invoice_id }
     });
     
@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    let testUser = await db.user.findFirst({
+    let testUser = await db.users.findFirst({
       where: { email: 'test@example.com' }
     });
     
     if (!testUser) {
-      testUser = await db.user.create({
+      testUser = await db.users.create({
         data: {
           name: 'Test User',
           email: 'test@example.com',
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    const testPayment = await db.addFund.create({
+    const testPayment = await db.addFunds.create({
       data: {
         invoice_id,
         order_id: `TEST-${Date.now()}`,

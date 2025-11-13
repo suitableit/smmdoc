@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const serviceCounts = await prisma.service.groupBy({
+    const serviceCounts = await prisma.services.groupBy({
       by: ['packageType'],
       _count: {
         id: true,
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingType = await prisma.servicetype.findUnique({
+    const existingType = await prisma.serviceTypes.findUnique({
       where: { name: name.trim() }
     });
 
@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const serviceType = await prisma.servicetype.create({
+    const serviceType = await prisma.serviceTypes.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,

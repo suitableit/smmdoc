@@ -108,7 +108,7 @@ export async function PUT(
     }
 
     const updatedUser = await db.$transaction(async (prisma) => {
-      const user = await prisma.user.update({
+      const user = await prisma.users.update({
         where: { id: userId },
         data: { 
           status,
@@ -125,7 +125,7 @@ export async function PUT(
       });
 
       if (status === 'suspended' || status === 'banned') {
-        await prisma.session.deleteMany({
+        await prisma.sessions.deleteMany({
           where: { userId: userId }
         });
       }

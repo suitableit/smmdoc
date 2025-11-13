@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const payment = await db.addFund.findUnique({
+    const payment = await db.addFunds.findUnique({
       where: { invoice_id },
       include: { user: true }
     });
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       if (isSuccessful && verificationStatus === "COMPLETED" && payment.user) {
         try {
           await db.$transaction(async (prisma) => {
-            await prisma.addFund.update({
+            await prisma.addFunds.update({
               where: { invoice_id },
               data: {
                 status: "Success",
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
             const totalAmountToAdd = originalAmount + bonusAmount;
 
-            const user = await prisma.user.update({
+            const user = await prisma.users.update({
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
       } 
       
       else if (verificationStatus === "PENDING") {
-        await db.addFund.update({
+        await db.addFunds.update({
           where: { invoice_id },
           data: {
             transaction_id: transaction_id,
@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
       } 
       
       else {
-        await db.addFund.update({
+        await db.addFunds.update({
           where: { invoice_id },
           data: {
             status: "Cancelled",

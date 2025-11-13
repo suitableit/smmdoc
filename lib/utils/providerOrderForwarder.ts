@@ -221,7 +221,7 @@ export class ProviderOrderForwarder {
         url: balanceRequest.url,
         data: balanceRequest.data,
         headers: balanceRequest.headers,
-        timeout: (provider.timeout_seconds || 30) * 1000,
+        timeout: ((provider as any).timeout_seconds || 30) * 1000,
       });
 
       const result = response.data;

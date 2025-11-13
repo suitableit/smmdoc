@@ -35,7 +35,7 @@ export async function POST(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: parseInt(id) },
       include: {
         service: {
@@ -116,7 +116,7 @@ export async function POST(
       );
     }
 
-    const existingRequest = await db.refillRequest.findFirst({
+    const existingRequest = await db.refillRequests.findFirst({
       where: {
         orderId: parseInt(id),
         status: 'pending'
@@ -134,7 +134,7 @@ export async function POST(
       );
     }
 
-    const refillRequest = await db.refillRequest.create({
+    const refillRequest = await db.refillRequests.create({
       data: {
         orderId: parseInt(id),
         userId: session.user.id,
