@@ -1,4 +1,4 @@
-model NewOrder {
+model NewOrders {
   id             Int             @id @default(autoincrement())
   categoryId     Int?
   serviceId      Int?
@@ -31,16 +31,16 @@ model NewOrder {
   apiResponse    String?         @db.Text
   isSubscription Boolean         @default(false)
   subscriptionStatus String?
-  cancelRequests CancelRequest[]
-  category       Category?       @relation(fields: [categoryId], references: [id])
-  service        Service?        @relation(fields: [serviceId], references: [id])
-  user           User            @relation(fields: [userId], references: [id])
-  refillRequests RefillRequest[]
+  cancelRequests CancelRequests[]
+  category       Categories?       @relation(fields: [categoryId], references: [id])
+  service        Services?        @relation(fields: [serviceId], references: [id])
+  user           Users            @relation(fields: [userId], references: [id])
+  refillRequests RefillRequests[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
   @@index([userId], map: "NewOrder_userId_fkey")
   @@index([packageType], map: "NewOrder_packageType_idx")
   @@index([status], map: "NewOrder_status_idx")
-  @@map("neworder")
+  @@map("new_orders")
 }

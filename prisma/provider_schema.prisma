@@ -8,7 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model apiProvider {
+model ApiProviders {
   id         Int      @id @default(autoincrement())
   name       String   @unique
   api_key    String
@@ -23,7 +23,7 @@ model apiProvider {
   @@map("api_providers")
 }
 
-model ProviderOrderLog {
+model ProviderOrderLogs {
   id               Int      @id @default(autoincrement())
   orderId          Int
   action           String
@@ -38,7 +38,7 @@ model ProviderOrderLog {
   @@map("provider_order_log")
 }
 
-model ProviderServiceConfig {
+model ProviderServiceConfigs {
   id                Int      @id @default(autoincrement())
   serviceId         Int      @unique
   providerId        Int?
@@ -53,7 +53,7 @@ model ProviderServiceConfig {
   @@map("provider_service_config")
 }
 
-model ProviderOrderTracking {
+model ProviderOrderTrackings {
   id               Int       @id @default(autoincrement())
   orderId          Int       @unique
   providerOrderId  String?
@@ -71,7 +71,7 @@ model ProviderOrderTracking {
   @@map("provider_order_tracking")
 }
 
-model ProviderApiLog {
+model ProviderApiLogs {
   id               Int      @id @default(autoincrement())
   providerId       Int?
   endpoint         String
@@ -89,7 +89,7 @@ model ProviderApiLog {
   @@map("provider_api_log")
 }
 
-model ProviderStatusMapping {
+model ProviderStatusMappings {
   id             Int      @id @default(autoincrement())
   providerId     Int
   providerStatus String

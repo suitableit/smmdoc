@@ -41,7 +41,7 @@ model User {
   supportTickets          SupportTicket[]
   repliedSupportTickets   SupportTicket[]        @relation("RepliedByUser")
 
-  @@map("user")
+  @@map("users")
 }
 
 model Account {
@@ -77,7 +77,7 @@ model Session {
   user         User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "Session_userId_idx")
-  @@map("session")
+  @@map("sessions")
 }
 
 model VerificationToken {
@@ -89,7 +89,7 @@ model VerificationToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "VerificationToken_email_token_key")
-  @@map("verificationtoken")
+  @@map("verification_tokens")
 }
 
 model PasswordResetToken {
@@ -101,7 +101,7 @@ model PasswordResetToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "PasswordResetToken_email_token_key")
-  @@map("passwordresettoken")
+  @@map("password_reset_tokens")
 }
 
 model TwoFactorToken {
@@ -113,7 +113,7 @@ model TwoFactorToken {
   updatedAt DateTime @updatedAt
 
   @@unique([email, token], map: "TwoFactorToken_email_token_key")
-  @@map("twofactortoken")
+  @@map("two_factor_tokens")
 }
 
 model TwoFactorConfirmation {
@@ -123,7 +123,7 @@ model TwoFactorConfirmation {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("twofactorconfirmation")
+  @@map("two_factor_confirmations")
 }
 
 model ApiKey {
@@ -135,7 +135,7 @@ model ApiKey {
   User      User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "ApiKey_userId_fkey")
-  @@map("apikey")
+  @@map("api_keys")
 }
 
 enum Role {

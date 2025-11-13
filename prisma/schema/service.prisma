@@ -49,5 +49,5 @@ model Service {
   @@index([status], map: "Service_status_idx")
   @@index([userId], map: "Service_userId_idx")
   @@index([packageType], map: "Service_packageType_idx")
-  @@map("service")
+  @@map("services")
 }

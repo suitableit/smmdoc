@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Category {
+model Categories {
   id            Int              @id @default(autoincrement())
   category_name String
   status        String           @default("active")
@@ -17,16 +17,16 @@ model Category {
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
   deletedAt     DateTime?
-  newOrders     NewOrder[]
-  user          user             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  services      Service[]
+  newOrders     NewOrders[]
+  user          Users             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services      Services[]
 
   @@index([position, createdAt], map: "Category_position_createdAt_idx")
   @@index([userId], map: "Category_userId_fkey")
   @@map("service_categories")
 }
 
-model Service {
+model Services {
   id                Int               @id @default(autoincrement())
   name              String
   rate              Float
@@ -67,12 +67,12 @@ model Service {
   subscriptionMin   Int?
   typeParameters    String?           @db.Text
   orderLink         String            @default("link")
-  favoriteServices  FavoriteService[]
-  newOrders         NewOrder[]
-  category          Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  favrouteCat       FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
-  serviceType       servicetype?      @relation(fields: [serviceTypeId], references: [id])
-  user              user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  favoriteServices  FavoriteServices[]
+  newOrders         NewOrders[]
+  category          Categories          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  favrouteCat       FavoriteCategories?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
+  serviceType       ServiceTypes?      @relation(fields: [serviceTypeId], references: [id])
+  user              Users              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([categoryId], map: "Service_categoryId_fkey")
   @@index([favrouteCatId], map: "Service_favrouteCatId_fkey")
@@ -83,7 +83,7 @@ model Service {
   @@map("services")
 }
 
-model NewOrder {
+model NewOrders {
   id                 Int                @id @default(autoincrement())
   categoryId         Int
   serviceId          Int
@@ -118,12 +118,12 @@ model NewOrder {
   subscriptionStatus String?
   typeData           String?            @db.Text
   username           String?
-  cancelRequests     CancelRequest[]
-  category           Category           @relation(fields: [categoryId], references: [id])
-  service            Service            @relation(fields: [serviceId], references: [id])
-  user               user               @relation(fields: [userId], references: [id])
-  providerOrderLogs  ProviderOrderLog[]
-  refillRequests     RefillRequest[]
+  cancelRequests     CancelRequests[]
+  category           Categories           @relation(fields: [categoryId], references: [id])
+  service            Services            @relation(fields: [serviceId], references: [id])
+  user               Users               @relation(fields: [userId], references: [id])
+  providerOrderLogs  ProviderOrderLogs[]
+  refillRequests     RefillRequests[]
 
   @@index([categoryId], map: "NewOrder_categoryId_fkey")
   @@index([serviceId], map: "NewOrder_serviceId_fkey")
@@ -135,34 +135,34 @@ model NewOrder {
   @@map("new_orders")
 }
 
-model FavrouteCat {
+model FavoriteCategories {
   id        Int       @id @default(autoincrement())
   name      String
   userId    Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  user      user      @relation(fields: [userId], references: [id])
-  services  Service[]
+  user      Users      @relation(fields: [userId], references: [id])
+  services  Services[]
 
   @@index([userId], map: "FavrouteCat_userId_fkey")
   @@map("favorite_categories")
 }
 
-model FavoriteService {
+model FavoriteServices {
   id        Int      @id @default(autoincrement())
   userId    Int
   serviceId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service   Services  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, serviceId], map: "FavoriteService_userId_serviceId_key")
   @@index([serviceId], map: "FavoriteService_serviceId_fkey")
   @@map("favorite_services")
 }
 
-model CancelRequest {
+model CancelRequests {
   id           Int       @id @default(autoincrement())
   orderId      Int
   userId       Int
@@ -174,8 +174,8 @@ model CancelRequest {
   processedAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  order        NewOrder  @relation(fields: [orderId], references: [id])
-  user         user      @relation(fields: [userId], references: [id])
+  order        NewOrders  @relation(fields: [orderId], references: [id])
+  user         Users      @relation(fields: [userId], references: [id])
 
   @@index([createdAt], map: "CancelRequest_createdAt_idx")
   @@index([orderId], map: "CancelRequest_orderId_fkey")
@@ -184,7 +184,7 @@ model CancelRequest {
   @@map("cancel_requests")
 }
 
-model RefillRequest {
+model RefillRequests {
   id                                   Int       @id @default(autoincrement())
   orderId                              Int
   userId                               Int
@@ -195,9 +195,9 @@ model RefillRequest {
   processedAt                          DateTime?
   createdAt                            DateTime  @default(now())
   updatedAt                            DateTime  @updatedAt
-  order                                NewOrder  @relation(fields: [orderId], references: [id])
-  user_refillrequest_processedByTouser user?     @relation("refillrequest_processedByTouser", fields: [processedBy], references: [id])
-  user                                 user      @relation(fields: [userId], references: [id])
+  order                                NewOrders  @relation(fields: [orderId], references: [id])
+  user_refillrequest_processedByTouser Users?     @relation("refillrequest_processedByTouser", fields: [processedBy], references: [id])
+  user                                 Users      @relation(fields: [userId], references: [id])
 
   @@index([createdAt], map: "RefillRequest_createdAt_idx")
   @@index([orderId], map: "RefillRequest_orderId_idx")
@@ -207,7 +207,7 @@ model RefillRequest {
   @@map("refill_requests")
 }
 
-model Account {
+model Accounts {
   id                       Int      @id @default(autoincrement())
   userId                   Int      @unique(map: "Account_userId_key")
   type                     String
@@ -223,27 +223,27 @@ model Account {
   refresh_token_expires_in Int?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
-  user                     user     @relation(fields: [userId], references: [id])
+  user                     Users     @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId], map: "Account_provider_providerAccountId_key")
   @@index([userId], map: "Account_userId_idx")
   @@map("oauth_accounts")
 }
 
-model Session {
+model Sessions {
   id           Int      @id @default(autoincrement())
   sessionToken String   @unique(map: "Session_sessionToken_key")
   userId       Int
   expires      DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  user         user     @relation(fields: [userId], references: [id])
+  user         Users     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "Session_userId_idx")
   @@map("sessions")
 }
 
-model VerificationToken {
+model VerificationTokens {
   id        Int      @id @default(autoincrement())
   token     String   @unique(map: "VerificationToken_token_key")
   expires   DateTime
@@ -255,7 +255,7 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-model PasswordResetToken {
+model PasswordResetTokens {
   id        Int      @id @default(autoincrement())
   token     String   @unique(map: "PasswordResetToken_token_key")
   expires   DateTime
@@ -267,7 +267,7 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
-model TwoFactorToken {
+model TwoFactorTokens {
   id        Int      @id @default(autoincrement())
   token     String   @unique(map: "TwoFactorToken_token_key")
   expires   DateTime
@@ -279,17 +279,17 @@ model TwoFactorToken {
   @@map("two_factor_tokens")
 }
 
-model TwoFactorConfirmation {
+model TwoFactorConfirmations {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique(map: "TwoFactorConfirmation_userId_key")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("two_factor_confirmations")
 }
 
-model SupportTicket {
+model SupportTickets {
   id            Int             @id @default(autoincrement())
   userId        Int
   subject       String
@@ -309,10 +309,10 @@ model SupportTicket {
   systemMessage String?         @db.Text
   ticketType    String          @default("Human")
   isRead        Boolean         @default(false)
-  repliedByUser user?           @relation("RepliedByUser", fields: [repliedBy], references: [id])
-  user          user            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages      TicketMessage[]
-  notes         TicketNote[]
+  repliedByUser Users?           @relation("RepliedByUser", fields: [repliedBy], references: [id])
+  user          Users            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages      TicketMessages[]
+  notes         TicketNotes[]
 
   @@index([userId])
   @@index([status])
@@ -323,7 +323,7 @@ model SupportTicket {
   @@map("support_tickets")
 }
 
-model TicketMessage {
+model TicketMessages {
   id          Int           @id @default(autoincrement())
   ticketId    Int
   userId      Int
@@ -333,8 +333,8 @@ model TicketMessage {
   attachments String?       @db.Text
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user        user          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
+  ticket      SupportTickets @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        Users          @relation("TicketMessages", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@index([userId])
@@ -342,7 +342,7 @@ model TicketMessage {
   @@map("ticket_messages")
 }
 
-model TicketNote {
+model TicketNotes {
   id        Int           @id @default(autoincrement())
   ticketId  Int
   userId    Int
@@ -350,8 +350,8 @@ model TicketNote {
   isPrivate Boolean       @default(true)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user      user          @relation("TicketNotes", fields: [userId], references: [id], onDelete: Cascade)
+  ticket    SupportTickets @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      Users          @relation("TicketNotes", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
   @@index([userId])
@@ -365,12 +365,12 @@ model ContactSettings {
   maxPendingContacts   String            @default("3")
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
-  categories           ContactCategory[]
+  categories           ContactCategories[]
 
   @@map("contact_settings")
 }
 
-model ContactCategory {
+model ContactCategories {
   id                Int             @id @default(autoincrement())
   name              String
   contactSettingsId Int
@@ -382,7 +382,7 @@ model ContactCategory {
   @@map("contact_categories")
 }
 
-model ContactMessage {
+model ContactMessages {
   id          Int           @id @default(autoincrement())
   userId      Int
   subject     String
@@ -395,7 +395,7 @@ model ContactMessage {
   repliedBy   Int?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @default(now()) @updatedAt
-  notes       ContactNote[]
+  notes       ContactNotes[]
 
   @@index([userId])
   @@index([categoryId])
@@ -403,7 +403,7 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
-model ContactNote {
+model ContactNotes {
   id        Int            @id @default(autoincrement())
   messageId Int
   userId    Int
@@ -411,15 +411,15 @@ model ContactNote {
   isPrivate Boolean        @default(true)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  message   ContactMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user      user           @relation(fields: [userId], references: [id])
+  message   ContactMessages @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      Users           @relation(fields: [userId], references: [id])
 
   @@index([messageId])
   @@index([userId])
   @@map("contact_notes")
 }
 
-model activitylog {
+model ActivityLogs {
   id        Int      @id @default(autoincrement())
   userId    Int?
   username  String?
@@ -429,7 +429,7 @@ model activitylog {
   userAgent String?  @db.Text
   metadata  String?  @db.LongText
   createdAt DateTime @default(now())
-  user      user?    @relation(fields: [userId], references: [id])
+  user      Users?    @relation(fields: [userId], references: [id])
 
   @@index([action])
   @@index([createdAt])
@@ -437,7 +437,7 @@ model activitylog {
   @@map("activity_logs")
 }
 
-model addFund {
+model AddFunds {
   id               Int                       @id @default(autoincrement())
   invoice_id       String                    @unique(map: "AddFund_invoice_id_key")
   amount           Float
@@ -461,13 +461,13 @@ model addFund {
   reference_id     String?                   @db.VarChar(255)
   currency         String?                   @default("BDT") @db.VarChar(3)
   original_amount  Float?
-  user             user                      @relation(fields: [userId], references: [id])
+  user             Users                      @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "addfund_userId_fkey")
   @@map("add_funds")
 }
 
-model affiliate_commissions {
+model AffiliateCommissions {
   id               Int        @id @default(autoincrement())
   affiliateId      Int
   referredUserId   Int
@@ -478,12 +478,13 @@ model affiliate_commissions {
   status           String     @default("pending")
   createdAt        DateTime   @default(now())
   updatedAt        DateTime
-  affiliates       affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  affiliate       Affiliates  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([affiliateId], map: "affiliate_commissions_affiliateId_fkey")
+  @@map("affiliate_commissions")
 }
 
-model affiliate_payouts {
+model AffiliatePayouts {
   id          Int        @id @default(autoincrement())
   affiliateId Int
   amount      Float
@@ -496,43 +497,47 @@ model affiliate_payouts {
   adminId     Int?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime
-  affiliates  affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  affiliate   Affiliates  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([affiliateId], map: "affiliate_payouts_affiliateId_fkey")
+  @@map("affiliate_payouts")
 }
 
-model affiliate_referrals {
+model AffiliateReferrals {
   id             Int        @id @default(autoincrement())
   affiliateId    Int
   referredUserId Int        @unique
   ipAddress      String?
   userAgent      String?
   createdAt      DateTime   @default(now())
-  affiliates     affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  affiliate      Affiliates  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([affiliateId], map: "affiliate_referrals_affiliateId_fkey")
+  @@map("affiliate_referrals")
 }
 
-model affiliates {
-  id                    Int                     @id @default(autoincrement())
-  userId                Int                     @unique
-  referralCode          String                  @unique
-  commissionRate        Float                   @default(5)
-  totalEarnings         Float                   @default(0)
-  availableEarnings     Float                   @default(0)
-  totalReferrals        Int                     @default(0)
-  totalVisits           Int                     @default(0)
-  status                String                  @default("active")
-  paymentMethod         String?
-  paymentDetails        String?                 @db.LongText
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime
-  affiliate_commissions affiliate_commissions[]
-  affiliate_payouts     affiliate_payouts[]
-  affiliate_referrals   affiliate_referrals[]
+model Affiliates {
+  id                Int                  @id @default(autoincrement())
+  userId            Int                  @unique
+  referralCode      String               @unique
+  commissionRate    Float                 @default(5)
+  totalEarnings     Float                 @default(0)
+  availableEarnings Float                @default(0)
+  totalReferrals    Int                   @default(0)
+  totalVisits       Int                   @default(0)
+  status            String                @default("active")
+  paymentMethod     String?
+  paymentDetails    String?               @db.LongText
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime
+  commissions       AffiliateCommissions[]
+  payouts           AffiliatePayouts[]
+  referrals        AffiliateReferrals[]
+
+  @@map("affiliates")
 }
 
-model child_panel_subscriptions {
+model ChildPanelSubscriptions {
   id            Int          @id @default(autoincrement())
   childPanelId  Int
   amount        Float
@@ -544,35 +549,38 @@ model child_panel_subscriptions {
   transactionId String?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime
-  child_panels  child_panels @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
+  childPanel    ChildPanels   @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
 
   @@index([childPanelId], map: "child_panel_subscriptions_childPanelId_fkey")
+  @@map("child_panel_subscriptions")
 }
 
-model child_panels {
-  id                        Int                         @id @default(autoincrement())
-  userId                    Int                         @unique
-  domain                    String                      @unique
-  subdomain                 String?
-  panelName                 String
-  apiKey                    String                      @unique
-  status                    String                      @default("pending")
-  plan                      String                      @default("basic")
-  theme                     String                      @default("default")
-  customBranding            Boolean                     @default(false)
-  totalOrders               Int                         @default(0)
-  totalRevenue              Float                       @default(0)
-  apiCallsToday             Int                         @default(0)
-  apiCallsTotal             Int                         @default(0)
-  lastActivity              DateTime?
-  expiryDate                DateTime?
-  settings                  String?                     @db.LongText
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime
-  child_panel_subscriptions child_panel_subscriptions[]
+model ChildPanels {
+  id                Int                    @id @default(autoincrement())
+  userId            Int                    @unique
+  domain            String                 @unique
+  subdomain         String?
+  panelName         String
+  apiKey            String                 @unique
+  status            String                 @default("pending")
+  plan              String                 @default("basic")
+  theme             String                 @default("default")
+  customBranding    Boolean                @default(false)
+  totalOrders       Int                    @default(0)
+  totalRevenue      Float                  @default(0)
+  apiCallsToday     Int                    @default(0)
+  apiCallsTotal     Int                    @default(0)
+  lastActivity      DateTime?
+  expiryDate        DateTime?
+  settings          String?                @db.LongText
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime
+  subscriptions     ChildPanelSubscriptions[]
+
+  @@map("child_panels")
 }
 
-model currency {
+model Currencies {
   id        Int      @id @default(autoincrement())
   code      String   @unique @db.VarChar(3)
   name      String   @db.VarChar(100)
@@ -585,7 +593,7 @@ model currency {
   @@map("currencies")
 }
 
-model currencySettings {
+model CurrencySettings {
   id                 Int      @id @default(autoincrement())
   defaultCurrency    String   @default("USD")
   displayDecimals    Int      @default(2)
@@ -598,7 +606,7 @@ model currencySettings {
   @@map("currency_settings")
 }
 
-model moduleSettings {
+model ModuleSettings {
   id                       Int      @id @default(autoincrement())
   affiliateSystemEnabled   Boolean  @default(false)
   commissionRate           Float    @default(5)
@@ -614,7 +622,7 @@ model moduleSettings {
   @@map("module_settings")
 }
 
-model service_update_logs {
+model ServiceUpdateLogs {
   id          Int      @id @default(autoincrement())
   serviceId   Int
   serviceName String
@@ -627,9 +635,11 @@ model service_update_logs {
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
+
+  @@map("service_update_logs")
 }
 
-model servicetype {
+model ServiceTypes {
   id               Int       @id @default(autoincrement())
   name             String    @unique(map: "ServiceType_name_key")
   status           String    @default("active")
@@ -654,32 +664,35 @@ model servicetype {
   supportsCancel   Boolean   @default(false)
   supportsDripfeed Boolean   @default(false)
   supportsRefill   Boolean   @default(false)
-  services         Service[]
+  services         Services[]
 
   @@map("service_types")
 }
 
-model ticket_settings {
+model TicketSettings {
   id                  Int               @id @default(autoincrement())
   ticketSystemEnabled Boolean           @default(true)
   maxPendingTickets   String            @default("3")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
-  ticket_subjects     ticket_subjects[]
+  ticketSubjects     TicketSubjects[]
+
+  @@map("ticket_settings")
 }
 
-model ticket_subjects {
+model TicketSubjects {
   id               Int             @id @default(autoincrement())
   name             String
   ticketSettingsId Int
   createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  ticket_settings  ticket_settings @relation(fields: [ticketSettingsId], references: [id], onDelete: Cascade)
+  ticketSettings  TicketSettings @relation(fields: [ticketSettingsId], references: [id], onDelete: Cascade)
 
   @@index([ticketSettingsId], map: "ticket_subjects_ticketSettingsId_fkey")
+  @@map("ticket_subjects")
 }
 
-model user {
+model Users {
   id                                            Int                    @id @default(autoincrement())
   username                                      String?                @unique(map: "User_username_key")
   name                                          String?
@@ -706,30 +719,30 @@ model user {
   language                                      String                 @default("en")
   timezone                                      String                 @default("Asia/Dhaka")
   suspendedUntil                                DateTime?
-  activitylog                                   activitylog[]
-  addFund                                       addFund[]
-  blogPosts                                     BlogPost[]
-  cancelRequests                                CancelRequest[]
-  contactNotes                                  ContactNote[]
-  favouriteCat                                  FavrouteCat[]
-  favoriteServices                              FavoriteService[]
-  newOrders                                     NewOrder[]
-  accounts                                      Account?
-  refillrequest_refillrequest_processedByTouser RefillRequest[]        @relation("refillrequest_processedByTouser")
-  refillRequests                                RefillRequest[]
-  Category                                      Category[]
-  services                                      Service[]
-  sessions                                      Session[]
-  repliedSupportTickets                         SupportTicket[]        @relation("RepliedByUser")
-  supportTickets                                SupportTicket[]
-  ticketMessages                                TicketMessage[]        @relation("TicketMessages")
-  ticketNotes                                   TicketNote[]           @relation("TicketNotes")
-  twoFactorConfirmation                         TwoFactorConfirmation?
+  activityLogs                                  ActivityLogs[]
+  addFunds                                      AddFunds[]
+  blogPosts                                     BlogPosts[]
+  cancelRequests                                CancelRequests[]
+  contactNotes                                  ContactNotes[]
+  favouriteCat                                  FavoriteCategories[]
+  favoriteServices                              FavoriteServices[]
+  newOrders                                     NewOrders[]
+  accounts                                      Accounts?
+  refillrequest_refillrequest_processedByTouser RefillRequests[]        @relation("refillrequest_processedByTouser")
+  refillRequests                                RefillRequests[]
+  categories                                    Categories[]
+  services                                       Services[]
+  sessions                                      Sessions[]
+  repliedSupportTickets                         SupportTickets[]        @relation("RepliedByUser")
+  supportTickets                                SupportTickets[]
+  ticketMessages                                TicketMessages[]        @relation("TicketMessages")
+  ticketNotes                                   TicketNotes[]           @relation("TicketNotes")
+  twoFactorConfirmation                         TwoFactorConfirmations?
 
   @@map("users")
 }
 
-model userSettings {
+model UserSettings {
   id                       Int      @id @default(autoincrement())
   resetPasswordEnabled     Boolean  @default(true)
   signUpPageEnabled        Boolean  @default(true)
@@ -855,7 +868,7 @@ model GeneralSettings {
   @@map("general_settings")
 }
 
-model api_providers {
+model ApiProviders {
   id                   Int                @id @default(autoincrement())
   name                 String             @unique
   api_key              String
@@ -899,13 +912,14 @@ model api_providers {
   balance_last_updated DateTime?
   current_balance      Float?
   deletedAt            DateTime?
-  providerOrderLogs    ProviderOrderLog[]
+  providerOrderLogs    ProviderOrderLogs[]
 
   @@index([name])
   @@index([status])
+  @@map("api_providers")
 }
 
-model ProviderOrderLog {
+model ProviderOrderLogs {
   id               Int            @id @default(autoincrement())
   orderId          Int
   providerId       Int?
@@ -916,8 +930,8 @@ model ProviderOrderLog {
   errorMessage     String?        @db.Text
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  order            NewOrder       @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  provider         api_providers? @relation(fields: [providerId], references: [id])
+  order            NewOrders       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider         ApiProviders? @relation(fields: [providerId], references: [id])
 
   @@index([orderId], map: "ProviderOrderLog_orderId_idx")
   @@index([action], map: "ProviderOrderLog_action_idx")
@@ -926,7 +940,7 @@ model ProviderOrderLog {
   @@map("provider_order_log")
 }
 
-model BlogPost {
+model BlogPosts {
   id             Int       @id @default(autoincrement())
   title          String
   slug           String    @unique
@@ -944,7 +958,7 @@ model BlogPost {
   authorId       Int
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  author         user      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author         Users      @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([slug])
   @@index([status])

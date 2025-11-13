@@ -23,5 +23,5 @@ model ServiceType {
   updatedAt         DateTime  @updatedAt
   services          Service[]
 
-  @@map("servicetype")
+  @@map("service_types")
 }

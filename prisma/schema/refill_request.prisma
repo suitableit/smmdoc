@@ -18,5 +18,5 @@ model RefillRequest {
   @@index([orderId], map: "RefillRequest_orderId_idx")
   @@index([status], map: "RefillRequest_status_idx")
   @@index([userId], map: "RefillRequest_userId_idx")
-  @@map("refillrequest")
+  @@map("refill_requests")
 }
