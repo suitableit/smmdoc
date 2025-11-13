@@ -12,7 +12,6 @@ model NewOrder {
   updatedAt      DateTime        @updatedAt
   remains        Int             @default(0)
   startCount     Int             @default(0)
-  bdtPrice       Float
   currency       String
   usdPrice       Float
   charge         Float           @default(0)
@@ -29,7 +28,6 @@ model NewOrder {
   isDripfeed     Boolean         @default(false)
   dripfeedRuns   Int?
   dripfeedInterval Int?
-  apiOrderId     String?
   apiResponse    String?         @db.Text
   isSubscription Boolean         @default(false)
   subscriptionStatus String?

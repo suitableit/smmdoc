@@ -208,7 +208,7 @@ export async function PUT(
     
     if (body.status && body.status !== currentOrder.status) {
       const user = currentOrder.user;
-      const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.bdtPrice;
+      const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.usdPrice * (user.dollarRate || 121.52);
       
       if (currentOrder.status === 'pending' && ['processing', 'completed'].includes(body.status)) {
         if (user.balance < orderPrice) {
@@ -373,7 +373,7 @@ export async function DELETE(
     }
     
     if (order.status !== 'pending') {
-      const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+      const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.usdPrice * (order.user.dollarRate || 121.52);
 
       await db.user.update({
         where: { id: order.userId },

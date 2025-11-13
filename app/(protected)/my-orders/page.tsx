@@ -784,7 +784,6 @@ export default function OrdersList() {
                             {(() => {
 
                               const usdPrice = order.usdPrice || 0;
-                              const bdtPrice = order.bdtPrice || 0;
 
                               if (!currentCurrencyData) {
                                 return `$${formatPrice(usdPrice)}`;
@@ -795,7 +794,7 @@ export default function OrdersList() {
                               if (currentCurrencyData.code === 'USD') {
                                 displayAmount = usdPrice;
                               } else if (currentCurrencyData.code === 'BDT') {
-                                displayAmount = bdtPrice;
+                                displayAmount = usdPrice * (order.user?.dollarRate || 121.52);
                               } else {
 
                                 displayAmount = usdPrice * currentCurrencyData.rate;

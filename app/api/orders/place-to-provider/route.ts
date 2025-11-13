@@ -27,12 +27,21 @@ export async function POST(req: NextRequest) {
 
     const order = await db.newOrder.findUnique({
       where: { id: orderId },
-      include: {
+      select: {
+        id: true,
+        link: true,
+        qty: true,
+        charge: true,
+        startCount: true,
+        remains: true,
+        dripfeedRuns: true,
+        dripfeedInterval: true,
         service: {
           select: {
             id: true,
             name: true,
-            providerServiceId: true
+            providerServiceId: true,
+            overflow: true
           }
         },
         user: {
@@ -78,10 +87,24 @@ export async function POST(req: NextRequest) {
       (provider as any).http_method || (provider as any).httpMethod || 'POST'
     );
     
+    const serviceOverflow = order.service.overflow || 0;
+    const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * order.qty);
+    const quantityWithOverflow = order.qty + serviceOverflowAmount;
+
+    const providerServiceId = order.service.providerServiceId;
+    if (!providerServiceId) {
+      return NextResponse.json(
+        { success: false, message: 'Service does not have provider service ID', data: null },
+        { status: 400 }
+      );
+    }
+
     const orderRequest = requestBuilder.buildAddOrderRequest(
-      order.service.providerServiceId || order.serviceId.toString(),
+      providerServiceId,
       order.link,
-      order.qty
+      quantityWithOverflow,
+      order.dripfeedRuns || undefined,
+      order.dripfeedInterval || undefined
     );
 
     console.log('Sending order to provider:', {
@@ -172,12 +195,70 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const providerOrderId = parsedOrder.orderId.toString();
+    console.log(`Order ${order.id} created with provider order ID: ${providerOrderId}. Fetching status and charge...`);
+
+    let apiCharge = 0;
+    let orderStatus = 'pending';
+    let startCount = order.startCount || 0;
+    let remains = order.remains || 0;
+
+    try {
+      const statusRequest = requestBuilder.buildOrderStatusRequest(providerOrderId);
+      const statusResponse = await axios({
+        method: statusRequest.method,
+        url: statusRequest.url,
+        data: statusRequest.data,
+        headers: statusRequest.headers,
+        timeout: 30000,
+      });
+
+      const parsedStatus = responseParser.parseOrderStatusResponse(statusResponse.data);
+      
+      const mapProviderStatus = (providerStatus: string): string => {
+        if (!providerStatus) return 'pending';
+        const normalizedStatus = providerStatus.toLowerCase().trim().replace(/\s+/g, '_');
+        const statusMap: { [key: string]: string } = {
+          'pending': 'pending',
+          'in_progress': 'processing',
+          'inprogress': 'processing',
+          'processing': 'processing',
+          'completed': 'completed',
+          'complete': 'completed',
+          'partial': 'partial',
+          'canceled': 'cancelled',
+          'cancelled': 'cancelled',
+          'refunded': 'refunded',
+          'failed': 'failed',
+          'fail': 'failed'
+        };
+        return statusMap[normalizedStatus] || 'pending';
+      };
+
+      orderStatus = mapProviderStatus(parsedStatus.status);
+      apiCharge = parsedStatus.charge || 0;
+      startCount = parsedStatus.startCount !== undefined ? parsedStatus.startCount : startCount;
+      remains = parsedStatus.remains !== undefined ? parsedStatus.remains : remains;
+
+      console.log(`Order ${order.id} status fetched: ${orderStatus}, Charge: ${apiCharge}`);
+    } catch (statusError) {
+      console.warn(`Could not fetch status for order ${order.id}, using default values:`, statusError);
+    }
+
+    const profit = order.charge - apiCharge;
+
     const updatedOrder = await db.newOrder.update({
       where: { id: orderId },
       data: {
-        providerOrderId: parsedOrder.orderId.toString(),
-        providerStatus: 'pending',
-        lastSyncAt: new Date()
+        providerOrderId: providerOrderId,
+        providerStatus: orderStatus,
+        status: orderStatus,
+        charge: apiCharge || order.charge,
+        profit: profit,
+        startCount: startCount,
+        remains: remains,
+        lastSyncAt: new Date(),
+        updatedAt: new Date()
       }
     });
 
@@ -194,8 +275,11 @@ export async function POST(req: NextRequest) {
 
     console.log('Order forwarded successfully:', {
       orderId: order.id,
-      providerOrderId: parsedOrder.orderId,
-      providerId: provider.id
+      providerOrderId: providerOrderId,
+      providerId: provider.id,
+      status: orderStatus,
+      charge: apiCharge,
+      profit: profit
     });
 
     return NextResponse.json(
@@ -204,9 +288,11 @@ export async function POST(req: NextRequest) {
         message: 'Order forwarded to provider successfully',
         data: {
           orderId: order.id,
-          providerOrderId: providerResponse.order,
+          providerOrderId: providerOrderId,
           providerName: provider.name,
-          status: 'pending'
+          status: orderStatus,
+          charge: apiCharge,
+          profit: profit
         }
       },
       { status: 200 }

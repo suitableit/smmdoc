@@ -3,6 +3,7 @@ import { ActivityLogger } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
+import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
 
 export async function POST(request: Request) {
   try {
@@ -160,7 +161,6 @@ export async function POST(request: Request) {
         qty,
         price,
         usdPrice,
-        bdtPrice,
         currency,
         avg_time,
         comments,
@@ -181,14 +181,12 @@ export async function POST(request: Request) {
       });
 
       const calculatedUsdPrice = usdPrice || (service!.rate * qty) / 1000;
-      const calculatedBdtPrice =
-        bdtPrice || calculatedUsdPrice * (user.dollarRate || 121.52);
 
       let finalPrice;
       if (user.currency === 'USD') {
         finalPrice = calculatedUsdPrice;
       } else if (user.currency === 'BDT') {
-        finalPrice = calculatedBdtPrice;
+        finalPrice = calculatedUsdPrice * (user.dollarRate || 121.52);
       } else if (user.currency === 'USDT') {
         finalPrice = calculatedUsdPrice;
       } else {
@@ -205,7 +203,6 @@ export async function POST(request: Request) {
         qty: parseInt(qty),
         price: finalPrice,
         usdPrice: calculatedUsdPrice,
-        bdtPrice: calculatedBdtPrice,
         currency: user.currency,
         avg_time: avg_time || service!.avg_time,
         status: 'pending',
@@ -233,8 +230,7 @@ export async function POST(request: Request) {
       processedOrders: processedOrders.map(o => ({
         currency: o.currency,
         price: o.price,
-        usdPrice: o.usdPrice,
-        bdtPrice: o.bdtPrice
+        usdPrice: o.usdPrice
       })),
       originalOrders: orders.map(o => ({ currency: o.currency, price: o.price }))
     });
@@ -257,11 +253,297 @@ export async function POST(request: Request) {
       );
     }
 
+    const providerDataArray: Array<{
+      providerOrderId: string | null;
+      providerStatus: string;
+      apiCharge: number;
+      profit: number;
+      startCount: number;
+      remains: number;
+      orderError: string | null;
+      serviceProviderId: number | null;
+    }> = [];
+    
+    for (let i = 0; i < processedOrders.length; i++) {
+      try {
+        const orderData = processedOrders[i];
+        let providerOrderId: string | null = null;
+        let providerStatus = 'pending';
+        let apiCharge = 0;
+        let profit = orderData.price;
+        let startCount = orderData.startCount || 0;
+        let remains = orderData.remains || orderData.qty;
+        let orderError: string | null = null;
+        let serviceProviderId: number | null = null;
+
+        console.log(`Processing order ${i + 1}/${processedOrders.length} for service ${orderData.serviceId}...`);
+
+        const service = await db.service.findUnique({
+          where: { id: orderData.serviceId },
+          select: {
+            id: true,
+            name: true,
+            rate: true,
+            providerId: true,
+            providerServiceId: true,
+            overflow: true
+          }
+        });
+
+        if (!service) {
+          throw new Error(`Service ${orderData.serviceId} not found`);
+        }
+
+        if (service?.providerId && service?.providerServiceId) {
+          try {
+          console.log(`Fetching provider ${service.providerId}...`);
+          const provider = await db.api_providers.findUnique({
+            where: { id: service.providerId }
+          });
+
+          if (!provider) {
+            throw new Error(`Provider ${service.providerId} not found`);
+          }
+
+          if (provider.status !== 'active') {
+            throw new Error(`Provider ${provider.name} is not active`);
+          }
+
+          serviceProviderId = service.providerId;
+
+          const providerForApi: any = {
+            id: provider.id,
+            name: provider.name,
+            api_url: provider.api_url,
+            api_key: provider.api_key,
+            status: provider.status
+          };
+
+          const forwarder = ProviderOrderForwarder.getInstance();
+
+          let shouldForward = true;
+          try {
+            const providerBalance = await forwarder.getProviderBalance(providerForApi);
+            const orderCost = orderData.usdPrice || (service.rate * orderData.qty) / 1000;
+
+            if (providerBalance < orderCost) {
+              console.log(`Provider ${provider.name} has insufficient balance. Required: ${orderCost.toFixed(2)}, Available: ${providerBalance.toFixed(2)}. Order will be stored but not forwarded.`);
+              shouldForward = false;
+              orderError = `Provider has insufficient balance. Required: ${orderCost.toFixed(2)}, Available: ${providerBalance.toFixed(2)}`;
+              apiCharge = 0;
+              profit = orderData.price;
+            }
+          } catch (balanceError) {
+            console.error('Error checking provider balance:', balanceError);
+            const errorMessage = balanceError instanceof Error ? balanceError.message : 'Unknown error';
+            shouldForward = false;
+            orderError = `Failed to check provider balance: ${errorMessage}`;
+            apiCharge = 0;
+            profit = orderData.price;
+          }
+
+          if (shouldForward) {
+            const serviceOverflow = service.overflow || 0;
+            const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * orderData.qty);
+            const quantityWithOverflow = orderData.qty + serviceOverflowAmount;
+            
+            const orderDataForProvider = {
+              service: service.providerServiceId,
+              link: orderData.link,
+              quantity: quantityWithOverflow,
+              runs: orderData.dripfeedRuns || undefined,
+              interval: orderData.dripfeedInterval || undefined
+            };
+
+            console.log(`Forwarding order to provider ${provider.name} (${provider.api_url}) before saving to database...`);
+            
+            try {
+              const forwardResult = await forwarder.forwardOrderToProvider(providerForApi, orderDataForProvider);
+
+              if (!forwardResult.order) {
+                throw new Error('Failed to create order: Provider did not return order ID');
+              }
+
+              providerOrderId = forwardResult.order.toString();
+              console.log(`Order created with provider order ID: ${providerOrderId}. Fetching status and charge...`);
+
+              const statusResult = await forwarder.checkProviderOrderStatus(providerForApi, providerOrderId);
+              
+              const mapProviderStatus = (providerStatus: string): string => {
+                if (!providerStatus) return 'pending';
+                const normalizedStatus = providerStatus.toLowerCase().trim().replace(/\s+/g, '_');
+                const statusMap: { [key: string]: string } = {
+                  'pending': 'pending',
+                  'in_progress': 'processing',
+                  'inprogress': 'processing',
+                  'processing': 'processing',
+                  'completed': 'completed',
+                  'complete': 'completed',
+                  'partial': 'partial',
+                  'canceled': 'cancelled',
+                  'cancelled': 'cancelled',
+                  'refunded': 'refunded',
+                  'failed': 'failed',
+                  'fail': 'failed'
+                };
+                return statusMap[normalizedStatus] || 'pending';
+              };
+
+              providerStatus = mapProviderStatus(statusResult.status);
+              apiCharge = statusResult.charge || forwardResult.charge || 0;
+              startCount = statusResult.start_count || forwardResult.start_count || 0;
+              remains = statusResult.remains || forwardResult.remains || orderData.qty;
+              profit = orderData.price - apiCharge;
+
+              console.log(`Order status fetched: ${providerStatus}, Charge: ${apiCharge}, Profit: ${profit}, StartCount: ${startCount}, Remains: ${remains}`);
+            } catch (forwardError: any) {
+              console.error(`Error forwarding order to provider:`, forwardError);
+              const errorMessage = forwardError instanceof Error ? forwardError.message : String(forwardError);
+              
+              if (errorMessage.toLowerCase().includes('balance') || errorMessage.toLowerCase().includes('insufficient')) {
+                orderError = `Provider has insufficient balance to process this order`;
+              } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
+                orderError = `Provider API timeout or network error: ${errorMessage}`;
+              } else {
+                orderError = errorMessage;
+              }
+              
+              apiCharge = 0;
+              profit = orderData.price;
+            }
+          }
+        } catch (providerError: any) {
+          console.error(`Error processing provider for order:`, {
+            error: providerError?.message || providerError,
+            stack: providerError?.stack,
+            serviceId: service.id,
+            providerId: service.providerId
+          });
+          
+          const errorMessage = providerError instanceof Error ? providerError.message : String(providerError);
+          
+          if (errorMessage.toLowerCase().includes('balance') || errorMessage.toLowerCase().includes('insufficient')) {
+            orderError = `Provider has insufficient balance to process this order`;
+          } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
+            orderError = `Provider API timeout or network error: ${errorMessage}`;
+          } else {
+            orderError = errorMessage;
+          }
+          
+          apiCharge = 0;
+          profit = orderData.price;
+        }
+      } else {
+        console.log(`Service ${service.id} has no provider, using manual pricing`);
+        apiCharge = orderData.price;
+        profit = 0;
+      }
+
+      providerDataArray.push({
+        providerOrderId,
+        providerStatus,
+        apiCharge,
+        profit,
+        startCount,
+        remains,
+        orderError,
+        serviceProviderId
+      });
+      } catch (providerLoopError: any) {
+        console.error(`Error processing order ${i + 1} for provider forwarding:`, {
+          error: providerLoopError?.message || providerLoopError,
+          stack: providerLoopError?.stack,
+          orderData: processedOrders[i] ? {
+            serviceId: processedOrders[i].serviceId,
+            categoryId: processedOrders[i].categoryId
+          } : 'N/A'
+        });
+        
+        providerDataArray.push({
+          providerOrderId: null,
+          providerStatus: 'pending',
+          apiCharge: processedOrders[i]?.price || 0,
+          profit: 0,
+          startCount: 0,
+          remains: processedOrders[i]?.qty || 0,
+          orderError: providerLoopError instanceof Error ? providerLoopError.message : String(providerLoopError),
+          serviceProviderId: null
+        });
+      }
+    }
+
     const result = await db.$transaction(async (prisma) => {
       const createdOrders = [];
-      for (const orderData of processedOrders) {
+      
+      for (let i = 0; i < processedOrders.length; i++) {
+        const orderData = processedOrders[i];
+        const providerData = providerDataArray[i];
+        const {
+          providerOrderId,
+          providerStatus,
+          apiCharge,
+          profit,
+          startCount,
+          remains,
+          orderError,
+          serviceProviderId
+        } = providerData;
+
+        console.log(`Creating order in database with data:`, {
+          serviceId: orderData.serviceId,
+          categoryId: orderData.categoryId,
+          userId: orderData.userId,
+          providerOrderId,
+          providerStatus,
+          status: orderError ? 'failed' : providerStatus,
+          charge: apiCharge > 0 ? apiCharge : orderData.price,
+          profit
+        });
+
+        const orderCreateData = {
+          categoryId: orderData.categoryId,
+          serviceId: orderData.serviceId,
+          userId: orderData.userId,
+          link: orderData.link,
+          qty: orderData.qty,
+          price: orderData.price,
+          avg_time: orderData.avg_time,
+          status: orderError ? 'failed' : providerStatus,
+          remains: remains,
+          startCount: startCount,
+          currency: orderData.currency,
+          usdPrice: orderData.usdPrice,
+          charge: apiCharge > 0 ? apiCharge : orderData.price,
+          profit: profit,
+          packageType: orderData.packageType || 1,
+          comments: orderData.comments || null,
+          username: orderData.username || null,
+          posts: orderData.posts || null,
+          delay: orderData.delay || null,
+          minQty: orderData.minQty || null,
+          maxQty: orderData.maxQty || null,
+          isDripfeed: orderData.isDripfeed || false,
+          dripfeedRuns: orderData.dripfeedRuns || null,
+          dripfeedInterval: orderData.dripfeedInterval || null,
+          isSubscription: orderData.isSubscription || false,
+          subscriptionStatus: orderData.isSubscription ? (orderData.subscriptionStatus || 'active') : null,
+          providerOrderId: providerOrderId,
+          providerStatus: orderError ? 'forward_failed' : providerStatus,
+          apiResponse: orderError ? JSON.stringify({ error: orderError }) : null,
+          lastSyncAt: providerOrderId ? new Date() : null,
+        };
+
+        console.log(`Order create data prepared:`, {
+          categoryId: orderCreateData.categoryId,
+          serviceId: orderCreateData.serviceId,
+          userId: orderCreateData.userId,
+          hasLink: !!orderCreateData.link,
+          qty: orderCreateData.qty,
+          price: orderCreateData.price
+        });
+
         const order = await prisma.newOrder.create({
-          data: orderData,
+          data: orderCreateData,
           include: {
             service: {
               select: {
@@ -280,6 +562,32 @@ export async function POST(request: Request) {
             },
           },
         });
+
+        console.log(`Order ${order.id} created successfully`);
+
+        if (serviceProviderId) {
+          try {
+            await prisma.providerOrderLog.create({
+              data: {
+                orderId: order.id,
+                providerId: serviceProviderId,
+                action: 'forward_order',
+                status: orderError ? 'failed' : 'success',
+                errorMessage: orderError || null,
+                response: JSON.stringify({ 
+                  order: providerOrderId, 
+                  status: providerStatus, 
+                  charge: apiCharge,
+                  error: orderError || null
+                }),
+                createdAt: new Date()
+              }
+            });
+          } catch (logError) {
+            console.warn(`Failed to create provider order log:`, logError);
+          }
+        }
+
         createdOrders.push(order);
       }
 
@@ -339,48 +647,6 @@ export async function POST(request: Request) {
       console.error('Failed to log order creation activity:', error);
     }
 
-    for (const order of result) {
-      if (order.service.providerId && order.service.providerServiceId) {
-        try {
-          const forwardResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/orders/place-to-provider`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              orderId: order.id,
-              providerId: order.service.providerId,
-            }),
-          });
-
-          if (!forwardResponse.ok) {
-            const errorText = await forwardResponse.text();
-            console.error(`Failed to forward order ${order.id} to provider:`, errorText);
-            
-            await db.newOrder.update({
-              where: { id: order.id },
-              data: {
-                status: 'failed',
-                providerStatus: 'forward_failed',
-              },
-            });
-          } else {
-            console.log(`Successfully forwarded order ${order.id} to provider`);
-          }
-        } catch (error) {
-          console.error(`Error forwarding order ${order.id} to provider:`, error);
-          
-          await db.newOrder.update({
-            where: { id: order.id },
-            data: {
-              status: 'failed',
-              providerStatus: 'forward_failed',
-            },
-          });
-        }
-      }
-    }
-
     return NextResponse.json(
       {
         success: true,
@@ -394,13 +660,43 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating order(s):', error);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorCode = error?.code || error?.meta?.code || undefined;
+    const errorMeta = error?.meta || undefined;
+    
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+      code: errorCode,
+      meta: errorMeta,
+      error: error
+    });
+    
+    let userFriendlyMessage = 'Error creating order(s)';
+    if (errorCode === 'P2002') {
+      userFriendlyMessage = 'Duplicate order detected. Please try again.';
+    } else if (errorCode === 'P2003') {
+      userFriendlyMessage = 'Invalid service or category. Please refresh and try again.';
+    } else if (errorMessage.includes('categoryId') || errorMessage.includes('serviceId')) {
+      userFriendlyMessage = 'Invalid service or category selected.';
+    } else if (errorMessage.includes('balance') || errorMessage.includes('insufficient')) {
+      userFriendlyMessage = errorMessage;
+    }
+    
     return NextResponse.json(
       {
         success: false,
-        message: 'Error creating order(s)',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: userFriendlyMessage,
+        error: errorMessage,
+        code: errorCode,
+        details: process.env.NODE_ENV === 'development' ? {
+          stack: errorStack,
+          meta: errorMeta
+        } : undefined,
       },
       { status: 500 }
     );

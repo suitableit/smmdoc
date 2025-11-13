@@ -207,17 +207,24 @@ export class ProviderOrderForwarder {
 
       const balanceRequest = requestBuilder.buildBalanceRequest();
 
-      const response = await fetch(balanceRequest.url, {
+      console.log('Balance request config:', {
+        url: balanceRequest.url,
         method: balanceRequest.method,
-        headers: balanceRequest.headers,
-        body: balanceRequest.data,
+        hasData: !!balanceRequest.data,
+        headers: balanceRequest.headers
       });
 
-      if (!response.ok) {
-        throw new Error(`Provider API error: ${response.status} ${response.statusText}`);
-      }
+      const axios = (await import('axios')).default;
+      
+      const response = await axios({
+        method: balanceRequest.method as any,
+        url: balanceRequest.url,
+        data: balanceRequest.data,
+        headers: balanceRequest.headers,
+        timeout: (provider.timeout_seconds || 30) * 1000,
+      });
 
-      const result = await response.json();
+      const result = response.data;
 
       if (result.error) {
         throw new Error(`Provider error: ${result.error}`);
@@ -227,9 +234,15 @@ export class ProviderOrderForwarder {
       const parsedBalance = responseParser.parseBalanceResponse(result);
 
       return parsedBalance.balance;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching provider balance:', error);
-      throw error;
+      if (error.response) {
+        throw new Error(`Provider API error: ${error.response.status} ${error.response.statusText} - ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        throw new Error(`Provider API request failed: ${error.message}`);
+      } else {
+        throw new Error(`Provider balance error: ${error.message}`);
+      }
     }
   }
 

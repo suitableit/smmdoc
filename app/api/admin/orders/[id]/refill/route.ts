@@ -148,8 +148,7 @@ export async function POST(
     
     const refillRate = originalOrder.service.rate;
     const refillUsdPrice = (refillRate * refillQuantity) / 1000;
-    const refillBdtPrice = refillUsdPrice * (originalOrder.user.dollarRate || 121.52);
-    const refillPrice = originalOrder.user.currency === 'USD' ? refillUsdPrice : refillBdtPrice;
+    const refillPrice = originalOrder.user.currency === 'USD' ? refillUsdPrice : refillUsdPrice * (originalOrder.user.dollarRate || 121.52);
     
     if (originalOrder.user.balance < refillPrice) {
       return NextResponse.json(
@@ -172,7 +171,6 @@ export async function POST(
           qty: refillQuantity,
           price: refillPrice,
           usdPrice: refillUsdPrice,
-          bdtPrice: refillBdtPrice,
           currency: originalOrder.currency,
           avg_time: originalOrder.service.avg_time,
           status: 'processing',

@@ -1,6 +1,8 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import axios from 'axios';
 
 const API_TIMEOUT = 15000;
 const MAX_RETRIES = 2;
@@ -122,6 +124,46 @@ export async function GET(req: NextRequest) {
 
     console.log('✅ Provider found:', provider.name);
 
+    // Try using ProviderOrderForwarder first (uses API specification builder)
+    try {
+      console.log('🔍 Attempting to fetch balance using ProviderOrderForwarder...');
+      const forwarder = new ProviderOrderForwarder();
+      const balance = await forwarder.getProviderBalance(provider as any);
+      
+      const formattedBalance = {
+        balance: balance,
+        currency: 'USD',
+        provider: provider.name,
+        providerId: provider.id,
+        lastChecked: new Date().toISOString()
+      };
+
+      // Cache balance in database
+      try {
+        await db.api_providers.update({
+          where: { id: provider.id },
+          data: {
+            current_balance: formattedBalance.balance,
+            balance_last_updated: new Date()
+          }
+        });
+        console.log(`💾 Balance cached in database for ${provider.name}: $${formattedBalance.balance}`);
+      } catch (dbError) {
+        console.error(`❌ Failed to cache balance in database for ${provider.name}:`, dbError);
+      }
+
+      console.log(`✅ Balance check completed for ${provider.name}:`, formattedBalance);
+
+      return NextResponse.json({
+        success: true,
+        data: formattedBalance
+      });
+    } catch (forwarderError) {
+      console.warn(`⚠️ ProviderOrderForwarder failed, falling back to manual method:`, forwarderError);
+      // Fall through to manual method below
+    }
+
+    // Fallback to manual method if ProviderOrderForwarder fails
     const apiUrlSan = sanitizeProviderUrl(provider.api_url);
     const balanceEndpointSan = sanitizeProviderUrl(provider.balance_endpoint || '');
     const balanceUrl = balanceEndpointSan || apiUrlSan;

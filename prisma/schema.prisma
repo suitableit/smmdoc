@@ -97,7 +97,6 @@ model NewOrder {
   updatedAt          DateTime           @updatedAt
   remains            Int                @default(0)
   startCount         Int                @default(0)
-  bdtPrice           Float
   currency           String
   usdPrice           Float
   charge             Float              @default(0)
@@ -105,7 +104,6 @@ model NewOrder {
   lastSyncAt         DateTime?
   providerOrderId    String?
   providerStatus     String?
-  apiOrderId         String?
   apiResponse        String?            @db.Text
   comments           String?            @db.Text
   delay              Int?

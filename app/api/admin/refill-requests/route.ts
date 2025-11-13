@@ -64,7 +64,6 @@ export async function GET(req: NextRequest) {
                 qty: true,
                 price: true,
                 usdPrice: true,
-                bdtPrice: true,
                 link: true,
                 status: true,
                 createdAt: true,

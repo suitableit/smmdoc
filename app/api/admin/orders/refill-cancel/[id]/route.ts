@@ -111,7 +111,7 @@ export async function PUT(
         const refillQuantity = order.remains || order.qty;
         const refillPrice = (refillQuantity / order.qty) * order.price;
         const refillUsdPrice = (refillQuantity / order.qty) * order.usdPrice;
-        const refillBdtPrice = (refillQuantity / order.qty) * order.bdtPrice;
+        const refillBdtPrice = refillUsdPrice * (order.user.dollarRate || 121.52);
 
         const userBalance = order.user.currency === 'USD' ? order.user.balance : order.user.balance;
         const requiredAmount = order.user.currency === 'USD' ? refillUsdPrice : refillBdtPrice;
@@ -137,7 +137,6 @@ export async function PUT(
               qty: refillQuantity,
               price: refillPrice,
               usdPrice: refillUsdPrice,
-              bdtPrice: refillBdtPrice,
               currency: order.currency,
               avg_time: order.avg_time,
               status: 'processing',
@@ -172,7 +171,7 @@ export async function PUT(
         });
 
       } else if (taskType === 'cancel') {
-        const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.bdtPrice;
+        const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.usdPrice * (order.user.dollarRate || 121.52);
 
         result = await db.$transaction(async (prisma) => {
           const cancelledOrder = await prisma.newOrder.update({

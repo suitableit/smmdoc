@@ -911,13 +911,11 @@ function NewOrder() {
 
     const bdtCurrency = availableCurrencies?.find(c => c.code === 'BDT');
     const usdToBdtRate = bdtCurrency?.rate || 121;
-    const bdtPrice = usdPrice * usdToBdtRate;
 
     console.log('Price Calculation Debug:', {
       serviceRate: price,
       quantity: qty,
       usdPrice: usdPrice,
-      bdtPrice: bdtPrice,
       finalTotalPrice: finalTotalPrice,
       userCurrency: currentUser?.currency,
       sessionUserCurrency: user?.currency,
@@ -929,7 +927,6 @@ function NewOrder() {
         qty,
         price: finalTotalPrice,
         usdPrice: usdPrice,
-        bdtPrice: bdtPrice,
         currency: currentUser?.currency,
         serviceId: parseInt(selectedService),
         categoryId: parseInt(selectedCategory),

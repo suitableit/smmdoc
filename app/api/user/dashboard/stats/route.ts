@@ -126,7 +126,6 @@ export async function GET() {
         recentOrders: recentOrders.map(order => ({
           id: order.id,
           status: order.status,
-          bdtPrice: order.bdtPrice,
           createdAt: order.createdAt,
           link: order.link,
           service: {

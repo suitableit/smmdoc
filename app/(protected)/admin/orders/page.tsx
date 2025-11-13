@@ -136,7 +136,6 @@ interface Order {
   charge: number;
   profit: number;
   usdPrice: number;
-  bdtPrice: number;
   currency: string;
   status:
     | 'pending'
@@ -290,6 +289,9 @@ const AdminOrdersPage = () => {
   };
 
   const isMountedRef = useRef<boolean>(true);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshStatsRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     return () => {
@@ -344,6 +346,108 @@ const AdminOrdersPage = () => {
       console.error('SWR stats fetch error:', error);
     },
   });
+
+  // Update refreshStats ref when it changes
+  useEffect(() => {
+    refreshStatsRef.current = refreshStats;
+  }, [refreshStats]);
+
+  // Set up real-time sync connection
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+
+    const connectRealtime = () => {
+      try {
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+        }
+
+        eventSource = new EventSource('/api/admin/orders/realtime');
+        eventSourceRef.current = eventSource;
+
+        eventSource.onopen = () => {
+          console.log('✅ Real-time sync connected');
+          reconnectAttempts = 0;
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'connected') {
+              console.log('Real-time sync:', data.message);
+            } else if (data.type === 'order_updated') {
+              const updatedOrder = data.data;
+              console.log('Order updated via real-time:', updatedOrder.id);
+
+              setOrders((prevOrders) => {
+                const orderIndex = prevOrders.findIndex((o) => o.id === updatedOrder.id);
+                if (orderIndex !== -1) {
+                  const newOrders = [...prevOrders];
+                  newOrders[orderIndex] = {
+                    ...newOrders[orderIndex],
+                    status: updatedOrder.status,
+                    providerStatus: updatedOrder.providerStatus,
+                    startCount: updatedOrder.startCount,
+                    remains: updatedOrder.remains,
+                    charge: updatedOrder.charge,
+                    lastSyncAt: updatedOrder.lastSyncAt,
+                  };
+                  return newOrders;
+                }
+                return prevOrders;
+              });
+
+              if (refreshStatsRef.current) {
+                refreshStatsRef.current();
+              }
+            } else if (data.type === 'sync_progress') {
+              const progress = data.progress;
+              if (progress.synced > 0) {
+                console.log(`Sync progress: ${progress.synced}/${progress.total} synced`);
+              }
+            } else if (data.type === 'ping') {
+              // Keep-alive ping, no action needed
+            }
+          } catch (error) {
+            console.error('Error parsing real-time message:', error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('Real-time sync error:', error);
+          eventSource?.close();
+
+          if (reconnectAttempts < maxReconnectAttempts) {
+            reconnectAttempts++;
+            console.log(`Reconnecting real-time sync (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+            reconnectTimeoutRef.current = setTimeout(() => {
+              connectRealtime();
+            }, reconnectDelay * reconnectAttempts);
+          } else {
+            console.error('Max reconnection attempts reached. Real-time sync disabled.');
+          }
+        };
+      } catch (error) {
+        console.error('Error setting up real-time sync:', error);
+      }
+    };
+
+    connectRealtime();
+
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, []);
 
   // Process orders data
   useEffect(() => {
@@ -520,27 +624,36 @@ const AdminOrdersPage = () => {
     );
   };
 
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const showToast = useCallback(
     (
       message: string,
-      type: 'success' | 'error' | 'info' | 'pending' = 'success'
+      type: 'success' | 'error' | 'info' | 'pending' = 'success',
+      duration: number = 4000
     ) => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
+      
       setToastNotification({ message, type });
-      setTimeout(() => setToastNotification(null), 4000);
+      
+      if (duration > 0) {
+        toastTimeoutRef.current = setTimeout(() => {
+          setToastNotification(null);
+          toastTimeoutRef.current = null;
+        }, duration);
+      }
     },
     []
   );
 
   const handleRefresh = useCallback(async () => {
     try {
-      // Refresh orders and stats immediately with revalidation
-      await Promise.all([
-        refreshOrders(undefined, { revalidate: true }),
-        refreshStats(undefined, { revalidate: true })
-      ]);
-      showToast('Orders refreshed', 'success');
+      showToast('Syncing provider orders...', 'pending');
 
-      // Sync provider orders in background
+      // First, sync all provider orders (API service orders) - including failed ones
       const syncPromise = fetch('/api/admin/provider-sync', {
         method: 'POST',
         headers: {
@@ -552,27 +665,50 @@ const AdminOrdersPage = () => {
         return { success: false, error: err.message };
       });
 
+      // Wait for sync with timeout (30 seconds max)
       const syncTimeout = new Promise((resolve) => {
-        setTimeout(() => resolve({ success: false, timeout: true }), 5000);
+        setTimeout(() => resolve({ success: false, timeout: true }), 30000);
       });
 
-      Promise.race([syncPromise, syncTimeout]).then((syncResult: any) => {
-        if (syncResult.timeout) {
-          // Sync is still running, but we already refreshed
-          console.log('Provider sync is running in background');
-        } else if (syncResult.success) {
-          const syncedCount = syncResult.data?.syncedCount || 0;
-          if (syncedCount > 0) {
-            showToast(`Synced ${syncedCount} order(s)`, 'success');
-            // Refresh again after sync
-            refreshOrders(undefined, { revalidate: true });
-            refreshStats(undefined, { revalidate: true });
-          }
+      const syncResult: any = await Promise.race([syncPromise, syncTimeout]);
+
+      if (syncResult.timeout) {
+        showToast('Sync is taking longer than expected, refreshing orders...', 'info');
+      } else if (syncResult.success) {
+        const syncedCount = syncResult.data?.syncedCount || 0;
+        const totalProcessed = syncResult.data?.totalProcessed || 0;
+        if (syncedCount > 0) {
+          showToast(`Synced ${syncedCount} of ${totalProcessed} provider order(s)`, 'success');
+        } else if (totalProcessed > 0) {
+          showToast(`Checked ${totalProcessed} provider order(s) - all up to date`, 'info');
+        } else {
+          showToast('No provider orders to sync', 'info');
         }
-      });
+      } else {
+        console.warn('Provider sync had issues:', syncResult.error);
+        showToast('Some provider orders may not have synced', 'info');
+      }
+
+      // After sync completes, refresh all orders and stats (including non-API orders)
+      await Promise.all([
+        refreshOrders(undefined, { revalidate: true }),
+        refreshStats(undefined, { revalidate: true })
+      ]);
+
+      showToast('All orders refreshed successfully', 'success');
     } catch (error) {
       console.error('Error refreshing orders:', error);
       showToast('Error refreshing orders', 'error');
+      
+      // Still try to refresh even if sync failed
+      try {
+        await Promise.all([
+          refreshOrders(undefined, { revalidate: true }),
+          refreshStats(undefined, { revalidate: true })
+        ]);
+      } catch (refreshError) {
+        console.error('Error refreshing after sync failure:', refreshError);
+      }
     }
   }, [refreshOrders, refreshStats, showToast]);
 
@@ -651,6 +787,8 @@ const AdminOrdersPage = () => {
   };
 
   const handleResendOrder = async (orderId: number) => {
+    showToast('Resending order to provider...', 'pending', 0);
+    
     try {
       const response = await fetch(`/api/admin/orders/${orderId}/resend`, {
         method: 'POST',
@@ -661,11 +799,11 @@ const AdminOrdersPage = () => {
 
       const result = await response.json();
 
-        if (result.success) {
-          showToast('Order resent successfully', 'success');
-          refreshOrders();
-          refreshStats();
-        } else {
+      if (result.success) {
+        showToast('Order resent successfully', 'success');
+        refreshOrders();
+        refreshStats();
+      } else {
         if (result.errorType === 'insufficient_balance' || 
             (result.error && result.error.toLowerCase().includes('insufficient balance'))) {
           showToast('Insufficient balance', 'error');
