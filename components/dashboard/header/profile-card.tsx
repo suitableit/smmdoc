@@ -39,7 +39,7 @@ const Avatar = ({
   </div>
 );
 
-const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
+const AvatarImage = ({ src, alt, onError }: { src: string; alt: string; onError?: () => void }) => {
   const [hasError, setHasError] = useState(false);
 
   if (!src || hasError) {
@@ -53,6 +53,7 @@ const AvatarImage = ({ src, alt }: { src: string; alt: string }) => {
       className="w-full h-full object-cover"
       onError={() => {
         setHasError(true);
+        onError?.();
       }}
     />
   );
@@ -227,6 +228,8 @@ const ProfileCard = ({
   const currentUser = useCurrentUser();
   const dispatch = useDispatch();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [dropdownImageError, setDropdownImageError] = useState(false);
 
   const isOpen = openDropdowns?.profile || false;
   const setIsOpen = (open: boolean) => handleDropdownChange?.('profile', open);
@@ -272,6 +275,13 @@ const ProfileCard = ({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (user?.photo || user?.image) {
+      setImageError(false);
+      setDropdownImageError(false);
+    }
+  }, [user?.photo, user?.image]);
   
   const isLoading = isInitialLoading || isLoadingStats || !user;
 
@@ -333,15 +343,19 @@ const ProfileCard = ({
         disabled={isLoggingOut}
       >
         <Avatar className="h-10 w-10 sm:h-10 sm:w-10">
-          <AvatarImage
-            src={user?.photo || user?.image}
-            alt={user?.name || 'User'}
-          />
-          {!(user?.photo || user?.image) && (
-            <AvatarFallback>
-              {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
-            </AvatarFallback>
-          )}
+          {(user?.photo || user?.image) && !imageError ? (
+            <img
+              src={user?.photo || user?.image || ''}
+              alt={user?.name || 'User'}
+              className="w-full h-full object-cover relative z-10"
+              onError={() => {
+                setImageError(true);
+              }}
+            />
+          ) : null}
+          <AvatarFallback>
+            {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
+          </AvatarFallback>
         </Avatar>
       </button>
 
@@ -389,15 +403,19 @@ const ProfileCard = ({
               >
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
-                    <AvatarImage
-                      src={user?.photo || user?.image}
-                      alt={user?.name || 'User'}
-                    />
-                    {!(user?.photo || user?.image) && (
-                      <AvatarFallback>
-                        {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
-                      </AvatarFallback>
-                    )}
+                    {(user?.photo || user?.image) && !dropdownImageError ? (
+                      <img
+                        src={user?.photo || user?.image || ''}
+                        alt={user?.name || 'User'}
+                        className="w-full h-full object-cover relative z-10"
+                        onError={() => {
+                          setDropdownImageError(true);
+                        }}
+                      />
+                    ) : null}
+                    <AvatarFallback>
+                      {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <h3

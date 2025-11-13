@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
     await writeFile(filepath, buffer);
 
     const imagePath = `/uploads/avatars/${filename}`;
-    const updatedUser = await db.user.update({
-      where: { id: session.user.id },
+    const updatedUser = await db.users.update({
+      where: { id: parseInt(session.user.id) },
       data: { 
         image: imagePath,
         updatedAt: new Date()
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
       await ActivityLogger.profileUpdated(
-        session.user.id,
+        parseInt(session.user.id),
         username,
         'profile picture'
       );
