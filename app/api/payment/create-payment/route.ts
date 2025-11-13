@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
           order_id,
           method: body.method,
           userId: session.user.id,
-          currency: 'BDT',
+          currency: 'USD',
         },
       });
 

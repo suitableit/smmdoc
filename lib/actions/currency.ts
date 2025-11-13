@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 export async function getUserCurrency() {
   const session = await auth();
   const user = await getUserById(session?.user?.id || '0');
-  if (!user) return 'BDT';
+  if (!user) return 'USD';
   return user.currency as 'USD' | 'BDT' | 'USDT';
 }
 

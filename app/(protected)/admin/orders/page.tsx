@@ -136,7 +136,6 @@ interface Order {
   charge: number;
   profit: number;
   usdPrice: number;
-  bdtPrice: number;
   currency: string;
   status:
     | 'pending'
@@ -595,18 +594,14 @@ const AdminOrdersPage = () => {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
+    const currencyData = availableCurrencies?.find(c => c.code === currency);
+    const symbol = currencyData?.symbol || '$';
+    
     if (currency === 'USD') {
       return `$${formatPrice(amount, 2)}`;
-    } else if (currency === 'BDT') {
-      return `৳${formatPrice(amount, 2)}`;
-    } else if (currency === 'XCD') {
-      return `$${formatPrice(amount, 2)}`;
-    } else {
-
-      const currencyData = availableCurrencies?.find(c => c.code === currency);
-      const symbol = currencyData?.symbol || '$';
-      return `${symbol}${formatPrice(amount, 2)}`;
     }
+    
+    return `${symbol}${formatPrice(amount, 2)}`;
   };
 
   const handleSelectAll = () => {

@@ -23,7 +23,6 @@ export interface Order {
   charge: number;
   profit: number;
   usdPrice: number;
-  bdtPrice: number;
   currency: string;
   status:
     | 'pending'

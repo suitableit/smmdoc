@@ -12,28 +12,18 @@ import { FaDollarSign, FaShoppingCart, FaWallet } from 'react-icons/fa';
 
 export default function UserDashboard() {
   const { data: response, error, isLoading } = useGetUserStatsQuery(undefined);
-  const { currency, rate } = useCurrency();
+  const { currency, rate, availableCurrencies } = useCurrency();
 
   const formatCurrency = (amount: number) => {
-
-    let convertedAmount = amount;
-    let symbol = '$';
-
+    const currentCurrencyData = availableCurrencies?.find(c => c.code === currency);
+    const symbol = currentCurrencyData?.symbol || '$';
+    const currencyRate = currentCurrencyData?.rate || 1;
+    
     if (currency === 'USD') {
-
-      convertedAmount = amount;
-      symbol = '$';
-    } else if (currency === 'BDT') {
-
-      const usdToBdtRate = 110;
-      convertedAmount = amount * usdToBdtRate;
-      symbol = '৳';
-    } else {
-
-      convertedAmount = amount * (rate || 1);
-      symbol = '$';
+      return `$${amount.toFixed(2)}`;
     }
-
+    
+    const convertedAmount = amount * currencyRate;
     return `${symbol}${convertedAmount.toFixed(2)}`;
   };
   const stats = response?.data;
@@ -193,9 +183,16 @@ export default function UserDashboard() {
                           );
                         })()}
                         <span className="text-sm mt-1 dark:text-white">
-                          {stats?.currency === 'USD'
-                            ? `$${order.usdPrice.toFixed(2)}`
-                            : `৳${order.bdtPrice.toFixed(2)}`}
+                          {(() => {
+                            const displayCurrency = stats?.currency || 'USD';
+                            if (displayCurrency === 'USD') {
+                              return `$${order.usdPrice.toFixed(2)}`;
+                            }
+                            const currencyData = availableCurrencies?.find(c => c.code === displayCurrency);
+                            const currencyRate = currencyData?.rate || rate || 1;
+                            const symbol = currencyData?.symbol || '$';
+                            return `${symbol}${(order.usdPrice * currencyRate).toFixed(2)}`;
+                          })()}
                         </span>
                       </div>
                     </div>

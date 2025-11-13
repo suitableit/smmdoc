@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         sender_number: '01712345678',
         transaction_id: `TXN-${Date.now()}`,
         userId: session.user.id,
-        currency: 'BDT',
+        currency: 'USD',
       },
     });
     
