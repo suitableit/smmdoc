@@ -48,7 +48,7 @@ export async function PUT(
       );
     }
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { id: blogId }
     });
 
@@ -63,7 +63,7 @@ export async function PUT(
       );
     }
 
-    const updatedPost = await db.blogPost.update({
+    const updatedPost = await db.blogPosts.update({
       where: { id: blogId },
       data: {
         status,

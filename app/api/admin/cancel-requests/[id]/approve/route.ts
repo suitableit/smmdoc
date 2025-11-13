@@ -43,7 +43,7 @@ export async function PUT(
     }
 
 
-    const existingRequest = await db.cancelRequest.findUnique({
+    const existingRequest = await db.cancelRequests.findUnique({
       where: {
         id: requestId
       },
@@ -68,7 +68,7 @@ export async function PUT(
     }
 
     const result = await db.$transaction(async (tx) => {
-      const updatedRequest = await tx.cancelRequest.update({
+      const updatedRequest = await tx.cancelRequests.update({
         where: {
           id: requestId
         },
@@ -90,7 +90,7 @@ export async function PUT(
         }
       });
 
-      await tx.newOrder.update({
+      await tx.newOrders.update({
         where: {
           id: existingRequest.orderId
         },
@@ -100,7 +100,7 @@ export async function PUT(
       });
 
       const refundAmountFloat = parseFloat(refundAmount.toString());
-      await tx.user.update({
+      await tx.users.update({
         where: {
           id: existingRequest.userId
         },

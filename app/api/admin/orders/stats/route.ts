@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       topUsers,
       revenueStats
     ] = await Promise.all([
-      db.newOrder.aggregate({
+      db.newOrders.aggregate({
         where: whereClause,
         _count: {
           id: true
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
         }
       }),
       
-      db.newOrder.groupBy({
+      db.newOrders.groupBy({
         by: ['status'],
         where: whereClause,
         _count: {
@@ -122,7 +122,7 @@ export async function GET(req: NextRequest) {
           `
         ),
       
-      db.newOrder.groupBy({
+      db.newOrders.groupBy({
         by: ['serviceId'],
         where: whereClause,
         _count: {
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
         take: 10
       }),
       
-      userId ? [] : db.newOrder.groupBy({
+      userId ? [] : db.newOrders.groupBy({
         by: ['userId'],
         where: whereClause,
         _count: {
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
         take: 10
       }),
       
-      db.newOrder.groupBy({
+      db.newOrders.groupBy({
         by: ['currency'],
         where: whereClause,
         _count: {
@@ -170,7 +170,7 @@ export async function GET(req: NextRequest) {
     ]);
     
     const serviceIds = topServices.map(s => s.serviceId);
-    const services = serviceIds.length > 0 ? await db.service.findMany({
+    const services = serviceIds.length > 0 ? await db.services.findMany({
       where: {
         id: {
           in: serviceIds
@@ -189,7 +189,7 @@ export async function GET(req: NextRequest) {
     }) : [];
     
     const userIds = topUsers.map(u => u.userId);
-    const users = userIds.length > 0 ? await db.user.findMany({
+    const users = userIds.length > 0 ? await db.users.findMany({
       where: {
         id: {
           in: userIds
@@ -234,7 +234,7 @@ export async function GET(req: NextRequest) {
       periodInfo.days = periodDays;
       periodInfo.startDate = startDate.toISOString();
 
-      const previousPeriodStats = await db.newOrder.aggregate({
+      const previousPeriodStats = await db.newOrders.aggregate({
         where: {
           createdAt: {
             gte: previousPeriodStart,

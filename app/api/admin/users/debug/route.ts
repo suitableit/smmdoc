@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    const users = await db.user.findMany({
+    const users = await db.users.findMany({
       select: {
         id: true,
         name: true,

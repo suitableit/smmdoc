@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: orderId },
       select: {
         id: true,
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: providerId }
     });
 
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
       console.error('Provider API error:', error);
       
-      await db.providerOrderLog.create({
+      await db.providerOrderLogs.create({
         data: {
           orderId: order.id,
           providerId: provider.id,
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
     try {
       parsedOrder = responseParser.parseAddOrderResponse(providerResponse);
     } catch (parseError) {
-      await db.providerOrderLog.create({
+      await db.providerOrderLogs.create({
         data: {
           orderId: order.id,
           providerId: provider.id,
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!parsedOrder || !parsedOrder.orderId) {
-      await db.providerOrderLog.create({
+      await db.providerOrderLogs.create({
         data: {
           orderId: order.id,
           providerId: provider.id,
@@ -247,7 +247,7 @@ export async function POST(req: NextRequest) {
 
     const profit = order.charge - apiCharge;
 
-    const updatedOrder = await db.newOrder.update({
+    const updatedOrder = await db.newOrders.update({
       where: { id: orderId },
       data: {
         providerOrderId: providerOrderId,

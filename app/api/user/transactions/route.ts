@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     await db.$queryRaw`SELECT 1`;
 
-    const transactions = await db.addFund.findMany({
+    const transactions = await db.addFunds.findMany({
       where,
       orderBy: {
         createdAt: 'desc',

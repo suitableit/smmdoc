@@ -12,7 +12,7 @@ async function processRefillRequest(orderIds: string[], userId: number) {
 
     for (const orderId of orderIds) {
       try {
-        const order = await db.newOrder.findUnique({
+        const order = await db.newOrders.findUnique({
           where: { id: parseInt(orderId) },
           include: {
             service: {
@@ -44,7 +44,7 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        const existingRequest = await db.refillRequest.findFirst({
+        const existingRequest = await db.refillRequests.findFirst({
           where: {
             orderId: parseInt(orderId),
             status: { in: ['pending', 'approved'] }
@@ -57,7 +57,7 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        await db.refillRequest.create({
+        await db.refillRequests.create({
           data: {
             orderId: parseInt(orderId),
             userId: userId,
@@ -66,7 +66,7 @@ async function processRefillRequest(orderIds: string[], userId: number) {
           }
         });
 
-        await db.newOrder.update({
+        await db.newOrders.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Refill Started' }
         });
@@ -99,7 +99,7 @@ async function processCancelRequest(orderIds: string[], userId: number) {
 
     for (const orderId of orderIds) {
       try {
-        const order = await db.newOrder.findUnique({
+        const order = await db.newOrders.findUnique({
           where: { id: parseInt(orderId) },
           include: {
             service: {
@@ -130,7 +130,7 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        const existingRequest = await db.cancelRequest.findFirst({
+        const existingRequest = await db.cancelRequests.findFirst({
           where: {
             orderId: parseInt(orderId),
             status: { in: ['pending', 'approved'] }
@@ -143,7 +143,7 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           continue;
         }
 
-        await db.cancelRequest.create({
+        await db.cancelRequests.create({
           data: {
             orderId: parseInt(orderId),
             userId: userId,
@@ -152,7 +152,7 @@ async function processCancelRequest(orderIds: string[], userId: number) {
           }
         });
 
-        await db.newOrder.update({
+        await db.newOrders.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Canceled' }
         });
@@ -182,7 +182,7 @@ async function processSpeedUpRequest(orderIds: string[], userId: number) {
     const results = [];
     
     for (const orderId of orderIds) {
-      const order = await db.newOrder.findFirst({
+      const order = await db.newOrders.findFirst({
         where: {
           id: parseInt(orderId),
           userId: userId
@@ -202,7 +202,7 @@ async function processSpeedUpRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-        await db.newOrder.update({
+        await db.newOrders.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Speed Up Approved' }
         });
@@ -230,7 +230,7 @@ async function processRestartRequest(orderIds: string[], userId: number) {
     const results = [];
     
     for (const orderId of orderIds) {
-      const order = await db.newOrder.findFirst({
+      const order = await db.newOrders.findFirst({
         where: {
           id: parseInt(orderId),
           userId: userId
@@ -250,7 +250,7 @@ async function processRestartRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-        await db.newOrder.update({
+        await db.newOrders.update({
           where: { id: parseInt(orderId) },
           data: { status: 'Restarted' }
         });
@@ -278,7 +278,7 @@ async function processFakeCompleteRequest(orderIds: string[], userId: number) {
     const results = [];
     
     for (const orderId of orderIds) {
-      const order = await db.newOrder.findFirst({
+      const order = await db.newOrders.findFirst({
         where: {
           id: parseInt(orderId),
           userId: userId
@@ -304,7 +304,7 @@ async function processFakeCompleteRequest(orderIds: string[], userId: number) {
         continue;
       }
       
-        await db.newOrder.update({
+        await db.newOrders.update({
           where: { id: parseInt(orderId) },
           data: { 
             status: 'Marked as Completed (Fake Complete)',
@@ -398,7 +398,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pendingTicketsCount = await db.supportTicket.count({
+    const pendingTicketsCount = await db.supportTickets.count({
       where: {
         userId: parseInt(session.user.id),
         status: {
@@ -421,7 +421,7 @@ export async function POST(request: NextRequest) {
     const orderIds = validatedData.orderIds ? validatedData.orderIds.map(id => id.trim()).filter(id => id) : [];
     
     if (orderIds.length > 0) {
-      const userOrders = await db.newOrder.findMany({
+      const userOrders = await db.newOrders.findMany({
         where: {
           id: { in: orderIds.map(id => parseInt(id)) },
           userId: parseInt(session.user.id)
@@ -481,7 +481,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const ticket = await db.supportTicket.create({
+    const ticket = await db.supportTickets.create({
       data: {
         userId: parseInt(session.user.id),
         subject: validatedData.subject,
@@ -507,7 +507,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    await db.ticketMessage.create({
+    await db.ticketMessages.create({
       data: {
         ticketId: ticket.id,
         userId: parseInt(session.user.id),
@@ -588,7 +588,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [tickets, totalCount] = await Promise.all([
-      db.supportTicket.findMany({
+      db.supportTickets.findMany({
         where,
         orderBy: {
           createdAt: 'desc'
@@ -604,7 +604,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
-      db.supportTicket.count({ where })
+      db.supportTickets.count({ where })
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);

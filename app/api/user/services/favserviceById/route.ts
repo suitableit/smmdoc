@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { favrouteCatId } = body;
-    const result = await db.service.findMany({
+    const result = await db.services.findMany({
       where: {
         favrouteCatId: favrouteCatId,
       },

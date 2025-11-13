@@ -17,21 +17,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let settings: any = await db.ticket_settings.findFirst({
+    let settings: any = await db.ticketSettings.findFirst({
       include: {
-        ticket_subjects: true
+        ticketSubjects: true
       }
     });
 
     if (!settings) {
-      settings = await db.ticket_settings.create({
+      settings = await db.ticketSettings.create({
         data: {
           ticketSystemEnabled: defaultTicketSettings.ticketSystemEnabled,
           maxPendingTickets: defaultTicketSettings.maxPendingTickets,
           updatedAt: new Date()
         },
         include: {
-          ticket_subjects: true
+          ticketSubjects: true
         }
       });
     }
@@ -41,7 +41,7 @@ export async function GET() {
       ticketSettings: {
         ticketSystemEnabled: settings.ticketSystemEnabled,
         maxPendingTickets: settings.maxPendingTickets,
-        subjects: settings.ticket_subjects.map((subject: any) => ({
+        subjects: settings.ticketSubjects.map((subject: any) => ({
           id: subject.id,
           name: subject.name
         })),
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await db.ticket_settings.upsert({
+    await db.ticketSettings.upsert({
       where: { id: 1 },
       update: {
         ticketSystemEnabled: ticketSettings.ticketSystemEnabled ?? true,
@@ -113,11 +113,11 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    await db.ticket_subjects.deleteMany({
+    await db.ticketSubjects.deleteMany({
       where: { ticketSettingsId: 1 }
     });
 
-    await db.ticket_subjects.createMany({
+    await db.ticketSubjects.createMany({
       data: ticketSettings.subjects.map((subject: any) => ({
         name: subject.name.trim(),
         ticketSettingsId: 1,

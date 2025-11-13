@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       };
     }
     
-    const transactions = await db.addFund.findMany({
+    const transactions = await db.addFunds.findMany({
       where: whereCondition,
       select: {
         id: true,
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
       take: limit,
     });
     
-    const totalCount = await db.addFund.count({ where: whereCondition });
+    const totalCount = await db.addFunds.count({ where: whereCondition });
     const totalPages = Math.ceil(totalCount / limit);
     
     return NextResponse.json({

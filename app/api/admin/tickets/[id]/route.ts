@@ -31,7 +31,7 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -61,7 +61,7 @@ export async function GET(
       );
     }
 
-    const ticket = await db.supportTicket.findUnique({
+    const ticket = await db.supportTickets.findUnique({
       where: { id: ticketId },
       include: {
         user: {
@@ -118,10 +118,10 @@ export async function GET(
     }
 
     const [totalTickets, openTickets] = await Promise.all([
-      db.supportTicket.count({
+      db.supportTickets.count({
         where: { userId: ticket.userId }
       }),
-      db.supportTicket.count({
+      db.supportTickets.count({
         where: {
           userId: ticket.userId,
           OR: [
@@ -199,7 +199,7 @@ export async function PUT(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -223,7 +223,7 @@ export async function PUT(
       );
     }
 
-    const existingTicket = await db.supportTicket.findUnique({
+    const existingTicket = await db.supportTickets.findUnique({
       where: { id: ticketId }
     });
 
@@ -253,7 +253,7 @@ export async function PUT(
       updateData.priority = validatedData.priority;
     }
 
-    const updatedTicket = await db.supportTicket.update({
+    const updatedTicket = await db.supportTickets.update({
       where: { id: ticketId },
       data: updateData,
       include: {
@@ -310,7 +310,7 @@ export async function DELETE(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -334,7 +334,7 @@ export async function DELETE(
       );
     }
 
-    const existingTicket = await db.supportTicket.findUnique({
+    const existingTicket = await db.supportTickets.findUnique({
       where: { id: ticketId }
     });
 
@@ -345,7 +345,7 @@ export async function DELETE(
       );
     }
 
-    await db.supportTicket.delete({
+    await db.supportTickets.delete({
       where: { id: ticketId }
     });
 

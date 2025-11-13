@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     }
 
     const [orders, totalCount] = await Promise.all([
-      db.newOrder.findMany({
+      db.newOrders.findMany({
         where: whereClause,
         include: {
           user: {
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit
       }),
-      db.newOrder.count({
+      db.newOrders.count({
         where: whereClause
       })
     ]);
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    const stats = await db.newOrder.aggregate({
+    const stats = await db.newOrders.aggregate({
       where: {
         status: {
           in: ['completed', 'partial']
@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    const statusBreakdown = await db.newOrder.groupBy({
+    const statusBreakdown = await db.newOrders.groupBy({
       by: ['status'],
       where: {
         status: {

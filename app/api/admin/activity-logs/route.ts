@@ -92,9 +92,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const totalCount = await db.activitylog.count({ where });
+    const totalCount = await db.activityLogs.count({ where });
 
-    const activityLogs = await db.activitylog.findMany({
+    const activityLogs = await db.activityLogs.findMany({
       where,
       include: {
         user: {
@@ -197,7 +197,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deleteResult = await db.activitylog.deleteMany({
+    const deleteResult = await db.activityLogs.deleteMany({
       where: {
         id: {
           in: logIds

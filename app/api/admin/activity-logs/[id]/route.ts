@@ -34,7 +34,7 @@ export async function DELETE(
       );
     }
 
-    const existingLog = await db.activitylog.findUnique({
+    const existingLog = await db.activityLogs.findUnique({
       where: { id: logId }
     });
 
@@ -49,7 +49,7 @@ export async function DELETE(
       );
     }
 
-    await db.activitylog.delete({
+    await db.activityLogs.delete({
       where: { id: logId }
     });
 
@@ -105,7 +105,7 @@ export async function GET(
       );
     }
 
-    const activityLog = await db.activitylog.findUnique({
+    const activityLog = await db.activityLogs.findUnique({
       where: { id: logId },
       include: {
         user: {

@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingPanel = await db.child_panels.findUnique({
+    const existingPanel = await db.childPanels.findUnique({
       where: { userId }
     });
 
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingDomain = await db.child_panels.findUnique({
+    const existingDomain = await db.childPanels.findUnique({
       where: { domain }
     });
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: { balance: true, currency: true }
     });
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
     const result = await db.$transaction(async (prisma) => {
-      await prisma.user.update({
+      await prisma.users.update({
         where: { id: userId },
         data: { 
           balance: { decrement: childPanelPrice },
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         }
       });
 
-      const childPanel = await prisma.child_panels.create({
+      const childPanel = await prisma.childPanels.create({
         data: {
           userId,
           domain,
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
         }
       });
 
-      await prisma.child_panel_subscriptions.create({
+      await prisma.childPanelSubscriptions.create({
         data: {
           childPanelId: childPanel.id,
           amount: childPanelPrice,

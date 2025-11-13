@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: parseInt(orderId) },
       include: {
         service: {
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (order.userId !== session.user.id) {
+    if (order.userId !== parseInt(session.user.id)) {
       return NextResponse.json(
         {
           error: 'You can only request refill for your own orders',
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existingRequest = await db.refillRequest.findFirst({
+    const existingRequest = await db.refillRequests.findFirst({
       where: {
         orderId: parseInt(orderId),
         status: {
@@ -133,10 +133,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const refillRequest = await db.refillRequest.create({
+    const refillRequest = await db.refillRequests.create({
       data: {
         orderId: parseInt(orderId),
-        userId: session.user.id,
+        userId: parseInt(session.user.id),
         reason: reason.trim(),
         status: 'pending'
       },
@@ -195,18 +195,18 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status') || 'all';
 
     const whereClause: any = {
-      userId: session.user.id
+      userId: parseInt(session.user.id)
     };
 
     if (status !== 'all') {
       whereClause.status = status;
     }
 
-    const totalRequests = await db.refillRequest.count({
+    const totalRequests = await db.refillRequests.count({
       where: whereClause
     });
 
-    const refillRequests = await db.refillRequest.findMany({
+    const refillRequests = await db.refillRequests.findMany({
       where: whereClause,
       include: {
         order: {

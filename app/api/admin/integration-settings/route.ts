@@ -15,8 +15,8 @@ export async function GET() {
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
+    const user = await db.users.findUnique({
+      where: { id: parseInt(session.user.id) },
       select: { role: true },
     });
 
@@ -149,8 +149,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
+    const user = await db.users.findUnique({
+      where: { id: parseInt(session.user.id) },
       select: { role: true },
     });
 

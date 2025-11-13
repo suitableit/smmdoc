@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }
 
     const [posts, totalCount] = await Promise.all([
-      db.blogPost.findMany({
+      db.blogPosts.findMany({
         where: whereClause,
         include: {
           author: {
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit
       }),
-      db.blogPost.count({ where: whereClause })
+      db.blogPosts.count({ where: whereClause })
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);
@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
         .replace(/(^-|-$)/g, '');
     }
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { slug: finalSlug }
     });
 
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     
     const finalExcerpt = excerpt || (plainTextContent.length > 160 ? plainTextContent.substring(0, 160) + '...' : plainTextContent);
 
-    const post = await db.blogPost.create({
+    const post = await db.blogPosts.create({
       data: {
         title,
         slug: finalSlug,

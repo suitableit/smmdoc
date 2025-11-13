@@ -33,7 +33,7 @@ export const changePassword = async (values: PasswordForm) => {
     return { success: false, error: 'Current password is incorrect!' };
   }
   const hashedPassword = await bcrypt.hash(newPass, 10);
-  await db.user.update({
+  await db.users.update({
     where: { id: user.id },
     data: { password: hashedPassword },
   });

@@ -408,7 +408,7 @@ const UserServiceTable: React.FC = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-4 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+          <div className="card card-padding">
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4 h-12">
@@ -420,13 +420,12 @@ const UserServiceTable: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead className="sticky top-0 z-10">
-                    <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-                      {Array.from({ length: 10 }).map((_, idx) => (
-                        <th key={idx} className="text-left py-3 px-4">
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    {Array.from({ length: 10 }).map((_, idx) => (
+                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
                           <div className="h-4 w-20 gradient-shimmer rounded" />
                         </th>
                       ))}
@@ -483,7 +482,6 @@ const UserServiceTable: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
             </div>
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
@@ -511,7 +509,7 @@ const UserServiceTable: React.FC = () => {
       )}
 
       <div className="page-content">
-        <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-4 md:p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+        <div className="card card-padding">
           <div className="mb-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="flex items-center gap-4 h-12">
@@ -562,39 +560,38 @@ const UserServiceTable: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 z-10">
-                  <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Fav
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                    Fav
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    ID
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Service
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Rate per 1000
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Min order
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Max order
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Average time
                     </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      ID
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Service
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Rate per 1000
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Min order
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Max order
-                    </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
-                      Average time
-                    </th>
-                    <th className="text-center py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-center py-3 px-4 font-medium text-gray-900">
                       Refill
                     </th>
-                    <th className="text-center py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-center py-3 px-4 font-medium text-gray-900">
                       Cancel
                     </th>
-                    <th className="text-left py-3 px-4 text-sm md:text-base font-medium text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700/50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
                       Action
                     </th>
                   </tr>
@@ -814,8 +811,7 @@ const UserServiceTable: React.FC = () => {
                     )}
                   </tbody>
                 </table>
-              </div>
-            </div>
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <div className="text-sm text-gray-600 dark:text-gray-300">

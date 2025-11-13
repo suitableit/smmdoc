@@ -28,7 +28,7 @@ export async function POST(
       );
     }
 
-    const transaction = await db.addFund.findUnique({
+    const transaction = await db.addFunds.findUnique({
       where: { id: transactionId },
       include: { user: true }
     });
@@ -56,7 +56,7 @@ export async function POST(
     
     try {
       await db.$transaction(async (prisma) => {
-        await prisma.addFund.update({
+        await prisma.addFunds.update({
           where: { id: transactionId },
           data: {
             status: "Success",
@@ -65,7 +65,7 @@ export async function POST(
           }
         });
         
-        const user = await prisma.user.update({
+        const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
             balance: { increment: transaction.amount },

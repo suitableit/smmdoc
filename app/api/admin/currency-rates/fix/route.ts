@@ -28,12 +28,12 @@ export async function POST() {
 
     for (const [currencyCode, correctRate] of Object.entries(CORRECT_RATES)) {
       try {
-        const existingCurrency = await db.currency.findUnique({
+        const existingCurrency = await db.currencies.findUnique({
           where: { code: currencyCode }
         });
 
         if (existingCurrency) {
-          const updatedCurrency = await db.currency.update({
+          const updatedCurrency = await db.currencies.update({
             where: { code: currencyCode },
             data: { rate: correctRate },
           });
@@ -84,7 +84,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const currencies = await db.currency.findMany({
+    const currencies = await db.currencies.findMany({
       orderBy: { code: 'asc' }
     });
 

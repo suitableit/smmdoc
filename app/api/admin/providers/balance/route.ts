@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
 
     console.log('🔍 Checking balance for provider:', providerId);
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: parseInt(providerId) }
     });
 
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
 
       // Cache balance in database
       try {
-        await db.api_providers.update({
+        await db.apiProviders.update({
           where: { id: provider.id },
           data: {
             current_balance: formattedBalance.balance,
@@ -418,7 +418,7 @@ export async function GET(req: NextRequest) {
     };
 
     try {
-      await db.api_providers.update({
+      await db.apiProviders.update({
         where: { id: provider.id },
         data: {
           current_balance: formattedBalance.balance,

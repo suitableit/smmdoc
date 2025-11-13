@@ -55,7 +55,7 @@ class ContactDB {
 
   async getContactCategories() {
     try {
-      const categories = await this.prisma.contactCategory.findMany({
+      const categories = await this.prisma.contactCategories.findMany({
         orderBy: { name: 'asc' }
       });
       return categories;
@@ -78,7 +78,7 @@ class ContactDB {
         });
       }
 
-      await this.prisma.contactCategory.create({
+      await this.prisma.contactCategories.create({
         data: {
           name,
           contactSettings: {
@@ -95,7 +95,7 @@ class ContactDB {
 
   async updateContactCategory(id: number, name: string) {
     try {
-      await this.prisma.contactCategory.update({
+      await this.prisma.contactCategories.update({
         where: { id },
         data: { name: name.trim() }
       });
@@ -108,7 +108,7 @@ class ContactDB {
 
   async deleteContactCategory(id: number) {
     try {
-      await this.prisma.contactCategory.delete({
+      await this.prisma.contactCategories.delete({
         where: { id }
       });
       return true;
@@ -126,7 +126,7 @@ class ContactDB {
     attachments?: string;
   }) {
     try {
-      await this.prisma.contactMessage.create({
+      await this.prisma.contactMessages.create({
         data: {
           userId: data.userId,
           subject: data.subject,
@@ -162,7 +162,7 @@ class ContactDB {
         }
       }
 
-      const count = await this.prisma.contactMessage.count({ where });
+      const count = await this.prisma.contactMessages.count({ where });
       return count;
     } catch (error) {
       console.error('Error counting contact messages:', error);
@@ -345,14 +345,14 @@ class ContactDB {
 
   async getContactMessageCounts() {
     try {
-      const total = await this.prisma.contactMessage.count();
-      const unread = await this.prisma.contactMessage.count({
+      const total = await this.prisma.contactMessages.count();
+      const unread = await this.prisma.contactMessages.count({
         where: { status: 'Unread' }
       });
-      const read = await this.prisma.contactMessage.count({
+      const read = await this.prisma.contactMessages.count({
         where: { status: 'Read' }
       });
-      const replied = await this.prisma.contactMessage.count({
+      const replied = await this.prisma.contactMessages.count({
         where: { status: 'Replied' }
       });
 
@@ -365,7 +365,7 @@ class ContactDB {
 
   async updateContactMessageStatus(id: number, status: string) {
     try {
-      await this.prisma.contactMessage.update({
+      await this.prisma.contactMessages.update({
         where: { id },
         data: { status }
       });
@@ -379,7 +379,7 @@ class ContactDB {
   async replyToContactMessage(id: number, adminReply: string, repliedBy: number, attachments?: string) {
     try {
 
-      const currentMessage = await this.prisma.contactMessage.findUnique({
+      const currentMessage = await this.prisma.contactMessages.findUnique({
         where: { id },
         select: { adminReply: true }
       });
@@ -410,7 +410,7 @@ class ContactDB {
         }
       }
 
-      const adminUser = await this.prisma.user.findUnique({
+      const adminUser = await this.prisma.users.findUnique({
         where: { id: repliedBy },
         select: { username: true, name: true }
       });
@@ -423,7 +423,7 @@ class ContactDB {
         attachments: attachments ? JSON.parse(attachments) : undefined
       });
 
-      await this.prisma.contactMessage.update({
+      await this.prisma.contactMessages.update({
         where: { id },
         data: {
           adminReply: JSON.stringify(replies),
@@ -441,7 +441,7 @@ class ContactDB {
 
   async deleteContactMessage(id: number) {
     try {
-      await this.prisma.contactMessage.delete({
+      await this.prisma.contactMessages.delete({
         where: { id }
       });
       return true;

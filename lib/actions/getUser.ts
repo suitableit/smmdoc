@@ -2,16 +2,20 @@
 'use server';
 
 import { getCurrentUser } from '@/lib/auth-helpers';
-import { db } from '../db';
+import { db } from '../db';
+
 export async function getUserDetails() {
-  try {
-    const session = await getCurrentUser();
+  try {
+
+    const session = await getCurrentUser();
+
     if (!session?.user?.id) {
       return null;
     }
 
-    try {
-      const user = await db.user.findUnique({
+    try {
+
+      const user = await db.users.findUnique({
         where: {
           id: session.user.id,
         },
@@ -38,17 +42,21 @@ export async function getUserDetails() {
 
       if (!user) {
         return null;
-      }
+      }
+
       return {
-        ...user,
+        ...user,
+
         balance: user.balance || 0,
         total_deposit: user.total_deposit || 0,
         total_spent: user.total_spent || 0
       };
     } catch (dbError) {
-      console.error("Database error:", dbError);
-      try {
-        const userBasic = await db.user.findUnique({
+      console.error("Database error:", dbError);
+
+      try {
+
+        const userBasic = await db.users.findUnique({
           where: {
             id: session.user.id,
           },
@@ -75,12 +83,14 @@ export async function getUserDetails() {
 
         if (!userBasic) {
           return null;
-        }
-        const transactions = await db.addFund.findMany({
+        }
+
+        const transactions = await db.addFunds.findMany({
           where: {
             userId: session.user.id,
           },
-        });
+        });
+
         return {
           ...userBasic,
           addFund: transactions,
@@ -89,7 +99,8 @@ export async function getUserDetails() {
           total_spent: userBasic.total_spent || 0
         };
       } catch (fallbackError) {
-        console.error("Fallback fetch failed:", fallbackError);
+        console.error("Fallback fetch failed:", fallbackError);
+
         return {
           id: session.user.id,
           name: session.user.name || null,

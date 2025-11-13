@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
     });
     
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     const invoiceId = `ADMIN-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
     const result = await db.$transaction(async (prisma) => {
-      const addFund = await prisma.addFund.create({
+      const addFund = await prisma.addFunds.create({
         data: {
           invoice_id: invoiceId,
           amount: parseFloat(amountUSD),
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      const updatedUser = await prisma.user.update({
+      const updatedUser = await prisma.users.update({
         where: { id: userId },
         data: {
           balance: { increment: parseFloat(amountUSD) },

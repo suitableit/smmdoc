@@ -34,7 +34,7 @@ export async function DELETE(
       );
     }
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { id: blogId }
     });
 
@@ -49,7 +49,7 @@ export async function DELETE(
       );
     }
 
-    await db.blogPost.delete({
+    await db.blogPosts.delete({
       where: { id: blogId }
     });
 

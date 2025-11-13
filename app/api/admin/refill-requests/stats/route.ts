@@ -24,26 +24,26 @@ export async function GET(req: NextRequest) {
       declinedRequests,
       completedRequests
     ] = await Promise.all([
-      db.refillRequest.count(),
+      db.refillRequests.count(),
       
-      db.refillRequest.count({
+      db.refillRequests.count({
         where: { status: 'pending' }
       }),
       
-      db.refillRequest.count({
+      db.refillRequests.count({
         where: { status: 'approved' }
       }),
       
-      db.refillRequest.count({
+      db.refillRequests.count({
         where: { status: 'declined' }
       }),
       
-      db.refillRequest.count({
+      db.refillRequests.count({
         where: { status: 'completed' }
       })
     ]);
 
-    const eligibleOrdersCount = await db.newOrder.count({
+    const eligibleOrdersCount = await db.newOrders.count({
       where: {
         status: 'completed',
         service: {

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     let validCurrencies = ['USD', 'BDT', 'USDT'];
 
     try {
-      const enabledCurrencies = await db.currency.findMany({
+      const enabledCurrencies = await db.currencies.findMany({
         where: { enabled: true },
         select: { code: true }
       });

@@ -21,7 +21,7 @@ export async function GET(
       );
     }
 
-    const post = await db.blogPost.findUnique({
+    const post = await db.blogPosts.findUnique({
       where: { id: blogId },
       include: {
         author: {
@@ -124,7 +124,7 @@ export async function PUT(
       seoKeywords
     } = body;
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { id: blogId }
     });
 
@@ -140,7 +140,7 @@ export async function PUT(
     }
 
     if (slug && slug !== existingPost.slug) {
-      const slugExists = await db.blogPost.findUnique({
+      const slugExists = await db.blogPosts.findUnique({
         where: { slug }
       });
 
@@ -163,7 +163,7 @@ export async function PUT(
       readingTime = Math.ceil(wordCount / wordsPerMinute);
     }
 
-    const updatedPost = await db.blogPost.update({
+    const updatedPost = await db.blogPosts.update({
       where: { id: blogId },
       data: {
         title: title || existingPost.title,

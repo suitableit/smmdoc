@@ -45,7 +45,7 @@ export async function GET(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: orderId },
       include: {
         user: {
@@ -154,7 +154,7 @@ export async function PUT(
       );
     }
 
-    const currentOrder = await db.newOrder.findUnique({
+    const currentOrder = await db.newOrders.findUnique({
       where: { id: orderId },
       include: {
         user: {
@@ -222,7 +222,7 @@ export async function PUT(
           );
         }
 
-        await db.user.update({
+        await db.users.update({
           where: { id: user.id },
           data: {
             balance: {
@@ -236,7 +236,7 @@ export async function PUT(
       }
       
       if (['processing', 'completed'].includes(currentOrder.status) && ['cancelled', 'refunded'].includes(body.status)) {
-        await db.user.update({
+        await db.users.update({
           where: { id: user.id },
           data: {
             balance: {
@@ -250,7 +250,7 @@ export async function PUT(
       }
     }
     
-    const updatedOrder = await db.newOrder.update({
+    const updatedOrder = await db.newOrders.update({
       where: { id: orderId },
       data: updateData,
       include: {
@@ -349,7 +349,7 @@ export async function DELETE(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: orderId },
       include: {
         user: {
@@ -375,7 +375,7 @@ export async function DELETE(
     if (order.status !== 'pending') {
       const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.usdPrice * (order.user.dollarRate || 121.52);
 
-      await db.user.update({
+      await db.users.update({
         where: { id: order.userId },
         data: {
           balance: {
@@ -388,7 +388,7 @@ export async function DELETE(
       });
     }
     
-    await db.newOrder.delete({
+    await db.newOrders.delete({
       where: { id: orderId }
     });
 

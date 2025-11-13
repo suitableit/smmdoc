@@ -1,11 +1,9 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const allBlogs = await prisma.blogPost.findMany({
+    const allBlogs = await db.blogPosts.findMany({
       select: {
         id: true,
         status: true,

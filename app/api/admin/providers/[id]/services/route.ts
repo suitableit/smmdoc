@@ -34,7 +34,7 @@ export async function GET(
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: providerId }
     });
 

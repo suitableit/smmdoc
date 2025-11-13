@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: providerId }
     });
 
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await db.api_providers.update({
+    await db.apiProviders.update({
       where: { id: providerId },
       data: { 
         status: 'active',

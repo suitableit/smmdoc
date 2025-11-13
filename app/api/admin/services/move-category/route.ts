@@ -45,8 +45,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const [fromCategory, toCategory] = await Promise.all([
-      db.category.findUnique({ where: { id: fromCatId } }),
-      db.category.findUnique({ where: { id: toCatId } })
+      db.categories.findUnique({ where: { id: fromCatId } }),
+      db.categories.findUnique({ where: { id: toCatId } })
     ]);
 
     if (!fromCategory) {
@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updateResult = await db.service.updateMany({
+    const updateResult = await db.services.updateMany({
       where: { categoryId: fromCatId },
       data: { categoryId: toCatId }
     });

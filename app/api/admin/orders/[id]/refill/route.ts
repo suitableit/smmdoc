@@ -35,7 +35,7 @@ export async function POST(
       );
     }
     
-    const originalOrder = await db.newOrder.findUnique({
+    const originalOrder = await db.newOrders.findUnique({
       where: { id: Number(id) },
       include: {
         user: {
@@ -162,7 +162,7 @@ export async function POST(
     }
     
     const result = await db.$transaction(async (prisma) => {
-      const refillOrder = await prisma.newOrder.create({
+      const refillOrder = await prisma.newOrders.create({
         data: {
           userId: originalOrder.userId,
           categoryId: originalOrder.categoryId,
@@ -202,7 +202,7 @@ export async function POST(
         }
       });
       
-      await prisma.user.update({
+      await prisma.users.update({
         where: { id: originalOrder.userId },
         data: {
           balance: {
@@ -292,7 +292,7 @@ export async function GET(
       );
     }
     
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: Number(id) },
       include: {
         user: {

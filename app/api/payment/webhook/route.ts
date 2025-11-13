@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing invoice_id" }, { status: 400 });
     }
     
-    const payment = await db.addFund.findUnique({
+    const payment = await db.addFunds.findUnique({
       where: { invoice_id },
       include: { user: true }
     });
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     
     try {
       const result = await db.$transaction(async (prisma) => {
-        const updatedPayment = await prisma.addFund.update({
+        const updatedPayment = await prisma.addFunds.update({
           where: { invoice_id },
           data: {
             status: paymentStatus,
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         if (paymentStatus === "Success" && payment.user) {
           const originalAmount = payment.original_amount || payment.amount;
 
-          const user = await prisma.user.update({
+          const user = await prisma.users.update({
             where: { id: payment.userId },
             data: {
               balance: {

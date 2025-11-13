@@ -38,14 +38,14 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const totalRequests = await db.refillRequest.count({
+    const totalRequests = await db.refillRequests.count({
       where: whereClause,
     });
 
     let refillRequests: any[] = [];
 
     try {
-      refillRequests = await db.refillRequest.findMany({
+      refillRequests = await db.refillRequests.findMany({
         where: whereClause,
         orderBy: {
           createdAt: 'desc'
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       for (const request of refillRequests) {
         if (request.orderId) {
           try {
-            const order = await db.newOrder.findUnique({
+            const order = await db.newOrders.findUnique({
               where: { id: request.orderId },
               select: {
                 id: true,
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
 
             if (order && order.serviceId) {
               try {
-                const service = await db.service.findUnique({
+                const service = await db.services.findUnique({
                   where: { id: order.serviceId },
                   select: {
                     id: true,
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
 
         if (request.userId) {
           try {
-            const user = await db.user.findUnique({
+            const user = await db.users.findUnique({
               where: { id: request.userId },
               select: {
                 id: true,
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
 
         if (request.processedBy) {
           try {
-            const processedByUser = await db.user.findUnique({
+            const processedByUser = await db.users.findUnique({
               where: { id: request.processedBy },
               select: {
                 id: true,
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: parseInt(orderId) },
       include: {
         service: {
@@ -230,7 +230,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const refillRequest = await db.refillRequest.create({
+    const refillRequest = await db.refillRequests.create({
       data: {
         orderId: parseInt(orderId),
         userId: order.userId,

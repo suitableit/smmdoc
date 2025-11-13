@@ -27,7 +27,7 @@ export async function POST(
 
     const { id  } = await params;
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
     });
@@ -45,7 +45,7 @@ export async function POST(
 
     const newApiKey = generateApiKey();
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: Number(id) },
       data: { apiKey: newApiKey },
       select: {
@@ -97,7 +97,7 @@ export async function DELETE(
 
     const { id  } = await params;
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: Number(id) },
       select: { id: true, username: true, apiKey: true }
     });
@@ -113,7 +113,7 @@ export async function DELETE(
       );
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: Number(id) },
       data: { apiKey: null },
       select: {
@@ -165,7 +165,7 @@ export async function GET(
 
     const { id  } = await params;
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: Number(id) },
       select: {
         id: true,

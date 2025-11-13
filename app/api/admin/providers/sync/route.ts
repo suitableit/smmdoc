@@ -7,7 +7,7 @@ import { validateProvider } from '@/lib/utils/providerValidator';
 
 const getValidProviders = async () => {
   try {
-    return await db.api_providers.findMany({
+    return await db.apiProviders.findMany({
       where: {
         status: 'active',
         api_key: { not: '' },
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     const syncResults = [];
     const errors = [];
 
-    const currenciesData = await db.currency.findMany({
+    const currenciesData = await db.currencies.findMany({
       where: { enabled: true }
     });
 
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
 
         console.log(`Fetched ${providerServices.length} services from ${provider.name}`);
 
-        let existingServices = await db.service.findMany({
+        let existingServices = await db.services.findMany({
           where: {
             updateText: {
               contains: `"providerId":${provider.id}`
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
         if (existingServices.length === 0) {
           console.log(`No services found with exact providerId:${provider.id}, trying broader search...`);
           
-          const servicesByProviderName = await db.service.findMany({
+          const servicesByProviderName = await db.services.findMany({
             where: {
               updateText: {
                 contains: `"provider":"${provider.name}"`
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
             }
           });
 
-          const allServices = await db.service.findMany({
+          const allServices = await db.services.findMany({
             where: {
               updateText: {
                 not: null
@@ -255,7 +255,7 @@ export async function POST(req: NextRequest) {
               }
 
               if (hasChanges) {
-                await db.service.update({
+                await db.services.update({
                   where: { id: existingService.id },
                   data: updates
                 });
@@ -294,7 +294,7 @@ export async function POST(req: NextRequest) {
                 
                 console.log(`Service ${existingService.name} (ID: ${providerServiceId}) not found in provider response, marking as inactive`);
                 
-                await db.service.update({
+                await db.services.update({
                   where: { id: existingService.id },
                   data: { 
                     status: 'inactive',

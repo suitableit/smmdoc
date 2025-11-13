@@ -21,7 +21,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const favoriteServices = await db.favoriteService.findMany({
+    const favoriteServices = await db.favoriteServices.findMany({
       where: { userId },
       select: {
         serviceId: true,

@@ -18,10 +18,10 @@ export const verificationConfirm = async (token: string) => {
   if (!existingUser) {
     return { success: false, error: "User not found" };
   }
-  await db.user.update({
+  await db.users.update({
     where: { id: existingUser.id },
     data: { emailVerified: new Date(), email: existingToken.email },
   });
-  await db.verificationToken.delete({ where: { id: existingToken.id } });
+  await db.verificationTokens.delete({ where: { id: existingToken.id } });
   return { success: true, error: "", message: "Email verified" };
 };

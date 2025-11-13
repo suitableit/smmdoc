@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 async function fetchCurrencyData() {
   try {
-    const currencies = await db.currency.findMany({
+    const currencies = await db.currencies.findMany({
       where: { enabled: true },
       select: {
         code: true,
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
         },
       };
       
-      services = await db.service.findMany(searchQuery);
+      services = await db.services.findMany(searchQuery);
       
       paginatedCategories = [];
       totalCategories = 0;
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
       
       if (showAllCategories) {
         [paginatedCategories, totalCategories] = await Promise.all([
-          db.category.findMany({
+          db.categories.findMany({
             where: {
               hideCategory: 'no',
             },
@@ -158,14 +158,14 @@ export async function GET(request: Request) {
               { createdAt: 'asc' as any },
             ],
           }),
-          db.category.count({
+          db.categories.count({
             where: {
               hideCategory: 'no',
             },
           }),
         ]);
 
-        services = await db.service.findMany({
+        services = await db.services.findMany({
           where: {
             status: 'active',
             AND: [
@@ -221,7 +221,7 @@ export async function GET(request: Request) {
         });
       } else {
         [paginatedCategories, totalCategories] = await Promise.all([
-          db.category.findMany({
+          db.categories.findMany({
             where: {
               hideCategory: 'no',
             },
@@ -233,7 +233,7 @@ export async function GET(request: Request) {
               { createdAt: 'asc' as any },
             ],
           }),
-          db.category.count({
+          db.categories.count({
             where: {
               hideCategory: 'no',
             },
@@ -242,7 +242,7 @@ export async function GET(request: Request) {
 
         const categoryIds = paginatedCategories.map((cat: any) => cat.id);
 
-        services = await db.service.findMany({
+        services = await db.services.findMany({
           where: {
             status: 'active',
             AND: [
@@ -312,7 +312,7 @@ export async function GET(request: Request) {
       };
     });
 
-    const uniqueProviders = await db.service.findMany({
+    const uniqueProviders = await db.services.findMany({
       where: {
         status: 'active',
         category: {

@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
-    const trendingPosts = await db.blogPost.findMany({
+    const trendingPosts = await db.blogPosts.findMany({
       where: {
         status: 'published'
       },

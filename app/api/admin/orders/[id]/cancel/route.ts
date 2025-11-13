@@ -35,7 +35,7 @@ export async function POST(
       );
     }
     
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: Number(id) },
       include: {
         user: {
@@ -136,7 +136,7 @@ export async function POST(
     }
     
     const result = await db.$transaction(async (prisma) => {
-      const cancelledOrder = await prisma.newOrder.update({
+      const cancelledOrder = await prisma.newOrders.update({
         where: { id: Number(id) },
         data: {
           status: 'cancelled',
@@ -173,7 +173,7 @@ export async function POST(
         const spentAmount = order.status === 'pending' ? 0 : orderPrice;
         const spentAdjustment = Math.min(spentAmount, refundAmount);
         
-        updatedUser = await prisma.user.update({
+        updatedUser = await prisma.users.update({
           where: { id: order.userId },
           data: {
             balance: {
@@ -273,7 +273,7 @@ export async function GET(
       );
     }
     
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: Number(id) },
       include: {
         user: {

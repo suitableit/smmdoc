@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     }
 
     const [transactions, totalCount] = await Promise.all([
-      db.addFund.findMany({
+      db.addFunds.findMany({
         where: whereClause,
         include: {
           user: {
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit,
       }),
-      db.addFund.count({
+      db.addFunds.count({
         where: whereClause,
       }),
     ]);

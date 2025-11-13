@@ -88,7 +88,7 @@ export async function GET(request: Request) {
           : {})
       };
 
-      const services = await db.service.findMany({
+      const services = await db.services.findMany({
         where: whereClause,
         orderBy: {
           createdAt: 'desc',
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
         },
       });
 
-      const allCategories = await db.category.findMany({
+      const allCategories = await db.categories.findMany({
         where: {
           hideCategory: 'no',
         },
@@ -130,7 +130,7 @@ export async function GET(request: Request) {
     const categoryLimit = limit;
     const categorySkip = (page - 1) * categoryLimit;
     const [paginatedCategories, totalCategories] = await Promise.all([
-      db.category.findMany({
+      db.categories.findMany({
         skip: categorySkip,
         take: categoryLimit,
         orderBy: [
@@ -139,7 +139,7 @@ export async function GET(request: Request) {
           { createdAt: 'asc' },
         ],
       }),
-      db.category.count(),
+      db.categories.count(),
     ]);
 
     const categoryIds = paginatedCategories.map(cat => cat.id);
@@ -204,7 +204,7 @@ export async function GET(request: Request) {
         : {})
     };
 
-    const services = await db.service.findMany({
+    const services = await db.services.findMany({
       where: whereClause,
       orderBy: {
         createdAt: 'desc',
@@ -371,7 +371,7 @@ export async function POST(request: Request) {
     if (serviceTypeIdInt !== undefined) {
       createData.serviceTypeId = serviceTypeIdInt;
     } else {
-      const defaultServiceType = await db.servicetype.findFirst({
+      const defaultServiceType = await db.serviceTypes.findFirst({
         where: { name: 'Default' }
       });
       
@@ -381,7 +381,7 @@ export async function POST(request: Request) {
     }
 
     console.log('Creating service with data:', JSON.stringify(createData, null, 2));
-    const newService = await db.service.create({
+    const newService = await db.services.create({
       data: createData,
     });
     console.log('Service created successfully:', newService.id);

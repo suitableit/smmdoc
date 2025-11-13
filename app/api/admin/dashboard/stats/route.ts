@@ -6,17 +6,17 @@ export async function GET() {
   try {
     const session = await requireAdmin();
     
-    const totalOrders = await db.newOrder.count();
+    const totalOrders = await db.newOrders.count();
     
-    const totalUsers = await db.user.count({
+    const totalUsers = await db.users.count({
       where: { role: 'user' }
     });
     
-    const totalServices = await db.service.count();
+    const totalServices = await db.services.count();
     
-    const totalCategories = await db.category.count();
+    const totalCategories = await db.categories.count();
     
-    const orders = await db.newOrder.findMany({
+    const orders = await db.newOrders.findMany({
       where: {
         status: {
           in: ['completed', 'processing']
@@ -29,7 +29,7 @@ export async function GET() {
     
     const totalRevenue = orders.reduce((acc, order) => acc + order.usdPrice, 0);
     
-    const recentOrders = await db.newOrder.findMany({
+    const recentOrders = await db.newOrders.findMany({
       take: 5,
       orderBy: {
         createdAt: 'desc'
@@ -49,23 +49,23 @@ export async function GET() {
       }
     });
     
-    const pendingOrders = await db.newOrder.count({
+    const pendingOrders = await db.newOrders.count({
       where: { status: 'pending' }
     });
     
-    const processingOrders = await db.newOrder.count({
+    const processingOrders = await db.newOrders.count({
       where: { status: 'processing' }
     });
     
-    const completedOrders = await db.newOrder.count({
+    const completedOrders = await db.newOrders.count({
       where: { status: 'completed' }
     });
     
-    const cancelledOrders = await db.newOrder.count({
+    const cancelledOrders = await db.newOrders.count({
       where: { status: 'cancelled' }
     });
 
-    const partialOrders = await db.newOrder.count({
+    const partialOrders = await db.newOrders.count({
       where: { status: 'partial' }
     });
 
@@ -74,7 +74,7 @@ export async function GET() {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    const todaysOrders = await db.newOrder.count({
+    const todaysOrders = await db.newOrders.count({
       where: {
         createdAt: {
           gte: todayStart,
@@ -83,7 +83,7 @@ export async function GET() {
       }
     });
 
-    const todaysOrdersWithProfit = await db.newOrder.findMany({
+    const todaysOrdersWithProfit = await db.newOrders.findMany({
       where: {
         createdAt: {
           gte: todayStart,
@@ -100,7 +100,7 @@ export async function GET() {
 
     const todaysProfit = todaysOrdersWithProfit.reduce((acc, order) => acc + (order.profit || 0), 0);
 
-    const newUsersToday = await db.user.count({
+    const newUsersToday = await db.users.count({
       where: {
         createdAt: {
           gte: todayStart,
@@ -114,7 +114,7 @@ export async function GET() {
     const lastWeek = new Date(today);
     lastWeek.setDate(today.getDate() - 7);
     
-    const dailyOrders = await db.newOrder.groupBy({
+    const dailyOrders = await db.newOrders.groupBy({
       by: ['createdAt'],
       _count: {
         id: true

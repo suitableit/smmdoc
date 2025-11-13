@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const contactMessage = await db.contactMessage.create({
+      const contactMessage = await db.contactMessages.create({
         data: {
           subject,
           message: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage: ${message}`,

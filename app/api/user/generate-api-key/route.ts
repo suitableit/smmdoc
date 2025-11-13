@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
 
     const apiKey = `smm_${crypto.randomBytes(32).toString('hex')}`;
 
-    const updatedUser = await db.user.update({
-      where: { id: session.user.id },
+    const updatedUser = await db.users.update({
+      where: { id: parseInt(session.user.id) },
       data: { 
         apiKey: apiKey,
         updatedAt: new Date()

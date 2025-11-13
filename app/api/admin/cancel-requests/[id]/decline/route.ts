@@ -16,7 +16,7 @@ export async function PUT(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id!) },
       select: { role: true }
     });
@@ -47,7 +47,7 @@ export async function PUT(
       );
     }
 
-    const existingRequest = await db.cancelRequest.findUnique({
+    const existingRequest = await db.cancelRequests.findUnique({
       where: { id: requestId },
       include: {
         order: {
@@ -73,7 +73,7 @@ export async function PUT(
       );
     }
 
-    const updatedRequest = await db.cancelRequest.update({
+    const updatedRequest = await db.cancelRequests.update({
       where: { id: requestId },
       data: {
         status: 'declined',

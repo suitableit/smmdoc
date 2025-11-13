@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    const post = await db.blogPost.findUnique({
+    const post = await db.blogPosts.findUnique({
       where: { slug },
       include: {
         author: {
@@ -49,7 +49,7 @@ export async function GET(
     }
 
     if (post.status === 'published') {
-      await db.blogPost.update({
+      await db.blogPosts.update({
         where: { id: post.id },
         data: { views: { increment: 1 } }
       });
@@ -107,7 +107,7 @@ export async function PUT(
       seoKeywords
     } = body;
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { slug }
     });
 
@@ -123,7 +123,7 @@ export async function PUT(
     }
 
     if (newSlug && newSlug !== slug) {
-      const slugExists = await db.blogPost.findUnique({
+      const slugExists = await db.blogPosts.findUnique({
         where: { slug: newSlug }
       });
 
@@ -167,7 +167,7 @@ export async function PUT(
     if (seoDescription !== undefined) updateData.seoDescription = seoDescription;
     if (seoKeywords !== undefined) updateData.seoKeywords = seoKeywords;
 
-    const updatedPost = await db.blogPost.update({
+    const updatedPost = await db.blogPosts.update({
       where: { slug },
       data: updateData,
       include: {
@@ -219,7 +219,7 @@ export async function DELETE(
 
     const { slug } = await params;
 
-    const existingPost = await db.blogPost.findUnique({
+    const existingPost = await db.blogPosts.findUnique({
       where: { slug }
     });
 
@@ -234,7 +234,7 @@ export async function DELETE(
       );
     }
 
-    await db.blogPost.delete({
+    await db.blogPosts.delete({
       where: { slug }
     });
 

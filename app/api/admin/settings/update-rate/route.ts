@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    await db.user.updateMany({
+    await db.users.updateMany({
       data: {
         dollarRate: parseFloat(dollarRate),
       },

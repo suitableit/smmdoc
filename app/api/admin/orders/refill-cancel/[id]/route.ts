@@ -61,7 +61,7 @@ export async function PUT(
     const taskType = taskParts[0];
     const orderId = taskParts[1];
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: Number(orderId) },
       include: {
         user: {
@@ -128,7 +128,7 @@ export async function PUT(
         }
 
         result = await db.$transaction(async (prisma) => {
-          const refillOrder = await prisma.newOrder.create({
+          const refillOrder = await prisma.newOrders.create({
             data: {
               userId: order.userId,
               categoryId: order.categoryId,
@@ -145,7 +145,7 @@ export async function PUT(
             }
           });
 
-          await prisma.user.update({
+          await prisma.users.update({
             where: { id: order.userId },
             data: {
               balance: {
@@ -174,7 +174,7 @@ export async function PUT(
         const refundAmount = order.user.currency === 'USD' ? order.usdPrice : order.usdPrice * (order.user.dollarRate || 121.52);
 
         result = await db.$transaction(async (prisma) => {
-          const cancelledOrder = await prisma.newOrder.update({
+          const cancelledOrder = await prisma.newOrders.update({
             where: { id: Number(orderId) },
             data: {
               status: 'cancelled',
@@ -183,7 +183,7 @@ export async function PUT(
           });
 
           if (order.status !== 'pending') {
-            await prisma.user.update({
+            await prisma.users.update({
               where: { id: order.userId },
               data: {
                 balance: {

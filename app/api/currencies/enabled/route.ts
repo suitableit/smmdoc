@@ -1,9 +1,9 @@
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const enabledCurrencies = await db.currency.findMany({
+    const enabledCurrencies = await db.currencies.findMany({
       where: {
         enabled: true
       },
@@ -52,7 +52,7 @@ export async function GET() {
       ];
 
       for (const currency of defaultCurrencies) {
-        await db.currency.upsert({
+        await db.currencies.upsert({
           where: { code: currency.code },
           update: {
             name: currency.name,
@@ -67,7 +67,7 @@ export async function GET() {
         });
       }
 
-      const seededCurrencies = await db.currency.findMany({
+      const seededCurrencies = await db.currencies.findMany({
         where: { enabled: true },
         orderBy: { code: 'asc' }
       });

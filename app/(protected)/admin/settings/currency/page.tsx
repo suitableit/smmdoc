@@ -10,7 +10,6 @@ import {
     FaCheck,
     FaDollarSign,
     FaEdit,
-    FaSync,
     FaTimes,
     FaTrash
 } from 'react-icons/fa';
@@ -293,7 +292,6 @@ const PaymentCurrencyPage = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
-  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -544,71 +542,6 @@ const PaymentCurrencyPage = () => {
     }
   };
 
-  const fixCurrencyRates = async () => {
-    setIsUpdatingRates(true);
-    showToast('Fixing currency rates...', 'pending');
-
-    try {
-      const response = await fetch('/api/admin/currency-rates/fix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-
-        clearCurrencyCache();
-        await refreshCurrencyData();
-
-        const settingsResponse = await fetch('/api/admin/currency-settings');
-        if (settingsResponse.ok) {
-          const settingsData = await settingsResponse.json();
-          if (settingsData.success && settingsData.currencies) {
-            setCurrencies(settingsData.currencies);
-          }
-        }
-
-        showToast(`Currency rates fixed successfully! Updated ${data.data.totalUpdated} currencies`, 'success');
-      } else {
-        showToast(data.error || 'Failed to fix currency rates', 'error');
-      }
-    } catch (error) {
-      console.error('Error fixing currency rates:', error);
-      showToast('Failed to fix currency rates', 'error');
-    } finally {
-      setIsUpdatingRates(false);
-    }
-  };
-
-  const updateCurrencyRates = async () => {
-    setIsUpdatingRates(true);
-    showToast('Updating currency rates...', 'pending');
-
-    try {
-      const response = await fetch('/api/admin/currency-rates/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-
-        clearCurrencyCache();
-        await refreshCurrencyData();
-
-        showToast(`Currency rates updated successfully! (${data.data.source})`, 'success');
-      } else {
-        showToast(data.error || 'Failed to update currency rates', 'error');
-      }
-    } catch (error) {
-      console.error('Error updating currency rates:', error);
-      showToast('Failed to update currency rates', 'error');
-    } finally {
-      setIsUpdatingRates(false);
-    }
-  };
 
   if (isPageLoading) {
     return (
@@ -643,43 +576,6 @@ const PaymentCurrencyPage = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex flex-wrap-reverse md:flex-nowrap gap-2">
-                  <button
-                    onClick={updateCurrencyRates}
-                    disabled={isUpdatingRates}
-                    className="btn btn-secondary btn-sm flex items-center gap-2"
-                  >
-                    {isUpdatingRates ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <FaSync />
-                        Auto Update
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={fixCurrencyRates}
-                    disabled={isUpdatingRates}
-                    className="btn btn-primary btn-sm flex items-center gap-2"
-                  >
-                    {isUpdatingRates ? (
-                      <>
-                        Fixing...
-                      </>
-                    ) : (
-                      <>
-                        Fix Rates
-                      </>
-                    )}
-                  </button>
-                </div>
-
-              </div>
               <div className="overflow-x-auto">
                 <div className="min-w-[600px]">
                   <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400">

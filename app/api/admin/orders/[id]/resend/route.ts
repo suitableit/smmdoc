@@ -47,7 +47,7 @@ export async function POST(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrderss.findUnique({
       where: { id: orderId },
       select: {
         id: true,
@@ -121,7 +121,7 @@ export async function POST(
     let newStatus = 'pending';
 
     if (order.service.providerId && order.service.providerServiceId) {
-      const apiProvider = await db.api_providers.findUnique({
+      const apiProvider = await db.apiProviders.findUnique({
         where: { id: order.service.providerId }
       });
 
@@ -222,7 +222,7 @@ export async function POST(
         newStatus = statusResult.status || resendResult.status || 'pending';
         const profit = order.charge - apiCharge;
         
-        await db.newOrder.update({
+        await db.newOrderss.update({
           where: { id: orderId },
           data: {
             status: newStatus,
@@ -277,7 +277,7 @@ export async function POST(
         );
       }
     } else {
-      await db.newOrder.update({
+      await db.newOrders.update({
         where: { id: orderId },
         data: {
           status: 'pending',
@@ -288,7 +288,7 @@ export async function POST(
       console.log(`Manual order ${order.id} status updated to pending for resend`);
     }
 
-    const updatedOrder = await db.newOrder.findUnique({
+    const updatedOrder = await db.newOrderss.findUnique({
       where: { id: orderId },
       include: {
         user: {

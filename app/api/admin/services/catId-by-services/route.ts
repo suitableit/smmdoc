@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { categoryId } = body;
     console.log('categoryId', categoryId);
-    const result = await db.service.findMany({
+    const result = await db.services.findMany({
       where: {
         categoryId: categoryId,
       },

@@ -1,10 +1,8 @@
 import { auth } from '@/auth';
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { createEmailTransporter, getFromEmailAddress } from '@/lib/email-config';
 import { getAppName } from '@/lib/utils/general-settings';
-
-const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {

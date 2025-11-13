@@ -4,17 +4,17 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const totalServices = await db.service.count();
+    const totalServices = await db.services.count();
     
-    const activeServices = await db.service.count({
+    const activeServices = await db.services.count({
       where: { status: 'active' }
     });
     
-    const inactiveServices = await db.service.count({
+    const inactiveServices = await db.services.count({
       where: { status: 'inactive' }
     });
     
-    const popularServices = await db.service.count({
+    const popularServices = await db.services.count({
       where: {
         newOrders: {
           some: {}
@@ -25,7 +25,7 @@ export async function GET() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const recentlyAdded = await db.service.count({
+    const recentlyAdded = await db.services.count({
       where: {
         createdAt: {
           gte: thirtyDaysAgo

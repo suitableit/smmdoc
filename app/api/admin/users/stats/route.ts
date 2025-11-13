@@ -53,14 +53,14 @@ export async function GET(req: NextRequest) {
       totalSpent,
       totalDeposits
     ] = await Promise.all([
-      db.user.count({
+      db.users.count({
         where: {
           role: roleFilter as any,
           ...dateFilter
         }
       }),
 
-      db.user.aggregate({
+      db.users.aggregate({
         where: {
           role: roleFilter as any
         },
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      db.user.aggregate({
+      db.users.aggregate({
         where: {
           role: roleFilter as any
         },
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      db.user.aggregate({
+      db.users.aggregate({
         where: {
           role: roleFilter as any
         },
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     const [verifiedActiveUsers, verifiedSuspendedUsers, verifiedBannedUsers, unverifiedUsers] = await Promise.all([
-      db.user.count({
+      db.users.count({
         where: {
           role: roleFilter as any,
           emailVerified: { not: null },
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      db.user.count({
+      db.users.count({
         where: {
           role: roleFilter as any,
           emailVerified: { not: null },
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      db.user.count({
+      db.users.count({
         where: {
           role: roleFilter as any,
           emailVerified: { not: null },
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
           ...dateFilter
         }
       }),
-      db.user.count({
+      db.users.count({
         where: {
           role: roleFilter as any,
           emailVerified: null,
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
 
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    const dailyRegistrations = await db.user.groupBy({
+    const dailyRegistrations = await db.users.groupBy({
       by: ['createdAt'],
       where: {
         role: roleFilter as any,
@@ -162,7 +162,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const currencyBreakdown = await db.user.groupBy({
+    const currencyBreakdown = await db.users.groupBy({
       by: ['currency'],
       where: {
         role: roleFilter as any
@@ -175,7 +175,7 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    const topUsersByBalance = await db.user.findMany({
+    const topUsersByBalance = await db.users.findMany({
       where: {
         role: roleFilter as any
       },
@@ -193,7 +193,7 @@ export async function GET(req: NextRequest) {
       take: 10
     });
 
-    const topUsersBySpending = await db.user.findMany({
+    const topUsersBySpending = await db.users.findMany({
       where: {
         role: roleFilter as any
       },
