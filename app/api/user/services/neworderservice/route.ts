@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     };
     
     const [services] = await Promise.all([
-      db.service.findMany({
+      db.services.findMany({
         where: whereClause,
         orderBy: {
           createdAt: 'desc',

@@ -46,7 +46,7 @@ export async function PUT(
       );
     }
 
-    const refillRequest = await db.refillRequest.findUnique({
+    const refillRequest = await db.refillRequests.findUnique({
       where: { id: Number(id) },
       include: {
         order: {
@@ -54,6 +54,7 @@ export async function PUT(
             id: true,
             qty: true,
             status: true,
+            categoryId: true,
             serviceId: true,
           }
         },
@@ -89,7 +90,7 @@ export async function PUT(
       );
     }
 
-    const updatedRequest = await db.refillRequest.update({
+    const updatedRequest = await db.refillRequests.update({
       where: { id: Number(id) },
       data: {
         status: action === 'approve' ? 'approved' : 'declined',
@@ -100,9 +101,9 @@ export async function PUT(
     });
 
     if (action === 'approve') {
-      await db.newOrder.create({
+      await db.newOrders.create({
         data: {
-          categoryId: refillRequest.order.serviceId,
+          categoryId: refillRequest.order.categoryId,
           serviceId: refillRequest.order.serviceId,
           userId: refillRequest.userId,
           link: 'REFILL_ORDER',
@@ -117,7 +118,7 @@ export async function PUT(
         }
       });
 
-      await db.refillRequest.update({
+      await db.refillRequests.update({
         where: { id: Number(id) },
         data: {
           status: 'completed'

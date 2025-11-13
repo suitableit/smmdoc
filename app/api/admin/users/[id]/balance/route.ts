@@ -48,7 +48,7 @@ export async function PUT(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId },
       select: { id: true, balance: true, username: true }
     });
@@ -81,7 +81,7 @@ export async function PUT(
         break;
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: userId },
       data: { balance: newBalance },
       select: {
@@ -144,7 +144,7 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: {
         id: true,

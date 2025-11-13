@@ -78,13 +78,13 @@ export async function GET() {
       });
     }
 
-    let currencies = await db.currency.findMany({
+    let currencies = await db.currencies.findMany({
       orderBy: { code: 'asc' }
     });
 
     if (currencies.length === 0) {
       for (const currency of defaultCurrencies) {
-        await db.currency.upsert({
+        await db.currencies.upsert({
           where: { code: currency.code },
           update: {
             name: currency.name,
@@ -98,7 +98,7 @@ export async function GET() {
           }
         });
       }
-      currencies = await db.currency.findMany({
+      currencies = await db.currencies.findMany({
         orderBy: { code: 'asc' }
       });
     }
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     }
 
     if (currencies && Array.isArray(currencies)) {
-      const existingCurrencies = await db.currency.findMany({
+      const existingCurrencies = await db.currencies.findMany({
         select: { code: true }
       });
 
@@ -160,14 +160,14 @@ export async function POST(request: Request) {
       const coreCurrencies = ['USD', 'BDT'];
       for (const codeToDelete of codesToDelete) {
         if (!coreCurrencies.includes(codeToDelete)) {
-          await db.currency.delete({
+          await db.currencies.delete({
             where: { code: codeToDelete }
           });
         }
       }
 
       for (const currency of currencies) {
-        await db.currency.upsert({
+        await db.currencies.upsert({
           where: { code: currency.code },
           update: {
             name: currency.name,

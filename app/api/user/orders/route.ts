@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('endDate');
 
     let whereClause: any = {
-      userId: session.user.id,
+      userId: parseInt(session.user.id),
     };
 
     if (status && status !== 'all') {
@@ -71,11 +71,11 @@ export async function GET(request: Request) {
       });
     }
 
-    const totalOrders = await db.newOrder.count({
+    const totalOrders = await db.newOrders.count({
       where: whereClause
     });
 
-    const orders = await db.newOrder.findMany({
+    const orders = await db.newOrders.findMany({
       where: whereClause,
       include: {
         service: {
@@ -121,8 +121,8 @@ export async function GET(request: Request) {
       status: order.status === 'failed' ? 'pending' : order.status
     }));
 
-    const stats = await db.newOrder.aggregate({
-      where: { userId: session.user.id },
+    const stats = await db.newOrders.aggregate({
+      where: { userId: parseInt(session.user.id) },
       _count: {
         id: true
       },
@@ -131,9 +131,9 @@ export async function GET(request: Request) {
       }
     });
 
-    const statusCounts = await db.newOrder.groupBy({
+    const statusCounts = await db.newOrders.groupBy({
       by: ['status'],
-      where: { userId: session.user.id },
+      where: { userId: parseInt(session.user.id) },
       _count: {
         status: true
       }

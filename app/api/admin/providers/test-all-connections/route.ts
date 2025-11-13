@@ -4,7 +4,7 @@ import { testProviderConnection } from '@/lib/utils/providerValidator';
 
 export async function POST(request: NextRequest) {
   try {
-    const providers = await db.api_providers.findMany({
+    const providers = await db.apiProviders.findMany({
       select: {
         id: true,
         name: true,

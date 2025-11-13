@@ -27,7 +27,7 @@ export async function POST(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -49,7 +49,7 @@ export async function POST(
       );
     }
 
-    const ticket = await db.supportTicket.findUnique({
+    const ticket = await db.supportTickets.findUnique({
       where: { id: ticketId },
       select: { id: true }
     });
@@ -64,7 +64,7 @@ export async function POST(
     const body = await request.json();
     const { content } = noteSchema.parse(body);
 
-    const note = await db.ticketNote.create({
+    const note = await db.ticketNotes.create({
       data: {
         ticketId: ticketId,
         userId: parseInt(session.user.id),
@@ -80,7 +80,7 @@ export async function POST(
       }
     });
 
-    const updatedTicket = await db.supportTicket.findUnique({
+    const updatedTicket = await db.supportTickets.findUnique({
       where: { id: ticketId },
       include: {
         user: {
@@ -140,10 +140,10 @@ export async function POST(
     }
 
     const [totalTickets, openTickets] = await Promise.all([
-      db.supportTicket.count({
+      db.supportTickets.count({
         where: { userId: updatedTicket.userId }
       }),
-      db.supportTicket.count({
+      db.supportTickets.count({
         where: {
           userId: updatedTicket.userId,
           status: { not: 'closed' }
@@ -245,7 +245,7 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -267,7 +267,7 @@ export async function GET(
       );
     }
 
-    const notes = await db.ticketNote.findMany({
+    const notes = await db.ticketNotes.findMany({
       where: { ticketId },
       orderBy: {
         createdAt: 'desc'

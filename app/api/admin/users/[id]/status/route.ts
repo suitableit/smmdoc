@@ -60,7 +60,7 @@ export async function PUT(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId },
       select: { id: true, username: true, email: true, role: true, status: true }
     });
@@ -210,7 +210,7 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: {
         id: true,

@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [tickets, totalCount] = await Promise.all([
-      db.supportTicket.findMany({
+      db.supportTickets.findMany({
         where,
         orderBy: {
           createdAt: 'desc'
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
           }
         }
       }),
-      db.supportTicket.count({ where })
+      db.supportTickets.count({ where })
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);
@@ -188,7 +188,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -226,7 +226,7 @@ export async function PATCH(request: NextRequest) {
         message = `${ticketIds.length} tickets marked as unread`;
         break;
       case 'delete_selected':
-        await db.supportTicket.deleteMany({
+        await db.supportTickets.deleteMany({
           where: {
             id: {
               in: ticketIdsAsNumbers
@@ -239,7 +239,7 @@ export async function PATCH(request: NextRequest) {
         });
     }
 
-    await db.supportTicket.updateMany({
+    await db.supportTickets.updateMany({
       where: {
         id: {
           in: ticketIdsAsNumbers

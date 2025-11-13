@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       await db.$queryRaw`SELECT 1`;
 
       const [transactionsResult, totalCountResult] = await Promise.all([
-        db.addFund.findMany({
+        db.addFunds.findMany({
           where,
           orderBy: {
             createdAt: 'desc',
@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
           },
         }),
         adminView && session.user.role === 'admin'
-          ? db.addFund.count({ where })
+          ? db.addFunds.count({ where })
           : Promise.resolve(0)
       ]);
 
@@ -206,23 +206,23 @@ export async function GET(request: NextRequest) {
 
       const stats = {
         totalTransactions: totalCount,
-        pendingTransactions: await db.addFund.count({
+        pendingTransactions: await db.addFunds.count({
           where: { ...where, admin_status: 'Pending' }
         }),
-        completedTransactions: await db.addFund.count({
+        completedTransactions: await db.addFunds.count({
           where: { ...where, admin_status: 'Success' }
         }),
-        cancelledTransactions: await db.addFund.count({
+        cancelledTransactions: await db.addFunds.count({
           where: { ...where, admin_status: 'Cancelled' }
         }),
-        suspiciousTransactions: await db.addFund.count({
+        suspiciousTransactions: await db.addFunds.count({
           where: { ...where, admin_status: 'Suspicious' }
         }),
-        totalVolume: await db.addFund.aggregate({
+        totalVolume: await db.addFunds.aggregate({
           where: { ...where, admin_status: 'Success' },
           _sum: { amount: true }
         }).then(result => result._sum.amount || 0),
-        todayTransactions: await db.addFund.count({
+        todayTransactions: await db.addFunds.count({
           where: {
             ...where,
             createdAt: {
@@ -288,7 +288,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
 
-    const transaction = await db.addFund.findUnique({
+    const transaction = await db.addFunds.findUnique({
       where: { id: Number(transactionId) },
       include: { user: true }
     });
@@ -306,7 +306,7 @@ export async function PATCH(request: NextRequest) {
       updateData.admin_status = 'Success';
 
       if (transaction.admin_status !== 'Success') {
-        await db.user.update({
+        await db.users.update({
           where: { id: transaction.userId },
           data: {
             balance: { increment: transaction.amount },
@@ -319,7 +319,7 @@ export async function PATCH(request: NextRequest) {
       updateData.admin_status = 'Cancelled';
 
       if (transaction.admin_status === 'Success') {
-        await db.user.update({
+        await db.users.update({
           where: { id: transaction.userId },
           data: {
             balance: { decrement: transaction.amount },
@@ -335,7 +335,7 @@ export async function PATCH(request: NextRequest) {
       updateData.status = 'Processing';
     }
 
-    const updatedTransaction = await db.addFund.update({
+    const updatedTransaction = await db.addFunds.update({
       where: { id: Number(transactionId) },
       data: updateData,
       include: {

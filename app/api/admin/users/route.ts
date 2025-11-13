@@ -54,9 +54,9 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const total = await db.user.count({ where: whereClause });
+    const total = await db.users.count({ where: whereClause });
 
-    const users = await db.user.findMany({
+    const users = await db.users.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 
     const usersWithOrderCounts = await Promise.all(
       users.map(async (user) => {
-        const orderCount = await db.newOrder.count({
+        const orderCount = await db.newOrders.count({
           where: { userId: user.id }
         });
         return {

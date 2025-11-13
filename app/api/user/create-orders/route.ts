@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: session.user.id },
       select: {
         id: true,
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         );
       }
 
-      const service = await db.service.findUnique({
+      const service = await db.services.findUnique({
         where: { id: serviceId },
         select: {
           id: true,
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
         isSubscription = false,
       } = orderData;
 
-      const service = await db.service.findUnique({
+      const service = await db.services.findUnique({
         where: { id: serviceId },
         select: { rate: true, avg_time: true, packageType: true },
       });
@@ -278,7 +278,7 @@ export async function POST(request: Request) {
 
         console.log(`Processing order ${i + 1}/${processedOrders.length} for service ${orderData.serviceId}...`);
 
-        const service = await db.service.findUnique({
+        const service = await db.services.findUnique({
           where: { id: orderData.serviceId },
           select: {
             id: true,
@@ -297,7 +297,7 @@ export async function POST(request: Request) {
         if (service?.providerId && service?.providerServiceId) {
           try {
           console.log(`Fetching provider ${service.providerId}...`);
-          const provider = await db.api_providers.findUnique({
+          const provider = await db.apiProviders.findUnique({
             where: { id: service.providerId }
           });
 
@@ -542,7 +542,7 @@ export async function POST(request: Request) {
           price: orderCreateData.price
         });
 
-        const order = await prisma.newOrder.create({
+        const order = await prisma.newOrders.create({
           data: orderCreateData,
           include: {
             service: {
@@ -567,7 +567,7 @@ export async function POST(request: Request) {
 
         if (serviceProviderId) {
           try {
-            await prisma.providerOrderLog.create({
+            await prisma.providerOrderLogs.create({
               data: {
                 orderId: order.id,
                 providerId: serviceProviderId,
@@ -608,8 +608,8 @@ export async function POST(request: Request) {
         willDeduct: true
       });
 
-      await prisma.user.update({
-        where: { id: session.user.id },
+      await prisma.users.update({
+        where: { id: parseInt(session.user.id) },
         data: {
           balance: {
             decrement: balanceDeductionAmount,

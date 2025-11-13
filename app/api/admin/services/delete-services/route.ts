@@ -30,7 +30,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const existingService = await db.service.findUnique({
+    const existingService = await db.services.findUnique({
       where: { id: Number(id) },
       select: { id: true, name: true }
     });
@@ -46,7 +46,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await db.service.delete({
+    await db.services.delete({
       where: {
         id: Number(id),
       },

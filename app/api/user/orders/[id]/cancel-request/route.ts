@@ -46,7 +46,7 @@ export async function POST(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: parseInt(id) },
       include: {
         service: {
@@ -77,7 +77,7 @@ export async function POST(
       );
     }
 
-    if (order.userId !== session.user.id) {
+    if (order.userId !== parseInt(session.user.id)) {
       return NextResponse.json(
         { 
           error: 'You can only request cancellation for your own orders',
@@ -125,7 +125,7 @@ export async function POST(
       );
     }
 
-    const existingRequest = await db.cancelRequest.findFirst({
+    const existingRequest = await db.cancelRequests.findFirst({
       where: {
         orderId: parseInt(id),
         status: 'pending'
@@ -145,10 +145,10 @@ export async function POST(
 
     const refundAmount = order.price;
 
-    const cancelRequest = await db.cancelRequest.create({
+    const cancelRequest = await db.cancelRequests.create({
       data: {
         orderId: parseInt(id),
-        userId: session.user.id,
+        userId: parseInt(session.user.id),
         reason: reason.trim(),
         status: 'pending',
         refundAmount: refundAmount,

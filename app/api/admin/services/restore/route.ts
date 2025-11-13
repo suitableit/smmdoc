@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: session.user.id },
       select: { role: true }
     });
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const service = await db.service.findUnique({
+    const service = await db.services.findUnique({
       where: { id: parseInt(id) }
     });
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: service.providerId }
     });
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await db.service.update({
+    await db.services.update({
       where: { id: parseInt(id) },
       data: {
         status: 'active',

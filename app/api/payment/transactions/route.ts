@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const transactions = await db.addFund.findMany({
+      const transactions = await db.addFunds.findMany({
         where: {
           userId: session.user.id,
         },

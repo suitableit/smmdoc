@@ -27,7 +27,8 @@ export type LoginResult = {
 
 export const login = async (
   values: z.infer<typeof signInSchema> & { recaptchaToken?: string }
-): Promise<LoginResult> => {
+): Promise<LoginResult> => {
+
   const recaptchaSettings = await getReCAPTCHASettings();
   if (recaptchaSettings && recaptchaSettings.enabledForms?.signIn) {
     if (!values.recaptchaToken) {
@@ -50,7 +51,8 @@ export const login = async (
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };
   }
-  const { email, password, code } = validedFields.data;
+  const { email, password, code } = validedFields.data;
+
   const isEmail = email.includes('@');
 
   const existingUser = isEmail
@@ -58,25 +60,30 @@ export const login = async (
     : await getUserByUsername(email);
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
-  }
+  }
+
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);
   if (!passwordsMatch) {
     return { success: false, error: 'Invalid Credentials!' };
-  }
+  }
+
   if (existingUser.status === 'banned') {
     return { success: false, error: "You're banned from our platform! Please contact support." };
   }
 
-  if (existingUser.status === 'suspended') {
-    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
-      await db.user.update({
+  if (existingUser.status === 'suspended') {
+
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
+
+      await db.users.update({
         where: { id: existingUser.id },
         data: {
           status: 'active',
           suspendedUntil: null
         }
       });
-    } else {
+    } else {
+
       let suspensionMessage = "You're suspended from our platform!";
 
       if (existingUser.suspendedUntil) {
@@ -107,36 +114,83 @@ export const login = async (
   if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
       existingUser.email
-    );
+    );
+
     await sendMail({
       sendTo: existingUser.email,
       subject: 'Email Verification',
       html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
     });
     return { success: true, message: 'Confirmation email sent!' };
-  }
+  }
 
-  try {
-    const isAdmin = existingUser.role === 'admin';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  try {
+
+    const isAdmin = existingUser.role === 'admin';
+
     const redirectUrl = isAdmin ? '/admin' : DEFAULT_SIGN_IN_REDIRECT;
 
     console.log('User role:', existingUser.role);
     console.log('Is admin:', isAdmin);
-    console.log('Redirect URL:', redirectUrl);
+    console.log('Redirect URL:', redirectUrl);
+
     const signInResult = await signIn('credentials', {
       email,
       password,
       redirect: false
     });
 
-    console.log('SignIn result:', JSON.stringify(signInResult, null, 2));
+    console.log('SignIn result:', JSON.stringify(signInResult, null, 2));
+
     const session = await auth();
     console.log('Session after sign-in:', JSON.stringify({
       id: session?.user?.id,
       name: session?.user?.name,
       email: session?.user?.email,
       role: session?.user?.role
-    }, null, 2));
+    }, null, 2));
+
     try {
       const headersList = await headers();
       const clientIP = headersList.get('x-client-ip') ||
@@ -152,7 +206,8 @@ export const login = async (
         await ActivityLogger.login(existingUser.id, username, clientIP);
       }
     } catch (logError) {
-      console.error('Failed to log login activity:', logError);
+      console.error('Failed to log login activity:', logError);
+
     }
 
     return {
@@ -179,7 +234,8 @@ export const login = async (
     console.error('Non-AuthError during login:', error);
     return { success: false, error: 'An unexpected error occurred. Please try again.' };
   }
-};
+};
+
 export const toggleTwoFactor = async (toggle: boolean) => {
   const session = await auth();
   if (!session?.user.id) {
@@ -188,15 +244,27 @@ export const toggleTwoFactor = async (toggle: boolean) => {
   const user = await getUserByEmail(session.user.email as string);
   if (!user) {
     return { success: false, error: 'User not found!' };
-  }
-  await db.user.update({
+  }
+
+  await db.users.update({
     where: { id: user.id },
     data: {
       isTwoFactorEnabled: toggle,
     },
-  });
+  });
+
+
+
+
+
+
+
+
+
+
   return { success: true, message: 'Two factor authentication updated!' };
-};
+};
+
 export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
   const validedFields = signInSchema.safeParse(values);
   if (!validedFields.success) {
@@ -208,28 +276,34 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
 
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
-  }
+  }
+
   if (existingUser.role !== 'admin') {
     return { success: false, error: 'Access denied. Admin login only.' };
-  }
+  }
+
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);
   if (!passwordsMatch) {
     return { success: false, error: 'Invalid Credentials!' };
-  }
+  }
+
   if (existingUser.status === 'banned') {
     return { success: false, error: "You're banned from our platform! Please contact support." };
   }
 
-  if (existingUser.status === 'suspended') {
-    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
-      await db.user.update({
+  if (existingUser.status === 'suspended') {
+
+    if (existingUser.suspendedUntil && new Date() > existingUser.suspendedUntil) {
+
+      await db.users.update({
         where: { id: existingUser.id },
         data: {
           status: 'active',
           suspendedUntil: null
         }
       });
-    } else {
+    } else {
+
       let suspensionMessage = "You're suspended from our platform!";
 
       if (existingUser.suspendedUntil) {
@@ -258,21 +332,24 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
   }
 
   try {
-    console.log('Admin login attempt for user:', email);
+    console.log('Admin login attempt for user:', email);
+
     const signInResult = await signIn('credentials', {
       email,
       password,
       redirect: false
     });
 
-    console.log('Admin login result:', JSON.stringify(signInResult, null, 2));
+    console.log('Admin login result:', JSON.stringify(signInResult, null, 2));
+
     const session = await auth();
     console.log('Admin session after sign-in:', JSON.stringify({
       id: session?.user?.id,
       name: session?.user?.name,
       email: session?.user?.email,
       role: session?.user?.role
-    }, null, 2));
+    }, null, 2));
+
     try {
       const headersList = await headers();
       const clientIP = headersList.get('x-client-ip') ||
@@ -283,7 +360,8 @@ export const adminLogin = async (values: z.infer<typeof signInSchema>) => {
       const username = existingUser.username || existingUser.email?.split('@')[0] || `user${existingUser.id}`;
       await ActivityLogger.adminLogin(existingUser.id, username, clientIP);
     } catch (logError) {
-      console.error('Failed to log admin login activity:', logError);
+      console.error('Failed to log admin login activity:', logError);
+
     }
 
     return { 

@@ -11,24 +11,31 @@ export const {
   signOut,
 } = NextAuth({
   events: {
-    async linkAccount({ user }: any) {
+    async linkAccount({ user }: any) {
+
       const userId = typeof user.id === 'string' ? parseInt(user.id) : user.id;
-      if (!isNaN(userId)) {
-        const existingUser = await db.user.findUnique({
+      if (!isNaN(userId)) {
+
+        const existingUser = await db.users.findUnique({
           where: { id: userId },
           select: { balance: true, total_deposit: true }
-        });
+        });
+
         const userSettings = await db.userSettings.findFirst();
         let initialBalance = 0;
 
         if (userSettings?.userFreeBalanceEnabled && userSettings?.freeAmount > 0) {
           initialBalance = userSettings.freeAmount;
-        }
-        const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
-        const updateData: any = {};
+        }
+
+        const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
+
+        const updateData: any = {};
+
         if (emailConfirmationEnabled) {
           updateData.emailVerified = new Date();
-        } else {
+        } else {
+
           updateData.emailVerified = new Date();
         }
 
@@ -37,7 +44,7 @@ export const {
           updateData.total_deposit = initialBalance;
         }
 
-        await db.user.update({
+        await db.users.update({
           where: { id: userId },
           data: updateData,
         });

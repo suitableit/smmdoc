@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const searchResults = await db.blogPost.findMany({
+    const searchResults = await db.blogPosts.findMany({
       where: {
         status: 'published',
         publishedAt: { lte: new Date() },

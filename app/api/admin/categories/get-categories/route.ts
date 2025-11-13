@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const result = await db.category.findMany({
+    const result = await db.categories.findMany({
       orderBy: [
         {
           position: 'asc',

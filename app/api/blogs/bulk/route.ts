@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     switch (operation) {
       case 'publish':
-        result = await db.blogPost.updateMany({
+        result = await db.blogPosts.updateMany({
           where: {
             id: { in: numericIds }
           },
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         break;
 
       case 'draft':
-        result = await db.blogPost.updateMany({
+        result = await db.blogPosts.updateMany({
           where: {
             id: { in: numericIds }
           },
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
         break;
 
       case 'delete':
-        result = await db.blogPost.deleteMany({
+        result = await db.blogPosts.deleteMany({
           where: {
             id: { in: numericIds }
           }

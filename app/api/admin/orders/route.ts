@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
     console.log('Fetching orders with whereClause:', JSON.stringify(whereClause, null, 2));
 
     const [orders, totalCount] = await Promise.all([
-      db.newOrder.findMany({
+      db.newOrders.findMany({
         where: whereClause,
         include: {
           user: {
@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
         skip,
         take: limit
       }),
-      db.newOrder.count({ where: whereClause })
+      db.newOrders.count({ where: whereClause })
     ]);
 
     const queryTime = Date.now() - queryStartTime;
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const service = await db.service.findUnique({
+    const service = await db.services.findUnique({
       where: { id: serviceId },
       include: { 
         category: true,
@@ -269,7 +269,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -310,7 +310,7 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    const order = await db.newOrder.create({
+    const order = await db.newOrders.create({
       data: {
         userId,
         categoryId,
@@ -364,7 +364,7 @@ export async function POST(req: NextRequest) {
     if (!skipBalanceCheck && status !== 'pending') {
       const orderPrice = user.currency === 'USD' ? calculatedUsdPrice : calculatedUsdPrice * (user.dollarRate || 121.52);
 
-      await db.user.update({
+      await db.users.update({
         where: { id: userId },
         data: {
           balance: {
@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
     let updatedOrder = order;
     try {
       if (service.providerId && service.providerServiceId) {
-        const apiProvider = await db.api_providers.findUnique({
+        const apiProvider = await db.apiProviders.findUnique({
           where: { id: service.providerId }
         });
 
@@ -404,7 +404,7 @@ export async function POST(req: NextRequest) {
 
           const providerRes = await forwarder.forwardOrderToProvider(providerForApi, providerOrderData);
 
-          updatedOrder = await db.newOrder.update({
+          updatedOrder = await db.newOrders.update({
             where: { id: order.id },
             data: {
               status: providerRes.status || 'pending',
@@ -431,7 +431,7 @@ export async function POST(req: NextRequest) {
       const forwarder = ProviderOrderForwarder.getInstance();
       const errorMessage = forwarder.formatProviderError(providerError);
 
-      updatedOrder = await db.newOrder.update({
+      updatedOrder = await db.newOrders.update({
         where: { id: order.id },
         data: {
           status: 'failed',

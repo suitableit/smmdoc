@@ -61,30 +61,30 @@ export async function GET(request: NextRequest) {
       todayTransactions,
       recentTransactions
     ] = await Promise.all([
-      db.addFund.count({ where: dateFilter }),
+      db.addFunds.count({ where: dateFilter }),
       
-      db.addFund.count({ 
+      db.addFunds.count({ 
         where: { ...dateFilter, admin_status: 'Pending' } 
       }),
       
-      db.addFund.count({ 
+      db.addFunds.count({ 
         where: { ...dateFilter, admin_status: 'Success' } 
       }),
       
-      db.addFund.count({ 
+      db.addFunds.count({ 
         where: { ...dateFilter, admin_status: 'Cancelled' } 
       }),
       
-      db.addFund.count({ 
+      db.addFunds.count({ 
         where: { ...dateFilter, admin_status: 'Suspicious' } 
       }),
       
-      db.addFund.aggregate({
+      db.addFunds.aggregate({
         where: { ...dateFilter, admin_status: 'Success' },
         _sum: { amount: true }
       }),
       
-      db.addFund.count({
+      db.addFunds.count({
         where: {
           createdAt: {
             gte: new Date(new Date().setHours(0, 0, 0, 0))
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         }
       }),
       
-      db.addFund.findMany({
+      db.addFunds.findMany({
         where: dateFilter,
         orderBy: { createdAt: 'desc' },
         take: 5,

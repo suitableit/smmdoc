@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const ticketSettings = await db.ticket_settings.findFirst({
+    const ticketSettings = await db.ticketSettings.findFirst({
       include: {
-        ticket_subjects: {
+        ticketSubjects: {
           orderBy: {
             id: 'asc'
           }
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const subjects = ticketSettings?.ticket_subjects?.map(subject => ({
+    const subjects = ticketSettings?.ticketSubjects?.map(subject => ({
       id: subject.id,
       name: subject.name
     })) || [];

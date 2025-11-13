@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const favoriteServices = await db.favoriteService.findMany({
+    const favoriteServices = await db.favoriteServices.findMany({
       where: { userId },
       select: { serviceId: true },
     });
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
 
 
     const [services, total] = await Promise.all([
-      db.service.findMany({
+      db.services.findMany({
         where: whereClause,
         skip,
         take: limit,
@@ -104,7 +104,7 @@ export async function GET(request: Request) {
           category: true,
         },
       }),
-      db.service.count({ where: whereClause }),
+      db.services.count({ where: whereClause }),
     ]);
     
     return NextResponse.json(

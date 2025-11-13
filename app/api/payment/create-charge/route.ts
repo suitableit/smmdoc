@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     });
 
     try {
-      const payment = await db.addFund.create({
+      const payment = await db.addFunds.create({
         data: {
           invoice_id,
           amount: amountUSD,

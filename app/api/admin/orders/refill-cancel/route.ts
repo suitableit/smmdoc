@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     }
 
     
-    const orders = await db.newOrder.findMany({
+    const orders = await db.newOrders.findMany({
       where: {
         OR: [
           { status: 'completed' },

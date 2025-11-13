@@ -1,8 +1,6 @@
 import { auth } from '@/auth';
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -15,7 +13,7 @@ export async function GET() {
       );
     }
 
-    const emailSettings = await prisma.emailSettings.findFirst();
+    const emailSettings = await db.emailSettings.findFirst();
     
     return NextResponse.json({
       success: true,
@@ -59,7 +57,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const emailSettings = await prisma.emailSettings.upsert({
+    const emailSettings = await db.emailSettings.upsert({
       where: { id: 1 },
       update: {
         email,

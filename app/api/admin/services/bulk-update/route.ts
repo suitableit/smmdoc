@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     
     updateFields.updatedAt = new Date();
     
-    const result = await db.service.updateMany({
+    const result = await db.services.updateMany({
       where: {
         id: {
           in: serviceIds

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const validatedData = noteSchema.parse(body);
 
-    const contactMessage = await db.contactMessage.findUnique({
+    const contactMessage = await db.contactMessages.findUnique({
       where: { id: messageId },
       select: { id: true }
     });
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    await db.contactNote.create({
+    await db.contactNotes.create({
       data: {
         messageId: messageId,
         userId: session.user.id,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       }
     });
 
-    const updatedMessage = await db.contactMessage.findUnique({
+    const updatedMessage = await db.contactMessages.findUnique({
       where: { id: messageId },
       include: {
         notes: {

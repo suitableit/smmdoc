@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const existingServices = await db.service.findMany({
+    const existingServices = await db.services.findMany({
       where: {
         providerServiceId: {
           in: providerServiceIds

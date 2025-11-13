@@ -32,7 +32,7 @@ export async function PATCH(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -54,7 +54,7 @@ export async function PATCH(
       );
     }
 
-    const existingTicket = await db.supportTicket.findUnique({
+    const existingTicket = await db.supportTickets.findUnique({
       where: { id: ticketId }
     });
 
@@ -70,7 +70,7 @@ export async function PATCH(
     
     const { status } = statusUpdateSchema.parse(statusData);
 
-    const updatedTicket = await db.supportTicket.update({
+    const updatedTicket = await db.supportTickets.update({
       where: { id: ticketId },
       data: {
         status,
@@ -89,7 +89,7 @@ export async function PATCH(
     });
 
     if (status !== existingTicket.status && generateSystemMessage) {
-      await db.ticketMessage.create({
+      await db.ticketMessages.create({
         data: {
           ticketId: ticketId,
           userId: parseInt(session.user.id),

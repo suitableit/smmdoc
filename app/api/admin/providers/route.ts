@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
         };
       }
 
-      configuredProviders = await db.api_providers.findMany({
+      configuredProviders = await db.apiProviders.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -98,14 +98,14 @@ export async function GET(req: NextRequest) {
     const providerStats = await Promise.all(
       configuredProviders.map(async (cp: any) => {
         try {
-          const totalServices = await db.service.count({
+          const totalServices = await db.services.count({
             where: { 
               providerId: cp.id,
               ...(cp.deletedAt ? {} : { deletedAt: null })
             }
           });
 
-          const activeServices = await db.service.count({
+          const activeServices = await db.services.count({
             where: { 
               providerId: cp.id,
               status: 'active',
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
             }
           });
 
-          const inactiveServices = await db.service.count({
+          const inactiveServices = await db.services.count({
             where: { 
               providerId: cp.id,
               status: 'inactive',
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
             }
           });
 
-          const orderCount = await db.newOrder.count({
+          const orderCount = await db.newOrders.count({
             where: {
               service: {
                 providerId: cp.id
@@ -252,7 +252,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: providerId }
     });
 
@@ -267,7 +267,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    await db.api_providers.update({
+    await db.apiProviders.update({
       where: { id: providerId },
       data: { 
         deletedAt: null,
@@ -275,7 +275,7 @@ export async function PATCH(req: NextRequest) {
       }
     });
 
-    const providerServices = await db.service.findMany({
+    const providerServices = await db.services.findMany({
       where: { 
         providerId: providerId,
         deletedAt: { not: null }
@@ -288,7 +288,7 @@ export async function PATCH(req: NextRequest) {
     const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
     if (serviceIds.length > 0) {
-      await db.service.updateMany({
+      await db.services.updateMany({
         where: { 
           providerId: providerId,
           deletedAt: { not: null }
@@ -297,12 +297,12 @@ export async function PATCH(req: NextRequest) {
       });
 
       for (const categoryId of categoryIds) {
-        const category = await db.category.findUnique({
+        const category = await db.categories.findUnique({
           where: { id: categoryId }
         });
 
         if (category && category.deletedAt) {
-          await db.category.update({
+          await db.categories.update({
             where: { id: categoryId },
             data: { deletedAt: null }
           });
@@ -310,12 +310,12 @@ export async function PATCH(req: NextRequest) {
       }
 
       for (const serviceTypeId of serviceTypeIds) {
-        const serviceType = await db.servicetype.findUnique({
+        const serviceType = await db.serviceTypes.findUnique({
           where: { id: serviceTypeId }
         });
 
         if (serviceType && serviceType.status === 'deleted') {
-          await db.servicetype.update({
+          await db.serviceTypes.update({
             where: { id: serviceTypeId },
             data: { 
               status: 'active',
@@ -425,7 +425,7 @@ export async function POST(req: NextRequest) {
 
     let newProvider: any;
     try {
-      const existingProviderByName = await db.api_providers.findUnique({
+      const existingProviderByName = await db.apiProviders.findUnique({
         where: { name: providerName }
       });
 
@@ -441,7 +441,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (apiUrl && apiUrl.trim() !== '') {
-        const existingProviderByUrl = await db.api_providers.findFirst({
+        const existingProviderByUrl = await db.apiProviders.findFirst({
           where: { 
             api_url: apiUrl.trim()
           }
@@ -459,7 +459,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      newProvider = await db.api_providers.create({
+      newProvider = await db.apiProviders.create({
         data: {
           name: providerName,
           api_key: apiKey,
@@ -591,7 +591,7 @@ export async function PUT(req: NextRequest) {
     if (httpMethod !== undefined) updateData.http_method = httpMethod;
 
     if (status === 'active') {
-      const provider = await db.api_providers.findUnique({
+      const provider = await db.apiProviders.findUnique({
         where: { id: parseInt(id) }
       });
 
@@ -645,7 +645,7 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    const updatedProvider = await db.api_providers.update({
+    const updatedProvider = await db.apiProviders.update({
       where: { id: parseInt(id) },
       data: updateData
     });
@@ -724,7 +724,7 @@ export async function DELETE(req: NextRequest) {
     let message = '';
     
     if (deleteType === 'trash') {
-      await db.api_providers.update({
+      await db.apiProviders.update({
         where: { id: providerId },
         data: { 
           deletedAt: new Date(),
@@ -732,7 +732,7 @@ export async function DELETE(req: NextRequest) {
         }
       });
 
-      const providerServices = await db.service.findMany({
+      const providerServices = await db.services.findMany({
         where: { providerId: providerId },
         select: { id: true, categoryId: true, serviceTypeId: true }
       });
@@ -742,13 +742,13 @@ export async function DELETE(req: NextRequest) {
       const serviceTypeIds = [...new Set(providerServices.map(service => service.serviceTypeId).filter(id => id !== null))];
 
       if (serviceIds.length > 0) {
-        await db.service.updateMany({
+        await db.services.updateMany({
           where: { providerId: providerId },
           data: { deletedAt: new Date() }
         });
 
         for (const categoryId of categoryIds) {
-          const selfCreatedServices = await db.service.count({
+          const selfCreatedServices = await db.services.count({
             where: { 
               categoryId: categoryId,
               providerId: null,
@@ -757,12 +757,12 @@ export async function DELETE(req: NextRequest) {
           });
 
           if (selfCreatedServices === 0) {
-            await db.category.update({
+            await db.categories.update({
               where: { id: categoryId },
               data: { deletedAt: new Date() }
             });
           } else {
-            await db.category.update({
+            await db.categories.update({
               where: { id: categoryId },
               data: { 
                 updatedAt: new Date()
@@ -772,7 +772,7 @@ export async function DELETE(req: NextRequest) {
         }
 
         for (const serviceTypeId of serviceTypeIds) {
-          const selfCreatedServicesInType = await db.service.count({
+          const selfCreatedServicesInType = await db.services.count({
             where: { 
               serviceTypeId: serviceTypeId,
               providerId: null,
@@ -781,7 +781,7 @@ export async function DELETE(req: NextRequest) {
           });
 
           if (selfCreatedServicesInType === 0) {
-            await db.servicetype.update({
+            await db.serviceTypes.update({
               where: { id: serviceTypeId },
               data: { 
                 status: 'deleted',
@@ -789,7 +789,7 @@ export async function DELETE(req: NextRequest) {
               }
             });
           } else {
-            await db.servicetype.update({
+            await db.serviceTypes.update({
               where: { id: serviceTypeId },
               data: { 
                 updatedAt: new Date()
@@ -802,7 +802,7 @@ export async function DELETE(req: NextRequest) {
       message = 'Provider moved to trash. Categories and service types with self-created services preserved and changed to "Self" provider';
     } else {
       
-      const providerServices = await db.service.findMany({
+      const providerServices = await db.services.findMany({
         where: { providerId: providerId },
         select: { id: true, categoryId: true, serviceTypeId: true }
       });
@@ -817,7 +817,7 @@ export async function DELETE(req: NextRequest) {
           where: { serviceId: { in: serviceIds } }
         });
 
-        await db.cancelRequest.deleteMany({
+        await db.cancelRequests.deleteMany({
           where: { 
             order: { 
               serviceId: { in: serviceIds } 
@@ -825,7 +825,7 @@ export async function DELETE(req: NextRequest) {
           }
         });
 
-        await db.refillRequest.deleteMany({
+        await db.refillRequests.deleteMany({
           where: { 
             order: { 
               serviceId: { in: serviceIds } 
@@ -833,16 +833,16 @@ export async function DELETE(req: NextRequest) {
           }
         });
 
-        await db.newOrder.deleteMany({
+        await db.newOrders.deleteMany({
           where: { serviceId: { in: serviceIds } }
         });
 
-        await db.service.deleteMany({
+        await db.services.deleteMany({
           where: { providerId: providerId }
         });
 
         for (const categoryId of categoryIds) {
-          const selfCreatedServices = await db.service.count({
+          const selfCreatedServices = await db.services.count({
             where: { 
               categoryId: categoryId,
               providerId: null,
@@ -851,11 +851,11 @@ export async function DELETE(req: NextRequest) {
           });
 
           if (selfCreatedServices === 0) {
-            await db.category.delete({
+            await db.categories.delete({
               where: { id: categoryId }
             });
           } else {
-            await db.category.update({
+            await db.categories.update({
               where: { id: categoryId },
               data: { 
                 updatedAt: new Date()
@@ -865,7 +865,7 @@ export async function DELETE(req: NextRequest) {
         }
 
         for (const serviceTypeId of serviceTypeIds) {
-          const selfCreatedServicesInType = await db.service.count({
+          const selfCreatedServicesInType = await db.services.count({
             where: { 
               serviceTypeId: serviceTypeId,
               providerId: null,
@@ -874,11 +874,11 @@ export async function DELETE(req: NextRequest) {
           });
 
           if (selfCreatedServicesInType === 0) {
-            await db.servicetype.delete({
+            await db.serviceTypes.delete({
               where: { id: serviceTypeId }
             });
           } else {
-            await db.servicetype.update({
+            await db.serviceTypes.update({
               where: { id: serviceTypeId },
               data: { 
                 updatedAt: new Date()
@@ -888,7 +888,7 @@ export async function DELETE(req: NextRequest) {
         }
       }
 
-      await db.api_providers.delete({
+      await db.apiProviders.delete({
         where: { id: providerId }
       });
 

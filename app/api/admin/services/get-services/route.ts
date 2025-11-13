@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const result = await db.service.findMany({
+    const result = await db.services.findMany({
       include: {
         category: {
           select: {

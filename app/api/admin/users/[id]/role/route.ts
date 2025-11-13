@@ -49,7 +49,7 @@ export async function PUT(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId },
       select: { id: true, username: true, role: true, email: true }
     });
@@ -76,7 +76,7 @@ export async function PUT(
       );
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: userId },
       data: { role },
       select: {
@@ -153,7 +153,7 @@ export async function GET(
 
     const { id  } = await params;
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: Number(id) },
       select: {
         id: true,

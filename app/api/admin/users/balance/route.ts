@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { username: username },
       select: {
         id: true,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const availableCurrencies = await db.currency.findMany({
+    const availableCurrencies = await db.currencies.findMany({
       where: { enabled: true },
       orderBy: { code: 'asc' }
     });
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 
 
     const result = await db.$transaction(async (prisma) => {
-      const updatedUser = await prisma.user.update({
+      const updatedUser = await prisma.users.update({
         where: { id: user.id },
         data: {
           balance: action === 'add'
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      const transactionRecord = await prisma.addFund.create({
+      const transactionRecord = await prisma.addFunds.create({
         data: {
           userId: user.id,
           invoice_id: `MANUAL-${Date.now()}`,

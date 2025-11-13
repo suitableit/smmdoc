@@ -33,7 +33,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
     }
 
-    const transaction = await db.addFund.findUnique({
+    const transaction = await db.addFunds.findUnique({
       where: { id: transactionId },
       include: { user: true }
     });
@@ -50,7 +50,7 @@ export async function PATCH(
     let notificationMessage = '';
 
     const result = await db.$transaction(async (prisma) => {
-      const currentUser = await prisma.user.findUnique({
+      const currentUser = await prisma.users.findUnique({
         where: { id: transaction.userId },
         select: { balance: true, name: true, email: true }
       });
@@ -67,7 +67,7 @@ export async function PATCH(
 
         if (transaction.admin_status !== 'Success' && transaction.admin_status !== 'approved') {
           balanceChange = transaction.amount;
-          await prisma.user.update({
+          await prisma.users.update({
             where: { id: transaction.userId },
             data: {
               balance: { increment: transaction.amount },
@@ -91,7 +91,7 @@ export async function PATCH(
         if (transaction.admin_status === 'Success') {
           if (currentUser.balance >= transaction.amount) {
             balanceChange = -transaction.amount;
-            await prisma.user.update({
+            await prisma.users.update({
               where: { id: transaction.userId },
               data: {
                 balance: { decrement: transaction.amount },
@@ -102,7 +102,7 @@ export async function PATCH(
           } else {
             const deductAmount = currentUser.balance;
             balanceChange = -deductAmount;
-            await prisma.user.update({
+            await prisma.users.update({
               where: { id: transaction.userId },
               data: {
                 balance: 0,
@@ -127,7 +127,7 @@ export async function PATCH(
         notificationMessage = `Your transaction status has been updated to ${status}.`;
       }
 
-      const updatedTransaction = await prisma.addFund.update({
+      const updatedTransaction = await prisma.addFunds.update({
         where: { id: transactionId },
         data: updateData
       });
@@ -211,7 +211,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid transaction ID' }, { status: 400 });
     }
 
-    const transaction = await db.addFund.findUnique({
+    const transaction = await db.addFunds.findUnique({
       where: { id: transactionId },
       include: {
         user: {

@@ -72,7 +72,7 @@ export async function PUT(
       );
     }
 
-    const currentOrder = await db.newOrder.findUnique({
+    const currentOrder = await db.newOrders.findUnique({
       where: { id: orderId },
       include: {
         user: {
@@ -166,13 +166,13 @@ export async function PUT(
     
     const result = await db.$transaction(async (prisma) => {
       if (balanceUpdate) {
-        await prisma.user.update({
+        await prisma.users.update({
           where: { id: user.id },
           data: balanceUpdate
         });
       }
       
-      const updatedOrder = await prisma.newOrder.update({
+      const updatedOrder = await prisma.newOrders.update({
         where: { id: orderId },
         data: updateData,
         include: {
@@ -281,7 +281,7 @@ export async function PATCH(
       );
     }
 
-    const updatedOrder = await db.newOrder.update({
+    const updatedOrder = await db.newOrders.update({
       where: { id: orderId },
       data: {
         status,
@@ -368,7 +368,7 @@ export async function GET(
       );
     }
 
-    const order = await db.newOrder.findUnique({
+    const order = await db.newOrders.findUnique({
       where: { id: orderId },
       select: {
         id: true,

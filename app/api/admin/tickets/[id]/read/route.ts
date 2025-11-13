@@ -29,7 +29,7 @@ export async function PATCH(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
@@ -59,7 +59,7 @@ export async function PATCH(
       );
     }
 
-    const existingTicket = await db.supportTicket.findUnique({
+    const existingTicket = await db.supportTickets.findUnique({
       where: { id: ticketId }
     });
 
@@ -73,7 +73,7 @@ export async function PATCH(
     const body = await request.json();
     const { isRead } = readStatusSchema.parse(body);
 
-    const updatedTicket = await db.supportTicket.update({
+    const updatedTicket = await db.supportTickets.update({
       where: { id: ticketId },
       data: {
         isRead,

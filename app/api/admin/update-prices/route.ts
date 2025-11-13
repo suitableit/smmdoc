@@ -8,6 +8,45 @@ interface PriceUpdateSettings {
   providerId?: string;
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getCurrentUser();
+
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          success: false,
+          data: null
+        },
+        { status: 401 }
+      );
+    }
+
+    // Return default price settings
+    return NextResponse.json({
+      success: true,
+      priceSettings: {
+        serviceType: 'all-services',
+        profitPercentage: 10,
+        providerId: ''
+      },
+      error: null
+    });
+
+  } catch (error) {
+    console.error('Error fetching price settings:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch price settings: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        success: false,
+        data: null
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUser();
@@ -88,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     console.log('Where clause for service query:', JSON.stringify(whereClause, null, 2));
 
-    const servicesToUpdate = await db.service.findMany({
+    const servicesToUpdate = await db.services.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -105,7 +144,7 @@ export async function POST(req: NextRequest) {
       const providerPrice = service.providerPrice || 0;
       const newRate = providerPrice + (providerPrice * profitPercentage / 100);
       
-      await db.service.update({
+      await db.services.update({
         where: { id: service.id },
         data: {
           percentage: profitPercentage,

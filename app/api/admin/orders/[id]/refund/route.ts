@@ -34,7 +34,7 @@ export async function POST(
       );
     }
 
-    const existingOrder = await db.newOrder.findUnique({
+    const existingOrder = await db.newOrders.findUnique({
       where: { id: Number(id) },
       include: {
         user: {
@@ -85,7 +85,7 @@ export async function POST(
     }
 
     const result = await db.$transaction(async (tx) => {
-      await tx.user.update({
+      await tx.users.update({
         where: { id: existingOrder.user.id },
         data: {
           balance: {
@@ -94,7 +94,7 @@ export async function POST(
         }
       });
 
-      const updatedOrder = await tx.newOrder.update({
+      const updatedOrder = await tx.newOrders.update({
         where: { id: Number(id) },
         data: { 
           status: refundType === 'full' ? 'refunded' : 'partial',
@@ -118,7 +118,7 @@ export async function POST(
         }
       });
 
-      await tx.addFund.create({
+      await tx.addFunds.create({
         data: {
           userId: existingOrder.user.id,
           invoice_id: `refund_${id}_${Date.now()}`,

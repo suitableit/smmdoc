@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const updatedService = await db.service.update({
+    const updatedService = await db.services.update({
       where: { id },
       data: { cancel },
     });

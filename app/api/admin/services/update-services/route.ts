@@ -85,7 +85,7 @@ export async function PUT(request: Request) {
       });
     }
 
-    const currentService = await db.service.findUnique({
+    const currentService = await db.services.findUnique({
       where: { id: parseInt(id) },
       include: {
         category: { select: { category_name: true } },
@@ -235,7 +235,7 @@ export async function PUT(request: Request) {
       });
     }
 
-    const updatedService = await db.service.update({
+    const updatedService = await db.services.update({
       where: {
         id: parseInt(id),
       },
@@ -265,7 +265,7 @@ export async function PUT(request: Request) {
           }
         });
 
-        await db.service_update_logs.create({
+        await db.serviceUpdateLogs.create({
           data: {
             serviceId: parseInt(id),
             serviceName: currentService.name,
@@ -312,7 +312,7 @@ export async function GET(request: Request) {
         success: false,
       });
     }
-    const result = await db.service.findUnique({
+    const result = await db.services.findUnique({
       where: {
         id: parseInt(id),
       },

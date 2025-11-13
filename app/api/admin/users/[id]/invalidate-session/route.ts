@@ -34,7 +34,7 @@ export async function POST(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId },
       select: { id: true, username: true, role: true }
     });

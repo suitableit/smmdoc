@@ -38,12 +38,12 @@ export async function POST(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: parseInt(session.user.id) },
       select: { role: true }
     });
 
-    const ticket = await db.supportTicket.findUnique({
+    const ticket = await db.supportTickets.findUnique({
       where: { id: ticketId },
       select: { userId: true, status: true }
     });
@@ -95,7 +95,7 @@ export async function POST(
       );
     }
 
-    const reply = await db.ticketMessage.create({
+    const reply = await db.ticketMessages.create({
       data: {
         ticketId: ticketId,
         userId: parseInt(session.user.id),
@@ -116,7 +116,7 @@ export async function POST(
     });
 
     const newStatus = isAdmin ? 'Answered' : 'Customer Reply';
-    await db.supportTicket.update({
+    await db.supportTickets.update({
       where: { id: ticketId },
       data: {
         status: newStatus,
@@ -126,7 +126,7 @@ export async function POST(
       }
     });
 
-    const updatedTicket = await db.supportTicket.findUnique({
+    const updatedTicket = await db.supportTickets.findUnique({
       where: { id: ticketId },
       include: {
         user: {
@@ -163,7 +163,7 @@ export async function POST(
       );
     }
 
-    const ticketWithNotes = await db.supportTicket.findUnique({
+    const ticketWithNotes = await db.supportTickets.findUnique({
       where: { id: ticketId },
       include: {
         user: {
@@ -216,11 +216,11 @@ export async function POST(
       );
     }
 
-    const totalTickets = await db.supportTicket.count({
+    const totalTickets = await db.supportTickets.count({
       where: { userId: ticketWithNotes.userId }
     });
 
-    const openTickets = await db.supportTicket.count({
+    const openTickets = await db.supportTickets.count({
       where: {
         userId: ticketWithNotes.userId,
         status: { not: 'closed' }

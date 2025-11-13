@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma where condition:', JSON.stringify(whereCondition, null, 2));
 
-    const cancelRequestsResult = await db.cancelRequest.findMany({
+    const cancelRequestsResult = await db.cancelRequests.findMany({
       where: whereCondition,
       include: {
         order: {
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma result sample:', JSON.stringify(cancelRequestsResult[0], null, 2));
 
-    const total = await db.cancelRequest.count({
+    const total = await db.cancelRequests.count({
       where: whereCondition
     });
 

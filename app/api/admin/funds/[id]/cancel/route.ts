@@ -28,7 +28,7 @@ export async function POST(
       );
     }
 
-    const transaction = await db.addFund.findUnique({
+    const transaction = await db.addFunds.findUnique({
       where: { id: transactionId },
       include: { user: true }
     });
@@ -48,7 +48,7 @@ export async function POST(
     }
     
     try {
-      await db.addFund.update({
+      await db.addFunds.update({
         where: { id: transactionId },
         data: {
           status: "Cancelled",

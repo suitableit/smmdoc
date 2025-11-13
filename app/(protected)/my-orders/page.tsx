@@ -209,6 +209,7 @@ export default function OrdersList() {
   const [limit, setLimit] = useState(10);
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
@@ -242,7 +243,7 @@ export default function OrdersList() {
     page,
     limit,
     status,
-    search,
+    search: debouncedSearch,
   });
 
   useEffect(() => {
@@ -284,16 +285,18 @@ export default function OrdersList() {
   }, [data]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
     if (search.trim()) {
       setIsSearchLoading(true);
-      const timer = setTimeout(() => {
-        setIsSearchLoading(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
     } else {
       setIsSearchLoading(false);
     }
+
+    return () => clearTimeout(timer);
   }, [search]);
 
   const showToast = (
@@ -333,26 +336,45 @@ export default function OrdersList() {
       });
     }
 
-    if (search) {
+    if (debouncedSearch) {
       filteredOrders = filteredOrders.filter((order: any) =>
-        order.id.toString().includes(search) ||
-        order.service?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        order.category?.category_name?.toLowerCase().includes(search.toLowerCase()) ||
-        order.link?.toLowerCase().includes(search.toLowerCase())
+        order.id.toString().includes(debouncedSearch) ||
+        order.service?.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        order.category?.category_name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        order.link?.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
     }
 
     return filteredOrders;
-  }, [data, status, search]);
+  }, [data, status, debouncedSearch]);
 
   const pagination = useMemo(() => {
-    return {
-      total: orders.length,
-      page: 1,
-      limit: 10,
-      totalPages: Math.ceil(orders.length / 10)
+    return data?.pagination || {
+      total: 0,
+      page: page,
+      limit: limit,
+      totalPages: 1
     };
-  }, [orders]);
+  }, [data, page, limit]);
+
+  const totalPages = pagination.totalPages || 1;
+
+  const handlePrevious = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const handleLimitChange = (newLimit: string) => {
+    setLimit(newLimit === 'all' ? 999999 : parseInt(newLimit));
+    setPage(1);
+  };
 
   const handleRefill = (orderId: number) => {
     showToast(`Refill request submitted for order #${formatID(orderId)}`, 'success');
@@ -595,26 +617,53 @@ export default function OrdersList() {
       <div className="page-content">
         <div className="card card-padding">
           <div className="mb-6">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaSearch className="w-4 h-4 text-gray-500" />
-              </div>
-              <input
-                type="search"
-                placeholder="Search by Order ID, Service name, or Category..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                autoComplete="off"
-              />
-              {isSearchLoading && (
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
-                  <div className="h-4 w-4 gradient-shimmer rounded-full" />
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex items-center gap-4 h-12">
+                <div className="relative">
+                  <select
+                    value={limit === 999999 ? 'all' : limit.toString()}
+                    onChange={(e) => handleLimitChange(e.target.value)}
+                    className="form-field pl-4 pr-8 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm min-w-[160px] h-12"
+                  >
+                    {pagination.total > 0 && (
+                      <>
+                        {pagination.total >= 10 && <option value="10">10 per page</option>}
+                        {pagination.total >= 25 && <option value="25">25 per page</option>}
+                        {pagination.total >= 50 && <option value="50">50 per page</option>}
+                        {pagination.total >= 100 && <option value="100">100 per page</option>}
+                        {pagination.total >= 200 && <option value="200">200 per page</option>}
+                        {pagination.total >= 500 && <option value="500">500 per page</option>}
+                        <option value="all">Show All</option>
+                      </>
+                    )}
+                    {pagination.total === 0 && (
+                      <option value="10">No orders found</option>
+                    )}
+                  </select>
                 </div>
-              )}
+              </div>
+              <div className="flex-1 h-12 items-center">
+                <div className="form-group mb-0 w-full">
+                  <div className="relative flex items-center h-12">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <input
+                      type="search"
+                      placeholder="Search by ID, Service Name, Category..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="form-field w-full pl-10 pr-10 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 text-sm h-12"
+                      autoComplete="off"
+                    />
+                    {isSearchLoading && (
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none z-10">
+                        <div className="h-4 w-4 gradient-shimmer rounded-full" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
           <div className="mb-6">
@@ -909,63 +958,25 @@ export default function OrdersList() {
               </tbody>
             </table>
           </div>
-          {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
-                Showing{' '}
-                <span className="font-medium">{formatNumber((page - 1) * limit + 1)}</span> to{' '}
-                <span className="font-medium">
-                  {formatNumber(Math.min(page * limit, pagination.total))}
-                </span>{' '}
-                of <span className="font-medium">{formatNumber(pagination.total)}</span>{' '}
-                orders
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                Page <span className="font-medium">{page}</span> of{' '}
+                <span className="font-medium">{totalPages}</span>
+                {' '}({pagination.total || 0} orders total)
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handlePrevious}
+                  disabled={page === 1 || isLoading}
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Previous
                 </button>
-                <div className="flex gap-1">
-                  {Array.from(
-                    { length: Math.min(5, pagination.totalPages) },
-                    (_, i) => {
-                      let pageNum;
-                      if (pagination.totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (page <= 3) {
-                        pageNum = i + 1;
-                      } else if (page >= pagination.totalPages - 2) {
-                        pageNum = pagination.totalPages - 4 + i;
-                      } else {
-                        pageNum = page - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setPage(pageNum)}
-                          className={`px-3 py-2 text-sm rounded-lg ${
-                            page === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    }
-                  )}
-                </div>
-
                 <button
-                  onClick={() =>
-                    setPage(Math.min(pagination.totalPages, page + 1))
-                  }
-                  disabled={page === pagination.totalPages}
-                  className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleNext}
+                  disabled={page === totalPages || isLoading}
+                  className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Next
                 </button>

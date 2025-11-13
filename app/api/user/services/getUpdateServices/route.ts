@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       },
     };
     const [services, total] = await Promise.all([
-      db.service.findMany({
+      db.services.findMany({
         where: whereClause,
         skip,
         take: limit,
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
           updatedAt: 'desc',
         },
       }),
-      db.service.count({ where: whereClause }),
+      db.services.count({ where: whereClause }),
     ]);
     return NextResponse.json(
       {

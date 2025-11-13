@@ -35,7 +35,7 @@ export async function DELETE(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId }
     });
 
@@ -89,7 +89,7 @@ export async function DELETE(
     }
 
     try {
-      await db.user.update({
+      await db.users.update({
         where: { id: userId },
         data: {
           status: 'deleted',
@@ -103,12 +103,12 @@ export async function DELETE(
         }
       });
 
-      await db.session.deleteMany({
+      await db.sessions.deleteMany({
         where: { userId: userId }
       });
 
       try {
-        await db.account.deleteMany({
+        await db.accounts.deleteMany({
           where: { userId: userId }
         });
       } catch (error) {

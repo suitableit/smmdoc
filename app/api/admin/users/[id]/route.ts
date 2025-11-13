@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -61,7 +61,7 @@ export async function GET(
       );
     }
 
-    const orderCount = await db.newOrder.count({
+    const orderCount = await db.newOrders.count({
       where: { userId: user.id }
     });
 
@@ -124,7 +124,7 @@ export async function PUT(
     const body = await req.json();
     const { username, name, email, balance, emailVerified, password, role, status } = body;
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId }
     });
 
@@ -140,7 +140,7 @@ export async function PUT(
     }
 
     if (username !== undefined && username !== existingUser.username) {
-      const usernameExists = await db.user.findUnique({
+      const usernameExists = await db.users.findUnique({
         where: { username: username },
         select: { id: true }
       });
@@ -158,7 +158,7 @@ export async function PUT(
     }
 
     if (email !== undefined && email !== existingUser.email) {
-      const emailExists = await db.user.findUnique({
+      const emailExists = await db.users.findUnique({
         where: { email: email },
         select: { id: true }
       });
@@ -192,7 +192,7 @@ export async function PUT(
       updateData.password = await bcrypt.hash(password, 12);
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.users.update({
       where: { id: userId },
       data: updateData,
       select: {
@@ -267,7 +267,7 @@ export async function DELETE(
       );
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await db.users.findUnique({
       where: { id: userId }
     });
 
@@ -312,64 +312,64 @@ export async function DELETE(
     try {
       await db.$transaction(async (tx) => {
         
-        await tx.activitylog.deleteMany({
+        await tx.activityLogs.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.addFund.deleteMany({
+        await tx.addFunds.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.newOrder.deleteMany({
+        await tx.newOrders.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.cancelRequest.deleteMany({
+        await tx.cancelRequests.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.refillRequest.deleteMany({
+        await tx.refillRequests.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.favoriteService.deleteMany({
+        await tx.favoriteServices.deleteMany({
           where: { userId: userId }
         });
         
-        await tx.favrouteCat.deleteMany({
+        await tx.favoriteCategories.deleteMany({
           where: { userId: userId }
         });
 
-        const userTickets = await tx.supportTicket.findMany({
+        const userTickets = await tx.supportTickets.findMany({
           where: { userId: userId },
           select: { id: true }
         });
         
         for (const ticket of userTickets) {
-          await tx.ticketMessage.deleteMany({
+          await tx.ticketMessages.deleteMany({
             where: { ticketId: ticket.id }
           });
-          await tx.ticketNote.deleteMany({
+          await tx.ticketNotes.deleteMany({
             where: { ticketId: ticket.id }
           });
         }
         
-        await tx.supportTicket.deleteMany({
+        await tx.supportTickets.deleteMany({
           where: { userId: userId }
         });
 
-        const userContactMessages = await tx.contactMessage.findMany({
+        const userContactMessages = await tx.contactMessages.findMany({
           where: { userId: userId },
           select: { id: true }
         });
         
         for (const message of userContactMessages) {
-          await tx.contactNote.deleteMany({
+          await tx.contactNotes.deleteMany({
             where: { messageId: message.id }
           });
         }
         
-        await tx.contactMessage.deleteMany({
+        await tx.contactMessages.deleteMany({
           where: { userId: userId }
         });
 
@@ -379,15 +379,15 @@ export async function DELETE(
         });
         
         if (userAffiliate) {
-          await tx.affiliate_commissions.deleteMany({
+          await tx.affiliateCommissions.deleteMany({
             where: { affiliateId: userAffiliate.id }
           });
           
-          await tx.affiliate_payouts.deleteMany({
+          await tx.affiliatePayouts.deleteMany({
             where: { affiliateId: userAffiliate.id }
           });
           
-          await tx.affiliate_referrals.deleteMany({
+          await tx.affiliateReferrals.deleteMany({
             where: { affiliateId: userAffiliate.id }
           });
           
@@ -396,38 +396,38 @@ export async function DELETE(
           });
         }
 
-        const userChildPanel = await tx.child_panels.findUnique({
+        const userChildPanel = await tx.childPanels.findUnique({
           where: { userId: userId },
           select: { id: true }
         });
         
         if (userChildPanel) {
-          await tx.child_panel_subscriptions.deleteMany({
+          await tx.childPanelSubscriptions.deleteMany({
             where: { childPanelId: userChildPanel.id }
           });
           
-          await tx.child_panels.delete({
+          await tx.childPanels.delete({
             where: { id: userChildPanel.id }
           });
         }
 
-        await tx.service.deleteMany({
+        await tx.services.deleteMany({
           where: { userId: userId }
         });
         
-        await tx.category.deleteMany({
+        await tx.categories.deleteMany({
           where: { userId: userId }
         });
 
-        await tx.session.deleteMany({
+        await tx.sessions.deleteMany({
           where: { userId: userId }
         });
         
-        await tx.account.deleteMany({
+        await tx.accounts.deleteMany({
           where: { userId: userId }
         });
         
-        await tx.twoFactorConfirmation.deleteMany({
+        await tx.twoFactorConfirmations.deleteMany({
           where: { userId: userId }
         });
 

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const serviceExists = await db.service.findUnique({
+    const serviceExists = await db.services.findUnique({
       where: { id: serviceId },
     });
 
@@ -23,8 +23,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const userExists = await db.user.findUnique({
-      where: { id: userId },
+    const userExists = await db.users.findUnique({
+      where: { id: parseInt(userId) },
     });
 
     if (!userExists) {
@@ -34,10 +34,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const existingFavorite = await db.favoriteService.findUnique({
+    const existingFavorite = await db.favoriteServices.findUnique({
       where: {
         userId_serviceId: {
-          userId,
+          userId: parseInt(userId),
           serviceId,
         },
       },
@@ -51,9 +51,9 @@ export async function POST(req: Request) {
         );
       }
 
-      await db.favoriteService.create({
+      await db.favoriteServices.create({
         data: {
-          userId,
+          userId: parseInt(userId),
           serviceId,
         },
       });
@@ -70,10 +70,10 @@ export async function POST(req: Request) {
         );
       }
 
-      await db.favoriteService.delete({
+      await db.favoriteServices.delete({
         where: {
           userId_serviceId: {
-            userId,
+            userId: parseInt(userId),
             serviceId,
           },
         },

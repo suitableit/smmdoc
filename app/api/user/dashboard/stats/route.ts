@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const session = await requireAuth();
 
-    const user = await db.user.findUnique({
+    const user = await db.users.findUnique({
       where: { id: session.user.id },
       select: {
         balance: true,
@@ -28,39 +28,39 @@ export async function GET() {
     const totalDeposit = user.total_deposit || 0;
     const totalSpent = user.total_spent || 0;
     
-    const totalOrders = await db.newOrder.count({
+    const totalOrders = await db.newOrders.count({
       where: { userId: session.user.id }
     });
     
-    const pendingOrders = await db.newOrder.count({
+    const pendingOrders = await db.newOrders.count({
       where: { 
         userId: session.user.id,
         status: 'pending' 
       }
     });
     
-    const processingOrders = await db.newOrder.count({
+    const processingOrders = await db.newOrders.count({
       where: { 
         userId: session.user.id,
         status: 'processing' 
       }
     });
     
-    const completedOrders = await db.newOrder.count({
+    const completedOrders = await db.newOrders.count({
       where: { 
         userId: session.user.id,
         status: 'completed' 
       }
     });
     
-    const cancelledOrders = await db.newOrder.count({
+    const cancelledOrders = await db.newOrders.count({
       where: { 
         userId: session.user.id,
         status: 'cancelled' 
       }
     });
     
-    const recentOrders = await db.newOrder.findMany({
+    const recentOrders = await db.newOrders.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -78,7 +78,7 @@ export async function GET() {
       }
     });
 
-    const favoriteCategories = await db.category.findMany({
+    const favoriteCategories = await db.categories.findMany({
       where: {
         services: {
           some: {
@@ -102,7 +102,7 @@ export async function GET() {
       take: 5
     });
 
-    const recentTransactions = await db.addFund.findMany({
+    const recentTransactions = await db.addFunds.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: 'desc' },
       take: 5
@@ -128,11 +128,17 @@ export async function GET() {
           status: order.status,
           createdAt: order.createdAt,
           link: order.link,
+          qty: order.qty,
+          usdPrice: order.usdPrice,
+          providerStatus: order.providerStatus,
           service: {
             name: order.service.name
           },
           category: {
             category_name: order.service.category.category_name
+          },
+          user: {
+            dollarRate: user.dollarRate
           }
         })),
         favoriteCategories: favoriteCategories.map(category => ({

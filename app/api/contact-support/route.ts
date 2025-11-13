@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (maxPendingContactsStr.toLowerCase() !== 'unlimited') {
       const { db } = await import('@/lib/db');
-      const userPendingCount = await db.contactMessage.count({
+      const userPendingCount = await db.contactMessages.count({
         where: {
           userId: session.user.id,
           OR: [
@@ -247,7 +247,7 @@ export async function GET() {
       canSubmit = true;
     } else {
       const { db } = await import('@/lib/db');
-      userPendingCount = await db.contactMessage.count({
+      userPendingCount = await db.contactMessages.count({
         where: {
           userId: session.user.id,
           OR: [

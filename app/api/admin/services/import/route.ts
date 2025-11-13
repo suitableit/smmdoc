@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       try {
         console.log('ðŸ”¥ Services request via POST:', { providerId, categories, page, limit });
 
-        const provider = await db.api_providers.findUnique({
+        const provider = await db.apiProviders.findUnique({
           where: { id: parseInt(providerId) }
         });
 
@@ -395,7 +395,7 @@ export async function GET(req: NextRequest) {
         console.log('ðŸ”¥ Categories request for provider:', providerId);
         console.log('ðŸ”¥ Session user:', session?.user?.email, 'Role:', session?.user?.role);
 
-        const provider = await db.api_providers.findUnique({
+        const provider = await db.apiProviders.findUnique({
           where: { id: parseInt(providerId) }
         });
 
@@ -612,7 +612,7 @@ export async function GET(req: NextRequest) {
       try {
         console.log('ðŸ”¥ Services request:', { providerId, categories });
 
-        const provider = await db.api_providers.findUnique({
+        const provider = await db.apiProviders.findUnique({
           where: { id: parseInt(providerId) }
         });
 
@@ -747,7 +747,7 @@ export async function GET(req: NextRequest) {
 
     if (action === 'categories' && providerId) {
       try {
-        const provider = await db.api_providers.findUnique({
+        const provider = await db.apiProviders.findUnique({
           where: { id: parseInt(providerId) }
         });
 
@@ -848,7 +848,7 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const configuredProviders = await db.api_providers.findMany({
+      const configuredProviders = await db.apiProviders.findMany({
         where: {
           status: 'active'
         },
@@ -902,7 +902,7 @@ export async function PUT(req: NextRequest) {
     if (services && Array.isArray(services) && providerId) {
       console.log('ðŸ”¥ Import request:', { providerId, servicesCount: services.length });
 
-      const provider = await db.api_providers.findUnique({
+      const provider = await db.apiProviders.findUnique({
         where: { id: parseInt(providerId) }
       });
 
@@ -915,7 +915,7 @@ export async function PUT(req: NextRequest) {
 
       console.log('âœ… Provider found:', provider.name);
 
-      const currencies = await db.currency.findMany({
+      const currencies = await db.currencies.findMany({
         where: { enabled: true },
         select: {
           id: true,
@@ -943,7 +943,7 @@ export async function PUT(req: NextRequest) {
         try {
           console.log(`ðŸ“ Processing service: ${service.name} (ID: ${service.id})`);
 
-          const existingService = await db.service.findFirst({
+          const existingService = await db.services.findFirst({
             where: {
               OR: [
                 { name: service.name },
@@ -1012,7 +1012,7 @@ export async function PUT(req: NextRequest) {
 
           const preferredServiceTypeName = service.type ? mapServiceTypeToPreferredName(service.type) : 'Default';
           
-          let serviceType = await db.servicetype.findFirst({
+          let serviceType = await db.serviceTypes.findFirst({
             where: { 
               name: preferredServiceTypeName,
               status: 'active'
@@ -1020,7 +1020,7 @@ export async function PUT(req: NextRequest) {
           });
           
           if (!serviceType && preferredServiceTypeName !== 'Default') {
-            serviceType = await db.servicetype.findFirst({
+            serviceType = await db.serviceTypes.findFirst({
               where: { 
                 name: 'Default',
                 status: 'active'
@@ -1030,7 +1030,7 @@ export async function PUT(req: NextRequest) {
           }
           
           if (!serviceType) {
-            serviceType = await db.servicetype.findFirst({
+            serviceType = await db.serviceTypes.findFirst({
               where: { 
                 packageType: 1,
                 status: 'active'
@@ -1053,12 +1053,12 @@ export async function PUT(req: NextRequest) {
             ? service.category.trim() 
             : 'Uncategorized';
             
-          let category = await db.category.findFirst({
+          let category = await db.categories.findFirst({
             where: { category_name: categoryName }
           });
 
           if (!category) {
-            category = await db.category.create({
+            category = await db.categories.create({
               data: {
                 category_name: categoryName,
                 status: 'active',
@@ -1068,7 +1068,7 @@ export async function PUT(req: NextRequest) {
             console.log(`ðŸ“ Created new category: ${categoryName}`);
           }
 
-          const newService = await db.service.create({
+          const newService = await db.services.create({
             data: {
               name: service.name,
               description: service.desc || service.description || `${service.name} - Imported from ${provider.name}`,
@@ -1137,7 +1137,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const provider = await db.api_providers.findUnique({
+    const provider = await db.apiProviders.findUnique({
       where: { id: parseInt(providerId) }
     });
 

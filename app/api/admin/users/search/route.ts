@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`Searching for users with query: "${query}"`);
     
-    const users = await db.user.findMany({
+    const users = await db.users.findMany({
       where: {
         OR: [
           { name: { contains: query } },

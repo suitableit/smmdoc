@@ -29,7 +29,7 @@ export async function updateUserCurrency(currency: 'USD' | 'BDT' | 'USDT') {
       timestamp: new Date().toISOString()
     });
 
-    const result = await db.user.update({
+    const result = await db.users.update({
       where: { id: session?.user?.id },
       data: { currency },
     });

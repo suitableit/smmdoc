@@ -10,7 +10,8 @@ import { newPasswordSchema } from "../validators/auth.validator";
 export const newPasswordValues = async (
   values: z.infer<typeof newPasswordSchema>,
   token?: string | null
-) => {
+) => {
+
   const userSettings = await db.userSettings.findFirst();
   const resetPasswordEnabled = userSettings?.resetPasswordEnabled ?? true;
 
@@ -39,10 +40,10 @@ export const newPasswordValues = async (
     return { success: false, error: "User does not exist" };
   }
   const hashedPassword = await bcrypt.hash(password, 10);
-  await db.user.update({
+  await db.users.update({
     where: { email: existingToken.email },
     data: { password: hashedPassword },
   });
-  await db.passwordResetToken.delete({ where: { token } });
+  await db.passwordResetTokens.delete({ where: { token } });
   return { success: true, error: "", message: "Password updated successfully" };
 };
