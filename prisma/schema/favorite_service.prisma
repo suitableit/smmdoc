@@ -9,5 +9,5 @@ model FavoriteService {
 
   @@unique([userId, serviceId], map: "FavoriteService_userId_serviceId_key")
   @@index([serviceId], map: "FavoriteService_serviceId_fkey")
-  @@map("favoriteservice")
+  @@map("favorite_services")
 }

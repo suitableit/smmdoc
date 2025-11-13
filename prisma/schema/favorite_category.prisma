@@ -8,5 +8,5 @@ model FavrouteCat {
   services  Service[]
 
   @@index([userId], map: "FavrouteCat_userId_fkey")
-  @@map("favroutecat")
+  @@map("favorite_categories")
 }

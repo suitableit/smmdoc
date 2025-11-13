@@ -13,5 +13,5 @@ model ActivityLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
-  @@map("activitylog")
+  @@map("activity_logs")
 }

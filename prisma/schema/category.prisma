@@ -14,7 +14,7 @@ model Category {
 
   @@index([userId], map: "Category_userId_fkey")
   @@index([position, createdAt], map: "Category_position_createdAt_idx")
-  @@map("category")
+  @@map("service_categories")
 }
 
 enum CategoryPosition {
