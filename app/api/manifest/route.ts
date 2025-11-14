@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
 
     const manifest = {
       id: '/',
-      name: appName || generalSettings.siteTitle || 'SMMDOC',
-      short_name: appName || generalSettings.siteTitle || 'SMMDOC',
+      name: appName,
+      short_name: appName,
       description: generalSettings.siteDescription || 'Your Social Media Growth Partner',
       start_url: '/',
       scope: '/',
