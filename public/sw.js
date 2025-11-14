@@ -1,8 +1,6 @@
 const CACHE_NAME = 'smmdoc-offline-v1';
-const OFFLINE_URL = '/offline';
 
 const urlsToCache = [
-  OFFLINE_URL,
   '/',
   '/manifest.json',
 ];
@@ -49,8 +47,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .catch(() => {
-          console.log('Service Worker: Network failed, serving offline page');
-          return caches.match(OFFLINE_URL);
+          console.log('Service Worker: Network failed');
+          return caches.match('/');
         })
     );
   } else {
