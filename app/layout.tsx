@@ -4,6 +4,7 @@ import { CustomCodesInjector } from '@/components/CustomCodesInjector';
 import AnalyticsInjector from '@/components/analytics-injector';
 import { ThemeProvider } from '@/components/theme-provider';
 import OfflineDetector from '@/components/OfflineDetector';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 import { APP_DESCRIPTION, APP_URL } from '@/lib/constants';
 import { getAppName } from '@/lib/utils/general-settings';
 import type { Metadata } from 'next';
@@ -71,6 +72,7 @@ export default async function RootLayout({
               disableTransitionOnChange
             >
               <Toaster richColors position="bottom-right" />
+              <ServiceWorkerRegistration />
               <CustomCodesInjector />
               <AnalyticsInjector />
               <AppNameProvider initialAppName={appName}>
