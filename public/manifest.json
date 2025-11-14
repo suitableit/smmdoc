@@ -1,7 +1,7 @@
 {
-  "name": "SMM Doc",
-  "short_name": "SMM Doc",
-  "description": "Social Media Marketing Documentation and Services",
+  "name": "SMMDOC",
+  "short_name": "SMMDOC",
+  "description": "Your Social Media Growth Partner",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -14,6 +14,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "offline_fallback": "/offline"
+  ]
 }

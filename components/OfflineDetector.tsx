@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import OfflineBanner from './OfflineBanner';
 
 export default function OfflineDetector({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
-  const pathname = usePathname();
 
   const checkConnectivity = async (): Promise<boolean> => {
     try {
@@ -27,48 +26,37 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
     }
   };
 
-  const handleGoOffline = () => {
-
-    if (pathname !== '/offline') {
-
-      const currentPageTitle = document.title;
-      const currentPath = pathname;
-
-      window.location.href = `/offline?from=${encodeURIComponent(currentPath)}&title=${encodeURIComponent(currentPageTitle)}&error=connection_lost`;
-    }
+  const handleRetryConnection = async () => {
+    const actuallyOnline = await checkConnectivity();
+    setIsOnline(actuallyOnline);
   };
 
   const handleOnlineStatusChange = async () => {
     const browserOnline = navigator.onLine;
 
     if (browserOnline) {
-
       const actuallyOnline = await checkConnectivity();
       setIsOnline(actuallyOnline);
-
-      if (actuallyOnline && pathname === '/offline') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromPage = urlParams.get('from');
-        if (fromPage) {
-          window.location.href = fromPage;
-        } else {
-          window.location.href = '/';
-        }
-      }
     } else {
       setIsOnline(false);
-      handleGoOffline();
     }
   };
 
   useEffect(() => {
+    const initialCheck = async () => {
+      if (navigator.onLine) {
+        const actuallyOnline = await checkConnectivity();
+        setIsOnline(actuallyOnline);
+      } else {
+        setIsOnline(false);
+      }
+    };
 
-    setIsOnline(navigator.onLine);
+    initialCheck();
 
     const handleOnline = () => handleOnlineStatusChange();
     const handleOffline = () => {
       setIsOnline(false);
-      handleGoOffline();
     };
 
     window.addEventListener('online', handleOnline);
@@ -77,22 +65,9 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
     const connectivityInterval = setInterval(async () => {
       if (navigator.onLine) {
         const actuallyOnline = await checkConnectivity();
-        const wasOnline = isOnline;
         setIsOnline(actuallyOnline);
-
-        if (wasOnline && !actuallyOnline) {
-          handleGoOffline();
-        }
-
-        else if (!wasOnline && actuallyOnline && pathname === '/offline') {
-          const urlParams = new URLSearchParams(window.location.search);
-          const fromPage = urlParams.get('from');
-          if (fromPage) {
-            window.location.href = fromPage;
-          } else {
-            window.location.href = '/';
-          }
-        }
+      } else {
+        setIsOnline(false);
       }
     }, 30000);
 
@@ -101,10 +76,15 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
       window.removeEventListener('offline', handleOffline);
       clearInterval(connectivityInterval);
     };
-  }, [pathname, isOnline]);
+  }, []);
 
   return (
     <div>
+      <OfflineBanner 
+        isOnline={isOnline} 
+        onRetry={handleRetryConnection}
+        isRetrying={isCheckingConnection}
+      />
       {children}
     </div>
   );
