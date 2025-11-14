@@ -220,7 +220,6 @@ export default function RootLayout({
     
     return (
       <div className="fixed bottom-6 left-6 z-50">
-        {/* WhatsApp Button */}
         {liveChatSettings.whatsappEnabled && (
           <div
             className={`transition-all duration-300 relative group ${
@@ -236,7 +235,6 @@ export default function RootLayout({
             >
               <FaWhatsapp className="w-7 h-7" />
             </button>
-            {/* Tooltip */}
             <div className="absolute left-16 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
               <div className="bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap">
                 WhatsApp
@@ -246,7 +244,6 @@ export default function RootLayout({
           </div>
         )}
 
-        {/* Telegram Button */}
         {liveChatSettings.telegramEnabled && (
           <div
             className={`transition-all duration-300 relative group ${
@@ -262,7 +259,6 @@ export default function RootLayout({
             >
               <RiTelegramFill className="w-7 h-7" />
             </button>
-            {/* Tooltip */}
             <div className="absolute left-16 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
               <div className="bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap">
                 Telegram
@@ -272,7 +268,6 @@ export default function RootLayout({
           </div>
         )}
 
-        {/* Messenger Button */}
         {liveChatSettings.messengerEnabled && (
           <div
             className={`transition-all duration-300 relative group ${
@@ -288,7 +283,6 @@ export default function RootLayout({
             >
               <FaFacebookMessenger className="w-7 h-7" />
             </button>
-            {/* Tooltip */}
             <div className="absolute left-16 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
               <div className="bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap">
                 Messenger
@@ -298,7 +292,6 @@ export default function RootLayout({
           </div>
         )}
 
-        {/* Main Chat Toggle Button */}
         <div className="relative group">
           <button
             onClick={toggleChat}
@@ -313,7 +306,6 @@ export default function RootLayout({
               <FaComment className="w-6 h-6" />
             )}
           </button>
-          {/* Tooltip for main button */}
           <div className="absolute left-16 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
             <div className="bg-gray-900 text-white text-sm px-3 py-1 rounded-lg whitespace-nowrap">
               {isChatExpanded ? 'Close' : liveChatSettings.hoverTitle}
@@ -331,10 +323,8 @@ export default function RootLayout({
       <main className="flex-1">{children}</main>
       <Footer />
 
-      {/* Chat Support Menu */}
       {renderChatMenu()}
 
-      {/* Back to Top Button */}
       <div
         className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ${
           isVisible

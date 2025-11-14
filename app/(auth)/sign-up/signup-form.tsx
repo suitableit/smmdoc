@@ -1,5 +1,4 @@
 'use client';
-import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
@@ -15,38 +14,46 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaSpinner, FaTimes, FaUser } from 'react-icons/fa';
+import { FaCheck, FaEnvelope, FaEye, FaEyeSlash, FaLock, FaTimes, FaUser } from 'react-icons/fa';
 
 export default function SignUpForm() {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
   const [showPassword, setShowPassword] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
-  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+
+  const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
+
   const dynamicSchema = useMemo(() => {
     if (settingsLoading || !userSettings) {
       return createSignUpSchema(false);
     }
     return createSignUpSchema(userSettings.nameFieldEnabled);
-  }, [userSettings, settingsLoading]);
+  }, [userSettings, settingsLoading]);
+
   const formKey = useMemo(() => {
     return `form-${settingsLoading}-${userSettings?.nameFieldEnabled}`;
   }, [settingsLoading, userSettings?.nameFieldEnabled]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };
+  };
+
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     form.setValue('email', value, {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
-    });
+    });
+
     if (emailStatus.message) {
       setEmailStatus({
         checking: false,
@@ -54,7 +61,8 @@ export default function SignUpForm() {
         message: ''
       });
     }
-  };
+  };
+
   const [usernameStatus, setUsernameStatus] = useState<{
     checking: boolean;
     available: boolean | null;
@@ -63,7 +71,8 @@ export default function SignUpForm() {
     checking: false,
     available: null,
     message: ''
-  });
+  });
+
   const [emailStatus, setEmailStatus] = useState<{
     checking: boolean;
     available: boolean | null;
@@ -78,7 +87,8 @@ export default function SignUpForm() {
     mode: 'all',
     resolver: zodResolver(dynamicSchema),
     defaultValues: signUpDefaultValues,
-  });
+  });
+
   const checkUsernameAvailability = useCallback(async (username: string) => {
     if (!username || username.length < 3) {
       setUsernameStatus({
@@ -127,7 +137,8 @@ export default function SignUpForm() {
         message: 'Error checking username availability'
       });
     }
-  }, []);
+  }, []);
+
   const checkEmailAvailability = useCallback(async (email: string) => {
     if (!email || !email.includes('@')) {
       setEmailStatus({
@@ -176,9 +187,11 @@ export default function SignUpForm() {
         message: 'Error checking email availability'
       });
     }
-  }, []);
+  }, []);
+
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value;
+
     const cleanedValue = value
       .toLowerCase()
       .replace(/[^a-z0-9._]/g, '');
@@ -187,7 +200,8 @@ export default function SignUpForm() {
       shouldValidate: true,
       shouldDirty: true,
       shouldTouch: true
-    });
+    });
+
     if (usernameStatus.message) {
       setUsernameStatus({
         checking: false,
@@ -195,22 +209,27 @@ export default function SignUpForm() {
         message: ''
       });
     }
-  };
+  };
+
 
   const onSubmit: SubmitHandler<DynamicSignUpSchema> = async (values) => {
     setError('');
-    setSuccess('');
+    setSuccess('');
+
     if (isEnabledForForm('signUp') && !recaptchaToken) {
       setError('Please complete the reCAPTCHA verification');
       return;
-    }
+    }
+
     const submitData = { ...values } as any;
     if (!userSettings?.nameFieldEnabled && submitData.name === '') {
       delete submitData.name;
-    }
+    }
+
     if (recaptchaToken) {
       submitData.recaptchaToken = recaptchaToken;
-    }
+    }
+
     setUsernameStatus({
       checking: false,
       available: null,
@@ -220,7 +239,8 @@ export default function SignUpForm() {
       checking: false,
       available: null,
       message: ''
-    });
+    });
+
     if (values.username) {
       setUsernameStatus({
         checking: true,
@@ -259,7 +279,8 @@ export default function SignUpForm() {
         setError('Error checking username availability');
         return;
       }
-    }
+    }
+
     if (values.email) {
       setEmailStatus({
         checking: true,
@@ -305,9 +326,15 @@ export default function SignUpForm() {
         .then((data) => {
           if (data?.error) {
             setError(data.error);
+            return;
           }
-          if (data?.message) {
-            setSuccess(data.message);
+          if (data?.success) {
+            if (data?.email) {
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('pendingVerificationEmail', data.email);
+              }
+              router.push('/verify-email');
+            }
           }
         })
         .catch((err) => {
@@ -322,7 +349,7 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200">
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full py-5 px-4 md:p-8 md:rounded-2xl md:shadow-lg md:border md:border-gray-200 md:dark:border-gray-700 transition-all duration-200">
       <div className="mb-6">
         <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-200">
           Sign Up
@@ -358,9 +385,6 @@ export default function SignUpForm() {
               }`}
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              {usernameStatus.checking && (
-                <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
-              )}
               {!usernameStatus.checking && usernameStatus.available === false && (
                 <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
               )}
@@ -435,9 +459,6 @@ export default function SignUpForm() {
               }`}
             />
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              {emailStatus.checking && (
-                <FaSpinner className="w-4 h-4 text-gray-500 dark:text-gray-400 animate-spin" />
-              )}
               {!emailStatus.checking && emailStatus.available === false && (
                 <FaTimes className="w-4 h-4 text-red-500 dark:text-red-400" />
               )}
@@ -542,7 +563,9 @@ export default function SignUpForm() {
             threshold={recaptchaSettings.threshold}
             onVerify={(token) => setRecaptchaToken(token)}
             onError={() => {
-              setRecaptchaToken(null);
+              setRecaptchaToken(null);
+
+
             }}
             onExpired={() => {
               setRecaptchaToken(null);
@@ -556,7 +579,7 @@ export default function SignUpForm() {
           disabled={isPending}
           className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? <ButtonLoader /> : 'Sign Up'}
+          {isPending ? 'Loading...' : 'Sign Up'}
         </button>
       </form>
       <div className="mt-4">

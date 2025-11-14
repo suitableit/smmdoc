@@ -1,5 +1,5 @@
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useRouter } from "next/navigation";
+import { FaExclamationTriangle } from "react-icons/fa";
 
 interface FormErrorProps {
   message?: string;
@@ -8,7 +8,8 @@ interface FormErrorProps {
 export const FormError: React.FC<FormErrorProps> = ({ message }) => {
   const router = useRouter();
 
-  if (!message) return null;
+  if (!message) return null;
+
   const contactSupportRegex = /(.*?)(contact support)(.*)/i;
   const match = message.match(contactSupportRegex);
 
@@ -17,7 +18,7 @@ export const FormError: React.FC<FormErrorProps> = ({ message }) => {
 
     return (
       <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
-        <ExclamationTriangleIcon className="w-4 h-4" />
+        <FaExclamationTriangle className="w-4 h-4" />
         <span>
           {beforeText}
           <button
@@ -36,7 +37,7 @@ export const FormError: React.FC<FormErrorProps> = ({ message }) => {
 
   return (
     <div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive">
-      <ExclamationTriangleIcon className="w-4 h-4" />
+      <FaExclamationTriangle className="w-4 h-4" />
       <span>{message}</span>
     </div>
   );

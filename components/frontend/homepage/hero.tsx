@@ -1,5 +1,4 @@
 'use client';
-import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
@@ -618,13 +617,7 @@ const Hero: React.FC = () => {
                     disabled={isPending}
                     className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isPending ? (
-                      <ButtonLoader />
-                    ) : showTwoFactor ? (
-                      'Confirm'
-                    ) : (
-                      'Login to Dashboard'
-                    )}
+                    {isPending ? 'Logged in...' : showTwoFactor ? 'Confirm' : 'Login to Dashboard'}
                   </button>
                 </form>
                 {!showTwoFactor && (

@@ -4,8 +4,8 @@ import * as z from "zod";
 
 import { getUserByEmail } from "@/data/user";
 import { db } from "../db";
-import { sendMail } from "../nodemailer";
-import { generateVerificationToken } from "../tokens";
+import { sendVerificationCodeEmail } from "../nodemailer";
+import { generateVerificationCode } from "../tokens";
 import { signUpSchema } from "../validators/auth.validator";
 import { verifyReCAPTCHA, getReCAPTCHASettings } from "../recaptcha";
 
@@ -85,12 +85,18 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
     });
 
     if (emailConfirmationEnabled) {
-      const verificationToken = await generateVerificationToken(email);
-      await sendMail({
-        sendTo: email,
-        subject: "Email Verification",
-        html: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken?.token}">Click here to verify your email</a>`,
-      });
+      const verificationToken = await generateVerificationCode(email);
+      if (verificationToken) {
+        const emailSent = await sendVerificationCodeEmail(
+          email,
+          verificationToken.token,
+          name || username
+        );
+
+        if (!emailSent) {
+          return { success: false, error: "Failed to send verification code email. Please try again." };
+        }
+      }
     }
 
     let successMessage = "Registration successful!";
@@ -100,12 +106,17 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
     }
 
     if (emailConfirmationEnabled) {
-      successMessage += " Please check your email for verification link. You must verify your email before logging in.";
+      successMessage += " Please check your email for verification code. You must verify your email before logging in.";
     } else {
       successMessage += " You can now log in to your account.";
     }
 
-    return { success: true, error: "", message: successMessage };
+    return { 
+      success: true, 
+      error: "", 
+      message: successMessage,
+      email: emailConfirmationEnabled ? email : undefined
+    };
   } catch (error) {
     console.error('Database error during user creation:', error);
     return { success: false, error: "Failed to create user account. Please try again." };

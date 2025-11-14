@@ -14,7 +14,6 @@ const About: React.FC = () => {
     >
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-12 items-center">
-          {/* Text Content */}
           <div className="default__text__content">
             <h4 className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)] mb-2 transition-colors duration-200">
               About Us
@@ -50,7 +49,6 @@ const About: React.FC = () => {
             </Link>
           </div>
 
-          {/* Image */}
           <div className="default_image text-center lg:text-right">
             <div className="relative group">
               <Image

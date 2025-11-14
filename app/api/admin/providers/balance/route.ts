@@ -124,7 +124,6 @@ export async function GET(req: NextRequest) {
 
     console.log('✅ Provider found:', provider.name);
 
-    // Try using ProviderOrderForwarder first (uses API specification builder)
     try {
       console.log('🔍 Attempting to fetch balance using ProviderOrderForwarder...');
       const forwarder = new ProviderOrderForwarder();
@@ -138,7 +137,6 @@ export async function GET(req: NextRequest) {
         lastChecked: new Date().toISOString()
       };
 
-      // Cache balance in database
       try {
         await db.apiProviders.update({
           where: { id: provider.id },
@@ -160,10 +158,8 @@ export async function GET(req: NextRequest) {
       });
     } catch (forwarderError) {
       console.warn(`⚠️ ProviderOrderForwarder failed, falling back to manual method:`, forwarderError);
-      // Fall through to manual method below
     }
 
-    // Fallback to manual method if ProviderOrderForwarder fails
     const apiUrlSan = sanitizeProviderUrl(provider.api_url);
     const balanceEndpointSan = sanitizeProviderUrl(provider.balance_endpoint || '');
     const balanceUrl = balanceEndpointSan || apiUrlSan;

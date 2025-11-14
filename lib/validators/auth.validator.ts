@@ -4,12 +4,15 @@ const signInSchema = z.object({
   email: z
     .string()
     .min(1, 'Username or Email is required')
-    .refine((value) => {
+    .refine((value) => {
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+      const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+
       if (value.includes('@')) {
         return emailRegex.test(value);
-      }
+      }
+
       return usernameRegex.test(value) && value.length >= 3;
     }, 'Please enter a valid email address or username'),
   password: z
@@ -49,7 +52,8 @@ const signUpSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  });
+  });
+
 const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
   const baseSchema = {
     username: z.string().nonempty('Username is required'),
@@ -65,7 +69,8 @@ const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
       .string()
       .nonempty('Confirm password is required')
       .min(5, 'Confirm password must be at least 5 characters'),
-  };
+  };
+
   const schemaWithName = nameFieldEnabled
     ? { ...baseSchema, name: z.string().nonempty('Name is required') }
     : { ...baseSchema, name: z.string().optional() };
@@ -76,7 +81,8 @@ const createSignUpSchema = (nameFieldEnabled: boolean = true) => {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     });
-};
+};
+
 export type DynamicSignUpSchema = z.infer<ReturnType<typeof createSignUpSchema>>;
 
 type SignUpSchema = z.infer<typeof signUpSchema>;
@@ -117,7 +123,8 @@ type NewPasswordSchema = z.infer<typeof newPasswordSchema>;
 
 const newPasswordDefaultValues: NewPasswordSchema = {
   password: '',
-};
+};
+
 const passwordSchema = z
   .object({
     currentPass: z.string().min(1, 'Current password is required'),
@@ -131,10 +138,32 @@ const passwordSchema = z
 
 type PasswordForm = z.infer<typeof passwordSchema>;
 
+const verifyEmailSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Invalid email address'),
+  code: z
+    .string()
+    .min(1, 'Verification code is required')
+    .length(6, 'Verification code must be 6 digits')
+    .regex(/^\d+$/, 'Verification code must contain only numbers'),
+});
+
+type VerifyEmailSchema = z.infer<typeof verifyEmailSchema>;
+
+const verifyEmailDefaultValues: VerifyEmailSchema = {
+  email: '',
+  code: '',
+};
+
 export {
     newPasswordDefaultValues,
     newPasswordSchema,
     passwordSchema,
     type NewPasswordSchema,
-    type PasswordForm
+    type PasswordForm,
+    verifyEmailDefaultValues,
+    verifyEmailSchema,
+    type VerifyEmailSchema
 };

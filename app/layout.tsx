@@ -68,12 +68,10 @@ export default async function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {/* <NextTopLoader /> */}
               <Toaster richColors position="bottom-right" />
               <CustomCodesInjector />
               <AnalyticsInjector />
               <AppNameProvider initialAppName={appName}>
-                {/* CurrencyProvider value is now memoized to reduce child rerenders */}
                 <CurrencyProvider serverCurrency={serverCurrency}>
                   <OfflineDetector>
                     <div className="non-sidebar-content font-nunito text-black">

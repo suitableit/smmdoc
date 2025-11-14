@@ -1,5 +1,4 @@
 'use client';
-import ButtonLoader from '@/components/button-loader';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { resetPassword } from '@/lib/actions/reset';
@@ -47,7 +46,7 @@ export default function ResetForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200">
+    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full py-5 px-4 md:p-8 md:rounded-2xl md:shadow-lg md:border md:border-gray-200 md:dark:border-gray-700 transition-all duration-200">
       <div className="mb-6">
         <h2 className="text-2xl text-center font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-200">
           Reset Password
@@ -93,7 +92,7 @@ export default function ResetForm() {
           disabled={isPending}
           className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? <ButtonLoader /> : 'Reset Password'}
+          {isPending ? 'Loading...' : 'Reset Password'}
         </button>
       </form>
 
