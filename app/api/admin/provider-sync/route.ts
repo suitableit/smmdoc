@@ -193,8 +193,6 @@ export async function POST(req: NextRequest) {
         ]
       };
       
-      // Sync all orders with providerOrderId, but prioritize active statuses
-      // We'll sync all provider orders regardless of status to catch status changes
 
       if (providerId) {
         whereClause.AND.push({

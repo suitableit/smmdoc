@@ -299,7 +299,6 @@ const AdminOrdersPage = () => {
     };
   }, []);
 
-  // Build API URL for orders
   const ordersUrl = useMemo(() => {
     const params = new URLSearchParams({
       page: pagination.page.toString(),
@@ -310,7 +309,6 @@ const AdminOrdersPage = () => {
     return `/api/admin/orders?${params.toString()}`;
   }, [pagination.page, pagination.limit, statusFilter, searchTerm]);
 
-  // Fetch orders using SWR
   const {
     data: ordersData,
     error: ordersError,
@@ -329,7 +327,6 @@ const AdminOrdersPage = () => {
     },
   });
 
-  // Fetch stats using SWR
   const {
     data: statsData,
     error: statsError,
@@ -347,12 +344,10 @@ const AdminOrdersPage = () => {
     },
   });
 
-  // Update refreshStats ref when it changes
   useEffect(() => {
     refreshStatsRef.current = refreshStats;
   }, [refreshStats]);
 
-  // Set up real-time sync connection
   useEffect(() => {
     let eventSource: EventSource | null = null;
     let reconnectAttempts = 0;
@@ -410,7 +405,6 @@ const AdminOrdersPage = () => {
                 console.log(`Sync progress: ${progress.synced}/${progress.total} synced`);
               }
             } else if (data.type === 'ping') {
-              // Keep-alive ping, no action needed
             }
           } catch (error) {
             console.error('Error parsing real-time message:', error);
@@ -449,7 +443,6 @@ const AdminOrdersPage = () => {
     };
   }, []);
 
-  // Process orders data
   useEffect(() => {
     if (ordersData?.success && ordersData.data) {
       const transformed = (ordersData.data || []).map((o: any) => ({
@@ -490,7 +483,6 @@ const AdminOrdersPage = () => {
     }
   }, [ordersData, ordersError]);
 
-  // Process stats data
   useEffect(() => {
     if (statsData?.success && statsData.data) {
       const data = statsData.data;
@@ -649,7 +641,6 @@ const AdminOrdersPage = () => {
     try {
       showToast('Syncing provider orders...', 'pending');
 
-      // First, sync all provider orders (API service orders) - including failed ones
       const syncPromise = fetch('/api/admin/provider-sync', {
         method: 'POST',
         headers: {
@@ -661,7 +652,6 @@ const AdminOrdersPage = () => {
         return { success: false, error: err.message };
       });
 
-      // Wait for sync with timeout (30 seconds max)
       const syncTimeout = new Promise((resolve) => {
         setTimeout(() => resolve({ success: false, timeout: true }), 30000);
       });
@@ -685,7 +675,6 @@ const AdminOrdersPage = () => {
         showToast('Some provider orders may not have synced', 'info');
       }
 
-      // After sync completes, refresh all orders and stats (including non-API orders)
       await Promise.all([
         refreshOrders(undefined, { revalidate: true }),
         refreshStats(undefined, { revalidate: true })
@@ -696,7 +685,6 @@ const AdminOrdersPage = () => {
       console.error('Error refreshing orders:', error);
       showToast('Error refreshing orders', 'error');
       
-      // Still try to refresh even if sync failed
       try {
         await Promise.all([
           refreshOrders(undefined, { revalidate: true }),

@@ -138,3 +138,36 @@ export const sendPasswordResetEmail = async (
     html: html,
   });
 };
+
+export const sendVerificationCodeEmail = async (
+  email: string,
+  code: string,
+  userName?: string
+): Promise<boolean> => {
+  const name = userName || 'User';
+  const appName = await getAppName();
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Email Verification Code - ${appName}</h2>
+      <p>Hello ${name},</p>
+      <p>Please use the verification code below to verify your email address:</p>
+      <div style="background-color: #f3f4f6; border-radius: 12px; padding: 25px; margin: 30px 0; text-align: center;">
+        <h3 style="color: #1f2937; margin: 0 0 20px 0; font-size: 20px;">Your Verification Code</h3>
+        <div style="background-color: #ffffff; border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; display: inline-block; font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #3b82f6; letter-spacing: 4px;">
+          ${code}
+        </div>
+        <p style="color: #6b7280; font-size: 14px; margin: 15px 0 0 0;">This code expires in 15 minutes</p>
+      </div>
+      <p>Enter this code on the verification page to complete your email verification and log in.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+      <p>Best regards,<br>${appName} Team</p>
+    </div>
+  `;
+
+  return await sendMail({
+    sendTo: email,
+    subject: `Email Verification Code - ${appName}`,
+    html: html,
+  });
+};

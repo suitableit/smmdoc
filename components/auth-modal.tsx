@@ -61,7 +61,8 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
         } else {
           setError('Something went wrong. Please try again.');
         }
-      } else {
+      } else {
+
         if (formData.password !== formData.confirmPassword) {
           setError('Passwords do not match');
           setLoading(false);
@@ -82,9 +83,11 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
         if (result?.error) {
           setError(result.error);
         } else if (result?.success) {
-          setSuccess('Registration successful! Please check your email for verification.');
+          setSuccess('Registration successful! Please check your email for verification.');
+
           setTimeout(() => {
-            onSuccess();
+            onSuccess();
+
             window.location.href = '/verify-email';
           }, 2000);
         } else {
@@ -225,7 +228,7 @@ export default function AuthModal({ isOpen, onClose, type, onSuccess }: AuthModa
               className="w-full h-9" 
               disabled={loading}
             >
-              {loading ? 'Please wait...' : (type === 'signin' ? 'Sign In' : 'Sign Up')}
+              {loading ? 'Loading...' : (type === 'signin' ? 'Sign In' : 'Sign Up')}
             </Button>
           </form>
         </CardContent>

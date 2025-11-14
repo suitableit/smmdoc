@@ -22,7 +22,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Return default price settings
     return NextResponse.json({
       success: true,
       priceSettings: {

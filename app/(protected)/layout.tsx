@@ -44,7 +44,6 @@ export default function ProtectedLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* Left sidebar - fixed black sidebar */}
       <div
         className={`hidden lg:block fixed left-0 top-0 bottom-0 z-30 bg-gradient-to-br from-[#0f172a] to-[#1e293b] transition-all duration-300 ${
           sidebarCollapsed ? 'w-[80px]' : 'w-[280px]'
@@ -57,13 +56,11 @@ export default function ProtectedLayout({
         />
       </div>
 
-      {/* Right side content with header and main content */}
       <div
         className={`flex flex-col w-full transition-all duration-300 ${
           sidebarCollapsed ? 'lg:ml-[80px]' : 'lg:ml-[280px]'
         }`}
       >
-        {/* Top header bar */}
         <div
           className={`fixed top-0 right-0 z-40 transition-all duration-300 ${
             sidebarCollapsed
@@ -74,7 +71,6 @@ export default function ProtectedLayout({
           <Header />
         </div>
 
-        {/* Main content area */}
         <main className="w-full mt-16 lg:mt-20">
           <div
             className={

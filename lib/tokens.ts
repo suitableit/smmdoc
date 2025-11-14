@@ -82,3 +82,24 @@ export const generateVerificationToken = async (email: string) => {
   });
   return verificationToken;
 };
+
+export const generateVerificationCode = async (email: string) => {
+  const code = crypto.randomInt(100_000, 1000_000).toString();
+  const expires = new Date(new Date().getTime() + 1000 * 60 * 15);
+  const existingToken = await getVerificationTokenByEmail(email);
+  if (existingToken) {
+    await db.verificationTokens.delete({
+      where: {
+        id: existingToken.id,
+      },
+    });
+  }
+  const verificationToken = await db.verificationTokens.create({
+    data: {
+      token: code,
+      email,
+      expires,
+    },
+  });
+  return verificationToken;
+};
