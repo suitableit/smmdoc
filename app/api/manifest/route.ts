@@ -24,64 +24,12 @@ export async function GET(request: NextRequest) {
       theme_color: '#000000',
       orientation: 'portrait-primary',
       categories: ['business', 'productivity', 'social'],
-      screenshots: [
-        {
-          src: iconPath,
-          sizes: '1280x720',
-          type: 'image/png',
-          form_factor: 'wide',
-          label: 'SMMDOC App Screenshot'
-        },
-        {
-          src: iconPath,
-          sizes: '750x1334',
-          type: 'image/png',
-          form_factor: 'narrow',
-          label: 'SMMDOC App Screenshot'
-        }
-      ],
       icons: [
-        {
-          src: iconPath,
-          sizes: '72x72',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: iconPath,
-          sizes: '96x96',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: iconPath,
-          sizes: '128x128',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: iconPath,
-          sizes: '144x144',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: iconPath,
-          sizes: '152x152',
-          type: 'image/png',
-          purpose: 'any'
-        },
         {
           src: iconPath,
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any maskable'
-        },
-        {
-          src: iconPath,
-          sizes: '384x384',
-          type: 'image/png',
-          purpose: 'any'
         },
         {
           src: iconPath,
@@ -113,64 +61,12 @@ export async function GET(request: NextRequest) {
       theme_color: '#000000',
       orientation: 'portrait-primary',
       categories: ['business', 'productivity', 'social'],
-      screenshots: [
-        {
-          src: '/favicon.png',
-          sizes: '1280x720',
-          type: 'image/png',
-          form_factor: 'wide',
-          label: 'SMMDOC App Screenshot'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '750x1334',
-          type: 'image/png',
-          form_factor: 'narrow',
-          label: 'SMMDOC App Screenshot'
-        }
-      ],
       icons: [
-        {
-          src: '/favicon.png',
-          sizes: '72x72',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '96x96',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '128x128',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '144x144',
-          type: 'image/png',
-          purpose: 'any'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '152x152',
-          type: 'image/png',
-          purpose: 'any'
-        },
         {
           src: '/favicon.png',
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any maskable'
-        },
-        {
-          src: '/favicon.png',
-          sizes: '384x384',
-          type: 'image/png',
-          purpose: 'any'
         },
         {
           src: '/favicon.png',
