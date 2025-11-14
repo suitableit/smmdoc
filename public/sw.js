@@ -2,7 +2,7 @@ const CACHE_NAME = 'smmdoc-offline-v1';
 
 const urlsToCache = [
   '/',
-  '/manifest.json',
+  '/api/manifest',
 ];
 
 self.addEventListener('install', (event) => {
