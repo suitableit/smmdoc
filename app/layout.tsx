@@ -40,6 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
       shortcut: '/api/favicon',
       apple: '/api/favicon',
     },
+    manifest: '/api/manifest',
   };
 }
 
@@ -54,6 +55,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="manifest" href="/api/manifest" />
         <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
       </head>
       <body
