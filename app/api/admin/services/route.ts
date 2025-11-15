@@ -274,6 +274,21 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('Full request body:', JSON.stringify(body, null, 2));
+    console.log('Category ID from body:', body.categoryId, 'Type:', typeof body.categoryId);
+    
+    if (body.categoryId === undefined || body.categoryId === null || body.categoryId === '') {
+      console.log('Category ID validation failed - missing categoryId');
+      return NextResponse.json(
+        {
+          error: 'Category is required. Please select a category.',
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
     const {
       categoryId,
       name,
@@ -293,6 +308,7 @@ export async function POST(request: Request) {
       mode,
       orderLink,
       packageType,
+      providerId,
       providerServiceId,
       dripfeedEnabled,
       subscriptionMin,
@@ -329,6 +345,9 @@ export async function POST(request: Request) {
         const num = parseInt(value);
         return isNaN(num) ? undefined : num;
       }
+      if (value === null || value === undefined || value === '') {
+        return undefined;
+      }
       return undefined;
     };
 
@@ -350,6 +369,7 @@ export async function POST(request: Request) {
       orderLink: orderLink || 'link',
       userId: session.user.id,
       packageType: toNumber(packageType, 1),
+      providerId: toInt(providerId) || null,
       providerServiceId: providerServiceId || null,
       dripfeedEnabled: toBool(dripfeedEnabled),
       subscriptionMin: toInt(subscriptionMin) || null,
@@ -363,13 +383,48 @@ export async function POST(request: Request) {
     };
 
     const categoryIdInt = toInt(categoryId);
-    if (categoryIdInt !== undefined) {
-      createData.categoryId = categoryIdInt;
+    console.log('Category ID converted:', categoryIdInt, 'from:', categoryId);
+    
+    if (categoryIdInt === undefined || categoryIdInt === null) {
+      return NextResponse.json(
+        {
+          error: `Category ID is required. Received: ${categoryId} (${typeof categoryId})`,
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
     }
+
+    const categoryExists = await db.categories.findUnique({
+      where: { id: categoryIdInt }
+    });
+
+    if (!categoryExists) {
+      return NextResponse.json(
+        {
+          error: `Category with ID ${categoryIdInt} does not exist. Please select a valid category.`,
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
+    createData.categoryId = categoryIdInt;
 
     const serviceTypeIdInt = toInt(serviceTypeId);
     if (serviceTypeIdInt !== undefined) {
-      createData.serviceTypeId = serviceTypeIdInt;
+      const serviceTypeExists = await db.serviceTypes.findUnique({
+        where: { id: serviceTypeIdInt }
+      });
+
+      if (serviceTypeExists) {
+        createData.serviceTypeId = serviceTypeIdInt;
+      } else {
+        console.warn(`Service type with ID ${serviceTypeIdInt} does not exist. Setting serviceTypeId to null.`);
+        createData.serviceTypeId = null;
+      }
     } else {
       const defaultServiceType = await db.serviceTypes.findFirst({
         where: { name: 'Default' }
@@ -377,6 +432,26 @@ export async function POST(request: Request) {
       
       if (defaultServiceType) {
         createData.serviceTypeId = defaultServiceType.id;
+      } else {
+        console.warn('Default service type not found. Setting serviceTypeId to null.');
+        createData.serviceTypeId = null;
+      }
+    }
+
+    if (createData.providerId !== null && createData.providerId !== undefined) {
+      const providerExists = await db.apiProviders.findUnique({
+        where: { id: createData.providerId }
+      });
+
+      if (!providerExists) {
+        return NextResponse.json(
+          {
+            error: `Provider with ID ${createData.providerId} does not exist`,
+            data: null,
+            success: false,
+          },
+          { status: 400 }
+        );
       }
     }
 
@@ -395,15 +470,63 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating service:", error);
-    return NextResponse.json(
-      {
-        error: 'Failed to create service: ' + (error instanceof Error ? error.message : 'Unknown error'),
-        data: null,
-        success: false,
-      },
-      { status: 500 }
-    );
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      code: error?.code,
+      meta: error?.meta,
+      cause: error?.cause
+    });
+    
+    let errorMessage = 'Failed to create service';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      errorMessage += ': ' + error.message;
+      
+      if (error.message.includes('Foreign key constraint') || error?.code === 'P2003') {
+        errorMessage = 'Foreign key constraint failed. Please check that the category, service type, or provider exists.';
+        statusCode = 400;
+      } else if (error.message.includes('Unique constraint') || error?.code === 'P2002') {
+        errorMessage = 'A service with this name or identifier already exists.';
+        statusCode = 400;
+      } else if (error.message.includes('Required') || error?.code === 'P2011') {
+        errorMessage = 'Required field is missing. Please check that all required fields are filled.';
+        statusCode = 400;
+      } else if (error?.code === 'P2001') {
+        errorMessage = 'The record you are trying to reference does not exist.';
+        statusCode = 404;
+      } else if (error?.code === 'P2012') {
+        errorMessage = 'A required value is missing.';
+        statusCode = 400;
+      }
+    }
+    
+    try {
+      return NextResponse.json(
+        {
+          error: errorMessage,
+          data: null,
+          success: false,
+        },
+        { status: statusCode }
+      );
+    } catch (jsonError) {
+      console.error("Failed to send error response:", jsonError);
+      return new NextResponse(
+        JSON.stringify({
+          error: errorMessage,
+          data: null,
+          success: false,
+        }),
+        {
+          status: statusCode,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
   }
 }

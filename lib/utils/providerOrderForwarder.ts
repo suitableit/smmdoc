@@ -4,9 +4,11 @@ import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from 
 export interface ProviderOrderRequest {
   service: string;
   link: string;
-  quantity: number;
+  quantity?: number;
+  comments?: string;
   runs?: number;
   interval?: number;
+  packageType?: number;
 }
 
 export interface ProviderOrderResponse {
@@ -41,53 +43,221 @@ export class ProviderOrderForwarder {
     orderData: ProviderOrderRequest
   ): Promise<ProviderOrderResponse> {
     try {
-      const apiSpec = createApiSpecFromProvider(provider);
-      const requestBuilder = new ApiRequestBuilder(
-        apiSpec,
-        provider.api_url,
-        provider.api_key,
-        (provider as any).http_method || (provider as any).httpMethod || 'POST'
-      );
-
-      const orderRequest = requestBuilder.buildAddOrderRequest(
-        orderData.service,
-        orderData.link,
-        orderData.quantity,
-        orderData.runs,
-        orderData.interval
-      );
-
-      const response = await fetch(orderRequest.url, {
-        method: orderRequest.method,
-        headers: orderRequest.headers,
-        body: orderRequest.data,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Provider API error: ${response.status} ${response.statusText}`);
+      const apiType = (provider as any).api_type || (provider as any).apiType || 1;
+      
+      if (apiType === 3) {
+        return await this.forwardOrderToSocialsMediaAPI(provider, orderData);
       }
-
-      const result = await response.json();
-
-      if (result.error) {
-        throw new Error(`Provider error: ${result.error}`);
-      }
-
-      const responseParser = new ApiResponseParser(apiSpec);
-      const parsedOrder = responseParser.parseAddOrderResponse(result);
-
-      return {
-        order: parsedOrder.orderId,
-        charge: (result as any).charge || 0,
-        start_count: (result as any).start_count || (result as any).startCount || 0,
-        status: this.mapProviderStatus((result as any).status || 'Pending'),
-        remains: (result as any).remains || 0,
-        currency: (result as any).currency || 'USD'
-      };
+      
+      return await this.forwardOrderToStandardAPI(provider, orderData);
     } catch (error) {
       console.error('Error forwarding order to provider:', error);
       throw error;
     }
+  }
+
+  private async forwardOrderToStandardAPI(
+    provider: Provider,
+    orderData: ProviderOrderRequest
+  ): Promise<ProviderOrderResponse> {
+    const apiSpec = createApiSpecFromProvider(provider);
+    const requestBuilder = new ApiRequestBuilder(
+      apiSpec,
+      provider.api_url,
+      provider.api_key,
+      (provider as any).http_method || (provider as any).httpMethod || 'POST'
+    );
+
+    const packageType = orderData.packageType || 1;
+    let quantity = orderData.quantity;
+    let comments = orderData.comments;
+
+    if (packageType === 3 || packageType === 4) {
+      quantity = undefined;
+    } else if (packageType === 2) {
+      quantity = undefined;
+    }
+
+    const orderRequest = requestBuilder.buildAddOrderRequest(
+      orderData.service,
+      orderData.link,
+      quantity,
+      comments,
+      orderData.runs,
+      orderData.interval
+    );
+
+    const response = await fetch(orderRequest.url, {
+      method: orderRequest.method,
+      headers: orderRequest.headers,
+      body: orderRequest.data,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Provider API error: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    if (result.error) {
+      throw new Error(`Provider error: ${result.error}`);
+    }
+
+    if (!result.order) {
+      throw new Error(`Provider did not return order ID: ${JSON.stringify(result)}`);
+    }
+
+    const responseParser = new ApiResponseParser(apiSpec);
+    const parsedOrder = responseParser.parseAddOrderResponse(result);
+
+    return {
+      order: parsedOrder.orderId,
+      charge: (result as any).charge || 0,
+      start_count: (result as any).start_count || (result as any).startCount || 0,
+      status: this.mapProviderStatus((result as any).status || 'Pending'),
+      remains: (result as any).remains || 0,
+      currency: (result as any).currency || 'USD'
+    };
+  }
+
+  private async forwardOrderToSocialsMediaAPI(
+    provider: Provider,
+    orderData: ProviderOrderRequest
+  ): Promise<ProviderOrderResponse> {
+    const axios = (await import('axios')).default;
+    
+    const packageType = orderData.packageType || 1;
+    
+    if (packageType === 11 || packageType === 12 || packageType === 13) {
+      return {
+        order: '',
+        charge: 0,
+        start_count: 0,
+        status: 'pending',
+        remains: 0,
+        currency: 'USD'
+      };
+    }
+
+    const orderPayload = {
+      cmd: 'orderadd',
+      token: provider.api_key,
+      apiurl: provider.api_url,
+      orders: [[{
+        service: orderData.service,
+        amount: orderData.quantity || 0,
+        data: orderData.link
+      }]]
+    };
+
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: provider.api_url,
+        data: new URLSearchParams({
+          jsonapi: JSON.stringify(orderPayload, null, 0)
+        }),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        timeout: ((provider as any).timeout_seconds || 30) * 1000
+      });
+
+      const result = response.data;
+
+      if (result[0]?.[0]?.status === 'error') {
+        throw new Error(`Provider error: ${JSON.stringify(result)}`);
+      }
+
+      const orderId = result[0]?.[0]?.id;
+      if (!orderId) {
+        throw new Error(`Provider did not return order ID: ${JSON.stringify(result)}`);
+      }
+
+      const statusResult = await this.checkSocialsMediaOrderStatus(provider, orderId);
+      const balanceResult = await this.getSocialsMediaBalance(provider);
+
+      return {
+        order: orderId.toString(),
+        charge: statusResult.charge || 0,
+        start_count: statusResult.start_count || 0,
+        status: this.mapProviderStatus(statusResult.status || 'Pending'),
+        remains: statusResult.remains || 0,
+        currency: balanceResult.currency || 'USD'
+      };
+    } catch (error: any) {
+      console.error('SocialsMedia API error:', error);
+      if (error.response) {
+        throw new Error(`Provider API error: ${error.response.status} ${JSON.stringify(error.response.data)}`);
+      }
+      throw error;
+    }
+  }
+
+  private async checkSocialsMediaOrderStatus(
+    provider: Provider,
+    orderId: string
+  ): Promise<ProviderStatusResponse> {
+    const axios = (await import('axios')).default;
+    
+    const statusPayload = {
+      cmd: 'orderstatus',
+      token: provider.api_key,
+      apiurl: provider.api_url,
+      orderid: [orderId]
+    };
+
+    const response = await axios({
+      method: 'POST',
+      url: provider.api_url,
+      data: new URLSearchParams({
+        jsonapi: JSON.stringify(statusPayload, null, 0)
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      timeout: ((provider as any).timeout_seconds || 30) * 1000
+    });
+
+    const result = response.data;
+    const orderData = result[orderId]?.order;
+
+    return {
+      charge: orderData?.price || 0,
+      start_count: orderData?.start_count || 0,
+      status: orderData?.status || 'Pending',
+      remains: orderData?.remains || 0,
+      currency: orderData?.currency || 'USD'
+    };
+  }
+
+  private async getSocialsMediaBalance(provider: Provider): Promise<{ balance: number; currency: string }> {
+    const axios = (await import('axios')).default;
+    
+    const balancePayload = {
+      cmd: 'profile',
+      token: provider.api_key,
+      apiurl: provider.api_url
+    };
+
+    const response = await axios({
+      method: 'POST',
+      url: provider.api_url,
+      data: new URLSearchParams({
+        jsonapi: JSON.stringify(balancePayload, null, 0)
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      timeout: ((provider as any).timeout_seconds || 30) * 1000
+    });
+
+    const result = response.data;
+
+    return {
+      balance: result.balance || 0,
+      currency: result.currency || 'USD'
+    };
   }
 
   async checkProviderOrderStatus(
@@ -95,6 +265,12 @@ export class ProviderOrderForwarder {
     providerOrderId: string
   ): Promise<ProviderStatusResponse> {
     try {
+      const apiType = (provider as any).api_type || (provider as any).apiType || 1;
+      
+      if (apiType === 3) {
+        return await this.checkSocialsMediaOrderStatus(provider, providerOrderId);
+      }
+      
       const apiSpec = createApiSpecFromProvider(provider);
       const requestBuilder = new ApiRequestBuilder(
         apiSpec,

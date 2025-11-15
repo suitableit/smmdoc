@@ -1,8 +1,21 @@
-﻿import { db } from '@/lib/db';
+﻿import { auth } from '@/auth';
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized access. Admin privileges required.',
+          data: null,
+          success: false,
+        },
+        { status: 401 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
     
@@ -62,6 +75,36 @@ export async function DELETE(request: NextRequest) {
     }
 
     console.log('Found category to delete:', category.category_name);
+
+    const servicesCount = await db.services.count({
+      where: { categoryId: categoryId }
+    });
+
+    if (servicesCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete category: It has ${servicesCount} service${servicesCount !== 1 ? 's' : ''} associated with it. Please delete or move the services first.`,
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
+    const ordersCount = await db.newOrders.count({
+      where: { categoryId: categoryId }
+    });
+
+    if (ordersCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete category: It has ${ordersCount} order${ordersCount !== 1 ? 's' : ''} associated with it.`,
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
 
     await db.categories.delete({
       where: {

@@ -1715,27 +1715,96 @@ function AdminServicesPage() {
       const deletePromises = [
         ...selectedServices.map((serviceId) =>
           axiosInstance.delete(`/api/admin/services/delete-services?id=${serviceId}`)
+            .then(response => {
+              console.log(`Service ${serviceId} deleted successfully:`, response.data);
+              return { success: true, data: response.data, type: 'service', id: serviceId };
+            })
+            .catch(error => {
+              console.error(`Service ${serviceId} deletion failed:`, error);
+              return { 
+                success: false, 
+                data: error.response?.data || { error: error.message || 'Unknown error' }, 
+                type: 'service', 
+                id: serviceId,
+                error: error 
+              };
+            })
         ),
         ...categoryIds.map((categoryId) =>
           axiosInstance.delete(`/api/admin/categories/delete-categories?id=${categoryId}`)
+            .then(response => {
+              console.log(`Category ${categoryId} deleted successfully:`, response.data);
+              return { success: true, data: response.data, type: 'category', id: categoryId };
+            })
+            .catch(error => {
+              console.error(`Category ${categoryId} deletion failed:`, error);
+              return { 
+                success: false, 
+                data: error.response?.data || { error: error.message || 'Unknown error' }, 
+                type: 'category', 
+                id: categoryId,
+                error: error 
+              };
+            })
         )
       ];
 
       const results = await Promise.all(deletePromises);
       console.log('Delete results:', results);
 
-      const failedDeletions = results.filter((result) => !result.data.success);
+      const processedResults = results;
 
-      if (failedDeletions.length > 0) {
+      const failedDeletions = processedResults.filter((result) => !result.success);
+      const successfulDeletions = processedResults.filter((result) => result.success);
+
+      console.log('Successful deletions:', successfulDeletions.length);
+      console.log('Failed deletions:', failedDeletions.length);
+      console.log('Failed details:', failedDeletions.map(f => ({
+        type: f.type,
+        id: f.id,
+        error: f.data?.error || f.data?.message || 'Unknown error'
+      })));
+
+      if (successfulDeletions.length > 0) {
+        const serviceSuccessCount = successfulDeletions.filter(r => r.type === 'service').length;
+        const categorySuccessCount = successfulDeletions.filter(r => r.type === 'category').length;
+        
+        const successMsg = [
+          serviceSuccessCount > 0 ? `${serviceSuccessCount} service${serviceSuccessCount !== 1 ? 's' : ''}` : '',
+          categorySuccessCount > 0 ? `${categorySuccessCount} categor${categorySuccessCount !== 1 ? 'ies' : 'y'}` : ''
+        ].filter(Boolean).join(' and ');
+        
         showToast(
-          `Failed to delete ${failedDeletions.length} item${failedDeletions.length !== 1 ? 's' : ''}`,
-          'error'
-        );
-      } else {
-        showToast(
-          `Successfully deleted ${serviceCount} service${serviceCount !== 1 ? 's' : ''} and ${categoryCount} categor${categoryCount !== 1 ? 'ies' : 'y'}`,
+          `Successfully deleted ${successMsg}`,
           'success'
         );
+      }
+      
+      if (failedDeletions.length > 0) {
+        const errorMessages = failedDeletions.map(f => {
+          const errorMsg = f.data?.error || f.data?.message || 'Unknown error';
+          const msg = typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg);
+          return msg.length > 80 ? msg.substring(0, 80) + '...' : msg;
+        });
+        const uniqueErrors = [...new Set(errorMessages)];
+        
+        let errorText = '';
+        if (uniqueErrors.length === 1) {
+          errorText = uniqueErrors[0];
+        } else if (uniqueErrors.length <= 3) {
+          errorText = uniqueErrors.join('; ');
+        } else {
+          errorText = `${uniqueErrors.slice(0, 2).join('; ')} and ${uniqueErrors.length - 2} more...`;
+        }
+        
+        showToast(
+          `Failed to delete ${failedDeletions.length} item${failedDeletions.length !== 1 ? 's' : ''}. ${errorText}`,
+          'error'
+        );
+      }
+      
+      if (successfulDeletions.length === 0 && failedDeletions.length > 0) {
+        console.error('All deletions failed. Details:', failedDeletions);
       }
 
       setSelectedServices([]);

@@ -81,7 +81,6 @@ export async function POST(request: Request) {
           avg_time: true,
           status: true,
           providerId: true,
-          providerServiceId: true,
           packageType: true,
         },
       });
@@ -287,7 +286,8 @@ export async function POST(request: Request) {
             name: true,
             rate: true,
             providerId: true,
-            providerServiceId: true
+            providerServiceId: true,
+            packageType: true
           }
         });
 
@@ -295,7 +295,26 @@ export async function POST(request: Request) {
           throw new Error(`Service ${orderData.serviceId} not found`);
         }
 
-        if (service?.providerId && service?.providerServiceId) {
+        const providerServiceId = service.providerServiceId || (service as any).api_service || null;
+        const providerServiceIdStr = providerServiceId ? String(providerServiceId).trim() : null;
+        const hasValidProviderServiceId = providerServiceIdStr && providerServiceIdStr !== '';
+        
+        console.log(`Checking provider forwarding for service ${service.id}:`, {
+          providerId: service?.providerId,
+          providerServiceId: providerServiceId,
+          providerServiceIdStr: providerServiceIdStr,
+          hasProvider: !!service?.providerId,
+          hasProviderServiceId: hasValidProviderServiceId,
+          serviceName: service.name
+        });
+        
+        if (service?.providerId) {
+          if (!hasValidProviderServiceId) {
+            console.warn(`Service ${service.id} has providerId (${service.providerId}) but no valid providerServiceId. Order will be stored but not forwarded to provider.`);
+          }
+        }
+        
+        if (service?.providerId && hasValidProviderServiceId) {
           try {
           console.log(`Fetching provider ${service.providerId}...`);
           const provider = await db.apiProviders.findUnique({
@@ -317,15 +336,25 @@ export async function POST(request: Request) {
             name: provider.name,
             api_url: provider.api_url,
             api_key: provider.api_key,
-            status: provider.status
+            status: provider.status,
+            api_type: (provider as any).api_type || (provider as any).apiType || 1,
+            timeout_seconds: (provider as any).timeout_seconds || 30
           };
 
           const forwarder = ProviderOrderForwarder.getInstance();
 
           let shouldForward = true;
           try {
+            console.log(`Checking provider balance for ${provider.name}...`);
             const providerBalance = await forwarder.getProviderBalance(providerForApi);
             const orderCost = orderData.usdPrice || (service.rate * orderData.qty) / 1000;
+
+            console.log(`Provider balance check result:`, {
+              providerName: provider.name,
+              providerBalance: providerBalance,
+              orderCost: orderCost,
+              sufficient: providerBalance >= orderCost
+            });
 
             if (providerBalance < orderCost) {
               console.log(`Provider ${provider.name} has insufficient balance. Required: ${orderCost.toFixed(2)}, Available: ${providerBalance.toFixed(2)}. Order will be stored but not forwarded.`);
@@ -333,42 +362,70 @@ export async function POST(request: Request) {
               orderError = `Provider has insufficient balance. Required: ${orderCost.toFixed(2)}, Available: ${providerBalance.toFixed(2)}`;
               apiCharge = 0;
               profit = orderData.price;
+            } else {
+              console.log(`Provider ${provider.name} has sufficient balance (${providerBalance.toFixed(2)}). Proceeding with order forwarding...`);
             }
           } catch (balanceError) {
             console.error('Error checking provider balance:', balanceError);
             const errorMessage = balanceError instanceof Error ? balanceError.message : 'Unknown error';
-            shouldForward = false;
-            orderError = `Failed to check provider balance: ${errorMessage}`;
-            apiCharge = 0;
-            profit = orderData.price;
+            console.warn(`Balance check failed for ${provider.name}, but proceeding with order forwarding anyway. Error: ${errorMessage}`);
+            shouldForward = true;
+            orderError = null;
           }
 
           if (shouldForward) {
-            const serviceOverflow = 0;
+            const packageType = service.packageType || orderData.packageType || 1;
+            const serviceOverflow = (service as any).service_overflow || (service as any).overflow || 0;
             const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * orderData.qty);
             const quantityWithOverflow = orderData.qty + serviceOverflowAmount;
             
+            let quantity = quantityWithOverflow;
+            let comments = orderData.comments;
+            
+            if (packageType === 2) {
+              quantity = undefined;
+            } else if (packageType === 3 || packageType === 4) {
+              quantity = undefined;
+            } else if (packageType === 11 || packageType === 12 || packageType === 13 || packageType === 14 || packageType === 15) {
+              quantity = undefined;
+            }
+            
             const orderDataForProvider = {
-              service: service.providerServiceId,
+              service: providerServiceIdStr,
               link: orderData.link,
-              quantity: quantityWithOverflow,
+              quantity: quantity,
+              comments: comments,
+              packageType: packageType,
               runs: orderData.dripfeedRuns || undefined,
               interval: orderData.dripfeedInterval || undefined
             };
 
             console.log(`Forwarding order to provider ${provider.name} (${provider.api_url}) before saving to database...`);
+            console.log(`Order data for provider:`, {
+              service: orderDataForProvider.service,
+              link: orderDataForProvider.link,
+              quantity: orderDataForProvider.quantity,
+              comments: orderDataForProvider.comments,
+              packageType: orderDataForProvider.packageType,
+              runs: orderDataForProvider.runs,
+              interval: orderDataForProvider.interval
+            });
             
             try {
               const forwardResult = await forwarder.forwardOrderToProvider(providerForApi, orderDataForProvider);
+              console.log(`Forward result from provider:`, {
+                order: forwardResult.order,
+                charge: forwardResult.charge,
+                status: forwardResult.status,
+                start_count: forwardResult.start_count,
+                remains: forwardResult.remains
+              });
 
-              if (!forwardResult.order) {
-                throw new Error('Failed to create order: Provider did not return order ID');
-              }
+              if (forwardResult.order && forwardResult.order !== '') {
+                providerOrderId = forwardResult.order.toString();
+                console.log(`Order created with provider order ID: ${providerOrderId}. Fetching status and charge...`);
 
-              providerOrderId = forwardResult.order.toString();
-              console.log(`Order created with provider order ID: ${providerOrderId}. Fetching status and charge...`);
-
-              const statusResult = await forwarder.checkProviderOrderStatus(providerForApi, providerOrderId);
+                const statusResult = await forwarder.checkProviderOrderStatus(providerForApi, providerOrderId);
               
               const mapProviderStatus = (providerStatus: string): string => {
                 if (!providerStatus) return 'pending';
@@ -390,13 +447,21 @@ export async function POST(request: Request) {
                 return statusMap[normalizedStatus] || 'pending';
               };
 
-              providerStatus = mapProviderStatus(statusResult.status);
-              apiCharge = statusResult.charge || forwardResult.charge || 0;
-              startCount = statusResult.start_count || forwardResult.start_count || 0;
-              remains = statusResult.remains || forwardResult.remains || orderData.qty;
-              profit = orderData.price - apiCharge;
+                providerStatus = mapProviderStatus(statusResult.status);
+                apiCharge = statusResult.charge || forwardResult.charge || 0;
+                startCount = statusResult.start_count || forwardResult.start_count || 0;
+                remains = statusResult.remains || forwardResult.remains || orderData.qty;
+                profit = orderData.price - apiCharge;
 
-              console.log(`Order status fetched: ${providerStatus}, Charge: ${apiCharge}, Profit: ${profit}, StartCount: ${startCount}, Remains: ${remains}`);
+                console.log(`Order status fetched: ${providerStatus}, Charge: ${apiCharge}, Profit: ${profit}, StartCount: ${startCount}, Remains: ${remains}`);
+              } else {
+                console.log(`Order forwarded but no provider order ID returned (likely subscription/auto order). Using default values.`);
+                providerStatus = 'pending';
+                apiCharge = forwardResult.charge || 0;
+                startCount = forwardResult.start_count || 0;
+                remains = forwardResult.remains || orderData.qty;
+                profit = orderData.price - apiCharge;
+              }
             } catch (forwardError: any) {
               console.error(`Error forwarding order to provider:`, forwardError);
               const errorMessage = forwardError instanceof Error ? forwardError.message : String(forwardError);
@@ -552,7 +617,6 @@ export async function POST(request: Request) {
                 name: true,
                 rate: true,
                 providerId: true,
-                providerServiceId: true,
               },
             },
             category: {

@@ -50,6 +50,7 @@ const ChangeAllStatusModal: React.FC<ChangeAllStatusModalProps> = ({
             <option value="">Select status...</option>
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
             <option value="cancelled">Cancel & Refund</option>
           </select>
         </div>

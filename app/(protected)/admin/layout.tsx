@@ -20,7 +20,7 @@ export default function AdminLayout({
       return;
     }
 
-    if (session.user.role !== 'admin') {
+    if (!session.user || session.user.role !== 'admin') {
       router.push('/dashboard');
       return;
     }
@@ -34,7 +34,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session || !session.user || session.user.role !== 'admin') {
     return null;
   }
 

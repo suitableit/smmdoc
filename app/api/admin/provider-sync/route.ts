@@ -521,6 +521,9 @@ async function syncSingleOrder(order: any, provider: any) {
     const mappedStatus = mapProviderStatus(parsedStatus.status);
     const currentProviderStatus = order.providerStatus || order.status;
     const currentStatus = order.status;
+    const isCancelled = mappedStatus === 'cancelled' || mappedStatus === 'canceled';
+    const wasCancelled = currentProviderStatus === 'cancelled' || currentProviderStatus === 'canceled' || currentStatus === 'cancelled' || currentStatus === 'canceled';
+    const statusChangedToCancelled = isCancelled && !wasCancelled;
 
     console.log(`Order ${order.id} status comparison:`, {
       providerStatus: parsedStatus.status,
@@ -528,7 +531,10 @@ async function syncSingleOrder(order: any, provider: any) {
       currentProviderStatus,
       currentStatus,
       orderProviderStatus: order.providerStatus,
-      orderStatus: order.status
+      orderStatus: order.status,
+      isCancelled,
+      wasCancelled,
+      statusChangedToCancelled
     });
 
     const updateData: any = {
@@ -567,13 +573,80 @@ async function syncSingleOrder(order: any, provider: any) {
         newStatus: mappedStatus,
         startCount: parsedStatus.startCount,
         remains: parsedStatus.remains,
-        charge: parsedStatus.charge
+        charge: parsedStatus.charge,
+        statusChangedToCancelled
       });
 
-      await db.newOrders.update({
-        where: { id: order.id },
-        data: updateData
-      });
+      if (statusChangedToCancelled) {
+        const orderWithUser = await db.newOrders.findUnique({
+          where: { id: order.id },
+          include: {
+            user: {
+              select: {
+                id: true,
+                currency: true,
+                balance: true,
+                total_spent: true,
+                dollarRate: true
+              }
+            }
+          }
+        });
+
+        if (orderWithUser && orderWithUser.user) {
+          const user = orderWithUser.user;
+          const orderPrice = user.currency === 'USD' 
+            ? orderWithUser.usdPrice 
+            : orderWithUser.usdPrice * (user.dollarRate || 121.52);
+          
+          const refundAmount = orderPrice;
+          const wasProcessed = orderWithUser.status !== 'pending';
+          const spentAdjustment = wasProcessed ? Math.min(orderPrice, refundAmount) : 0;
+
+          console.log(`Processing refund for cancelled order ${order.id}:`, {
+            userId: user.id,
+            orderPrice,
+            refundAmount,
+            wasProcessed,
+            spentAdjustment,
+            previousBalance: user.balance
+          });
+
+          await db.$transaction(async (tx) => {
+            await tx.users.update({
+              where: { id: user.id },
+              data: {
+                balance: {
+                  increment: refundAmount
+                },
+                ...(spentAdjustment > 0 && {
+                  total_spent: {
+                    decrement: spentAdjustment
+                  }
+                })
+              }
+            });
+
+            await tx.newOrders.update({
+              where: { id: order.id },
+              data: updateData
+            });
+          });
+
+          console.log(`Refund processed successfully for order ${order.id}. User ${user.id} received ${refundAmount} ${user.currency}`);
+        } else {
+          console.warn(`Could not find user for order ${order.id}, skipping refund`);
+          await db.newOrders.update({
+            where: { id: order.id },
+            data: updateData
+          });
+        }
+      } else {
+        await db.newOrders.update({
+          where: { id: order.id },
+          data: updateData
+        });
+      }
 
       await db.providerOrderLogs.create({
         data: {
@@ -650,7 +723,8 @@ function mapProviderStatus(providerStatus: string): string {
     'cancelled': 'cancelled',
     'refunded': 'refunded',
     'failed': 'failed',
-    'fail': 'failed'
+    'fail': 'failed',
+    'error': 'failed'
   };
 
   if (statusMap[normalizedStatus]) {
