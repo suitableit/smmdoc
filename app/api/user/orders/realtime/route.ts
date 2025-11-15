@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !session.user || !session.user.id) {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -18,6 +18,11 @@ export async function GET(req: NextRequest) {
       start(controller) {
         const send = (data: any) => {
           try {
+            if (data.type === 'order_updated' && data.data?.user?.id) {
+              if (data.data.user.id !== session.user.id) {
+                return;
+              }
+            }
             const message = `data: ${JSON.stringify(data)}\n\n`;
             controller.enqueue(encoder.encode(message));
           } catch (error) {
@@ -27,7 +32,7 @@ export async function GET(req: NextRequest) {
 
         send({ type: 'connected', message: 'Real-time sync connected' });
 
-        const userId = 'admin';
+        const userId = String(session.user.id);
         const removeConnection = addRealtimeConnection(send, userId);
 
         req.signal.addEventListener('abort', () => {

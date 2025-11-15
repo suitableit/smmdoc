@@ -72,9 +72,9 @@ export async function PATCH(req: NextRequest) {
       updatedAt: new Date()
     };
 
-    if (status === 'completed') {
-      updateData.remains = 0;
-    }
+          if (status === 'completed') {
+            updateData.remains = BigInt(0);
+          }
 
     if (status === 'cancelled') {
       const orders = await db.newOrders.findMany({

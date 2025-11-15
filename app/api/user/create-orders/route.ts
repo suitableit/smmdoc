@@ -198,21 +198,21 @@ export async function POST(request: Request) {
         serviceId,
         userId: session.user.id,
         link,
-        qty: parseInt(qty),
+        qty: BigInt(qty.toString()),
         price: finalPrice,
         usdPrice: calculatedUsdPrice,
         currency: user.currency,
         avg_time: avg_time || service!.avg_time,
         status: 'pending',
-        remains: parseInt(qty),
-        startCount: 0,
+        remains: BigInt(qty.toString()),
+        startCount: BigInt(0),
         packageType: service!.packageType || 1,
         comments: comments || null,
         username: username || null,
         posts: posts ? parseInt(posts) : null,
         delay: delay ? parseInt(delay) : null,
-        minQty: minQty ? parseInt(minQty) : null,
-        maxQty: maxQty ? parseInt(maxQty) : null,
+        minQty: minQty ? BigInt(minQty.toString()) : null,
+        maxQty: maxQty ? BigInt(maxQty.toString()) : null,
         isDripfeed,
         dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
         dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
@@ -272,7 +272,7 @@ export async function POST(request: Request) {
         let providerStatus = 'pending';
         let apiCharge = 0;
         let profit = orderData.price;
-        let startCount = orderData.startCount || 0;
+        let startCount = orderData.startCount ? BigInt(orderData.startCount.toString()) : BigInt(0);
         let remains = orderData.remains || orderData.qty;
         let orderError: string | null = null;
         let serviceProviderId: number | null = null;
@@ -449,7 +449,7 @@ export async function POST(request: Request) {
 
                 providerStatus = mapProviderStatus(statusResult.status);
                 apiCharge = statusResult.charge || forwardResult.charge || 0;
-                startCount = statusResult.start_count || forwardResult.start_count || 0;
+                startCount = statusResult.start_count || forwardResult.start_count || BigInt(0);
                 remains = statusResult.remains || forwardResult.remains || orderData.qty;
                 profit = orderData.price - apiCharge;
 
@@ -458,7 +458,7 @@ export async function POST(request: Request) {
                 console.log(`Order forwarded but no provider order ID returned (likely subscription/auto order). Using default values.`);
                 providerStatus = 'pending';
                 apiCharge = forwardResult.charge || 0;
-                startCount = forwardResult.start_count || 0;
+                startCount = forwardResult.start_count || BigInt(0);
                 remains = forwardResult.remains || orderData.qty;
                 profit = orderData.price - apiCharge;
               }

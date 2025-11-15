@@ -89,14 +89,14 @@ model NewOrders {
   serviceId          Int
   userId             Int
   link               String
-  qty                Int
+  qty                BigInt
   price              Float
   avg_time           String
   status             String             @default("pending")
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
-  remains            Int                @default(0)
-  startCount         Int                @default(0)
+  remains            BigInt             @default(0)
+  startCount         BigInt             @default(0)
   currency           String
   usdPrice           Float
   charge             Float              @default(0)
@@ -111,8 +111,8 @@ model NewOrders {
   dripfeedRuns       Int?
   isDripfeed         Boolean            @default(false)
   isSubscription     Boolean            @default(false)
-  maxQty             Int?
-  minQty             Int?
+  maxQty             BigInt?
+  minQty             BigInt?
   packageType        Int?               @default(1)
   posts              Int?
   subscriptionStatus String?

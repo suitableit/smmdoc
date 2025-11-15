@@ -165,15 +165,15 @@ export async function PUT(
     };
     
     if (startCount !== undefined) {
-      updateData.startCount = parseInt(startCount);
+      updateData.startCount = BigInt(startCount.toString());
     }
-    
+
     if (remains !== undefined) {
-      updateData.remains = parseInt(remains);
+      updateData.remains = BigInt(remains.toString());
     }
     
     if (status === 'completed') {
-      updateData.remains = 0;
+      updateData.remains = BigInt(0);
     }
     
     const result = await db.$transaction(async (prisma) => {
@@ -421,15 +421,17 @@ export async function GET(
       );
     }
     
-    const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
+    const qtyNum = typeof order.qty === 'bigint' ? Number(order.qty) : order.qty;
+    const remainsNum = typeof order.remains === 'bigint' ? Number(order.remains) : order.remains;
+    const progress = qtyNum > 0 ? ((qtyNum - remainsNum) / qtyNum) * 100 : 0;
     
     const statusInfo = {
       currentStatus: order.status,
       progress: Math.round(progress),
-      totalQuantity: order.qty,
-      delivered: order.qty - order.remains,
-      remaining: order.remains,
-      startCount: order.startCount,
+      totalQuantity: typeof order.qty === 'bigint' ? order.qty.toString() : order.qty,
+      delivered: (qtyNum - remainsNum).toString(),
+      remaining: typeof order.remains === 'bigint' ? order.remains.toString() : order.remains,
+      startCount: typeof order.startCount === 'bigint' ? order.startCount.toString() : order.startCount,
       createdAt: order.createdAt,
       lastUpdated: order.updatedAt,
       statusHistory: [

@@ -292,7 +292,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                   className="text-sm font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  {order.service?.providerName || order.seller || 'null'}
+                  {order.service?.providerName || order.seller || 'Self'}
                 </div>
               </td>
               <td className="p-3">
