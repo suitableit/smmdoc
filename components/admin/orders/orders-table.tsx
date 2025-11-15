@@ -7,6 +7,7 @@ import {
   FaExternalLinkAlt,
   FaEye,
   FaSync,
+  FaEdit,
 } from 'react-icons/fa';
 import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
 
@@ -73,6 +74,10 @@ interface OrdersTableContentProps {
   onEditStartCount: (orderId: number, startCount: number) => void;
   onMarkPartial: (orderId: number) => void;
   onUpdateStatus: (orderId: number, status: string) => void;
+  onViewOrderErrors?: (orderId: number) => void;
+  onViewOrderDetails?: (orderId: number) => void;
+  onEditOrderUrl?: (orderId: number) => void;
+  onActivateRefill?: (orderId: number) => void;
   formatID: (id: number) => string;
   formatNumber: (num: number) => string;
   formatPrice: (price: number, decimals?: number) => string;
@@ -89,6 +94,10 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
   onEditStartCount,
   onMarkPartial,
   onUpdateStatus,
+  onViewOrderErrors,
+  onViewOrderDetails,
+  onEditOrderUrl,
+  onActivateRefill,
   formatID: formatIDProp,
   formatNumber: formatNumberProp,
   formatPrice: formatPriceProp,
@@ -428,21 +437,93 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     </button>
                     <div className="hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                       <div className="py-1">
-                        {(order.status === 'failed' || order.status === 'pending') && (
-                          <button
-                            onClick={() => {
-                              onResendOrder(order.id);
-                              const dropdown = document.querySelector(
-                                '.absolute.right-0'
-                              ) as HTMLElement;
-                              dropdown?.classList.add('hidden');
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                          >
-                            <FaSync className="h-3 w-3" />
-                            Resend Order
-                          </button>
-                        )}
+                        {/* Check if order has error - status is failed or apiResponse contains error */}
+                        {(() => {
+                          const hasError = order.status === 'failed' || 
+                            (order.apiResponse && 
+                             order.apiResponse !== '-' && 
+                             order.apiResponse !== null &&
+                             (order.apiResponse.includes('error') || 
+                              (() => {
+                                try {
+                                  const parsed = JSON.parse(order.apiResponse);
+                                  return parsed?.error || false;
+                                } catch {
+                                  return false;
+                                }
+                              })()));
+                          const hasProvider = !!order.service?.providerId;
+                          
+                          return (
+                            <>
+                              {/* Order Errors - Show if has error and has provider */}
+                              {hasError && hasProvider && onViewOrderErrors && (
+                                <button
+                                  onClick={() => {
+                                    onViewOrderErrors(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaExclamationCircle className="h-3 w-3" />
+                                  Order Errors
+                                </button>
+                              )}
+                              {/* Resend Order - Show if has error and has provider */}
+                              {hasError && hasProvider && (
+                                <button
+                                  onClick={() => {
+                                    onResendOrder(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaSync className="h-3 w-3" />
+                                  Resend Order
+                                </button>
+                              )}
+                              {/* Order Details - Show if no error and has provider */}
+                              {!hasError && hasProvider && onViewOrderDetails && (
+                                <button
+                                  onClick={() => {
+                                    onViewOrderDetails(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaEye className="h-3 w-3" />
+                                  Order Details
+                                </button>
+                              )}
+                              {/* Edit Order URL - Show if no provider OR has error */}
+                              {(!hasProvider || hasError) && onEditOrderUrl && (
+                                <button
+                                  onClick={() => {
+                                    onEditOrderUrl(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaEdit className="h-3 w-3" />
+                                  Edit Order URL
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
+                        {/* Edit Start Count - Always show */}
                         <button
                           onClick={() => {
                             onEditStartCount(
@@ -459,19 +540,41 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                           <FaEye className="h-3 w-3" />
                           Edit Start Count
                         </button>
-                        <button
-                          onClick={() => {
-                            onMarkPartial(order.id);
-                            const dropdown = document.querySelector(
-                              '.absolute.right-0'
-                            ) as HTMLElement;
-                            dropdown?.classList.add('hidden');
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                        >
-                          <FaExclamationCircle className="h-3 w-3" />
-                          Mark Partial
-                        </button>
+                        {/* Mark Partial - Show if status is not partial */}
+                        {order.status !== 'partial' && (
+                          <button
+                            onClick={() => {
+                              onMarkPartial(order.id);
+                              const dropdown = document.querySelector(
+                                '.absolute.right-0'
+                              ) as HTMLElement;
+                              dropdown?.classList.add('hidden');
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                          >
+                            <FaExclamationCircle className="h-3 w-3" />
+                            Mark Partial
+                          </button>
+                        )}
+                        {/* Activate Refill Button - Show if completed or no refill requests */}
+                        {(order.status === 'completed' || 
+                          (!order.refillRequests || order.refillRequests.length === 0)) && 
+                         onActivateRefill && (
+                          <button
+                            onClick={() => {
+                              onActivateRefill(order.id);
+                              const dropdown = document.querySelector(
+                                '.absolute.right-0'
+                              ) as HTMLElement;
+                              dropdown?.classList.add('hidden');
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                          >
+                            <FaSync className="h-3 w-3" />
+                            Activate Refill Button
+                          </button>
+                        )}
+                        {/* Update Order Status - Always show */}
                         <button
                           onClick={() => {
                             onUpdateStatus(
