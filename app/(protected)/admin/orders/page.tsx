@@ -25,6 +25,8 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
+import { userOrderApi } from '@/lib/services/userOrderApi';
+import { useAppDispatch } from '@/lib/store';
 
 const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
 
@@ -199,6 +201,7 @@ interface PaginationInfo {
 
 const AdminOrdersPage = () => {
   const { appName } = useAppNameWithFallback();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     setPageTitle('All Orders', appName);
@@ -319,6 +322,7 @@ const AdminOrdersPage = () => {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const refreshStatsRef = useRef<(() => void) | null>(null);
+  const hasSyncedRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -426,6 +430,7 @@ const AdminOrdersPage = () => {
               if (refreshStatsRef.current) {
                 refreshStatsRef.current();
               }
+              dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
             } else if (data.type === 'sync_progress') {
               const progress = data.progress;
               if (progress.synced > 0) {
@@ -469,6 +474,65 @@ const AdminOrdersPage = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (hasSyncedRef.current) return;
+    
+    const syncProviderOrders = async () => {
+      hasSyncedRef.current = true;
+      try {
+        const syncPromise = fetch('/api/admin/provider-sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ syncAll: true }),
+        }).then(res => res.json()).catch(err => {
+          console.error('Error syncing provider orders on reload:', err);
+          return { success: false, error: err.message };
+        });
+
+        const syncTimeout = new Promise((resolve) => {
+          setTimeout(() => resolve({ success: false, timeout: true }), 30000);
+        });
+
+        const syncResult: any = await Promise.race([syncPromise, syncTimeout]);
+
+        if (syncResult.timeout) {
+          console.log('Sync is taking longer than expected, refreshing orders...');
+        } else if (syncResult.success) {
+          const syncedCount = syncResult.data?.syncedCount || 0;
+          const totalProcessed = syncResult.data?.totalProcessed || 0;
+          if (syncedCount > 0) {
+            console.log(`Synced ${syncedCount} of ${totalProcessed} provider order(s) on page reload`);
+          } else if (totalProcessed > 0) {
+            console.log(`Checked ${totalProcessed} provider order(s) - all up to date`);
+          } else {
+            console.log('No provider orders to sync');
+          }
+        } else {
+          console.warn('Provider sync had issues:', syncResult.error);
+        }
+
+        await Promise.all([
+          refreshOrders(undefined, { revalidate: true }),
+          refreshStats(undefined, { revalidate: true })
+        ]);
+
+        dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
+      } catch (error) {
+        console.error('Error syncing provider orders on page reload:', error);
+        await Promise.all([
+          refreshOrders(undefined, { revalidate: true }),
+          refreshStats(undefined, { revalidate: true })
+        ]).catch(refreshError => {
+          console.error('Error refreshing after sync failure:', refreshError);
+        });
+      }
+    };
+
+    syncProviderOrders();
+  }, [refreshOrders, refreshStats, dispatch]);
 
   useEffect(() => {
     if (ordersData?.success && ordersData.data) {
@@ -707,7 +771,9 @@ const AdminOrdersPage = () => {
         refreshStats(undefined, { revalidate: true })
       ]);
 
-      showToast('All orders refreshed successfully', 'success');
+      dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
+
+      showToast('All orders synced and refreshed successfully', 'success');
     } catch (error) {
       console.error('Error refreshing orders:', error);
       showToast('Error refreshing orders', 'error');
@@ -717,11 +783,12 @@ const AdminOrdersPage = () => {
           refreshOrders(undefined, { revalidate: true }),
           refreshStats(undefined, { revalidate: true })
         ]);
+        dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
       } catch (refreshError) {
         console.error('Error refreshing after sync failure:', refreshError);
       }
     }
-  }, [refreshOrders, refreshStats, showToast]);
+  }, [refreshOrders, refreshStats, showToast, dispatch]);
 
   const handleDeleteOrder = async (orderId: number) => {
     try {

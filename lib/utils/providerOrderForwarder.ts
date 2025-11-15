@@ -22,9 +22,9 @@ export interface ProviderOrderResponse {
 
 export interface ProviderStatusResponse {
   charge: number;
-  start_count: number;
+  start_count: bigint;
   status: string;
-  remains: number;
+  remains: bigint;
   currency: string;
 }
 

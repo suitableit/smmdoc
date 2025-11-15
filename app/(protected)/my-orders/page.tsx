@@ -7,7 +7,7 @@ import { useGetUserOrdersQuery } from '@/lib/services/userOrderApi';
 import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
 import moment from 'moment';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     FaBan,
     FaCheck,
@@ -236,10 +236,11 @@ export default function OrdersList() {
   });
 
   const [localPendingCancelRequests, setLocalPendingCancelRequests] = useState<Set<number>>(new Set());
+  const hasSyncedRef = useRef(false);
 
   const { currency, availableCurrencies, currentCurrencyData } = useCurrency();
 
-  const { data, isLoading, error } = useGetUserOrdersQuery({
+  const { data, isLoading, error, refetch } = useGetUserOrdersQuery({
     page,
     limit,
     status,
@@ -251,10 +252,105 @@ export default function OrdersList() {
   }, [appName]);
 
   useEffect(() => {
-    const urlStatus = searchParams?.get('status');
-    const newStatus = urlStatus ? urlStatus.replace('-', '_') : 'all';
-    setStatus(newStatus);
-  }, []);
+    let eventSource: EventSource | null = null;
+
+    const connectRealtime = () => {
+      try {
+        eventSource = new EventSource('/api/user/orders/realtime');
+
+        eventSource.onopen = () => {
+          console.log('✅ Real-time sync connected for my-orders');
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'order_updated') {
+              console.log('Order updated via real-time on my-orders:', data.orderId);
+              refetch();
+            } else if (data.type === 'ping') {
+              console.log('Real-time ping received');
+            }
+          } catch (error) {
+            console.error('Error parsing real-time message:', error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('Real-time sync error on my-orders:', error);
+          if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+            eventSource = null;
+            setTimeout(() => {
+              if (!eventSource) {
+                connectRealtime();
+              }
+            }, 5000);
+          }
+        };
+      } catch (error) {
+        console.error('Error setting up real-time sync on my-orders:', error);
+      }
+    };
+
+    connectRealtime();
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+    if (hasSyncedRef.current) return;
+    
+    const syncProviderOrders = async () => {
+      hasSyncedRef.current = true;
+      try {
+        const syncPromise = fetch('/api/user/orders/sync-provider', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ syncAll: true }),
+        }).then(res => res.json()).catch(err => {
+          console.error('Error syncing provider orders on reload:', err);
+          return { success: false, error: err.message };
+        });
+
+        const syncTimeout = new Promise((resolve) => {
+          setTimeout(() => resolve({ success: false, timeout: true }), 30000);
+        });
+
+        const syncResult: any = await Promise.race([syncPromise, syncTimeout]);
+
+        if (syncResult.timeout) {
+          console.log('Sync is taking longer than expected, refreshing orders...');
+        } else if (syncResult.success) {
+          const syncedCount = syncResult.data?.synced || 0;
+          const totalProcessed = syncResult.data?.processed || 0;
+          if (syncedCount > 0) {
+            console.log(`Synced ${syncedCount} of ${totalProcessed} provider order(s) on page reload`);
+          } else if (totalProcessed > 0) {
+            console.log(`Checked ${totalProcessed} provider order(s) - all up to date`);
+          } else {
+            console.log('No provider orders to sync');
+          }
+        } else {
+          console.warn('Provider sync had issues:', syncResult.error);
+        }
+
+        refetch();
+      } catch (error) {
+        console.error('Error syncing provider orders on page reload:', error);
+        refetch();
+      }
+    };
+
+    syncProviderOrders();
+  }, [refetch]);
 
   useEffect(() => {
     const urlStatus = searchParams?.get('status');

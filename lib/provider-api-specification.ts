@@ -326,11 +326,14 @@ export class ApiResponseParser {
       return response;
     }
 
+    const startCountValue = this.getNestedValue(response, mapping.startCount);
+    const remainsValue = this.getNestedValue(response, mapping.remains);
+
     return {
       charge: parseFloat(this.getNestedValue(response, mapping.charge)) || 0,
-      startCount: parseInt(this.getNestedValue(response, mapping.startCount)) || 0,
+      startCount: startCountValue ? BigInt(startCountValue.toString()) : BigInt(0),
       status: this.getNestedValue(response, mapping.status),
-      remains: parseInt(this.getNestedValue(response, mapping.remains)) || 0,
+      remains: remainsValue ? BigInt(remainsValue.toString()) : BigInt(0),
       currency: this.getNestedValue(response, mapping.currency)
     };
   }
@@ -377,9 +380,9 @@ export interface ParsedService {
 
 export interface ParsedOrderStatus {
   charge: number;
-  startCount: number;
+  startCount: bigint;
   status: string;
-  remains: number;
+  remains: bigint;
   currency: string;
 }
 

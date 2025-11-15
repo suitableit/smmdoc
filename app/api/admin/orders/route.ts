@@ -127,9 +127,18 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalCount / limit);
 
+    const serializedOrders = uniqueOrders.map(order => ({
+      ...order,
+      qty: typeof order.qty === 'bigint' ? order.qty.toString() : order.qty,
+      remains: typeof order.remains === 'bigint' ? order.remains.toString() : order.remains,
+      startCount: typeof order.startCount === 'bigint' ? order.startCount.toString() : order.startCount,
+      minQty: order.minQty && typeof order.minQty === 'bigint' ? order.minQty.toString() : order.minQty,
+      maxQty: order.maxQty && typeof order.maxQty === 'bigint' ? order.maxQty.toString() : order.maxQty,
+    }));
+
     return NextResponse.json({
       success: true,
-      data: uniqueOrders,
+      data: serializedOrders,
       pagination: {
         page,
         limit,
@@ -323,21 +332,21 @@ export async function POST(req: NextRequest) {
         categoryId,
         serviceId,
         link,
-        qty: parseInt(qty),
+        qty: BigInt(qty.toString()),
         price: finalPrice,
         usdPrice: calculatedUsdPrice,
         currency: user.currency,
         avg_time: avg_time || service.avg_time,
         status,
-        remains: parseInt(qty),
-        startCount: 0,
+        remains: BigInt(qty.toString()),
+        startCount: BigInt(0),
         packageType: service.packageType || 1,
         comments: comments || null,
         username: username || null,
         posts: posts ? parseInt(posts) : null,
         delay: delay ? parseInt(delay) : null,
-        minQty: minQty ? parseInt(minQty) : null,
-        maxQty: maxQty ? parseInt(maxQty) : null,
+        minQty: minQty ? BigInt(minQty.toString()) : null,
+        maxQty: maxQty ? BigInt(maxQty.toString()) : null,
         isDripfeed,
         dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
         dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
@@ -396,7 +405,7 @@ export async function POST(req: NextRequest) {
           const providerOrderData = {
             service: String(service.providerServiceId),
             link,
-            quantity: parseInt(qty),
+            quantity: typeof qty === 'bigint' ? Number(qty) : parseInt(qty),
             runs: isDripfeed && dripfeedRuns ? parseInt(dripfeedRuns) : undefined,
             interval: isDripfeed && dripfeedInterval ? parseInt(dripfeedInterval) : undefined
           };
@@ -465,10 +474,19 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
 
+    const serializedOrder = {
+      ...updatedOrder,
+      qty: typeof updatedOrder.qty === 'bigint' ? updatedOrder.qty.toString() : updatedOrder.qty,
+      remains: typeof updatedOrder.remains === 'bigint' ? updatedOrder.remains.toString() : updatedOrder.remains,
+      startCount: typeof updatedOrder.startCount === 'bigint' ? updatedOrder.startCount.toString() : updatedOrder.startCount,
+      minQty: updatedOrder.minQty && typeof updatedOrder.minQty === 'bigint' ? updatedOrder.minQty.toString() : updatedOrder.minQty,
+      maxQty: updatedOrder.maxQty && typeof updatedOrder.maxQty === 'bigint' ? updatedOrder.maxQty.toString() : updatedOrder.maxQty,
+    };
+
     return NextResponse.json({
       success: true,
       message: 'Order created successfully',
-      data: updatedOrder,
+      data: serializedOrder,
       error: null
     });
 
