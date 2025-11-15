@@ -14,8 +14,10 @@ import axiosInstance from '@/lib/axiosInstance';
 import {
   createServiceDefaultValues,
   CreateServiceSchema,
-} from '@/lib/validators/admin/services/services.validator';
-const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
+} from '@/lib/validators/admin/services/services.validator';
+
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
+
 const FormItem = ({
   className = '',
   children,
@@ -51,14 +53,16 @@ const FormMessage = ({
 }) =>
   children ? (
     <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
-  ) : null;
+  ) : null;
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 export const CreateServiceForm: React.FC<{
   onClose: () => void;
   showToast: (
@@ -77,7 +81,8 @@ export const CreateServiceForm: React.FC<{
     data: serviceTypesData,
     error: serviceTypesError,
     isLoading: serviceTypesLoading,
-  } = useSWR('/api/admin/service-types', fetcher);
+  } = useSWR('/api/admin/service-types', fetcher);
+
   useEffect(() => {
     console.log('🔍 Service Types Debug in Admin Services:');
     console.log('📊 serviceTypesData:', serviceTypesData);
@@ -97,18 +102,24 @@ export const CreateServiceForm: React.FC<{
   } = useSWR('/api/admin/providers?filter=active', fetcher);
 
   const [isPending, startTransition] = useTransition();
-  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
+  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
+
   const detectOrderLinkType = useCallback((serviceName: string, serviceType?: string): 'link' | 'username' => {
     const name = serviceName.toLowerCase();
-    const type = serviceType?.toLowerCase() || '';
-    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
-    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
+    const type = serviceType?.toLowerCase() || '';
+
+    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
+
+    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
+
     if (usernameKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
       return 'username';
-    }
+    }
+
     if (linkKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
       return 'link';
-    }
+    }
+
     return 'link';
   }, []);
 
@@ -120,13 +131,15 @@ export const CreateServiceForm: React.FC<{
     setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
-    mode: 'onChange',
+    mode: 'onChange',
+
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual',
       orderLink: 'link',
     },
-  });
+  });
+
   useEffect(() => {
     if (serviceTypesData?.data && !watch('serviceTypeId')) {
       const defaultServiceType = serviceTypesData.data.find(
@@ -136,10 +149,14 @@ export const CreateServiceForm: React.FC<{
         setValue('serviceTypeId', defaultServiceType.id.toString());
       }
     }
-  }, [serviceTypesData, setValue, watch]);
-  const refillValue = watch('refill');
-  const modeValue = watch('mode');
-  const providerIdValue = watch('providerId');
+  }, [serviceTypesData, setValue, watch]);
+
+  const refillValue = watch('refill');
+
+  const modeValue = watch('mode');
+
+  const providerIdValue = watch('providerId');
+
   const {
     data: apiServicesData,
     error: apiServicesError,
@@ -147,11 +164,15 @@ export const CreateServiceForm: React.FC<{
   } = useSWR(
     modeValue === 'auto' && providerIdValue ? `/api/admin/providers/${providerIdValue}/services` : null,
     fetcher
-  );
-  const providerServiceIdValue = watch('providerServiceId');
+  );
+
+  const providerServiceIdValue = watch('providerServiceId');
+
   const mapApiServiceTypeToInternalType = (apiServiceType: string): string | null => {
-    if (!apiServiceType || !serviceTypesData?.data) return null;
-    const normalizedApiType = apiServiceType.toLowerCase().trim();
+    if (!apiServiceType || !serviceTypesData?.data) return null;
+
+    const normalizedApiType = apiServiceType.toLowerCase().trim();
+
     const typeMapping: { [key: string]: string[] } = {
       '1': ['default', 'standard', 'normal', 'regular', 'basic'],
       '2': ['package', 'pack', 'bundle', 'fixed'],
@@ -162,9 +183,11 @@ export const CreateServiceForm: React.FC<{
       '13': ['auto comments', 'auto comment', 'subscription comments', 'auto-comments'],
       '14': ['limited auto likes', 'limited likes', 'limited auto like'],
       '15': ['limited auto views', 'limited views', 'limited auto view'],
-    };
+    };
+
     for (const [internalTypeId, apiTypeVariants] of Object.entries(typeMapping)) {
-      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
+      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
+
         const serviceTypeExists = serviceTypesData.data.find(
           (type: any) => type.id.toString() === internalTypeId
         );
@@ -172,7 +195,8 @@ export const CreateServiceForm: React.FC<{
           return internalTypeId;
         }
       }
-    }
+    }
+
     for (const serviceType of serviceTypesData.data) {
       const normalizedInternalName = serviceType.name.toLowerCase();
       if (normalizedApiType.includes(normalizedInternalName) || 
@@ -182,7 +206,8 @@ export const CreateServiceForm: React.FC<{
     }
 
     return null;
-  };
+  };
+
   useEffect(() => {
     if (providerServiceIdValue && apiServicesData?.data?.services) {
       const selectedService = apiServicesData.data.services.find(
@@ -196,7 +221,8 @@ export const CreateServiceForm: React.FC<{
         setValue('min_order', selectedService.min?.toString() || '');
         setValue('max_order', selectedService.max?.toString() || '');
         setValue('perqty', '1000');
-        setValue('avg_time', '0-1 hours');
+        setValue('avg_time', '0-1 hours');
+
         if (selectedService.type && serviceTypesData?.data) {
           const mappedServiceTypeId = mapApiServiceTypeToInternalType(selectedService.type);
           if (mappedServiceTypeId) {
@@ -205,7 +231,9 @@ export const CreateServiceForm: React.FC<{
           } else {
             console.log(`⚠️ No mapping found for service type: ${selectedService.type}`);
           }
-        }
+        }
+
+
         let refillBoolValue = false;
         if (selectedService.refill !== undefined && selectedService.refill !== null) {
           if (typeof selectedService.refill === 'boolean') {
@@ -216,7 +244,8 @@ export const CreateServiceForm: React.FC<{
           } else if (typeof selectedService.refill === 'number') {
             refillBoolValue = selectedService.refill > 0;
           }
-        }
+        }
+
         let cancelBoolValue = false;
         if (selectedService.cancel !== undefined && selectedService.cancel !== null) {
           if (typeof selectedService.cancel === 'boolean') {
@@ -230,22 +259,27 @@ export const CreateServiceForm: React.FC<{
         }
 
         setValue('refill', refillBoolValue);
-        setValue('cancel', cancelBoolValue);
-        if (refillBoolValue) {
+        setValue('cancel', cancelBoolValue);
+
+        if (refillBoolValue) {
+
           const refillDays = selectedService.refillDays || selectedService.refill_days || 30;
           const refillDisplay = selectedService.refillDisplay || selectedService.refill_display || 24;
 
           setValue('refillDays', Number(refillDays) as any);
           setValue('refillDisplay', Number(refillDisplay) as any);
-        } else {
+        } else {
+
           setValue('refillDays', undefined as any);
           setValue('refillDisplay', undefined as any);
-        }
+        }
+
         const detectedType = detectOrderLinkType(selectedService.name, selectedService.type);
         setValue('orderLink', detectedType);
         setOrderLinkType(detectedType);
       }
-    } else {
+    } else {
+
       setValue('orderLink', 'link');
       setOrderLinkType('link');
       setValue('refill', false);
@@ -256,7 +290,8 @@ export const CreateServiceForm: React.FC<{
   }, [providerServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType]);
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
-    console.log('Form submitted with values:', values);
+    console.log('Form submitted with values:', values);
+
     if (!values.categoryId || values.categoryId === '') {
       showToast('Please select a service category', 'error');
       return;
@@ -265,19 +300,26 @@ export const CreateServiceForm: React.FC<{
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
       return;
-    }
+    }
+
     if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
       showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
-    }
+    }
+
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
+        if (key === 'categoryId' || key === 'serviceTypeId') {
+          return value !== null && value !== undefined && value !== '';
+        }
         if (value === '' || value === null || value === undefined) return false;
         return true;
       })
     );
 
+    console.log('Original values:', values);
     console.log('Filtered values to send:', filteredValues);
+    console.log('Category ID in filtered:', filteredValues.categoryId);
 
     startTransition(async () => {
       try {
@@ -289,7 +331,8 @@ export const CreateServiceForm: React.FC<{
         console.log('API response:', response.data);
         if (response.data.success) {
           reset();
-          showToast(response.data.message, 'success');
+          showToast(response.data.message, 'success');
+
           if (refreshAllDataWithServices) {
             await refreshAllDataWithServices();
           }
@@ -300,7 +343,21 @@ export const CreateServiceForm: React.FC<{
         }
       } catch (error: any) {
         console.error('API Error:', error);
-        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+        console.error('Error response:', error.response);
+        console.error('Error response data:', error.response?.data);
+        
+        let errorMessage = 'Failed to create service. Please try again.';
+        
+        if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        console.error('Displaying error:', errorMessage);
+        showToast(errorMessage, 'error');
       }
     });
   };

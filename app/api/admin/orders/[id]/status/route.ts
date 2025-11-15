@@ -46,7 +46,7 @@ export async function PUT(
       );
     }
     
-    const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
+    const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         { 
@@ -82,7 +82,8 @@ export async function PUT(
             email: true,
             balance: true,
             currency: true,
-            dollarRate: true
+            dollarRate: true,
+            total_spent: true
           }
         },
         service: {
@@ -136,7 +137,18 @@ export async function PUT(
       };
     }
     
-    if (['processing', 'in_progress', 'completed', 'partial'].includes(currentOrder.status) && ['cancelled', 'refunded'].includes(status)) {
+    if (status === 'cancelled' && currentOrder.status !== 'cancelled') {
+      console.log(`Processing refund for cancelled order ${orderId}:`, {
+        userId: user.id,
+        orderPrice,
+        userCurrency: user.currency,
+        orderUsdPrice: currentOrder.usdPrice,
+        userDollarRate: user.dollarRate,
+        previousStatus: currentOrder.status,
+        previousBalance: user.balance,
+        previousTotalSpent: user.total_spent
+      });
+      
       balanceUpdate = {
         balance: {
           increment: orderPrice
@@ -166,10 +178,27 @@ export async function PUT(
     
     const result = await db.$transaction(async (prisma) => {
       if (balanceUpdate) {
-        await prisma.users.update({
+        const updatedUser = await prisma.users.update({
           where: { id: user.id },
-          data: balanceUpdate
+          data: balanceUpdate,
+          select: {
+            id: true,
+            balance: true,
+            total_spent: true
+          }
         });
+        
+        if (status === 'cancelled') {
+          console.log(`Refund processed for cancelled order ${orderId}:`, {
+            userId: user.id,
+            refundAmount: orderPrice,
+            userCurrency: user.currency,
+            previousBalance: user.balance,
+            newBalance: updatedUser.balance,
+            previousTotalSpent: user.total_spent,
+            newTotalSpent: updatedUser.total_spent
+          });
+        }
       }
       
       const updatedOrder = await prisma.newOrders.update({
@@ -269,7 +298,7 @@ export async function PATCH(
       );
     }
 
-    const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled', 'refunded'];
+    const validStatuses = ['pending', 'processing', 'in_progress', 'completed', 'partial', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
         {

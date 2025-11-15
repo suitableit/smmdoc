@@ -46,6 +46,21 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const ordersCount = await db.newOrders.count({
+      where: { serviceId: Number(id) }
+    });
+
+    if (ordersCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Cannot delete service: It has ${ordersCount} order${ordersCount !== 1 ? 's' : ''} associated with it.`,
+          data: null,
+          success: false,
+        },
+        { status: 400 }
+      );
+    }
+
     await db.services.delete({
       where: {
         id: Number(id),

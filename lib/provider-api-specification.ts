@@ -169,16 +169,21 @@ export class ApiRequestBuilder {
     return this.buildRequest(endpoint, params);
   }
 
-  buildAddOrderRequest(serviceId: string, link: string, quantity: number, runs?: number, interval?: number): RequestConfig {
+  buildAddOrderRequest(serviceId: string, link: string, quantity?: number, comments?: string, runs?: number, interval?: number): RequestConfig {
     const endpoint = this.spec.addOrderEndpoint || this.baseUrl;
     const params: Record<string, any> = {
       [this.spec.apiKeyParam]: this.apiKey,
       [this.spec.actionParam]: this.spec.addOrderAction,
       [this.spec.serviceIdParam]: serviceId,
-      [this.spec.linkParam]: link,
-      [this.spec.quantityParam]: quantity
+      [this.spec.linkParam]: link
     };
 
+    if (quantity !== undefined) {
+      params[this.spec.quantityParam] = quantity;
+    }
+    if (comments !== undefined) {
+      params['comments'] = comments;
+    }
     if (runs !== undefined) {
       params[this.spec.runsParam] = runs;
     }

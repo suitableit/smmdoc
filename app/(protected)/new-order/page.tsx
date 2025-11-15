@@ -11,6 +11,7 @@ import {
     dashboardApi,
     useGetUserStatsQuery,
 } from '@/lib/services/dashboardApi';
+import { userOrderApi } from '@/lib/services/userOrderApi';
 import { ServiceTypeFields } from '@/components/ServiceTypeFields';
 import { validateOrderByType, getServiceTypeConfig, ServiceTypeConfig } from '@/lib/serviceTypes';
 import axios from 'axios';
@@ -49,30 +50,38 @@ const Toast = ({
   type = 'success',
   onClose,
 }: {
-  message: string;
+  message: string | { message?: string } | unknown;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div
-    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
-      type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
-        : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
-        : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-    }`}
-  >
-    <div className="flex items-center space-x-2">
-      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
-      <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
-        <FaTimes className="w-3 h-3" />
-      </button>
+}) => {
+  const displayMessage = typeof message === 'string' 
+    ? message 
+    : (typeof message === 'object' && message !== null && 'message' in message && typeof message.message === 'string'
+      ? message.message
+      : JSON.stringify(message) || 'An error occurred');
+  
+  return (
+    <div
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+        type === 'success'
+          ? 'bg-green-50 border-green-200 text-green-800'
+          : type === 'error'
+          ? 'bg-red-50 border-red-200 text-red-800'
+          : type === 'info'
+          ? 'bg-blue-50 border-blue-200 text-blue-800'
+          : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+      }`}
+    >
+      <div className="flex items-center space-x-2">
+        {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+        <span className="font-medium">{displayMessage}</span>
+        <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+          <FaTimes className="w-3 h-3" />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ServiceDetailsCard = ({
   selectedService,
@@ -418,10 +427,13 @@ function NewOrder() {
   const [serviceTypeErrors, setServiceTypeErrors] = useState<Record<string, string>>({});
 
   const showToast = (
-    message: string,
+    message: string | any,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
   ) => {
-    setToastMessage({ message, type });
+    const messageString = typeof message === 'string' 
+      ? message 
+      : (message?.message || message?.error || JSON.stringify(message) || 'An error occurred');
+    setToastMessage({ message: messageString, type });
     setTimeout(() => setToastMessage(null), 4000);
   };
 
@@ -955,6 +967,7 @@ function NewOrder() {
       showToast('Order created successfully!', 'success');
 
       dispatch(dashboardApi.util.invalidateTags(['UserStats']));
+      dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
 
       refetchUserStats();
 
@@ -964,21 +977,27 @@ function NewOrder() {
       setSelectedCategory('');
       setSearch('');
       resetServiceTypeFields();
+
+      setTimeout(() => {
+        router.push('/my-orders');
+      }, 1500);
     } else {
-      showToast(response.data.message || 'Failed to create order', 'error');
+      const errorMsg = response.data?.message || 'Failed to create order';
+      showToast(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg), 'error');
     }
   } catch (error: any) {
     console.error('Error creating order:', error);
+    let errorMessage = 'Failed to create order';
+    
     if (error.response?.status === 404) {
       const notFoundMsg = error.response?.data?.message || 'Selected service not found or inactive.';
-      showToast(notFoundMsg, 'error');
+      errorMessage = typeof notFoundMsg === 'string' ? notFoundMsg : 'Selected service not found or inactive.';
     } else {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to create order';
-      showToast(errorMessage, 'error');
+      const msg = error.response?.data?.message || error.message || error;
+      errorMessage = typeof msg === 'string' ? msg : JSON.stringify(msg);
     }
+    
+    showToast(errorMessage, 'error');
   } finally {
     setIsSubmitting(false);
   }

@@ -18,14 +18,41 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
   showToast,
 }) => {
   const [newStatus, setNewStatus] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
-      setNewStatus(currentStatus);
+      const normalizedStatus = currentStatus?.toLowerCase().trim();
+      if (normalizedStatus === 'pending' || normalizedStatus === 'inprogress' || normalizedStatus === 'processing') {
+        setNewStatus('completed');
+      } else {
+        setNewStatus(currentStatus);
+      }
     }
   }, [isOpen, currentStatus]);
 
-  if (!isOpen) return null;
+  if (!isOpen) return null;
+
+  const normalizedStatus = currentStatus?.toLowerCase().trim();
+  
+  const canCancel = ['pending', 'completed', 'processing', 'partial', 'fail', 'cancelled'].includes(normalizedStatus);
+  const canComplete = ['pending', 'inprogress', 'in_progress', 'processing'].includes(normalizedStatus);
+  const canInProgress = ['pending', 'processing'].includes(normalizedStatus);
+  
+  const availableStatuses: string[] = [];
+  
+  if (canCancel) {
+    availableStatuses.push('cancelled');
+  }
+  if (canComplete) {
+    availableStatuses.push('completed');
+  }
+  if (canInProgress) {
+    availableStatuses.push('in_progress');
+  }
+  
+  const showAllOptions = availableStatuses.length === 0;
+
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       setIsLoading(true);
@@ -88,13 +115,27 @@ const UpdateOrderStatusModal: React.FC<UpdateOrderStatusModalProps> = ({
             onChange={(e) => setNewStatus(e.target.value)}
             className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
           >
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="partial">Partial</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="refunded">Refunded</option>
+            {showAllOptions ? (
+              <>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancel & Refund</option>
+              </>
+            ) : (
+              <>
+                {availableStatuses.includes('cancelled') && (
+                  <option value="cancelled">Cancel & Refund</option>
+                )}
+                {availableStatuses.includes('completed') && (
+                  <option value="completed">Complete</option>
+                )}
+                {availableStatuses.includes('in_progress') && (
+                  <option value="in_progress">In Progress</option>
+                )}
+              </>
+            )}
           </select>
         </div>
         <div className="flex gap-2 justify-end">

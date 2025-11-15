@@ -182,6 +182,9 @@ async function syncSingleOrder(order: any, provider: any) {
     
     const mappedStatus = mapProviderStatus(parsedStatus.status);
     const currentStatus = order.providerStatus;
+    const isCancelled = mappedStatus === 'canceled' || mappedStatus === 'cancelled';
+    const wasCancelled = currentStatus === 'canceled' || currentStatus === 'cancelled';
+    const statusChangedToCancelled = isCancelled && !wasCancelled;
 
     const updateData: any = {
       providerStatus: mappedStatus,
@@ -213,13 +216,80 @@ async function syncSingleOrder(order: any, provider: any) {
         status: `${currentStatus} -> ${mappedStatus}`,
         startCount: parsedStatus.startCount,
         remains: parsedStatus.remains,
-        charge: parsedStatus.charge
+        charge: parsedStatus.charge,
+        statusChangedToCancelled
       });
 
-      await db.newOrders.update({
-        where: { id: order.id },
-        data: updateData
-      });
+      if (statusChangedToCancelled) {
+        const orderWithUser = await db.newOrders.findUnique({
+          where: { id: order.id },
+          include: {
+            user: {
+              select: {
+                id: true,
+                currency: true,
+                balance: true,
+                total_spent: true,
+                dollarRate: true
+              }
+            }
+          }
+        });
+
+        if (orderWithUser && orderWithUser.user) {
+          const user = orderWithUser.user;
+          const orderPrice = user.currency === 'USD' 
+            ? orderWithUser.usdPrice 
+            : orderWithUser.usdPrice * (user.dollarRate || 121.52);
+          
+          const refundAmount = orderPrice;
+          const wasProcessed = orderWithUser.status !== 'pending';
+          const spentAdjustment = wasProcessed ? Math.min(orderPrice, refundAmount) : 0;
+
+          console.log(`Processing refund for cancelled order ${order.id}:`, {
+            userId: user.id,
+            orderPrice,
+            refundAmount,
+            wasProcessed,
+            spentAdjustment,
+            previousBalance: user.balance
+          });
+
+          await db.$transaction(async (tx) => {
+            await tx.users.update({
+              where: { id: user.id },
+              data: {
+                balance: {
+                  increment: refundAmount
+                },
+                ...(spentAdjustment > 0 && {
+                  total_spent: {
+                    decrement: spentAdjustment
+                  }
+                })
+              }
+            });
+
+            await tx.newOrders.update({
+              where: { id: order.id },
+              data: updateData
+            });
+          });
+
+          console.log(`Refund processed successfully for order ${order.id}. User ${user.id} received ${refundAmount} ${user.currency}`);
+        } else {
+          console.warn(`Could not find user for order ${order.id}, skipping refund`);
+          await db.newOrders.update({
+            where: { id: order.id },
+            data: updateData
+          });
+        }
+      } else {
+        await db.newOrders.update({
+          where: { id: order.id },
+          data: updateData
+        });
+      }
 
       await db.providerOrderLogs.create({
         data: {
@@ -283,9 +353,12 @@ function mapProviderStatus(providerStatus: string): string {
     'processing': 'processing',
     'completed': 'completed',
     'partial': 'partial',
-    'canceled': 'canceled',
-    'cancelled': 'canceled',
-    'refunded': 'refunded'
+    'canceled': 'cancelled',
+    'cancelled': 'cancelled',
+    'refunded': 'refunded',
+    'failed': 'failed',
+    'fail': 'failed',
+    'error': 'failed'
   };
 
   return statusMap[providerStatus?.toLowerCase()] || 'pending';

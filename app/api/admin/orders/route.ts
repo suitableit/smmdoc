@@ -100,6 +100,13 @@ export async function GET(req: NextRequest) {
               id: true,
               category_name: true
             }
+          },
+          refillRequests: {
+            select: {
+              id: true,
+              status: true
+            },
+            take: 1
           }
         },
         orderBy: {

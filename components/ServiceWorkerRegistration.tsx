@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      // Register immediately, don't wait for load event
       const registerServiceWorker = async () => {
         try {
           const registration = await navigator.serviceWorker.register('/sw.js', {
@@ -29,7 +28,6 @@ export default function ServiceWorkerRegistration() {
         }
       };
 
-      // Register immediately if page is already loaded, otherwise wait for load
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
         registerServiceWorker();
       } else {

@@ -63,6 +63,11 @@ interface Order {
   providerOrderId?: string;
   providerStatus?: string;
   lastSyncAt?: string;
+  apiResponse?: string;
+  refillRequests?: Array<{
+    id: number;
+    status: string;
+  }>;
 }
 
 interface OrdersTableContentProps {
@@ -75,9 +80,7 @@ interface OrdersTableContentProps {
   onMarkPartial: (orderId: number) => void;
   onUpdateStatus: (orderId: number, status: string) => void;
   onViewOrderErrors?: (orderId: number) => void;
-  onViewOrderDetails?: (orderId: number) => void;
   onEditOrderUrl?: (orderId: number) => void;
-  onActivateRefill?: (orderId: number) => void;
   formatID: (id: number) => string;
   formatNumber: (num: number) => string;
   formatPrice: (price: number, decimals?: number) => string;
@@ -95,9 +98,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
   onMarkPartial,
   onUpdateStatus,
   onViewOrderErrors,
-  onViewOrderDetails,
   onEditOrderUrl,
-  onActivateRefill,
   formatID: formatIDProp,
   formatNumber: formatNumberProp,
   formatPrice: formatPriceProp,
@@ -382,9 +383,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     className="text-xs"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    {order.remains
-                      ? formatCount(order.remains)
-                      : 'null'}{' '}
+                    {formatCount(order.remains ?? 0)}{' '}
                     left
                   </div>
                 </div>
@@ -437,43 +436,25 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     </button>
                     <div className="hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                       <div className="py-1">
-                        {/* Check if order has error - status is failed or apiResponse contains error */}
                         {(() => {
-                          const hasError = order.status === 'failed' || 
-                            (order.apiResponse && 
-                             order.apiResponse !== '-' && 
-                             order.apiResponse !== null &&
-                             (order.apiResponse.includes('error') || 
-                              (() => {
-                                try {
-                                  const parsed = JSON.parse(order.apiResponse);
-                                  return parsed?.error || false;
-                                } catch {
-                                  return false;
-                                }
-                              })()));
-                          const hasProvider = !!order.service?.providerId;
+                          const status = order.status?.toLowerCase();
+                          
+                          const pendingOrInProgress = ['pending', 'in_progress', 'inprogress', 'processing'].includes(status);
+                          const failed = status === 'failed';
+                          const cancelledOrCompleted = ['cancelled', 'canceled', 'completed'].includes(status);
+                          
+                          const showResendOrder = failed;
+                          
+                          const isAutoMode = !!order.providerOrderId;
+                          const showEditOrderUrl = (pendingOrInProgress || failed) && !isAutoMode;
+                          
+                          const showEditStartCount = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
+                          const showMarkPartial = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
+                          const showUpdateStatus = pendingOrInProgress || failed || cancelledOrCompleted;
                           
                           return (
                             <>
-                              {/* Order Errors - Show if has error and has provider */}
-                              {hasError && hasProvider && onViewOrderErrors && (
-                                <button
-                                  onClick={() => {
-                                    onViewOrderErrors(order.id);
-                                    const dropdown = document.querySelector(
-                                      '.absolute.right-0'
-                                    ) as HTMLElement;
-                                    dropdown?.classList.add('hidden');
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                >
-                                  <FaExclamationCircle className="h-3 w-3" />
-                                  Order Errors
-                                </button>
-                              )}
-                              {/* Resend Order - Show if has error and has provider */}
-                              {hasError && hasProvider && (
+                              {showResendOrder && (
                                 <button
                                   onClick={() => {
                                     onResendOrder(order.id);
@@ -488,24 +469,8 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Resend Order
                                 </button>
                               )}
-                              {/* Order Details - Show if no error and has provider */}
-                              {!hasError && hasProvider && onViewOrderDetails && (
-                                <button
-                                  onClick={() => {
-                                    onViewOrderDetails(order.id);
-                                    const dropdown = document.querySelector(
-                                      '.absolute.right-0'
-                                    ) as HTMLElement;
-                                    dropdown?.classList.add('hidden');
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                >
-                                  <FaEye className="h-3 w-3" />
-                                  Order Details
-                                </button>
-                              )}
-                              {/* Edit Order URL - Show if no provider OR has error */}
-                              {(!hasProvider || hasError) && onEditOrderUrl && (
+                              {/* Edit Order URL - Show for Pending, In Progress, Failed */}
+                              {showEditOrderUrl && onEditOrderUrl && (
                                 <button
                                   onClick={() => {
                                     onEditOrderUrl(order.id);
@@ -520,77 +485,63 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Edit Order URL
                                 </button>
                               )}
+                              {/* Edit Start Count - Show for Pending, In Progress, Failed, Cancelled, Completed */}
+                              {showEditStartCount && (
+                                <button
+                                  onClick={() => {
+                                    onEditStartCount(
+                                      order.id,
+                                      order.startCount || 0
+                                    );
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaEye className="h-3 w-3" />
+                                  Edit Start Count
+                                </button>
+                              )}
+                              {/* Mark Partial - Show for Pending, In Progress, Failed, Cancelled, Completed (not if already partial) */}
+                              {showMarkPartial && order.status !== 'partial' && (
+                                <button
+                                  onClick={() => {
+                                    onMarkPartial(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaExclamationCircle className="h-3 w-3" />
+                                  Mark Partial
+                                </button>
+                              )}
+                              {/* Update Order Status - Show for Pending, In Progress, Failed, Cancelled, Completed */}
+                              {showUpdateStatus && (
+                                <button
+                                  onClick={() => {
+                                    onUpdateStatus(
+                                      order.id,
+                                      order.status
+                                    );
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                >
+                                  <FaSync className="h-3 w-3" />
+                                  Update Order Status
+                                </button>
+                              )}
                             </>
                           );
                         })()}
-                        {/* Edit Start Count - Always show */}
-                        <button
-                          onClick={() => {
-                            onEditStartCount(
-                              order.id,
-                              order.startCount || 0
-                            );
-                            const dropdown = document.querySelector(
-                              '.absolute.right-0'
-                            ) as HTMLElement;
-                            dropdown?.classList.add('hidden');
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                        >
-                          <FaEye className="h-3 w-3" />
-                          Edit Start Count
-                        </button>
-                        {/* Mark Partial - Show if status is not partial */}
-                        {order.status !== 'partial' && (
-                          <button
-                            onClick={() => {
-                              onMarkPartial(order.id);
-                              const dropdown = document.querySelector(
-                                '.absolute.right-0'
-                              ) as HTMLElement;
-                              dropdown?.classList.add('hidden');
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                          >
-                            <FaExclamationCircle className="h-3 w-3" />
-                            Mark Partial
-                          </button>
-                        )}
-                        {/* Activate Refill Button - Show if completed or no refill requests */}
-                        {(order.status === 'completed' || 
-                          (!order.refillRequests || order.refillRequests.length === 0)) && 
-                         onActivateRefill && (
-                          <button
-                            onClick={() => {
-                              onActivateRefill(order.id);
-                              const dropdown = document.querySelector(
-                                '.absolute.right-0'
-                              ) as HTMLElement;
-                              dropdown?.classList.add('hidden');
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                          >
-                            <FaSync className="h-3 w-3" />
-                            Activate Refill Button
-                          </button>
-                        )}
-                        {/* Update Order Status - Always show */}
-                        <button
-                          onClick={() => {
-                            onUpdateStatus(
-                              order.id,
-                              order.status
-                            );
-                            const dropdown = document.querySelector(
-                              '.absolute.right-0'
-                            ) as HTMLElement;
-                            dropdown?.classList.add('hidden');
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                        >
-                          <FaSync className="h-3 w-3" />
-                          Update Order Status
-                        </button>
                       </div>
                     </div>
                   </div>

@@ -44,6 +44,10 @@ const UpdateOrderStatusModal = dynamic(() => import('@/components/admin/orders/m
   ssr: false,
 });
 
+const EditOrderUrlModal = dynamic(() => import('@/components/admin/orders/modals/edit-order-url'), {
+  ssr: false,
+});
+
 const OrdersTableContent = dynamic(() => import('@/components/admin/orders/orders-table'), {
   ssr: false,
 });
@@ -161,6 +165,11 @@ interface Order {
   providerOrderId?: string;
   providerStatus?: string;
   lastSyncAt?: string;
+  apiResponse?: string;
+  refillRequests?: Array<{
+    id: number;
+    status: string;
+  }>;
   apiProvider?: {
     id: string;
     name: string;
@@ -251,6 +260,24 @@ const AdminOrdersPage = () => {
   }>({
     open: false,
     orderId: '',
+  });
+
+  const [orderErrorsDialog, setOrderErrorsDialog] = useState<{
+    open: boolean;
+    orderId: string | number;
+  }>({
+    open: false,
+    orderId: '',
+  });
+
+  const [editOrderUrlDialog, setEditOrderUrlDialog] = useState<{
+    open: boolean;
+    orderId: string | number;
+    currentLink: string;
+  }>({
+    open: false,
+    orderId: '',
+    currentLink: '',
   });
 
   const [bulkStatusDialog, setBulkStatusDialog] = useState<{
@@ -765,6 +792,25 @@ const AdminOrdersPage = () => {
     setUpdateStatusDialog({ open: true, orderId, currentStatus });
   };
 
+  const openOrderErrorsDialog = (orderId: string | number) => {
+    setOrderErrorsDialog({ open: true, orderId });
+  };
+
+  const openEditOrderUrlDialog = (orderId: string | number, currentLink: string) => {
+    setEditOrderUrlDialog({ open: true, orderId, currentLink });
+  };
+
+  const handleViewOrderErrors = (orderId: string | number) => {
+    showToast('Order Errors modal coming soon', 'info');
+  };
+
+  const handleEditOrderUrl = (orderId: number) => {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      openEditOrderUrlDialog(orderId, order.link || '');
+    }
+  };
+
   const openBulkStatusDialog = () => {
     setBulkStatusDialog({ open: true });
     setBulkStatus('');
@@ -1140,6 +1186,12 @@ const AdminOrdersPage = () => {
                   onUpdateStatus={(orderId: number, currentStatus: string) => {
                     openUpdateStatusDialog(orderId, currentStatus);
                   }}
+                  onViewOrderErrors={(orderId: number) => {
+                    handleViewOrderErrors(orderId);
+                  }}
+                  onEditOrderUrl={(orderId: number) => {
+                    handleEditOrderUrl(orderId);
+                  }}
                   formatID={formatID}
                   formatNumber={formatNumber}
                   formatPrice={formatPrice}
@@ -1247,6 +1299,19 @@ const AdminOrdersPage = () => {
           refreshOrders();
           refreshStats();
           showToast('Order status updated successfully');
+        }}
+        showToast={showToast}
+      />
+      <EditOrderUrlModal
+        isOpen={editOrderUrlDialog.open}
+        onClose={() => setEditOrderUrlDialog({ open: false, orderId: '', currentLink: '' })}
+        orderId={editOrderUrlDialog.orderId}
+        currentLink={editOrderUrlDialog.currentLink}
+        onSuccess={() => {
+          setEditOrderUrlDialog({ open: false, orderId: '', currentLink: '' });
+          refreshOrders();
+          refreshStats();
+          showToast('Order link updated successfully');
         }}
         showToast={showToast}
       />
