@@ -95,7 +95,7 @@ export async function PATCH(
 
     const notGoingQty = parseInt(notGoingAmount);
     
-    if (notGoingQty >= order.qty) {
+    if (notGoingQty >= Number(order.qty)) {
       return NextResponse.json(
         {
           error: 'Not going amount cannot be greater than or equal to order quantity',
@@ -109,10 +109,10 @@ export async function PATCH(
     const orderPrice = order.user.currency === 'USD' 
       ? order.usdPrice 
       : order.usdPrice * (order.user.dollarRate || 121.52);
-    const pricePerUnit = orderPrice / order.qty;
+    const pricePerUnit = orderPrice / Number(order.qty);
     const refundAmount = pricePerUnit * notGoingQty;
     const newCharge = orderPrice - refundAmount;
-    const newQuantity = order.qty - notGoingQty;
+    const newQuantity = Number(order.qty) - notGoingQty;
 
     const result = await db.$transaction(async (prisma) => {
       if (refundAmount > 0) {
@@ -133,9 +133,9 @@ export async function PATCH(
         where: { id: orderId },
         data: {
           status: 'partial',
-          remains: notGoingQty,
+          remains: BigInt(notGoingQty),
           price: newCharge,
-          qty: newQuantity,
+          qty: BigInt(newQuantity),
           charge: newCharge,
           updatedAt: new Date()
         },

@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
       }
 
       if (['pending', 'processing', 'in_progress'].includes(order.status)) {
-        const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
+        const progress = Number(order.qty) > 0 ? ((Number(order.qty) - Number(order.remains)) / Number(order.qty)) * 100 : 0;
         let refundType = 'full';
         let customRefundAmount = order.price;
 

@@ -170,7 +170,7 @@ export async function POST(
 
         try {
           const providerBalance = await providerForwarder.getProviderBalance(providerForBalance);
-          const orderCost = order.charge || (order.service.rate * order.qty) / 1000;
+          const orderCost = order.charge || (order.service.rate * Number(order.qty)) / 1000;
 
           if (providerBalance < orderCost) {
             console.log(`Provider ${apiProvider.name} has insufficient balance. Required: ${orderCost}, Available: ${providerBalance}`);
@@ -203,7 +203,7 @@ export async function POST(
         const orderData = {
           service: order.service.providerServiceId,
           link: order.link,
-          quantity: order.qty,
+          quantity: Number(order.qty),
           runs: order.dripfeedRuns || undefined,
           interval: order.dripfeedInterval || undefined
         };

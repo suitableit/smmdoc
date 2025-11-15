@@ -486,20 +486,21 @@ export async function POST(request: Request) {
     
     if (error instanceof Error) {
       errorMessage += ': ' + error.message;
+      const prismaError = error as any;
       
-      if (error.message.includes('Foreign key constraint') || error?.code === 'P2003') {
+      if (error.message.includes('Foreign key constraint') || prismaError?.code === 'P2003') {
         errorMessage = 'Foreign key constraint failed. Please check that the category, service type, or provider exists.';
         statusCode = 400;
-      } else if (error.message.includes('Unique constraint') || error?.code === 'P2002') {
+      } else if (error.message.includes('Unique constraint') || prismaError?.code === 'P2002') {
         errorMessage = 'A service with this name or identifier already exists.';
         statusCode = 400;
-      } else if (error.message.includes('Required') || error?.code === 'P2011') {
+      } else if (error.message.includes('Required') || prismaError?.code === 'P2011') {
         errorMessage = 'Required field is missing. Please check that all required fields are filled.';
         statusCode = 400;
-      } else if (error?.code === 'P2001') {
+      } else if (prismaError?.code === 'P2001') {
         errorMessage = 'The record you are trying to reference does not exist.';
         statusCode = 404;
-      } else if (error?.code === 'P2012') {
+      } else if (prismaError?.code === 'P2012') {
         errorMessage = 'A required value is missing.';
         statusCode = 400;
       }

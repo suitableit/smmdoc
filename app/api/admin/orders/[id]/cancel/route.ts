@@ -96,8 +96,8 @@ export async function POST(
         refundAmount = orderPrice;
         break;
       case 'partial':
-        const deliveredPercentage = order.qty > 0 ? (order.qty - order.remains) / order.qty : 0;
-        refundAmount = orderPrice * (order.remains / order.qty);
+        const deliveredPercentage = Number(order.qty) > 0 ? (Number(order.qty) - Number(order.remains)) / Number(order.qty) : 0;
+        refundAmount = orderPrice * (Number(order.remains) / Number(order.qty));
         break;
       case 'none':
         refundAmount = 0;
@@ -309,9 +309,9 @@ export async function GET(
     const isCancellable = cancellableStatuses.includes(order.status);
     
     const orderPrice = (order as any).user?.currency === 'USD' ? order.usdPrice : order.usdPrice * ((order as any).user?.dollarRate || 121.52);
-    const deliveredQuantity = order.qty - order.remains;
-    const deliveredPercentage = order.qty > 0 ? deliveredQuantity / order.qty : 0;
-    const partialRefundAmount = orderPrice * (order.remains / order.qty);
+    const deliveredQuantity = Number(order.qty) - Number(order.remains);
+    const deliveredPercentage = Number(order.qty) > 0 ? deliveredQuantity / Number(order.qty) : 0;
+    const partialRefundAmount = orderPrice * (Number(order.remains) / Number(order.qty));
     
     const cancellationInfo = {
       eligible: isCancellable,

@@ -87,8 +87,8 @@ export async function POST(req: NextRequest) {
     );
     
     const serviceOverflow = 0;
-    const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * order.qty);
-    const quantityWithOverflow = order.qty + serviceOverflowAmount;
+    const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * Number(order.qty));
+    const quantityWithOverflow = Number(order.qty) + serviceOverflowAmount;
 
     const providerServiceId = order.service.providerServiceId;
     if (!providerServiceId) {
@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       providerServiceId,
       order.link,
       quantityWithOverflow,
+      undefined,
       order.dripfeedRuns || undefined,
       order.dripfeedInterval || undefined
     );

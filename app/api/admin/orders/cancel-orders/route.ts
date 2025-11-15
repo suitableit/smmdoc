@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
     });
 
     const totalRefundValue = orders.reduce((sum, order) => {
-      const progress = order.qty > 0 ? ((order.qty - order.remains) / order.qty) * 100 : 0;
+      const progress = Number(order.qty) > 0 ? ((Number(order.qty) - Number(order.remains)) / Number(order.qty)) * 100 : 0;
       let refundPercentage = 1;
       
       if (order.status === 'processing' && progress > 0) {
