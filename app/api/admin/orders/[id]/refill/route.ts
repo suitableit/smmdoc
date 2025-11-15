@@ -107,10 +107,10 @@ export async function POST(
     
     switch (refillType) {
       case 'full':
-        refillQuantity = originalOrder.qty;
+        refillQuantity = Number(originalOrder.qty);
         break;
       case 'remaining':
-        refillQuantity = originalOrder.remains;
+        refillQuantity = Number(originalOrder.remains);
         break;
       case 'custom':
         if (!customQuantity || customQuantity <= 0) {
@@ -173,14 +173,14 @@ export async function POST(
           categoryId: originalOrder.categoryId,
           serviceId: originalOrder.serviceId,
           link: originalOrder.link,
-          qty: refillQuantity,
+          qty: BigInt(refillQuantity),
           price: refillPrice,
           usdPrice: refillUsdPrice,
           currency: originalOrder.currency,
           avg_time: originalOrder.service.avg_time,
           status: 'processing',
-          remains: refillQuantity,
-          startCount: 0
+          remains: BigInt(refillQuantity),
+          startCount: BigInt(0)
         },
         include: {
           user: {
@@ -239,8 +239,8 @@ export async function POST(
         originalOrder: {
           id: originalOrder.id,
           status: originalOrder.status,
-          qty: originalOrder.qty,
-          remains: originalOrder.remains
+          qty: Number(originalOrder.qty),
+          remains: Number(originalOrder.remains)
         },
         refillOrder: result,
         refillDetails: {
@@ -338,8 +338,8 @@ export async function GET(
     const { currencies } = await fetchCurrencyData();
     
     const refillRate = (order as any).service?.rate || 0;
-    const fullRefillUsd = (refillRate * order.qty) / 1000;
-    const remainingRefillUsd = (refillRate * order.remains) / 1000;
+    const fullRefillUsd = (refillRate * Number(order.qty)) / 1000;
+    const remainingRefillUsd = (refillRate * Number(order.remains)) / 1000;
     
     const userCurrency = order.user.currency || 'USD';
     const fullRefillInUserCurrency = userCurrency === 'USD' || userCurrency === 'USDT' 
@@ -359,9 +359,9 @@ export async function GET(
       order: {
         id: order.id,
         status: order.status,
-        totalQuantity: order.qty,
-        remainingQuantity: order.remains,
-        deliveredQuantity: order.qty - order.remains
+        totalQuantity: Number(order.qty),
+        remainingQuantity: Number(order.remains),
+        deliveredQuantity: Number(order.qty) - Number(order.remains)
       },
       service: {
         id: (order as any).service?.id,
@@ -377,13 +377,13 @@ export async function GET(
       },
       refillOptions: {
         full: {
-          quantity: order.qty,
+          quantity: Number(order.qty),
           costUsd: fullRefillUsd,
           cost: fullRefillInUserCurrency,
           affordable: order.user.balance >= fullRefillInUserCurrency
         },
         remaining: {
-          quantity: order.remains,
+          quantity: Number(order.remains),
           costUsd: remainingRefillUsd,
           cost: remainingRefillInUserCurrency,
           affordable: order.user.balance >= remainingRefillInUserCurrency

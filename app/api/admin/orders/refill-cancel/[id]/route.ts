@@ -109,9 +109,9 @@ export async function PUT(
 
     if (action === 'approve') {
       if (taskType === 'refill') {
-        const refillQuantity = order.remains || order.qty;
-        const refillPrice = (refillQuantity / order.qty) * order.price;
-        const refillUsdPrice = (refillQuantity / order.qty) * order.usdPrice;
+        const refillQuantity = Number(order.remains || order.qty);
+        const refillPrice = (refillQuantity / Number(order.qty)) * order.price;
+        const refillUsdPrice = (refillQuantity / Number(order.qty)) * order.usdPrice;
         const { currencies } = await fetchCurrencyData();
         
         const requiredAmount = order.user.currency === 'USD' || order.user.currency === 'USDT' 

@@ -186,11 +186,11 @@ export async function PUT(
     }
     
     if (body.remains !== undefined) {
-      updateData.remains = parseInt(body.remains);
+      updateData.remains = BigInt(parseInt(body.remains));
     }
     
     if (body.startCount !== undefined) {
-      updateData.startCount = parseInt(body.startCount);
+      updateData.startCount = BigInt(parseInt(body.startCount));
     }
     
     if (body.link !== undefined) {
@@ -198,9 +198,9 @@ export async function PUT(
     }
     
     if (body.qty !== undefined) {
-      updateData.qty = parseInt(body.qty);
+      updateData.qty = BigInt(parseInt(body.qty));
       if (updateData.remains === undefined) {
-        updateData.remains = parseInt(body.qty) - (currentOrder.qty - currentOrder.remains);
+        updateData.remains = BigInt(parseInt(body.qty) - (Number(currentOrder.qty) - Number(currentOrder.remains)));
       }
     }
     

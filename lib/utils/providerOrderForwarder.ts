@@ -180,9 +180,9 @@ export class ProviderOrderForwarder {
       return {
         order: orderId.toString(),
         charge: statusResult.charge || 0,
-        start_count: statusResult.start_count || 0,
+        start_count: Number(statusResult.start_count || 0),
         status: this.mapProviderStatus(statusResult.status || 'Pending'),
-        remains: statusResult.remains || 0,
+        remains: Number(statusResult.remains || 0),
         currency: balanceResult.currency || 'USD'
       };
     } catch (error: any) {

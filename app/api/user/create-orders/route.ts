@@ -449,8 +449,8 @@ export async function POST(request: Request) {
 
                 providerStatus = mapProviderStatus(statusResult.status);
                 apiCharge = statusResult.charge || forwardResult.charge || 0;
-                startCount = statusResult.start_count || forwardResult.start_count || BigInt(0);
-                remains = statusResult.remains || forwardResult.remains || orderData.qty;
+                startCount = BigInt(statusResult.start_count || forwardResult.start_count || 0);
+                remains = BigInt(statusResult.remains || forwardResult.remains || Number(orderData.qty));
                 profit = orderData.price - apiCharge;
 
                 console.log(`Order status fetched: ${providerStatus}, Charge: ${apiCharge}, Profit: ${profit}, StartCount: ${startCount}, Remains: ${remains}`);
@@ -458,8 +458,8 @@ export async function POST(request: Request) {
                 console.log(`Order forwarded but no provider order ID returned (likely subscription/auto order). Using default values.`);
                 providerStatus = 'pending';
                 apiCharge = forwardResult.charge || 0;
-                startCount = forwardResult.start_count || BigInt(0);
-                remains = forwardResult.remains || orderData.qty;
+                startCount = BigInt(forwardResult.start_count || 0);
+                remains = BigInt(forwardResult.remains || Number(orderData.qty));
                 profit = orderData.price - apiCharge;
               }
             } catch (forwardError: any) {
@@ -510,8 +510,8 @@ export async function POST(request: Request) {
         providerStatus,
         apiCharge,
         profit,
-        startCount,
-        remains,
+        startCount: Number(startCount),
+        remains: Number(remains),
         orderError,
         serviceProviderId
       });

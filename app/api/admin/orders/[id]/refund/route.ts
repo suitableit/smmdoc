@@ -78,7 +78,7 @@ export async function POST(
       if (refundAmount && refundAmount > 0) {
         finalRefundAmount = Math.min(refundAmount, existingOrder.price);
       } else {
-        const completedPercentage = ((existingOrder.qty - existingOrder.remains) / existingOrder.qty) * 100;
+        const completedPercentage = ((Number(existingOrder.qty) - Number(existingOrder.remains)) / Number(existingOrder.qty)) * 100;
         const refundPercentage = Math.max(0, 100 - completedPercentage);
         finalRefundAmount = (existingOrder.price * refundPercentage) / 100;
       }
