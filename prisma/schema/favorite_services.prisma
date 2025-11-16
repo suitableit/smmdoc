@@ -1,11 +1,11 @@
-model FavoriteService {
+model FavoriteServices {
   id        Int      @id @default(autoincrement())
   userId    Int
   serviceId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service   Services  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user      Users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, serviceId], map: "FavoriteService_userId_serviceId_key")
   @@index([serviceId], map: "FavoriteService_serviceId_fkey")

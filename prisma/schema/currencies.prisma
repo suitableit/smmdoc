@@ -11,7 +11,7 @@ model CurrencySettings {
   @@map("currency_settings")
 }
 
-model Currency {
+model Currencies {
   id        Int      @id @default(autoincrement())
   code      String   @unique @db.VarChar(3)
   name      String   @db.VarChar(100)
