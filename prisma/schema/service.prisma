@@ -36,8 +36,8 @@ model Service {
   customComments      String?           @db.Text
   isSecret            Boolean           @default(false)
   orderLink           String            @default("link") 
-  favoriteServices    FavoriteService[]
-  newOrders           NewOrder[]
+  favoriteServices    FavoriteServices[]
+  newOrders           NewOrders[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   favrouteCat         FavrouteCat?      @relation(fields: [favrouteCatId], references: [id], onDelete: Cascade)
   serviceType         ServiceType?      @relation(fields: [serviceTypeId], references: [id])

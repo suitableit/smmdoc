@@ -9,8 +9,8 @@ model Category {
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
   user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  newOrders     NewOrder[]
-  services      Service[]
+  newOrders     NewOrders[]
+  services      Services[]
 
   @@index([userId], map: "Category_userId_fkey")
   @@index([position, createdAt], map: "Category_position_createdAt_idx")

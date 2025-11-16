@@ -9,9 +9,9 @@ model RefillRequest {
   processedAt     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  order           NewOrder  @relation(fields: [orderId], references: [id])
-  processedByUser User?     @relation("ProcessedRefillRequests", fields: [processedBy], references: [id])
-  user            User      @relation(fields: [userId], references: [id])
+  order           NewOrders  @relation(fields: [orderId], references: [id])
+  processedByUser Users?     @relation("ProcessedRefillRequests", fields: [processedBy], references: [id])
+  user            Users      @relation(fields: [userId], references: [id])
 
   @@index([processedBy], map: "RefillRequest_processedBy_fkey")
   @@index([createdAt], map: "RefillRequest_createdAt_idx")
