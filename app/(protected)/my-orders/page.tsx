@@ -989,19 +989,31 @@ export default function OrdersList() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {order.status === 'completed' && order.service?.refill && (
-                              <button
-                                onClick={() => setRefillModal({
-                                  isOpen: true,
-                                  orderId: order.id,
-                                  reason: ''
-                                })}
-                                className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
-                                title="Refill Order"
-                              >
-                                Refill
-                              </button>
-                            )}
+                            {order.status === 'completed' && order.service?.refill && (() => {
+                              const refillDays = order.service?.refillDays;
+                              let isRefillTimeValid = true;
+                              
+                              if (refillDays) {
+                                const daysSinceCompletion = Math.floor(
+                                  (new Date().getTime() - new Date(order.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+                                );
+                                isRefillTimeValid = daysSinceCompletion <= refillDays;
+                              }
+                              
+                              return isRefillTimeValid ? (
+                                <button
+                                  onClick={() => setRefillModal({
+                                    isOpen: true,
+                                    orderId: order.id,
+                                    reason: ''
+                                  })}
+                                  className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
+                                  title="Refill Order"
+                                >
+                                  Refill
+                                </button>
+                              ) : null;
+                            })()}
                             {order.status === 'pending' && order.service?.cancel && (() => {
 
 

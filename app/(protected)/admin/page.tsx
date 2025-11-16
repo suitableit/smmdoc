@@ -935,7 +935,7 @@ export default function AdminDashboardPage() {
       </div>
       <div className="mb-6">
         <div className="card">
-          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+          <div className="card-header px-4 pt-4 lg:px-6 lg:pt-6" style={{ paddingBottom: 0 }}>
             <div className="flex items-center gap-2 lg:justify-between lg:w-full">
               <div className="flex items-center gap-2 lg:flex-1">
                 <div className="card-icon">
@@ -955,7 +955,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div style={{ padding: '0 24px 24px' }} className="min-h-[300px] flex flex-col lg:block">
+          <div className="px-4 pb-4 lg:px-6 lg:pb-6 min-h-[300px] flex flex-col lg:block">
             {transactionsLoading ? (
               <TransactionsTableSkeleton />
             ) : pendingTransactions.length === 0 ? (
@@ -982,7 +982,7 @@ export default function AdminDashboardPage() {
               />
             )}
           </div>
-          <div style={{ padding: '0 24px 24px' }} className="lg:hidden">
+          <div className="px-4 pb-4 lg:px-6 lg:pb-6 lg:hidden">
             <Link
               href="/admin/transactions"
               className="btn btn-secondary flex items-center justify-center gap-2 w-full"

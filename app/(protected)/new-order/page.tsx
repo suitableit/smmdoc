@@ -86,13 +86,16 @@ const Toast = ({
 const ServiceDetailsCard = ({
   selectedService,
   services,
+  servicesData,
   isLoading = false,
 }: {
   selectedService: string;
   services: any[];
+  servicesData?: any[];
   isLoading?: boolean;
 }) => {
-  const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
+  const selected = services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService) 
+    || servicesData?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService);
 
   if (isLoading) {
     return (
@@ -658,8 +661,9 @@ function NewOrder() {
 
     console.log('Selected category changed:', selectedCategory);
     setIsServiceDetailsLoading(true);
+    
+    const currentSelectedService = selectedService;
     setServices([]);
-    setSelectedService('');
 
     axios
       .post('/api/admin/services/catId-by-services', {
@@ -669,8 +673,16 @@ function NewOrder() {
         const fetchedServices = res?.data?.data || [];
         console.log('Fetched services for category', selectedCategory, ':', fetchedServices);
         setServices(fetchedServices);
-        if (fetchedServices?.length > 0) {
-          setSelectedService(fetchedServices[0]?.id);
+        
+        const serviceExists = fetchedServices.some((s: any) => 
+          String(s.id) === String(currentSelectedService) || s.id === parseInt(String(currentSelectedService))
+        );
+        
+        if (serviceExists) {
+          setSelectedService(String(currentSelectedService));
+          console.log('Preserved selected service:', currentSelectedService);
+        } else if (fetchedServices?.length > 0) {
+          setSelectedService(String(fetchedServices[0]?.id));
           console.log('Auto-selected service:', fetchedServices[0]?.id);
           resetServiceTypeFields();
         } else {
@@ -683,7 +695,9 @@ function NewOrder() {
         console.error('Error fetching services:', error);
         showToast('Error fetching services', 'error');
         setServices([]);
-        setSelectedService('');
+        if (!currentSelectedService) {
+          setSelectedService('');
+        }
       })
       .finally(() => {
         setIsServiceDetailsLoading(false);
@@ -935,26 +949,26 @@ function NewOrder() {
 
     const orderPayload = [
       {
-        link,
-        qty,
-        price: finalTotalPrice,
-        usdPrice: usdPrice,
-        currency: currentUser?.currency,
-        serviceId: parseInt(selectedService),
-        categoryId: parseInt(selectedCategory),
-        userId: user?.id,
-        avg_time: selected?.avg_time || '',
+        link: String(link || ''),
+        qty: Number(qty) || 0,
+        price: Number(finalTotalPrice) || 0,
+        usdPrice: Number(usdPrice) || 0,
+        currency: String(currentUser?.currency || user?.currency || 'USD'),
+        serviceId: parseInt(String(selectedService)),
+        categoryId: parseInt(String(selectedCategory)),
+        userId: parseInt(String(user?.id || currentUser?.id || '')),
+        avg_time: String(selected?.avg_time || 'N/A'),
 
-        comments: serviceTypeFields.comments || undefined,
-        username: serviceTypeFields.username || undefined,
-        posts: serviceTypeFields.posts || undefined,
-        delay: serviceTypeFields.delay || undefined,
-        minQty: serviceTypeFields.minQty || undefined,
-        maxQty: serviceTypeFields.maxQty || undefined,
-        isDripfeed: serviceTypeFields.isDripfeed,
-        dripfeedRuns: serviceTypeFields.dripfeedRuns || undefined,
-        dripfeedInterval: serviceTypeFields.dripfeedInterval || undefined,
-        isSubscription: serviceTypeFields.isSubscription,
+        comments: serviceTypeFields.comments ? String(serviceTypeFields.comments) : undefined,
+        username: serviceTypeFields.username ? String(serviceTypeFields.username) : undefined,
+        posts: serviceTypeFields.posts ? Number(serviceTypeFields.posts) : undefined,
+        delay: serviceTypeFields.delay ? Number(serviceTypeFields.delay) : undefined,
+        minQty: serviceTypeFields.minQty ? Number(serviceTypeFields.minQty) : undefined,
+        maxQty: serviceTypeFields.maxQty ? Number(serviceTypeFields.maxQty) : undefined,
+        isDripfeed: Boolean(serviceTypeFields.isDripfeed || false),
+        dripfeedRuns: serviceTypeFields.dripfeedRuns ? Number(serviceTypeFields.dripfeedRuns) : undefined,
+        dripfeedInterval: serviceTypeFields.dripfeedInterval ? Number(serviceTypeFields.dripfeedInterval) : undefined,
+        isSubscription: Boolean(serviceTypeFields.isSubscription || false),
       },
     ];
 
@@ -989,12 +1003,25 @@ function NewOrder() {
     console.error('Error creating order:', error);
     let errorMessage = 'Failed to create order';
     
-    if (error.response?.status === 404) {
-      const notFoundMsg = error.response?.data?.message || 'Selected service not found or inactive.';
-      errorMessage = typeof notFoundMsg === 'string' ? notFoundMsg : 'Selected service not found or inactive.';
-    } else {
-      const msg = error.response?.data?.message || error.message || error;
-      errorMessage = typeof msg === 'string' ? msg : JSON.stringify(msg);
+    if (error.response) {
+      const responseData = error.response.data;
+      if (responseData?.message) {
+        errorMessage = typeof responseData.message === 'string' 
+          ? responseData.message 
+          : JSON.stringify(responseData.message);
+      } else if (responseData?.error) {
+        errorMessage = typeof responseData.error === 'string' 
+          ? responseData.error 
+          : JSON.stringify(responseData.error);
+      } else if (error.response.status === 404) {
+        errorMessage = 'Selected service not found or inactive.';
+      } else if (error.response.status === 400) {
+        errorMessage = responseData?.message || 'Invalid order data. Please check your inputs.';
+      } else if (error.response.status === 500) {
+        errorMessage = responseData?.message || 'Server error. Please try again later.';
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
     }
     
     showToast(errorMessage, 'error');
@@ -1008,13 +1035,23 @@ function NewOrder() {
 
     if (selected) {
       setServicesData([]);
-      setSelectedCategory(categoryId);
-      setSelectedService(serviceId);
       setQty(0);
       setLink('');
       setSearch(selected.name);
       setShowDropdown(false);
       resetServiceTypeFields();
+      
+      setSelectedService(String(serviceId));
+      
+      setServices((prevServices) => {
+        const exists = prevServices.some((s) => s.id === serviceId || s.id === parseInt(serviceId));
+        if (exists) {
+          return prevServices;
+        }
+        return [...prevServices, selected];
+      });
+      
+      setSelectedCategory(categoryId);
     }
   };
 
@@ -1375,6 +1412,7 @@ function NewOrder() {
             <ServiceDetailsCard
               selectedService={selectedService}
               services={services}
+              servicesData={servicesData}
               isLoading={isServiceDetailsLoading}
             />
           </div>

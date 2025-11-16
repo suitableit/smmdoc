@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { serializeOrder } from '@/lib/utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -93,7 +94,7 @@ export async function GET(
     
     return NextResponse.json({
       success: true,
-      data: order,
+      data: serializeOrder(order),
       error: null
     });
     
@@ -289,7 +290,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Order updated successfully',
-      data: updatedOrder,
+      data: serializeOrder(updatedOrder),
       error: null
     });
     

@@ -8,6 +8,7 @@ import { convertFromUSD, convertToUSD, fetchCurrencyData } from '@/lib/currency-
 
 export async function POST(request: Request) {
   try {
+    console.log('Order creation request received');
     const session = await auth();
 
     if (!session || !session.user || !session.user.id) {
@@ -150,7 +151,18 @@ export async function POST(request: Request) {
       }
     }
 
-    const { currencies } = await fetchCurrencyData();
+    let currencies: any[] = [];
+    try {
+      const currencyData = await fetchCurrencyData();
+      currencies = currencyData.currencies || [];
+    } catch (currencyError) {
+      console.error('Error fetching currency data:', currencyError);
+      currencies = [
+        { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
+        { id: 2, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
+        { id: 3, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
+      ];
+    }
     
     let totalCost = 0;
     const processedOrders: any[] = [];
@@ -193,30 +205,35 @@ export async function POST(request: Request) {
 
       totalCost += finalPrice;
 
+      const qtyNum = Number(qty);
+      if (isNaN(qtyNum) || qtyNum <= 0) {
+        throw new Error(`Invalid quantity in order data: ${qty}`);
+      }
+
       processedOrders.push({
-        categoryId,
-        serviceId,
-        userId: session.user.id,
-        link,
-        qty: BigInt(qty.toString()),
-        price: finalPrice,
-        usdPrice: calculatedUsdPrice,
-        currency: user.currency,
-        avg_time: avg_time || service!.avg_time,
+        categoryId: parseInt(String(categoryId)),
+        serviceId: parseInt(String(serviceId)),
+        userId: parseInt(String(session.user.id)),
+        link: String(link || ''),
+        qty: BigInt(Math.floor(qtyNum)),
+        price: Number(finalPrice),
+        usdPrice: Number(calculatedUsdPrice),
+        currency: String(user.currency || 'USD'),
+        avg_time: String(avg_time || service!.avg_time || 'N/A'),
         status: 'pending',
-        remains: BigInt(qty.toString()),
+        remains: BigInt(Math.floor(qtyNum)),
         startCount: BigInt(0),
-        packageType: service!.packageType || 1,
-        comments: comments || null,
-        username: username || null,
-        posts: posts ? parseInt(posts) : null,
-        delay: delay ? parseInt(delay) : null,
-        minQty: minQty ? BigInt(minQty.toString()) : null,
-        maxQty: maxQty ? BigInt(maxQty.toString()) : null,
-        isDripfeed,
-        dripfeedRuns: dripfeedRuns ? parseInt(dripfeedRuns) : null,
-        dripfeedInterval: dripfeedInterval ? parseInt(dripfeedInterval) : null,
-        isSubscription,
+        packageType: Number(service!.packageType || 1),
+        comments: comments ? String(comments) : null,
+        username: username ? String(username) : null,
+        posts: posts ? parseInt(String(posts)) : null,
+        delay: delay ? parseInt(String(delay)) : null,
+        minQty: minQty && !isNaN(Number(minQty)) ? BigInt(Math.floor(Number(minQty))) : null,
+        maxQty: maxQty && !isNaN(Number(maxQty)) ? BigInt(Math.floor(Number(maxQty))) : null,
+        isDripfeed: Boolean(isDripfeed || false),
+        dripfeedRuns: dripfeedRuns ? parseInt(String(dripfeedRuns)) : null,
+        dripfeedInterval: dripfeedInterval ? parseInt(String(dripfeedInterval)) : null,
+        isSubscription: Boolean(isSubscription || false),
         subscriptionStatus: isSubscription ? 'active' : null,
       });
     }
@@ -299,10 +316,13 @@ export async function POST(request: Request) {
         const providerServiceIdStr = providerServiceId ? String(providerServiceId).trim() : null;
         const hasValidProviderServiceId = providerServiceIdStr && providerServiceIdStr !== '';
         
+        const finalProviderServiceId = hasValidProviderServiceId ? providerServiceIdStr : String(service.id);
+        
         console.log(`Checking provider forwarding for service ${service.id}:`, {
           providerId: service?.providerId,
           providerServiceId: providerServiceId,
           providerServiceIdStr: providerServiceIdStr,
+          finalProviderServiceId: finalProviderServiceId,
           hasProvider: !!service?.providerId,
           hasProviderServiceId: hasValidProviderServiceId,
           serviceName: service.name
@@ -310,12 +330,15 @@ export async function POST(request: Request) {
         
         if (service?.providerId) {
           if (!hasValidProviderServiceId) {
-            console.warn(`Service ${service.id} has providerId (${service.providerId}) but no valid providerServiceId. Order will be stored but not forwarded to provider.`);
+            console.warn(`Service ${service.id} has providerId (${service.providerId}) but no valid providerServiceId. Using service ID (${service.id}) as fallback for provider service ID.`);
           }
         }
         
-        if (service?.providerId && hasValidProviderServiceId) {
+        console.log(`Service provider check - providerId: ${service.providerId}, type: ${typeof service.providerId}, truthy: ${!!service.providerId}`);
+        
+        if (service?.providerId !== null && service?.providerId !== undefined) {
           try {
+          console.log(`Service has providerId: ${service.providerId}, proceeding with forwarding...`);
           console.log(`Fetching provider ${service.providerId}...`);
           const provider = await db.apiProviders.findUnique({
             where: { id: service.providerId }
@@ -347,7 +370,8 @@ export async function POST(request: Request) {
           try {
             console.log(`Checking provider balance for ${provider.name}...`);
             const providerBalance = await forwarder.getProviderBalance(providerForApi);
-            const orderCost = orderData.usdPrice || (service.rate * orderData.qty) / 1000;
+            const qtyNum = typeof orderData.qty === 'bigint' ? Number(orderData.qty) : Number(orderData.qty);
+            const orderCost = orderData.usdPrice || (service.rate * qtyNum) / 1000;
 
             console.log(`Provider balance check result:`, {
               providerName: provider.name,
@@ -376,10 +400,11 @@ export async function POST(request: Request) {
           if (shouldForward) {
             const packageType = service.packageType || orderData.packageType || 1;
             const serviceOverflow = (service as any).service_overflow || (service as any).overflow || 0;
-            const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * orderData.qty);
-            const quantityWithOverflow = orderData.qty + serviceOverflowAmount;
+            const qtyNumForOverflow = typeof orderData.qty === 'bigint' ? Number(orderData.qty) : Number(orderData.qty);
+            const serviceOverflowAmount = Math.floor((serviceOverflow / 100) * qtyNumForOverflow);
+            const quantityWithOverflow = qtyNumForOverflow + serviceOverflowAmount;
             
-            let quantity = quantityWithOverflow;
+            let quantity: number | undefined = quantityWithOverflow;
             let comments = orderData.comments;
             
             if (packageType === 2) {
@@ -391,7 +416,7 @@ export async function POST(request: Request) {
             }
             
             const orderDataForProvider = {
-              service: providerServiceIdStr,
+              service: finalProviderServiceId,
               link: orderData.link,
               quantity: quantity,
               comments: comments,
@@ -449,8 +474,10 @@ export async function POST(request: Request) {
 
                 providerStatus = mapProviderStatus(statusResult.status);
                 apiCharge = statusResult.charge || forwardResult.charge || 0;
+                const qtyNumForRemains = typeof orderData.qty === 'bigint' ? Number(orderData.qty) : Number(orderData.qty);
                 startCount = BigInt(statusResult.start_count || forwardResult.start_count || 0);
-                remains = BigInt(statusResult.remains || forwardResult.remains || Number(orderData.qty));
+                const providerRemains = statusResult.remains !== undefined ? statusResult.remains : forwardResult.remains;
+                remains = BigInt(qtyNumForRemains);
                 profit = orderData.price - apiCharge;
 
                 console.log(`Order status fetched: ${providerStatus}, Charge: ${apiCharge}, Profit: ${profit}, StartCount: ${startCount}, Remains: ${remains}`);
@@ -458,8 +485,9 @@ export async function POST(request: Request) {
                 console.log(`Order forwarded but no provider order ID returned (likely subscription/auto order). Using default values.`);
                 providerStatus = 'pending';
                 apiCharge = forwardResult.charge || 0;
+                const qtyNumForDefault = typeof orderData.qty === 'bigint' ? Number(orderData.qty) : Number(orderData.qty);
                 startCount = BigInt(forwardResult.start_count || 0);
-                remains = BigInt(forwardResult.remains || Number(orderData.qty));
+                remains = BigInt(qtyNumForDefault);
                 profit = orderData.price - apiCharge;
               }
             } catch (forwardError: any) {
@@ -479,11 +507,14 @@ export async function POST(request: Request) {
             }
           }
         } catch (providerError: any) {
-          console.error(`Error processing provider for order:`, {
+          console.error(`CRITICAL: Error processing provider for order ${i + 1}:`, {
             error: providerError?.message || providerError,
             stack: providerError?.stack,
             serviceId: service.id,
-            providerId: service.providerId
+            providerId: service.providerId,
+            serviceName: service.name,
+            errorName: providerError?.name,
+            errorCode: (providerError as any)?.code
           });
           
           const errorMessage = providerError instanceof Error ? providerError.message : String(providerError);
@@ -493,14 +524,16 @@ export async function POST(request: Request) {
           } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
             orderError = `Provider API timeout or network error: ${errorMessage}`;
           } else {
-            orderError = errorMessage;
+            orderError = `Provider error: ${errorMessage}`;
           }
           
           apiCharge = 0;
           profit = orderData.price;
+          
+          console.warn(`Continuing with order creation despite provider error. Order will be stored with status 'pending' and error: ${orderError}`);
         }
       } else {
-        console.log(`Service ${service.id} has no provider, using manual pricing`);
+        console.log(`Service ${service.id} (${service.name}) has no providerId (${service.providerId}), using manual pricing. Order will be stored but not forwarded to provider.`);
         apiCharge = orderData.price;
         profit = 0;
       }
@@ -508,10 +541,10 @@ export async function POST(request: Request) {
       providerDataArray.push({
         providerOrderId,
         providerStatus,
-        apiCharge,
-        profit,
-        startCount: Number(startCount),
-        remains: Number(remains),
+        apiCharge: Number(apiCharge),
+        profit: Number(profit),
+        startCount: typeof startCount === 'bigint' ? Number(startCount) : Number(startCount),
+        remains: typeof remains === 'bigint' ? Number(remains) : Number(remains),
         orderError,
         serviceProviderId
       });
@@ -538,12 +571,18 @@ export async function POST(request: Request) {
       }
     }
 
-    const result = await db.$transaction(async (prisma) => {
-      const createdOrders = [];
-      
-      for (let i = 0; i < processedOrders.length; i++) {
-        const orderData = processedOrders[i];
-        const providerData = providerDataArray[i];
+    let result;
+    try {
+      result = await db.$transaction(async (prisma) => {
+        const createdOrders = [];
+        
+        for (let i = 0; i < processedOrders.length; i++) {
+          const orderData = processedOrders[i];
+          const providerData = providerDataArray[i];
+          
+          if (!orderData || !providerData) {
+            throw new Error(`Missing order data or provider data for order ${i + 1}`);
+          }
         const {
           providerOrderId,
           providerStatus,
@@ -566,36 +605,76 @@ export async function POST(request: Request) {
           profit
         });
 
+        if (!orderData.categoryId || !orderData.serviceId || !orderData.userId || !orderData.link) {
+          throw new Error(`Missing required fields for order ${i + 1}: categoryId=${orderData.categoryId}, serviceId=${orderData.serviceId}, userId=${orderData.userId}, link=${orderData.link ? 'present' : 'missing'}`);
+        }
+
+        const categoryIdNum = parseInt(String(orderData.categoryId));
+        const serviceIdNum = parseInt(String(orderData.serviceId));
+        const userIdNum = parseInt(String(orderData.userId));
+        
+        if (isNaN(categoryIdNum) || isNaN(serviceIdNum) || isNaN(userIdNum)) {
+          throw new Error(`Invalid IDs for order ${i + 1}: categoryId=${orderData.categoryId}, serviceId=${orderData.serviceId}, userId=${orderData.userId}`);
+        }
+
+        if (orderData.price === undefined || orderData.price === null || isNaN(Number(orderData.price))) {
+          throw new Error(`Invalid price for order ${i + 1}: ${orderData.price}`);
+        }
+
+        if (orderData.usdPrice === undefined || orderData.usdPrice === null || isNaN(Number(orderData.usdPrice))) {
+          throw new Error(`Invalid usdPrice for order ${i + 1}: ${orderData.usdPrice}`);
+        }
+
+        if (!orderData.qty || Number(orderData.qty) <= 0) {
+          throw new Error(`Invalid quantity for order ${i + 1}: ${orderData.qty}`);
+        }
+
+        const qtyNum = Number(orderData.qty);
+        if (isNaN(qtyNum) || qtyNum <= 0) {
+          throw new Error(`Invalid quantity value for order ${i + 1}: ${orderData.qty}`);
+        }
+
+        const orderQty = BigInt(Math.floor(qtyNum));
+        const orderRemains = orderQty;
+
+        const remainsValue: any = remains;
+        console.log(`Setting remains for order ${i + 1}:`, {
+          qty: orderQty.toString(),
+          remains: orderRemains.toString(),
+          providerRemains: typeof remainsValue === 'bigint' ? remainsValue.toString() : String(remainsValue || '0'),
+          note: 'For new orders, remains always equals quantity'
+        });
+
         const orderCreateData = {
-          categoryId: orderData.categoryId,
-          serviceId: orderData.serviceId,
-          userId: orderData.userId,
-          link: orderData.link,
-          qty: orderData.qty,
-          price: orderData.price,
-          avg_time: orderData.avg_time,
-          status: orderError ? 'failed' : providerStatus,
-          remains: remains,
-          startCount: startCount,
-          currency: orderData.currency,
-          usdPrice: orderData.usdPrice,
-          charge: apiCharge > 0 ? apiCharge : orderData.price,
-          profit: profit,
-          packageType: orderData.packageType || 1,
-          comments: orderData.comments || null,
-          username: orderData.username || null,
-          posts: orderData.posts || null,
-          delay: orderData.delay || null,
-          minQty: orderData.minQty || null,
-          maxQty: orderData.maxQty || null,
-          isDripfeed: orderData.isDripfeed || false,
-          dripfeedRuns: orderData.dripfeedRuns || null,
-          dripfeedInterval: orderData.dripfeedInterval || null,
-          isSubscription: orderData.isSubscription || false,
-          subscriptionStatus: orderData.isSubscription ? (orderData.subscriptionStatus || 'active') : null,
-          providerOrderId: providerOrderId,
-          providerStatus: orderError ? 'forward_failed' : providerStatus,
-          apiResponse: orderError ? JSON.stringify({ error: orderError }) : null,
+          categoryId: categoryIdNum,
+          serviceId: serviceIdNum,
+          userId: userIdNum,
+          link: String(orderData.link || ''),
+          qty: orderQty,
+          price: Number(orderData.price),
+          avg_time: String(orderData.avg_time || 'N/A'),
+          status: String(orderError ? 'failed' : providerStatus || 'pending'),
+          remains: orderRemains,
+          startCount: typeof startCount === 'bigint' ? startCount : BigInt(Math.floor(Number(startCount || 0))),
+          currency: String(orderData.currency || 'USD'),
+          usdPrice: Number(orderData.usdPrice),
+          charge: apiCharge > 0 ? Number(apiCharge) : Number(orderData.price),
+          profit: Number(profit || 0),
+          packageType: Number(orderData.packageType || 1),
+          comments: orderData.comments ? String(orderData.comments) : null,
+          username: orderData.username ? String(orderData.username) : null,
+          posts: orderData.posts ? parseInt(String(orderData.posts)) : null,
+          delay: orderData.delay ? parseInt(String(orderData.delay)) : null,
+          minQty: orderData.minQty && !isNaN(Number(orderData.minQty)) ? BigInt(Math.floor(Number(orderData.minQty))) : null,
+          maxQty: orderData.maxQty && !isNaN(Number(orderData.maxQty)) ? BigInt(Math.floor(Number(orderData.maxQty))) : null,
+          isDripfeed: Boolean(orderData.isDripfeed || false),
+          dripfeedRuns: orderData.dripfeedRuns ? parseInt(String(orderData.dripfeedRuns)) : null,
+          dripfeedInterval: orderData.dripfeedInterval ? parseInt(String(orderData.dripfeedInterval)) : null,
+          isSubscription: Boolean(orderData.isSubscription || false),
+          subscriptionStatus: orderData.isSubscription ? String(orderData.subscriptionStatus || 'active') : null,
+          providerOrderId: providerOrderId ? String(providerOrderId) : null,
+          providerStatus: orderError ? 'forward_failed' : String(providerStatus || 'pending'),
+          apiResponse: orderError ? String(JSON.stringify({ error: orderError })) : null,
           lastSyncAt: providerOrderId ? new Date() : null,
         };
 
@@ -689,8 +768,18 @@ export async function POST(request: Request) {
         },
       });
 
-      return createdOrders;
-    });
+        return createdOrders;
+      });
+    } catch (transactionError: any) {
+      console.error('Transaction error details:', {
+        message: transactionError?.message,
+        stack: transactionError?.stack,
+        code: transactionError?.code,
+        meta: transactionError?.meta,
+        error: transactionError
+      });
+      throw transactionError;
+    }
 
     console.log(
       `User ${session.user.email} created ${result.length} order(s)`,
@@ -702,6 +791,7 @@ export async function POST(request: Request) {
         timestamp: new Date().toISOString(),
       }
     );
+    
 
     try {
       const username = session.user.username || session.user.email?.split('@')[0] || `user${session.user.id}`;
@@ -716,11 +806,26 @@ export async function POST(request: Request) {
       console.error('Failed to log order creation activity:', error);
     }
 
+    const serializeOrder = (order: any) => {
+      return {
+        ...order,
+        qty: typeof order.qty === 'bigint' ? order.qty.toString() : order.qty,
+        remains: typeof order.remains === 'bigint' ? order.remains.toString() : order.remains,
+        startCount: typeof order.startCount === 'bigint' ? order.startCount.toString() : order.startCount,
+        minQty: order.minQty && typeof order.minQty === 'bigint' ? order.minQty.toString() : order.minQty,
+        maxQty: order.maxQty && typeof order.maxQty === 'bigint' ? order.maxQty.toString() : order.maxQty,
+      };
+    };
+
+    const serializedResult = Array.isArray(result) 
+      ? result.map(serializeOrder)
+      : serializeOrder(result);
+
     return NextResponse.json(
       {
         success: true,
         message: `${result.length} order(s) created successfully`,
-        data: isMultipleOrders ? result : result[0],
+        data: isMultipleOrders ? serializedResult : (Array.isArray(serializedResult) ? serializedResult[0] : serializedResult),
         summary: {
           orderCount: result.length,
           totalCost,
@@ -746,28 +851,56 @@ export async function POST(request: Request) {
     });
     
     let userFriendlyMessage = 'Error creating order(s)';
+    let statusCode = 500;
+    
     if (errorCode === 'P2002') {
       userFriendlyMessage = 'Duplicate order detected. Please try again.';
+      statusCode = 400;
     } else if (errorCode === 'P2003') {
       userFriendlyMessage = 'Invalid service or category. Please refresh and try again.';
+      statusCode = 400;
     } else if (errorMessage.includes('categoryId') || errorMessage.includes('serviceId')) {
       userFriendlyMessage = 'Invalid service or category selected.';
+      statusCode = 400;
     } else if (errorMessage.includes('balance') || errorMessage.includes('insufficient')) {
       userFriendlyMessage = errorMessage;
+      statusCode = 400;
+    } else if (errorMessage.includes('Cannot convert') || errorMessage.includes('BigInt') || errorMessage.includes('Invalid value') || errorMessage.includes('Invalid order data format') || errorMessage.includes('Invalid IDs') || errorMessage.includes('Invalid price') || errorMessage.includes('Invalid quantity')) {
+      userFriendlyMessage = errorMessage;
+      statusCode = 400;
+    } else if (errorMessage.includes('Required') || errorMessage.includes('missing') || errorMessage.includes('Null constraint')) {
+      userFriendlyMessage = `Missing required information: ${errorMessage}`;
+      statusCode = 400;
     }
     
-    return NextResponse.json(
-      {
-        success: false,
-        message: userFriendlyMessage,
-        error: errorMessage,
-        code: errorCode,
-        details: process.env.NODE_ENV === 'development' ? {
-          stack: errorStack,
-          meta: errorMeta
-        } : undefined,
-      },
-      { status: 500 }
-    );
+    try {
+      return NextResponse.json(
+        {
+          success: false,
+          message: userFriendlyMessage,
+          error: errorMessage,
+          code: errorCode,
+          details: process.env.NODE_ENV === 'development' ? {
+            stack: errorStack,
+            meta: errorMeta,
+            errorName: error?.name
+          } : undefined,
+        },
+        { status: statusCode }
+      );
+    } catch (jsonError) {
+      console.error('Error creating error response:', jsonError);
+      return new NextResponse(
+        JSON.stringify({
+          success: false,
+          message: userFriendlyMessage,
+          error: errorMessage
+        }),
+        {
+          status: statusCode,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+    }
   }
 }

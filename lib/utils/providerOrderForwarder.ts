@@ -224,9 +224,9 @@ export class ProviderOrderForwarder {
 
     return {
       charge: orderData?.price || 0,
-      start_count: orderData?.start_count || 0,
+      start_count: orderData?.start_count ? BigInt(orderData.start_count) : BigInt(0),
       status: orderData?.status || 'Pending',
-      remains: orderData?.remains || 0,
+      remains: orderData?.remains ? BigInt(orderData.remains) : BigInt(0),
       currency: orderData?.currency || 'USD'
     };
   }

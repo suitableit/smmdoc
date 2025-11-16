@@ -314,8 +314,8 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     {order.qty ? formatCount(order.qty) : 'null'}
                   </div>
                   <div className="text-xs text-green-600">
-                    {order.qty && order.remains
-                      ? formatCount(order.qty - order.remains)
+                    {order.qty && order.remains !== undefined && order.remains !== null
+                      ? formatCount(Number(order.qty) - Number(order.remains))
                       : '0'}{' '}
                     delivered
                   </div>
@@ -359,8 +359,11 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     className="text-xs font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {order.qty && order.remains
-                      ? calculateProgressProp(order.qty, order.remains)
+                    {order.qty && order.remains !== undefined && order.remains !== null
+                      ? calculateProgressProp(
+                          Number(order.qty),
+                          Number(order.remains)
+                        )
                       : 0}
                     %
                   </div>
@@ -369,10 +372,10 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                       className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
                       style={{
                         width: `${
-                          order.qty && order.remains
+                          order.qty && order.remains !== undefined && order.remains !== null
                             ? calculateProgressProp(
-                                order.qty,
-                                order.remains
+                                Number(order.qty),
+                                Number(order.remains)
                               )
                             : 0
                         }%`,
@@ -383,7 +386,9 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                     className="text-xs"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    {formatCount(order.remains ?? 0)}{' '}
+                    {order.remains !== undefined && order.remains !== null
+                      ? formatCount(Number(order.remains))
+                      : '0'}{' '}
                     left
                   </div>
                 </div>

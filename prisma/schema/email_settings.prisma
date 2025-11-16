@@ -8,6 +8,5 @@ model EmailSettings {
   smtp_protocol String   @default("tls")
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
-
   @@map("email_settings")
 }

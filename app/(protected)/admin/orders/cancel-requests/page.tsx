@@ -574,11 +574,7 @@ const CancelRequestsPage = () => {
                         : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.totalRequests
-                    )}
+                    {statsLoading ? 0 : stats.totalRequests}
                   </span>
                 </button>
                 <button
@@ -597,11 +593,7 @@ const CancelRequestsPage = () => {
                         : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.pendingRequests
-                    )}
+                    {statsLoading ? 0 : stats.pendingRequests}
                   </span>
                 </button>
                 <button
@@ -620,11 +612,7 @@ const CancelRequestsPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.approvedRequests
-                    )}
+                    {statsLoading ? 0 : stats.approvedRequests}
                   </span>
                 </button>
                 <button
@@ -643,11 +631,7 @@ const CancelRequestsPage = () => {
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.declinedRequests
-                    )}
+                    {statsLoading ? 0 : stats.declinedRequests}
                   </span>
                 </button>
               </div>

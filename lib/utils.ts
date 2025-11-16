@@ -12,7 +12,8 @@ export const revalidate = { next: { revalidate: 3600 } };
 
 export function formatError(error: unknown): string {
   if (error instanceof Error) {
-    if (error.name === 'ZodError' && 'errors' in error) {
+    if (error.name === 'ZodError' && 'errors' in error) {
+
       const fieldErrors = (error as any).errors.map((err: any) => err.message);
       return fieldErrors.join('. ');
     }
@@ -33,7 +34,12 @@ export function formatError(error: unknown): string {
 
     if (error.name === 'PrismaClientInitializationError') {
       return 'Database connection failed. Please check your database configuration.';
-    }
+    }
+
+
+
+
+
 
     return error.message;
   }
@@ -43,13 +49,15 @@ export function formatError(error: unknown): string {
 
 export function handleError(error: unknown): string {
   const formattedErrorMessage = formatError(error);
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
+
     console.error('Error in production mode:', error);
   } else {
     console.error('Error in development mode:', error);
   }
   return formattedErrorMessage;
-}
+}
+
 function extractFieldName(target: any): string {
   if (!target) return 'Field';
   if (Array.isArray(target)) target = target[0];
@@ -60,10 +68,12 @@ function extractFieldName(target: any): string {
       .split('_')
       .pop() || 'Field'
   );
-}
+}
+
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
+}
+
 export function formatNumber(num: number | string): string {
   const number = typeof num === 'string' ? parseFloat(num) : num;
   if (isNaN(number)) return '0';
@@ -81,12 +91,27 @@ export function formatPrice(amount: number, decimals: number = 2): string {
 
 export function formatID(id: number | string): string {
   const number = typeof id === 'string' ? parseInt(id) : id;
-  if (isNaN(number)) return String(id);
+  if (isNaN(number)) return String(id);
+
   return number.toString();
 }
 
 export function formatCount(count: number | string): string {
   const number = typeof count === 'string' ? parseInt(count) : count;
-  if (isNaN(number)) return '0';
+  if (isNaN(number)) return '0';
+
   return number.toString();
+}
+
+export function serializeOrder(order: any): any {
+  if (!order) return order;
+  
+  return {
+    ...order,
+    qty: typeof order.qty === 'bigint' ? order.qty.toString() : order.qty,
+    remains: typeof order.remains === 'bigint' ? order.remains.toString() : order.remains,
+    startCount: typeof order.startCount === 'bigint' ? order.startCount.toString() : order.startCount,
+    minQty: order.minQty && typeof order.minQty === 'bigint' ? order.minQty.toString() : order.minQty,
+    maxQty: order.maxQty && typeof order.maxQty === 'bigint' ? order.maxQty.toString() : order.maxQty,
+  };
 }

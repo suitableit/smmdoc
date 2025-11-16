@@ -10,7 +10,8 @@ import {
     FaRedo,
     FaSearch,
     FaSync,
-    FaTimes
+    FaTimes,
+    FaTimesCircle
 } from 'react-icons/fa';
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -131,7 +132,7 @@ interface RefillOrderStats {
   completedOrders: number;
   todayRefills: number;
   totalRefillAmount: number;
-  statusBreakdown: Record<string, number>;
+  statusBreakdown?: Record<string, number>;
 }
 
 interface PaginationInfo {
@@ -171,8 +172,6 @@ const RefillOrdersPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-  const [selectedBulkAction, setSelectedBulkAction] = useState('');
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -190,6 +189,14 @@ const RefillOrdersPage = () => {
     reason: '',
   });
   const [processing, setProcessing] = useState(false);
+
+  const [viewDialog, setViewDialog] = useState<{
+    open: boolean;
+    order: Order | null;
+  }>({
+    open: false,
+    order: null,
+  });
 
   const calculateStatusCounts = (ordersData: Order[]) => {
     const counts = {
@@ -308,8 +315,8 @@ const RefillOrdersPage = () => {
 
       setStats({
         totalEligible: result.data?.eligibleOrdersCount || 0,
-        partialOrders: 0,
-        completedOrders: 0,
+        partialOrders: result.data?.partialOrdersCount || 0,
+        completedOrders: result.data?.completedOrdersCount || 0,
         todayRefills: result.data?.totalRequests || 0,
         totalRefillAmount: 0,
         statusBreakdown: {
@@ -327,7 +334,12 @@ const RefillOrdersPage = () => {
         completedOrders: 0,
         todayRefills: 0,
         totalRefillAmount: 0,
-        statusBreakdown: {},
+        statusBreakdown: {
+          pending: 0,
+          approved: 0,
+          declined: 0,
+          completed: 0,
+        },
       });
       showToast('Error fetching statistics. Please refresh the page.', 'error');
     }
@@ -388,24 +400,23 @@ const RefillOrdersPage = () => {
     }
   };
 
-  const calculateProgress = (qty: number, remains: number) => {
-    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
-  };
-
-  const handleSelectAll = () => {
-    if (selectedOrders?.length === orders?.length && orders?.length > 0) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orders?.map((order) => order.id) || []);
+  const getRefillRequestStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return <FaClock className="h-3 w-3 text-yellow-500" />;
+      case 'approved':
+        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+      case 'declined':
+        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+      case 'completed':
+        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+      default:
+        return <FaClock className="h-3 w-3 text-gray-500" />;
     }
   };
 
-  const handleSelectOrder = (orderId: number) => {
-    setSelectedOrders((prev) =>
-      prev.includes(orderId)
-        ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId]
-    );
+  const calculateProgress = (qty: number, remains: number) => {
+    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
   };
 
   const handleRefresh = async () => {
@@ -442,6 +453,13 @@ const RefillOrdersPage = () => {
       showToast('Error fetching refill information', 'error');
       setRefillDialogOpen(false);
     }
+  };
+
+  const handleViewRefillRequestDetails = (order: Order) => {
+    setViewDialog({
+      open: true,
+      order: order,
+    });
   };
 
   const handleCreateRefill = async () => {
@@ -559,11 +577,7 @@ const RefillOrdersPage = () => {
                       statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.totalEligible
-                    )}
+                    {statsLoading ? 0 : stats.totalEligible}
                   </span>
                 </button>
                 <button
@@ -580,11 +594,7 @@ const RefillOrdersPage = () => {
                       statusFilter === 'partial' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.partialOrders
-                    )}
+                    {statsLoading ? 0 : stats.partialOrders}
                   </span>
                 </button>
                 <button
@@ -603,11 +613,7 @@ const RefillOrdersPage = () => {
                         : 'bg-green-100 text-green-700'
                     }`}
                   >
-                    {statsLoading ? (
-                      <span className="inline-block h-4 w-6 gradient-shimmer rounded" />
-                    ) : (
-                      stats.completedOrders
-                    )}
+                    {statsLoading ? 0 : stats.completedOrders}
                   </span>
                 </button>
               </div>
@@ -615,58 +621,12 @@ const RefillOrdersPage = () => {
           </div>
 
           <div style={{ padding: '0 24px' }}>
-            {selectedOrders?.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {selectedOrders?.length || 0} selected
-                  </span>
-                  <select
-                    className="w-auto pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-                    value={selectedBulkAction}
-                    onChange={(e) => {
-                      setSelectedBulkAction(e.target.value);
-                    }}
-                  >
-                    <option value="" disabled>
-                      Bulk Actions
-                    </option>
-                    <option value="bulk_refill">Bulk Refill</option>
-                    <option value="export">Export Selected</option>
-                  </select>
-                </div>
-
-                {selectedBulkAction && (
-                  <button
-                    onClick={() => {
-                      if (selectedBulkAction === 'bulk_refill') {
-                        console.log('Bulk refill selected:', selectedOrders);
-                        showToast(`Creating refills for ${selectedOrders?.length || 0} selected orders...`, 'info');
-                      } else if (selectedBulkAction === 'export') {
-                        console.log('Export selected:', selectedOrders);
-                        showToast(`Exporting ${selectedOrders?.length || 0} selected orders...`, 'info');
-                      }
-
-                      setSelectedBulkAction('');
-                      setSelectedOrders([]);
-                    }}
-                    className="btn btn-primary px-3 py-2.5 whitespace-nowrap w-full sm:w-auto"
-                  >
-                    Apply Action
-                  </button>
-                )}
-              </div>
-            )}
-
             {ordersLoading ? (
               <div style={{ minHeight: '600px' }}>
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1300px]">
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
-                        <th className="text-left p-3">
-                          <div className="h-4 w-4 gradient-shimmer rounded" />
-                        </th>
                         {Array.from({ length: 10 }).map((_, idx) => (
                           <th key={idx} className="text-left p-3">
                             <div className="h-4 w-20 gradient-shimmer rounded" />
@@ -677,9 +637,6 @@ const RefillOrdersPage = () => {
                     <tbody>
                       {Array.from({ length: 10 }).map((_, rowIdx) => (
                         <tr key={rowIdx} className="border-t">
-                          <td className="p-3">
-                            <div className="h-4 w-4 gradient-shimmer rounded" />
-                          </td>
                           <td className="p-3">
                             <div className="h-6 w-16 gradient-shimmer rounded" />
                           </td>
@@ -731,7 +688,6 @@ const RefillOrdersPage = () => {
                       <div key={idx} className="card border-l-4 border-blue-500 mb-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="h-4 w-4 gradient-shimmer rounded" />
                             <div className="h-6 w-16 gradient-shimmer rounded" />
                             <div className="h-6 w-20 gradient-shimmer rounded-full" />
                           </div>
@@ -819,14 +775,6 @@ const RefillOrdersPage = () => {
                     <thead className="sticky top-0 bg-white border-b z-10">
                       <tr>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedOrders?.length === orders?.length && orders?.length > 0}
-                            onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
-                          />
-                        </th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
                           Order ID
                         </th>
                         <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -864,14 +812,6 @@ const RefillOrdersPage = () => {
                           key={`${order.id}-${index}`}
                           className="border-t hover:bg-gray-50 transition-colors duration-200"
                         >
-                          <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.includes(order.id)}
-                              onChange={() => handleSelectOrder(order.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
-                          </td>
                           <td className="p-3">
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {safeFormatOrderId(order.id)}
@@ -1007,9 +947,9 @@ const RefillOrdersPage = () => {
                                 <FaRedo className="h-3 w-3" />
                               </button>
                               <button
-                                onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                                onClick={() => handleViewRefillRequestDetails(order)}
                                 className="btn btn-secondary p-2"
-                                title="View Order Details"
+                                title="View Refill Request Details"
                               >
                                 <FaEye className="h-3 w-3" />
                               </button>
@@ -1029,12 +969,6 @@ const RefillOrdersPage = () => {
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.includes(order.id)}
-                              onChange={() => handleSelectOrder(order.id)}
-                              className="rounded border-gray-300 w-4 h-4"
-                            />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                               {safeFormatOrderId(order.id)}
                             </div>
@@ -1045,9 +979,9 @@ const RefillOrdersPage = () => {
                           </div>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => window.open(`/admin/orders/${order.id}`, '_blank')}
+                              onClick={() => handleViewRefillRequestDetails(order)}
                               className="btn btn-secondary p-2"
-                              title="View Order Details"
+                              title="View Refill Request Details"
                             >
                               <FaEye className="h-3 w-3" />
                             </button>
@@ -1455,6 +1389,177 @@ const RefillOrdersPage = () => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {viewDialog.open && viewDialog.order && viewDialog.order.refillRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold">Refill Request Details</h3>
+              <button
+                onClick={() => setViewDialog({ open: false, order: null })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FaTimes className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mb-6">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Status</label>
+                  <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mt-1">
+                    {getRefillRequestStatusIcon(viewDialog.order.refillRequest.status)}
+                    <span className="text-xs font-medium capitalize">
+                      {viewDialog.order.refillRequest.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Requested</label>
+                  <div className="text-sm text-gray-900 mt-1">
+                    {viewDialog.order.refillRequest.createdAt ? (
+                      <>
+                        {new Date(viewDialog.order.refillRequest.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(viewDialog.order.refillRequest.createdAt).toLocaleTimeString()}
+                      </>
+                    ) : (
+                      'Unknown'
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">User</label>
+                  <div className="text-sm text-gray-900 mt-1">
+                    {viewDialog.order.user?.username ||
+                      viewDialog.order.user?.email?.split('@')[0] ||
+                      'Unknown'}{' '}
+                    ({viewDialog.order.user?.email || 'No email'})
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-6">
+              <h4 className="text-md font-semibold mb-4 text-gray-800">Order Summary</h4>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Order ID</label>
+                    <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
+                      {safeFormatOrderId(viewDialog.order.id)}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Order Status</label>
+                    <div className="text-sm text-gray-900 mt-1 capitalize">
+                      {viewDialog.order.status || 'Unknown'}
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-600">Service</label>
+                  <div className="text-sm text-gray-900 mt-1">
+                    {viewDialog.order.service?.name || 'Unknown Service'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Category: {viewDialog.order.category?.category_name || 'Unknown'}{' '}
+                    {viewDialog.order.service?.seller && (
+                      <>
+                        • Seller: {viewDialog.order.service.seller.type || 'Unknown'}
+                        {viewDialog.order.service.seller.name && ` (${viewDialog.order.service.seller.name})`}
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Quantity</label>
+                    <div className="text-sm text-gray-900 mt-1">
+                      {formatNumber(viewDialog.order.qty || 0)}
+                    </div>
+                    {viewDialog.order.remains !== undefined && (
+                      <div className="text-xs text-green-600 mt-1">
+                        {formatNumber(viewDialog.order.qty - viewDialog.order.remains)} delivered
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Amount</label>
+                    <div className="text-sm text-gray-900 mt-1">
+                      ${formatPrice(viewDialog.order.charge || viewDialog.order.price || 0, 2)}
+                    </div>
+                    <div className="text-xs text-gray-500">{viewDialog.order.currency || 'USD'}</div>
+                  </div>
+                </div>
+                {viewDialog.order.remains !== undefined && (
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-gray-600">Remaining</label>
+                    <div className="text-sm text-orange-600 mt-1">
+                      {formatNumber(viewDialog.order.remains)}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Order Link</label>
+                  <div className="text-sm mt-1">
+                    {viewDialog.order.link ? (
+                      <a
+                        href={viewDialog.order.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 break-all"
+                      >
+                        {viewDialog.order.link}
+                      </a>
+                    ) : (
+                      <span className="text-gray-500">No link provided</span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="text-sm font-medium text-gray-600">Order Created</label>
+                  <div className="text-sm text-gray-900 mt-1">
+                    {viewDialog.order.createdAt ? (
+                      <>
+                        {new Date(viewDialog.order.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(viewDialog.order.createdAt).toLocaleTimeString()}
+                      </>
+                    ) : (
+                      'Unknown'
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-6">
+              <h4 className="text-md font-semibold mb-3 text-gray-800">Refill Reason</h4>
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                <div className="text-sm text-gray-900">
+                  {viewDialog.order.refillRequest.reason || 'No reason provided'}
+                </div>
+              </div>
+            </div>
+            {viewDialog.order.refillRequest.adminNotes && (
+              <div className="mb-6">
+                <h4 className="text-md font-semibold mb-3 text-gray-800">Admin Notes</h4>
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+                  <div className="text-sm text-gray-900">
+                    {viewDialog.order.refillRequest.adminNotes}
+                  </div>
+                  {viewDialog.order.refillRequest.processedAt && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      Processed on{' '}
+                      {new Date(viewDialog.order.refillRequest.processedAt).toLocaleDateString()} at{' '}
+                      {new Date(viewDialog.order.refillRequest.processedAt).toLocaleTimeString()}
+                      {viewDialog.order.refillRequest.processedBy &&
+                        ` by ${viewDialog.order.refillRequest.processedBy}`}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

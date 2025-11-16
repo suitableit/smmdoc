@@ -43,14 +43,34 @@ export async function GET(req: NextRequest) {
       })
     ]);
 
-    const eligibleOrdersCount = await db.newOrders.count({
-      where: {
-        status: 'completed',
-        service: {
-          refill: true
+    const [eligibleOrdersCount, partialOrdersCount, completedOrdersCount] = await Promise.all([
+      db.newOrders.count({
+        where: {
+          status: {
+            in: ['completed', 'partial']
+          },
+          service: {
+            refill: true
+          }
         }
-      }
-    });
+      }),
+      db.newOrders.count({
+        where: {
+          status: 'partial',
+          service: {
+            refill: true
+          }
+        }
+      }),
+      db.newOrders.count({
+        where: {
+          status: 'completed',
+          service: {
+            refill: true
+          }
+        }
+      })
+    ]);
 
     const stats = {
       totalRequests,
@@ -58,7 +78,9 @@ export async function GET(req: NextRequest) {
       approvedRequests,
       declinedRequests,
       completedRequests,
-      eligibleOrdersCount
+      eligibleOrdersCount,
+      partialOrdersCount,
+      completedOrdersCount
     };
 
     return NextResponse.json({
