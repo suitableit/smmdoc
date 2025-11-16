@@ -1,15 +1,5 @@
 
-generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/contact-message-client"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-model ContactMessage {
+model ContactMessages {
   id          Int      @id @default(autoincrement())
   userId      Int
   subject     String
