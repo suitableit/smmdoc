@@ -32,7 +32,7 @@ model User {
   Category                Category[]
   favoriteServices        FavoriteService[]
   favouriteCat            FavrouteCat[]
-  newOrders               NewOrder[]
+  newOrders               NewOrders[]
   processedRefillRequests RefillRequest[]        @relation("ProcessedRefillRequests")
   refillRequests          RefillRequest[]
   services                Service[]

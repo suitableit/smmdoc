@@ -10,7 +10,7 @@ model CancelRequest {
   processedAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  order        NewOrder  @relation(fields: [orderId], references: [id])
+  order        NewOrders  @relation(fields: [orderId], references: [id])
   user         User      @relation(fields: [userId], references: [id])
 
   @@index([orderId], map: "CancelRequest_orderId_fkey")
