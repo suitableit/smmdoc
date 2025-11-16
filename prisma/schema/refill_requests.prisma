@@ -1,4 +1,4 @@
-model RefillRequest {
+model RefillRequests {
   id              Int       @id @default(autoincrement())
   orderId         Int
   userId          Int

@@ -1,4 +1,4 @@
-model CancelRequest {
+model CancelRequests {
   id           Int       @id @default(autoincrement())
   orderId      Int
   userId       Int
@@ -11,7 +11,7 @@ model CancelRequest {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   order        NewOrders  @relation(fields: [orderId], references: [id])
-  user         User      @relation(fields: [userId], references: [id])
+  user         Users      @relation(fields: [userId], references: [id])
 
   @@index([orderId], map: "CancelRequest_orderId_fkey")
   @@index([userId], map: "CancelRequest_userId_fkey")

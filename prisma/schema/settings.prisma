@@ -48,12 +48,12 @@ model TicketSettings {
   maxPendingTickets   String          @default("3")
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
-  subjects            TicketSubject[]
+  subjects            TicketSubjects[]
 
   @@map("ticket_settings")
 }
 
-model TicketSubject {
+model TicketSubjects {
   id               Int            @id @default(autoincrement())
   name             String
   ticketSettingsId Int
@@ -71,12 +71,12 @@ model ContactSettings {
   maxPendingContacts   String            @default("3")
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
-  categories           ContactCategory[]
+  categories           ContactCategories[]
 
   @@map("contact_settings")
 }
 
-model ContactCategory {
+model ContactCategories {
   id                Int             @id @default(autoincrement())
   name              String
   contactSettingsId Int
@@ -104,7 +104,7 @@ model ModuleSettings {
   @@map("module_settings")
 }
 
-model ServiceUpdateLog {
+model ServiceUpdateLogs {
   id          Int      @id @default(autoincrement())
   serviceId   Int
   serviceName String
@@ -121,7 +121,7 @@ model ServiceUpdateLog {
   @@map("service_update_logs")
 }
 
-model Affiliate {
+model Affiliates {
   id                Int                   @id @default(autoincrement())
   userId            Int                   @unique
   referralCode      String                @unique
@@ -142,20 +142,20 @@ model Affiliate {
   @@map("affiliates")
 }
 
-model AffiliateReferral {
+model AffiliateReferrals {
   id             Int       @id @default(autoincrement())
   affiliateId    Int
   referredUserId Int       @unique
   ipAddress      String?
   userAgent      String?
   createdAt      DateTime  @default(now())
-  affiliate      Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  affiliate      Affiliates @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([affiliateId], map: "affiliate_referrals_affiliateId_fkey")
   @@map("affiliate_referrals")
 }
 
-model AffiliateCommission {
+model AffiliateCommissions {
   id               Int       @id @default(autoincrement())
   affiliateId      Int
   referredUserId   Int
@@ -172,7 +172,7 @@ model AffiliateCommission {
   @@map("affiliate_commissions")
 }
 
-model AffiliatePayout {
+model AffiliatePayouts {
   id          Int       @id @default(autoincrement())
   affiliateId Int
   amount      Float
@@ -191,7 +191,7 @@ model AffiliatePayout {
   @@map("affiliate_payouts")
 }
 
-model ChildPanel {
+model ChildPanels {
   id             Int                      @id @default(autoincrement())
   userId         Int                      @unique
   domain         String                   @unique
@@ -211,12 +211,12 @@ model ChildPanel {
   settings       String?                  @db.LongText
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
-  subscriptions  ChildPanelSubscription[]
+  subscriptions  ChildPanelSubscriptions[]
 
   @@map("child_panels")
 }
 
-model ChildPanelSubscription {
+model ChildPanelSubscriptions {
   id            Int        @id @default(autoincrement())
   childPanelId  Int
   amount        Float
@@ -228,7 +228,7 @@ model ChildPanelSubscription {
   transactionId String?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  childPanel    ChildPanel @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
+  childPanel    ChildPanels @relation(fields: [childPanelId], references: [id], onDelete: Cascade)
 
   @@index([childPanelId], map: "child_panel_subscriptions_childPanelId_fkey")
   @@map("child_panel_subscriptions")

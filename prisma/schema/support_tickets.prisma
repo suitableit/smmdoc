@@ -1,4 +1,4 @@
-model SupportTicket {
+model SupportTickets {
   id            Int      @id @default(autoincrement())
   userId        Int
   subject       String
@@ -20,8 +20,8 @@ model SupportTicket {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user          User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  repliedByUser User? @relation("RepliedByUser", fields: [repliedBy], references: [id])
+  user          Users  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repliedByUser Users? @relation("RepliedByUser", fields: [repliedBy], references: [id])
 
   @@index([userId])
   @@index([status])

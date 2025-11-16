@@ -1,4 +1,4 @@
-model ActivityLog {
+model ActivityLogs {
   id        Int      @id @default(autoincrement())
   userId    Int?
   username  String?
@@ -8,7 +8,7 @@ model ActivityLog {
   userAgent String?  @db.Text
   metadata  String?  @db.LongText
   createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+  user      Users?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([action])

@@ -1,4 +1,4 @@
-model Category {
+model Categories {
   id            Int              @id @default(autoincrement())
   category_name String
   status        String           @default("active")
@@ -8,7 +8,7 @@ model Category {
   deletedAt     DateTime?
   hideCategory  String           @default("no")
   position      CategoryPosition @default(bottom)
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          Users             @relation(fields: [userId], references: [id], onDelete: Cascade)
   newOrders     NewOrders[]
   services      Services[]
 

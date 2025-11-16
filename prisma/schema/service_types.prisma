@@ -1,4 +1,4 @@
-model ServiceType {
+model ServiceTypes {
   id                Int       @id @default(autoincrement())
   name              String    @unique(map: "ServiceType_name_key")
   description       String?
@@ -21,7 +21,7 @@ model ServiceType {
   minQuantity       Int?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  services          Service[]
+  services          Services[]
 
   @@map("service_types")
 }
