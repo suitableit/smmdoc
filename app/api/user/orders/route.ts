@@ -88,7 +88,8 @@ export async function GET(request: Request) {
             avg_time: true,
             status: true,
             refill: true,
-            cancel: true
+            cancel: true,
+            refillDays: true
           }
         },
         category: {

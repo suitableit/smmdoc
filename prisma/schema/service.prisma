@@ -35,7 +35,7 @@ model Service {
   autoDelay           Int?
   customComments      String?           @db.Text
   isSecret            Boolean           @default(false)
-  orderLink           String            @default("link") // Added via migration 20250125000006_add_order_link_to_services - stores order link type: "link" or "username"
+  orderLink           String            @default("link") 
   favoriteServices    FavoriteService[]
   newOrders           NewOrder[]
   category            Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
