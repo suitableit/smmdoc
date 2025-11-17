@@ -13,6 +13,7 @@ import {
 
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -56,8 +57,8 @@ interface Service {
   id: number;
   name: string;
   rate: number;
-  min_order: number;
-  max_order: number;
+  min_order: number | string;
+  max_order: number | string;
   avg_time: string;
   description: string;
   category: {
@@ -78,12 +79,24 @@ const ServicesTable: React.FC = () => {
   const [groupedServices, setGroupedServices] = useState<
     Record<string, Service[]>
   >({});
+
+  const ensureGroupedServicesIsValid = (grouped: Record<string, Service[]>) => {
+    const valid: Record<string, Service[]> = {};
+    Object.entries(grouped).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        valid[key] = value;
+      }
+    });
+    return valid;
+  };
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [limit, setLimit] = useState('10');
   const [isShowAll, setIsShowAll] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selected, setSelected] = useState<Service | null>(null);
 
   const showToast = (
     message: string,
@@ -131,6 +144,11 @@ const ServicesTable: React.FC = () => {
 
         const data = await response.json();
 
+        if (!data || !data.data) {
+          console.error('Invalid response data:', data);
+          throw new Error('Invalid response format');
+        }
+
         if (!user?.id) {
           const servicesData =
             data?.data?.map((service: Service) => ({
@@ -151,7 +169,7 @@ const ServicesTable: React.FC = () => {
               return acc;
             },
           );
-          setGroupedServices(grouped);
+          setGroupedServices(ensureGroupedServicesIsValid(grouped));
           setTotalPages(data.totalPages || 1);
           return;
         }
@@ -197,7 +215,7 @@ const ServicesTable: React.FC = () => {
               return acc;
             },
           );
-          setGroupedServices(grouped);
+          setGroupedServices(ensureGroupedServicesIsValid(grouped));
         } catch (favError) {
           console.error('Error fetching favorites:', favError);
 
@@ -220,7 +238,7 @@ const ServicesTable: React.FC = () => {
               return acc;
             },
           );
-          setGroupedServices(grouped);
+          setGroupedServices(ensureGroupedServicesIsValid(grouped));
         }
 
         setTotalPages(data.totalPages || 1);
@@ -247,11 +265,12 @@ const ServicesTable: React.FC = () => {
             }
           });
 
-          setGroupedServices(grouped);
+          setGroupedServices(ensureGroupedServicesIsValid(grouped));
         }
       } catch (error) {
         console.error('Error fetching services:', error);
-        showToast('Error fetching services. Please try again later.', 'error');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        showToast(`Error fetching services: ${errorMessage}`, 'error');
         setServices([]);
         setGroupedServices({});
         setTotalPages(1);
@@ -269,6 +288,11 @@ const ServicesTable: React.FC = () => {
 
   const handleNext = () => {
     if (page < totalPages) setPage(page + 1);
+  };
+
+  const handleViewDetails = (service: Service) => {
+    setSelected(service);
+    setIsOpen(true);
   };
 
   const toggleFavorite = async (serviceId: number) => {
@@ -335,7 +359,7 @@ const ServicesTable: React.FC = () => {
 
   if (loading && !search) {
     return (
-      <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+      <div className="card card-padding">
         <div className="text-center py-8 flex flex-col items-center">
           <GradientSpinner size="w-14 h-14" className="mb-4" />
           <div className="text-lg font-medium">Loading services...</div>
@@ -345,7 +369,7 @@ const ServicesTable: React.FC = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-lg dark:shadow-black/20 transition-all duration-300">
+    <div className="card card-padding">
       {toastMessage && (
         <Toast
           message={toastMessage.message}
@@ -408,38 +432,40 @@ const ServicesTable: React.FC = () => {
         )}
       </div>
       {Object.keys(groupedServices).length > 0 ? (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-600">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 rounded-t-lg">
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white first:rounded-tl-lg">
-                  Fav
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  ID
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  Service
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  Rate per 1000
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  Min order
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  Max order
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">
-                  Average time
-                </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white last:rounded-tr-lg">
-                  Action
-                </th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                    Fav
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    ID
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Service
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Rate per 1000
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Min order
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Max order
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    Average time
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                    Action
+                  </th>
+                </tr>
+              </thead>
             <tbody>
-              {Object.entries(groupedServices).map(
+              {Object.entries(groupedServices)
+                .filter(([_, categoryServices]) => Array.isArray(categoryServices) && categoryServices.length > 0)
+                .map(
                 ([categoryName, categoryServices]) => (
                   <Fragment key={categoryName}>
                     <tr>
@@ -451,7 +477,7 @@ const ServicesTable: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                    {categoryServices.map((service, index) => {
+                    {Array.isArray(categoryServices) && categoryServices.map((service, index) => {
                       const isLastInCategory =
                         index === categoryServices.length - 1;
                       const isLastCategory =
@@ -462,7 +488,7 @@ const ServicesTable: React.FC = () => {
                       return (
                         <tr
                           key={service.id}
-                          className={`border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30 ${
+                          className={`border-b border-gray-200 hover:bg-gray-50 ${
                             isLastRow ? 'last:border-b-0' : ''
                           }`}
                         >
@@ -473,7 +499,7 @@ const ServicesTable: React.FC = () => {
                           >
                             <button
                               onClick={() => toggleFavorite(service.id)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
+                              className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
                               title={
                                 service.isFavorite
                                   ? 'Remove from favorites'
@@ -488,17 +514,17 @@ const ServicesTable: React.FC = () => {
                             </button>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                            <span className="text-sm font-mono text-gray-700">
                               {service.id}
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-gray-900">
                               {service.name}
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            <span className="text-sm font-medium text-gray-900">
                               <PriceDisplay
                                 amount={service.rate}
                                 originalCurrency={'USD'}
@@ -506,17 +532,17 @@ const ServicesTable: React.FC = () => {
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {`${service.min_order || 0}`}
+                            <span className="text-sm text-gray-700">
+                              {typeof service.min_order === 'string' ? service.min_order : (service.min_order || 0).toString()}
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
-                              {`${service.max_order || 0}`}
+                            <span className="text-sm text-gray-700">
+                              {typeof service.max_order === 'string' ? service.max_order : (service.max_order || 0).toString()}
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                            <span className="text-sm text-gray-700">
                               {service.avg_time || 'N/A'}
                             </span>
                           </td>
@@ -525,7 +551,10 @@ const ServicesTable: React.FC = () => {
                               isLastRow ? 'last:rounded-br-lg' : ''
                             }`}
                           >
-                            <button className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--primary)] dark:text-[var(--secondary)] hover:text-[#4F0FD8] dark:hover:text-[#A121E8] border border-[var(--primary)] dark:border-[var(--secondary)] rounded hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--secondary)]/10 transition-colors duration-200">
+                            <button 
+                              onClick={() => handleViewDetails(service)}
+                              className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--primary)] hover:text-[#4F0FD8] border border-[var(--primary)] rounded hover:bg-[var(--primary)]/10 transition-colors duration-200"
+                            >
                               <FaEye className="w-3 h-3" />
                               Details
                             </button>
@@ -670,6 +699,13 @@ const ServicesTable: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+      {isOpen && selected && (
+        <ServiceViewModal
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          service={selected}
+        />
       )}
     </div>
   );

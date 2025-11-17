@@ -48,8 +48,6 @@ const Hero: React.FC = () => {
                 className="w-full max-w-lg mx-auto lg:mx-0 rounded-2xl"
                 priority
               />
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-full opacity-20 animate-pulse"></div>
-              <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-r from-[var(--secondary)] to-[var(--primary)] rounded-full opacity-30 animate-pulse delay-1000"></div>
             </div>
           </div>
         </div>

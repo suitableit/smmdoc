@@ -65,7 +65,8 @@ const BlogPage: React.FC = () => {
   const [allBlogPosts, setAllBlogPosts] = useState<BlogPost[]>([]);
   const [visiblePosts, setVisiblePosts] = useState(6);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
   const fetchBlogPosts = async () => {
     try {
       setIsLoading(true);
@@ -86,13 +87,15 @@ const BlogPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Frontend: Error fetching blog posts:', error);
-      setError('Failed to load blog posts');
+      setError('Failed to load blog posts');
+
       setAllBlogPosts([]);
       console.log('Frontend: No blog posts available');
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   useEffect(() => {
     fetchBlogPosts();
   }, []);
@@ -100,7 +103,8 @@ const BlogPage: React.FC = () => {
   const displayedPosts = allBlogPosts.slice(0, visiblePosts);
   const hasMorePosts = visiblePosts < allBlogPosts.length;
 
-  const loadMorePosts = () => {
+  const loadMorePosts = () => {
+
     setTimeout(() => {
       setVisiblePosts((prev) => Math.min(prev + 3, allBlogPosts.length));
     }, 1000);
@@ -143,6 +147,14 @@ const BlogPage: React.FC = () => {
               <GradientSpinner size="w-16 h-16" className="mb-4" />
               <p className="text-gray-600 dark:text-gray-300 text-lg font-medium transition-colors duration-200">
                 Loading blog posts...
+              </p>
+            </div>
+          </div>
+        ) : allBlogPosts.length === 0 ? (
+          <div className="card-padding bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 transition-all duration-300 p-12">
+            <div className="flex flex-col items-center justify-center text-center">
+              <p className="text-gray-600 dark:text-gray-300 text-lg font-medium transition-colors duration-200">
+                No blog found!
               </p>
             </div>
           </div>
