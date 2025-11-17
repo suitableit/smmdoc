@@ -186,22 +186,45 @@ export function AddFundForm() {
           return;
         }
 
+        const cleanedPhone = values.phone.replace(/\D/g, '');
+        if (!cleanedPhone || cleanedPhone.length < 10) {
+          showToast('Please enter a valid phone number', 'error');
+          return;
+        }
+
+        const amountValue = activeCurrency === 'USD' 
+          ? parseFloat(values.amountUSD || '0')
+          : parseFloat(values.amountBDT || '0');
+
+        if (isNaN(amountValue) || amountValue <= 0) {
+          showToast('Please enter a valid amount', 'error');
+          return;
+        }
+
         const formValues = {
           method: 'uddoktapay',
-          amount: activeCurrency === 'USD' ? values.amountUSD : values.amountBDT,
+          amount: amountValue.toString(),
           currency: activeCurrency,
           userId: user?.id,
           full_Name: user?.name || 'John Doe',
           email: user?.email || 'customer@example.com',
-          phone: values.phone.replace(/\D/g, ''),
+          phone: cleanedPhone,
         };
 
         showToast('Payment processing...', 'pending');
+
+        console.log('Sending payment request:', formValues);
 
         const res = await axiosInstance.post(
           '/api/payment/create-charge',
           formValues
         );
+
+        if (res.data?.error) {
+          console.error('Payment API error:', res.data);
+          showToast('Payment processing failed. Please try again.', 'error');
+          return;
+        }
 
         if (res.data && res.data.payment_url) {
           if (res.data.order_id) {
@@ -232,9 +255,13 @@ export function AddFundForm() {
         } else {
           showToast('Payment processing failed. Please try again.', 'error');
         }
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Payment error:', {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+        });
         showToast('Payment processing failed. Please try again.', 'error');
-        console.error('Payment error:', error);
       }
     });
   };

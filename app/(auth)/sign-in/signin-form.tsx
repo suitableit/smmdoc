@@ -273,78 +273,7 @@ export default function SignInForm() {
 
         <div className="space-y-4">
           <button
-            type="button"
-            onClick={() => {
-              const formValues = form.getValues();
-              if (!formValues.email || !formValues.password) {
-                setError('Please enter your email and password');
-                return;
-              }
-
-              setError('');
-              setSuccess('Logging in...');
-
-              login(formValues)
-                .then((data) => {
-                  if (data?.error) {
-                    setError(data.error);
-                    setSuccess('');
-                    return;
-                  }
-
-                  if (data?.twoFactor) {
-                    setShowTwoFactor(true);
-                    return;
-                  }
-
-                  if (data?.success) {
-                    const isAdmin = data.isAdmin === true;
-                    const redirectUrl = isAdmin ? '/admin' : '/dashboard';
-
-                    setError('');
-                    setSuccess(`Login successful! Redirecting to ${isAdmin ? 'Admin' : 'User'} Dashboard...`);
-
-                    const notification = document.createElement('div');
-                    notification.style.position = 'fixed';
-                    notification.style.top = '50%';
-                    notification.style.left = '50%';
-                    notification.style.transform = 'translate(-50%, -50%)';
-                    notification.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                    notification.style.color = 'white';
-                    notification.style.padding = '20px';
-                    notification.style.borderRadius = '10px';
-                    notification.style.zIndex = '9999';
-                    notification.style.textAlign = 'center';
-                    notification.innerHTML = `
-                      <div style="font-size: 18px; margin-bottom: 10px;">Login Successful!</div>
-                      <div>Redirecting to ${isAdmin ? 'Admin' : 'User'} Dashboard...</div>
-                      <div style="margin-top: 15px;">
-                        <div style="height: 5px; width: 100%; background-color: #ddd; border-radius: 5px;">
-                          <div id="progress-bar" style="height: 100%; width: 0%; background-color: #a855f7; border-radius: 5px; transition: width 0.5s;"></div>
-                        </div>
-                      </div>
-                    `;
-                    document.body.appendChild(notification);
-
-                    let progress = 0;
-                    const progressBar = document.getElementById('progress-bar');
-                    const interval = setInterval(() => {
-                      progress += 10;
-                      if (progressBar) progressBar.style.width = `${progress}%`;
-                      if (progress >= 100) {
-                        clearInterval(interval);
-
-                        window.location.href = redirectUrl + '?t=' + new Date().getTime();
-                      }
-                    }, 100);
-                  }
-                })
-                .catch((err) => {
-                  console.error('Login error:', err);
-                  setError('An unexpected error occurred. Please try again.');
-                  setSuccess('');
-                });
-            }}
+            type="submit"
             disabled={isPending}
             className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
