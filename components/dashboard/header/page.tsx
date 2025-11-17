@@ -66,6 +66,76 @@ const ThemeToggle = ({
     setMounted(true);
   }, []);
 
+  const createFadeTransition = () => {
+    const overlay = document.createElement('div');
+    overlay.className = 'theme-fade-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+    `;
+
+    const styleId = 'theme-fade-animation-style';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @keyframes themeFadeDown {
+          0% {
+            opacity: 0;
+            transform: translateY(-100%);
+          }
+          30% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          70% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(100%);
+          }
+        }
+        .theme-fade-overlay {
+          animation: themeFadeDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay);
+      }
+    }, 600);
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    createFadeTransition();
+    
+    setTimeout(() => {
+      setTheme(newTheme);
+    }, 150);
+  };
+
+  const cycleTheme = () => {
+    const themeOrder = ['system', 'light', 'dark'];
+    const currentIndex = themeOrder.indexOf(theme || 'system');
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    const nextTheme = themeOrder[nextIndex];
+    handleThemeChange(nextTheme);
+  };
+
   if (!mounted) {
     return (
       <div
@@ -90,7 +160,7 @@ const ThemeToggle = ({
   ];
 
   const currentTheme =
-    themeOptions.find((option) => option.key === theme) || themeOptions[0];
+    themeOptions.find((option) => option.key === theme) || themeOptions[2];
   const CurrentIcon = currentTheme.icon;
 
   if (isMobile) {
@@ -119,7 +189,7 @@ const ThemeToggle = ({
             return (
               <button
                 key={option.key}
-                onClick={() => setTheme(option.key)}
+                onClick={() => handleThemeChange(option.key)}
                 className={`flex flex-col items-center gap-1 p-1.5 rounded-md text-center transition-all duration-200 ${
                   isActive ? 'text-white shadow-sm' : 'hover:opacity-80'
                 }`}
@@ -143,60 +213,20 @@ const ThemeToggle = ({
   }
 
   return (
-    <DropdownMenu 
-      open={openDropdowns?.theme}
-      onOpenChange={(isOpen) => handleDropdownChange?.('theme', isOpen)}
+    <button
+      onClick={cycleTheme}
+      className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
+      style={{
+        backgroundColor: 'var(--dropdown-bg)',
+        border: `1px solid var(--header-border)`,
+      }}
+      aria-label={`Current theme: ${currentTheme.label}. Click to cycle themes.`}
+      title={`Current: ${currentTheme.label}`}
     >
-      <DropdownMenuTrigger asChild>
-        <button
-          className="h-10 w-10 sm:h-10 sm:w-10 rounded-lg header-theme-transition flex items-center justify-center hover:opacity-80 group"
-          style={{
-            backgroundColor: 'var(--dropdown-bg)',
-            border: `1px solid var(--header-border)`,
-          }}
-        >
-          <CurrentIcon
-            className="h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200"
-          />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-40 theme-dropdown header-theme-transition shadow-sm"
-        style={{
-          backgroundColor: 'var(--dropdown-bg)',
-          border: `1px solid var(--header-border)`,
-        }}
-      >
-        <div className="p-1">
-          {themeOptions.map((option) => {
-            const IconComponent = option.icon;
-            const isActive = theme === option.key;
-
-            return (
-              <button
-                key={option.key}
-                onClick={() => setTheme(option.key)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                  isActive ? 'text-white shadow-sm' : 'hover:opacity-80'
-                }`}
-                style={{
-                  backgroundColor: isActive ? 'var(--primary)' : 'transparent',
-                  color: isActive ? 'white' : 'var(--header-text)',
-                }}
-              >
-                <IconComponent
-                  className={`h-4 w-4 transition-colors duration-200 ${
-                    isActive ? 'text-white' : ''
-                  }`}
-                />
-                <span className="font-medium text-sm">{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <CurrentIcon
+        className="h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-200"
+      />
+    </button>
   );
 };
 
