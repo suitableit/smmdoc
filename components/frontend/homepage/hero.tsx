@@ -443,7 +443,7 @@ const Hero: React.FC = () => {
               </pre>
             </div>
           )}
-          <div className="flex justify-center">
+          <div className="w-full lg:flex lg:justify-center">
             {isLoading && <LoadingContent />}
             {!isLoading && isAuthenticated && <AuthenticatedUserContent />}
             {!isLoading && !isAuthenticated && (

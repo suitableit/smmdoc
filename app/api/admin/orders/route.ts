@@ -134,6 +134,11 @@ export async function GET(req: NextRequest) {
       startCount: typeof order.startCount === 'bigint' ? order.startCount.toString() : order.startCount,
       minQty: order.minQty && typeof order.minQty === 'bigint' ? order.minQty.toString() : order.minQty,
       maxQty: order.maxQty && typeof order.maxQty === 'bigint' ? order.maxQty.toString() : order.maxQty,
+      service: order.service ? {
+        ...order.service,
+        min_order: typeof order.service.min_order === 'bigint' ? order.service.min_order.toString() : order.service.min_order,
+        max_order: typeof order.service.max_order === 'bigint' ? order.service.max_order.toString() : order.service.max_order,
+      } : order.service,
     }));
 
     return NextResponse.json({

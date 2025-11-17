@@ -11,6 +11,14 @@ import {
 } from 'react-icons/fa';
 import { formatID, formatNumber, formatPrice, formatCount } from '@/lib/utils';
 
+const cleanLinkDisplay = (link: string): string => {
+  if (!link) return link;
+  let cleaned = link;
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+  cleaned = cleaned.replace(/^www\./i, '');
+  return cleaned;
+};
+
 interface Order {
   id: number;
   user: {
@@ -263,9 +271,12 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
                       >
-                        {order.link.length > 18
-                          ? order.link.substring(0, 18) + '...'
-                          : order.link}
+                        {(() => {
+                          const cleanedLink = cleanLinkDisplay(order.link);
+                          return cleanedLink.length > 18
+                            ? cleanedLink.substring(0, 18) + '...'
+                            : cleanedLink;
+                        })()}
                       </a>
                       <button
                         onClick={() =>

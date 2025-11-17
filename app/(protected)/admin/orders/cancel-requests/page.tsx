@@ -17,6 +17,14 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
+const cleanLinkDisplay = (link: string): string => {
+  if (!link) return link;
+  let cleaned = link;
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+  cleaned = cleaned.replace(/^www\./i, '');
+  return cleaned;
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -979,7 +987,7 @@ const CancelRequestsPage = () => {
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs truncate"
                                 >
-                                  <span className="truncate">{request.order.link}</span>
+                                  <span className="truncate">{cleanLinkDisplay(request.order.link)}</span>
                                   <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
                                 </a>
                               ) : (
@@ -1200,7 +1208,7 @@ const CancelRequestsPage = () => {
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs"
                             >
-                              <span className="truncate">{request.order.link}</span>
+                              <span className="truncate">{cleanLinkDisplay(request.order.link)}</span>
                               <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
                             </a>
                           ) : (
@@ -1463,7 +1471,7 @@ const CancelRequestsPage = () => {
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-800 break-all"
                                   >
-                                    {viewDialog.request.order.link}
+                                    {cleanLinkDisplay(viewDialog.request.order.link)}
                                   </a>
                                 ) : (
                                   <span className="text-gray-500">

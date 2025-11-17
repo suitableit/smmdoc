@@ -16,14 +16,16 @@ import {
   FaCheckCircle,
 } from 'react-icons/fa';
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { formatID } from '@/lib/utils';
+import { formatID } from '@/lib/utils';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const ServiceActionsDropdown = React.memo(({
   service,
   statusFilter,
@@ -108,7 +110,8 @@ const ServiceActionsDropdown = React.memo(({
   );
 });
 
-ServiceActionsDropdown.displayName = 'ServiceActionsDropdown';
+ServiceActionsDropdown.displayName = 'ServiceActionsDropdown';
+
 const getStatusIcon = (status: string, deletedAt?: string | null) => {
   if (deletedAt) {
     return <FaTrash className="h-3 w-3 text-red-500" />;
@@ -117,7 +120,8 @@ const getStatusIcon = (status: string, deletedAt?: string | null) => {
     return <FaTimesCircle className="h-3 w-3 text-red-500" />;
   }
   return <FaCheckCircle className="h-3 w-3 text-green-500" />;
-};
+};
+
 const getActualCategoryName = (displayCategoryName: string) => {
   return displayCategoryName.includes(' (ID: ')
     ? displayCategoryName.split(' (ID: ')[0]
@@ -312,24 +316,32 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
         </thead>
         <tbody>
           {(Object.entries(groupedServices) as [string, any[]][])
-            .filter(([categoryName, services]) => {
+            .filter(([categoryName, services]) => {
+
+
+
               if (statusFilter === 'inactive') {
                 const actualCategoryName = getActualCategoryName(categoryName);
                 const categoryData = categoriesData?.data?.find(
                   (cat: any) => cat.category_name === actualCategoryName
-                );
-                const isCategoryInactive = !activeCategoryToggles[categoryName];
+                );
+
+                const isCategoryInactive = !activeCategoryToggles[categoryName];
+
                 const hasInactiveServices = services.some((service: any) => service.status === 'inactive');
 
                 return isCategoryInactive || hasInactiveServices;
-              }
+              }
+
               return true;
             })
-            .sort(([categoryNameA], [categoryNameB]) => {
+            .sort(([categoryNameA], [categoryNameB]) => {
+
               const actualCategoryNameA =
                 getActualCategoryName(categoryNameA);
               const actualCategoryNameB =
-                getActualCategoryName(categoryNameB);
+                getActualCategoryName(categoryNameB);
+
               const categoryA = categoriesData?.data?.find(
                 (cat: any) =>
                   cat.category_name === actualCategoryNameA

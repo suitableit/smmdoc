@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { serializeServices } from '@/lib/utils';
 
 export async function GET(request: Request) {
   try {
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
     ]);
     return NextResponse.json(
       {
-        data: services,
+        data: serializeServices(services),
       },
       { status: 200 }
     );

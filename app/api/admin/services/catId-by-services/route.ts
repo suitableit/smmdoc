@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { serializeServices } from '@/lib/utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       },
     });
     return NextResponse.json(
-      { success: true, data: result, error: null },
+      { success: true, data: serializeServices(result), error: null },
       { status: 200 }
     );
   } catch (error: any) {

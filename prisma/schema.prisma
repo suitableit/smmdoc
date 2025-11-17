@@ -30,8 +30,8 @@ model Services {
   id                Int               @id @default(autoincrement())
   name              String
   rate              Float
-  min_order         Int
-  max_order         Int
+  min_order         BigInt
+  max_order         BigInt
   avg_time          String
   description       String            @db.Text
   updateText        String?           @db.Text
