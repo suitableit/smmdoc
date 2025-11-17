@@ -15,8 +15,19 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Fetch admin email from general settings
+    let adminEmail = 'support@smmdoc.com'; // Default fallback
+    try {
+      const generalSettings = await db.generalSettings.findFirst();
+      if (generalSettings?.adminEmail) {
+        adminEmail = generalSettings.adminEmail;
+      }
+    } catch (error) {
+      console.error('Error fetching admin email from settings:', error);
+    }
+    
     const body = await request.json();
-    const { name, email, phone, subject, message, adminEmail, recaptchaToken } = body;
+    const { name, email, phone, subject, message, recaptchaToken } = body;
 
     if (!name || !email || !phone || !subject || !message) {
       return NextResponse.json(
@@ -37,6 +48,7 @@ export async function POST(request: NextRequest) {
       console.log('ReCAPTCHA token received:', recaptchaToken.substring(0, 20) + '...');
     }
 
+    let contactMessageId = 0;
     try {
       const contactMessage = await db.contactMessages.create({
         data: {
@@ -48,6 +60,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      contactMessageId = contactMessage.id;
       console.log('Contact message created:', contactMessage.id);
     } catch (dbError) {
       console.error('Database error:', dbError);
@@ -61,11 +74,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Send email to admin
+    try {
+      const { sendMail } = await import('@/lib/nodemailer');
+      const { contactEmailTemplates } = await import('@/lib/email-templates');
+      
+      const emailTemplate = contactEmailTemplates.newContactMessageAdmin({
+        userName: name,
+        userEmail: email,
+        subject: subject.trim(),
+        message: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage: ${message}`,
+        category: 'General Inquiry',
+        messageId: contactMessageId,
+        attachments: undefined
+      });
+      
+      await sendMail({
+        sendTo: adminEmail,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html
+      });
+      
+      console.log('Contact form email sent to admin:', adminEmail);
+    } catch (emailError) {
+      console.error('Error sending contact form email to admin:', emailError);
+      // Don't fail the request if email fails
+    }
+
     console.log('Contact form submission received:', {
       name,
       email,
       subject,
-      adminEmail: adminEmail || 'support@smmdoc.com',
+      adminEmail: adminEmail,
     });
 
     return NextResponse.json(

@@ -95,10 +95,8 @@ const ContactForm: React.FC = () => {
     setErrors({});
 
     try {
-
       const submitData = {
         ...formData,
-        adminEmail: 'support@smmdoc.com',
         ...(recaptchaToken && { recaptchaToken })
       };
 
