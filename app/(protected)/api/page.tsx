@@ -22,7 +22,6 @@ import {
     FaPlus,
     FaQuestionCircle,
     FaRedo,
-    FaSpinner,
     FaSync,
     FaTimes,
 } from 'react-icons/fa';
@@ -367,7 +366,6 @@ axios.post(url, payload)
                   >
                     {isGeneratingKey ? (
                       <>
-                        <FaSpinner className="h-4 w-4 mr-2 animate-spin" />
                         Generating...
                       </>
                     ) : (

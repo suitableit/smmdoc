@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { serializeServices } from '@/lib/utils';
 
 export async function GET(request: Request) {
   try {
@@ -21,56 +22,100 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
-    const skip = (page - 1) * limit;
-    const whereClause = {
+    
+    // Build where clause - match the exact pattern from working routes
+    const whereClause: any = {
       status: 'active',
-      ...(search
+      updateText: {
+        not: null,
+      },
+      ...(search && search.trim()
         ? {
-            OR: [
+            AND: [
               {
-                name: {
-                  contains: search,
-                  mode: 'insensitive',
-                },
-              },
-              {
-                description: {
-                  contains: search,
-                  mode: 'insensitive',
-                },
+                OR: [
+                  {
+                    name: {
+                      contains: search,
+                    },
+                  },
+                  {
+                    description: {
+                      contains: search,
+                    },
+                  },
+                ],
               },
             ],
           }
         : {}),
-      updateText: {
-        not: null,
-      },
     };
-    const [services, total] = await Promise.all([
-      db.services.findMany({
+    
+    console.log('Fetching services with whereClause:', JSON.stringify(whereClause, null, 2));
+    
+    // Fetch services - get more than needed to account for filtering
+    const maxFetchLimit = 1000;
+    let allServices;
+    try {
+      allServices = await db.services.findMany({
         where: whereClause,
-        skip,
-        take: limit,
+        take: maxFetchLimit,
         orderBy: {
           updatedAt: 'desc',
         },
-      }),
-      db.services.count({ where: whereClause }),
-    ]);
+      });
+      console.log('Database query successful, fetched', allServices.length, 'services');
+    } catch (dbError) {
+      console.error('Database query failed:', dbError);
+      if (dbError instanceof Error) {
+        console.error('Database error message:', dbError.message);
+        console.error('Database error stack:', dbError.stack);
+      }
+      throw dbError;
+    }
+    
+    // Filter out services with empty or whitespace-only updateText
+    const filteredServices = allServices.filter(
+      (service) => service.updateText && service.updateText.trim().length > 0
+    );
+    
+    console.log(`After filtering: ${filteredServices.length} services with valid updateText`);
+    
+    // Calculate actual total
+    const actualTotal = filteredServices.length;
+    
+    // Apply pagination to filtered results
+    const skip = (page - 1) * limit;
+    const paginatedServices = filteredServices.slice(skip, skip + limit);
+    
+    console.log(`Returning page ${page} with ${paginatedServices.length} services (total: ${actualTotal})`);
+    
+    // Serialize services to handle BigInt fields
+    const serializedServices = serializeServices(paginatedServices);
+    
     return NextResponse.json(
       {
-        data: services,
-        total,
+        data: serializedServices,
+        total: actualTotal,
         page,
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(actualTotal / limit),
       },
       { status: 200 }
     );
   } catch (error) {
+    console.error('Error in getUpdateServices API:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+    }
     return NextResponse.json(
       {
         message: 'Error fetching services',
         error: error instanceof Error ? error.message : 'Unknown error',
+        details: process.env.NODE_ENV === 'development' 
+          ? (error instanceof Error ? error.stack : String(error))
+          : undefined,
       },
       { status: 500 }
     );

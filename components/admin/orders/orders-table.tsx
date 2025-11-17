@@ -485,7 +485,6 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Resend Order
                                 </button>
                               )}
-                              {/* Edit Order URL - Show for Pending, In Progress, Failed */}
                               {showEditOrderUrl && onEditOrderUrl && (
                                 <button
                                   onClick={() => {
@@ -501,7 +500,6 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Edit Order URL
                                 </button>
                               )}
-                              {/* Edit Start Count - Show for Pending, In Progress, Failed, Cancelled, Completed */}
                               {showEditStartCount && (
                                 <button
                                   onClick={() => {
@@ -520,7 +518,6 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Edit Start Count
                                 </button>
                               )}
-                              {/* Mark Partial - Show for Pending, In Progress, Failed, Cancelled, Completed (not if already partial) */}
                               {showMarkPartial && order.status !== 'partial' && (
                                 <button
                                   onClick={() => {
@@ -536,7 +533,6 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                   Mark Partial
                                 </button>
                               )}
-                              {/* Update Order Status - Show for Pending, In Progress, Failed, Cancelled, Completed */}
                               {showUpdateStatus && (
                                 <button
                                   onClick={() => {

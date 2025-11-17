@@ -19,7 +19,6 @@ import {
     FaCreditCard,
     FaExchangeAlt,
     FaShieldAlt,
-    FaSpinner,
     FaTimes,
     FaWallet,
 } from 'react-icons/fa';
@@ -481,7 +480,6 @@ export function AddFundForm() {
           >
             {isPending ? (
               <div className="flex items-center gap-2">
-                <FaSpinner className="animate-spin" />
                 Processing...
               </div>
             ) : (
