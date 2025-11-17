@@ -30,7 +30,7 @@ const Hero: React.FC = () => {
               page.
             </p>
             <Link
-              href="/signup"
+              href="/about"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
             >
               <span>Get Started</span>

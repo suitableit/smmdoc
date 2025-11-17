@@ -15,8 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Fetch admin email from general settings
-    let adminEmail = 'support@smmdoc.com'; // Default fallback
+    let adminEmail = 'support@smmdoc.com';
     try {
       const generalSettings = await db.generalSettings.findFirst();
       if (generalSettings?.adminEmail) {
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Send email to admin
     try {
       const { sendMail } = await import('@/lib/nodemailer');
       const { contactEmailTemplates } = await import('@/lib/email-templates');
@@ -98,7 +96,6 @@ export async function POST(request: NextRequest) {
       console.log('Contact form email sent to admin:', adminEmail);
     } catch (emailError) {
       console.error('Error sending contact form email to admin:', emailError);
-      // Don't fail the request if email fails
     }
 
     console.log('Contact form submission received:', {
