@@ -21,11 +21,14 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
 
   useEffect(() => {
     if (isOpen) {
-      setIsAnimating(true);
+      setIsAnimating(true);
+
       document.body.style.overflow = 'hidden';
-    } else {
+    } else {
+
       document.body.style.overflow = 'unset';
-    }
+    }
+
     return () => {
       document.body.style.overflow = 'unset';
     };

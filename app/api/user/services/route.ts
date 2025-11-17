@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { serializeServices } from '@/lib/utils';
 
 async function fetchCurrencyData() {
   try {
@@ -301,7 +302,7 @@ export async function GET(request: Request) {
 
 
 
-    const servicesWithConvertedPrices = services.map(service => {
+    const servicesWithConvertedPrices = serializeServices(services).map(service => {
       const priceUSD = service.rate;
       const convertedPrice = convertFromUSD(priceUSD, currency, currencies);
 

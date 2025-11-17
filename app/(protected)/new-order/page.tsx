@@ -45,6 +45,26 @@ import {
 } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 
+const toNumber = (value: number | bigint | string | null | undefined): number => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'bigint') {
+    const num = Number(value);
+    return isNaN(num) || !isFinite(num) ? 0 : num;
+  }
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  const num = Number(value);
+  return isNaN(num) || !isFinite(num) ? 0 : num;
+};
+
+const toString = (value: number | bigint | string | null | undefined): string => {
+  if (value === null || value === undefined) return '0';
+  if (typeof value === 'bigint') return value.toString();
+  return String(value);
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -183,7 +203,7 @@ const ServiceDetailsCard = ({
         </div>
         <h3 className="text-lg font-bold leading-tight">{selected.name}</h3>
         <div className="text-sm opacity-90 mt-2">
-          Max {selected.max_order || 'N/A'} ~ NO REFILL ~{' '}
+          Max {toString(selected.max_order) || 'N/A'} ~ NO REFILL ~{' '}
           {selected.avg_time || 'N/A'} ~ INSTANT - ${selected.rate || '0.00'}{' '}
           per 1000
         </div>
@@ -352,13 +372,13 @@ const ServiceDetailsCard = ({
         <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div className="text-center">
             <div className="text-lg font-bold text-gray-900">
-              {selected.min_order || 0}
+              {toString(selected.min_order) || '0'}
             </div>
             <div className="text-xs text-gray-500">Min Order</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-gray-900">
-              {selected.max_order || 0}
+              {toString(selected.max_order) || '0'}
             </div>
             <div className="text-xs text-gray-500">Max Order</div>
           </div>
@@ -864,16 +884,16 @@ function NewOrder() {
       return;
     }
 
-    const minOrder = selected?.min_order || 0;
-    const maxOrder = selected?.max_order || 0;
+    const minOrder = toNumber(selected?.min_order);
+    const maxOrder = toNumber(selected?.max_order);
 
     if (qty < minOrder) {
-      showToast(`Minimum order quantity is ${minOrder}`, 'error');
+      showToast(`Minimum order quantity is ${toString(selected?.min_order) || '0'}`, 'error');
       return;
     }
 
     if (qty > maxOrder) {
-      showToast(`Maximum order quantity is ${maxOrder}`, 'error');
+      showToast(`Maximum order quantity is ${toString(selected?.max_order) || '0'}`, 'error');
       return;
     }
 
@@ -1316,31 +1336,31 @@ function NewOrder() {
                           : setQty(0)
                       }
                       min={
-                        services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
-                          ?.min_order || 0
+                        toNumber(services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
+                          ?.min_order) || 0
                       }
                       max={
-                        services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
-                          ?.max_order || 0
+                        toNumber(services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
+                          ?.max_order) || 0
                       }
                       value={qty || ''}
                     />
                     <small className="text-xs text-gray-500 mt-1">
                       Min:{' '}
-                      {services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
-                        ?.min_order || 0}{' '}
+                      {toString(services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
+                        ?.min_order) || '0'}{' '}
                       - Max:{' '}
-                      {services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
-                        ?.max_order || 0}
+                      {toString(services?.find((s) => s.id === parseInt(selectedService) || s.id === selectedService)
+                        ?.max_order) || '0'}
                     </small>
-                    {qty > 0 && qty < (selected?.min_order || 0) && (
+                    {qty > 0 && qty < toNumber(selected?.min_order) && (
                       <div className="text-red-500 text-xs mt-1">
-                        Quantity must be at least {selected?.min_order || 0}
+                        Quantity must be at least {toString(selected?.min_order) || '0'}
                       </div>
                     )}
-                    {qty > (selected?.max_order || 999999) && (
+                    {qty > toNumber(selected?.max_order || 999999) && (
                       <div className="text-red-500 text-xs mt-1">
-                        Quantity cannot exceed {selected?.max_order || 0}
+                        Quantity cannot exceed {toString(selected?.max_order) || '0'}
                       </div>
                     )}
                   </div>
@@ -1380,8 +1400,8 @@ function NewOrder() {
                       !selectedService ||
                       !link ||
                       qty < 1 ||
-                      qty < (selected?.min_order || 0) ||
-                      qty > (selected?.max_order || 999999)
+                      qty < toNumber(selected?.min_order) ||
+                      qty > toNumber(selected?.max_order || 999999)
                     }
                     className="btn btn-primary w-full"
                   >
@@ -1389,10 +1409,10 @@ function NewOrder() {
                       <>
                         Creating Order...
                       </>
-                    ) : qty > 0 && qty < (selected?.min_order || 0) ? (
-                      `Minimum ${selected?.min_order || 0} required`
-                    ) : qty > (selected?.max_order || 999999) ? (
-                      `Maximum ${selected?.max_order || 0} allowed`
+                    ) : qty > 0 && qty < toNumber(selected?.min_order) ? (
+                      `Minimum ${toString(selected?.min_order) || '0'} required`
+                    ) : qty > toNumber(selected?.max_order || 999999) ? (
+                      `Maximum ${toString(selected?.max_order) || '0'} allowed`
                     ) : !selectedService ? (
                       'Select a service first'
                     ) : !link ? (

@@ -115,3 +115,18 @@ export function serializeOrder(order: any): any {
     maxQty: order.maxQty && typeof order.maxQty === 'bigint' ? order.maxQty.toString() : order.maxQty,
   };
 }
+
+export function serializeService(service: any): any {
+  if (!service) return service;
+  
+  return {
+    ...service,
+    min_order: typeof service.min_order === 'bigint' ? service.min_order.toString() : service.min_order,
+    max_order: typeof service.max_order === 'bigint' ? service.max_order.toString() : service.max_order,
+  };
+}
+
+export function serializeServices(services: any[]): any[] {
+  if (!services || !Array.isArray(services)) return services;
+  return services.map(serializeService);
+}

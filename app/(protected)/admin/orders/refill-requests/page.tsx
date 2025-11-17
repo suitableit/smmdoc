@@ -18,6 +18,14 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 
+const cleanLinkDisplay = (link: string): string => {
+  if (!link) return link;
+  let cleaned = link;
+  cleaned = cleaned.replace(/^https?:\/\//i, '');
+  cleaned = cleaned.replace(/^www\./i, '');
+  return cleaned;
+};
+
 const Toast = ({
   message,
   type = 'success',
@@ -870,9 +878,12 @@ const RefillOrdersPage = () => {
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
                                 >
-                                  {order.link.length > 18
-                                    ? order.link.substring(0, 18) + '...'
-                                    : order.link}
+                                  {(() => {
+                                    const cleanedLink = cleanLinkDisplay(order.link);
+                                    return cleanedLink.length > 18
+                                      ? cleanedLink.substring(0, 18) + '...'
+                                      : cleanedLink;
+                                  })()}
                                 </a>
                                 <button
                                   onClick={() => window.open(order.link, '_blank')}

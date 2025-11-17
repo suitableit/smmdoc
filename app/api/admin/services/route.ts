@@ -2,6 +2,7 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
+import { serializeServices } from '@/lib/utils';
 
 export async function GET(request: Request) {
   try {
@@ -112,7 +113,7 @@ export async function GET(request: Request) {
 
       return NextResponse.json(
         {
-          data: services || [],
+          data: serializeServices(services || []),
           total: services.length,
           page: 1,
           limit: services.length,
@@ -217,7 +218,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       {
-        data: services || [],
+        data: serializeServices(services || []),
         total: services.length,
         page,
         totalPages: Math.ceil(totalCategories / categoryLimit),
