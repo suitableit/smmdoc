@@ -23,7 +23,6 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const search = searchParams.get('search') || '';
     
-    // Build where clause - match the exact pattern from working routes
     const whereClause: any = {
       status: 'active',
       updateText: {
@@ -53,7 +52,6 @@ export async function GET(request: Request) {
     
     console.log('Fetching services with whereClause:', JSON.stringify(whereClause, null, 2));
     
-    // Fetch services - get more than needed to account for filtering
     const maxFetchLimit = 1000;
     let allServices;
     try {
@@ -74,23 +72,19 @@ export async function GET(request: Request) {
       throw dbError;
     }
     
-    // Filter out services with empty or whitespace-only updateText
     const filteredServices = allServices.filter(
       (service) => service.updateText && service.updateText.trim().length > 0
     );
     
     console.log(`After filtering: ${filteredServices.length} services with valid updateText`);
     
-    // Calculate actual total
     const actualTotal = filteredServices.length;
     
-    // Apply pagination to filtered results
     const skip = (page - 1) * limit;
     const paginatedServices = filteredServices.slice(skip, skip + limit);
     
     console.log(`Returning page ${page} with ${paginatedServices.length} services (total: ${actualTotal})`);
     
-    // Serialize services to handle BigInt fields
     const serializedServices = serializeServices(paginatedServices);
     
     return NextResponse.json(
