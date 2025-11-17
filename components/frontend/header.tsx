@@ -135,7 +135,6 @@ const Header: React.FC<HeaderProps> = ({
   const ThemeToggle = ({ inMenu = false }: { inMenu?: boolean }) => {
     const [theme, setTheme] = useState('system');
     const [mounted, setMounted] = useState(false);
-    const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
     useEffect(() => {
       setMounted(true);
@@ -158,15 +157,80 @@ const Header: React.FC<HeaderProps> = ({
       }
     };
 
-    const handleThemeChange = (newTheme: string) => {
-      setTheme(newTheme);
-      setIsThemeMenuOpen(false);
-      if (newTheme === 'system') {
-        localStorage.removeItem('theme');
-      } else {
-        localStorage.setItem('theme', newTheme);
+    const createFadeTransition = () => {
+      const overlay = document.createElement('div');
+      overlay.className = 'theme-fade-overlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, transparent 100%);
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0;
+      `;
+
+      const styleId = 'theme-fade-animation-style';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          @keyframes themeFadeDown {
+            0% {
+              opacity: 0;
+              transform: translateY(-100%);
+            }
+            30% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            70% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(100%);
+            }
+          }
+          .theme-fade-overlay {
+            animation: themeFadeDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          }
+        `;
+        document.head.appendChild(style);
       }
-      applyTheme(newTheme);
+
+      document.body.appendChild(overlay);
+
+      setTimeout(() => {
+        if (document.body.contains(overlay)) {
+          document.body.removeChild(overlay);
+        }
+      }, 600);
+    };
+
+    const handleThemeChange = (newTheme: string) => {
+      createFadeTransition();
+      
+      setTimeout(() => {
+        setTheme(newTheme);
+        if (newTheme === 'system') {
+          localStorage.removeItem('theme');
+        } else {
+          localStorage.setItem('theme', newTheme);
+        }
+        applyTheme(newTheme);
+      }, 150);
+    };
+
+    const cycleTheme = () => {
+      const themeOrder = ['system', 'light', 'dark'];
+      const currentIndex = themeOrder.indexOf(theme);
+      const nextIndex = (currentIndex + 1) % themeOrder.length;
+      const nextTheme = themeOrder[nextIndex];
+      handleThemeChange(nextTheme);
     };
 
     if (!mounted) {
@@ -207,42 +271,15 @@ const Header: React.FC<HeaderProps> = ({
     const CurrentIcon = currentTheme.icon;
 
     return (
-      <div className="relative">
+      <div className="relative flex items-center justify-center pl-4">
         <button
-          onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-          className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm ml-4"
-          aria-label="Toggle theme"
+          onClick={cycleTheme}
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 shadow-sm"
+          aria-label={`Current theme: ${currentTheme.label}. Click to cycle themes.`}
+          title={`Current: ${currentTheme.label}`}
         >
           <CurrentIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 dark:text-gray-300 transition-colors duration-200" />
         </button>
-
-        {isThemeMenuOpen && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setIsThemeMenuOpen(false)} />
-            <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50 transition-colors duration-200">
-              <div className="p-1">
-                {themeOptions.map((option) => {
-                  const IconComponent = option.icon;
-                  const isActive = theme === option.key;
-                  return (
-                    <button
-                      key={option.key}
-                      onClick={() => handleThemeChange(option.key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 ${
-                        isActive
-                          ? 'bg-[var(--primary)] text-white shadow-sm'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      <IconComponent className={`h-4 w-4 transition-colors duration-200 ml-1 ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
-                      <span className="font-medium text-sm">{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
       </div>
     );
   };
