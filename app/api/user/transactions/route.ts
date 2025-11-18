@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
-      transaction_type: 'deposit',
+      transaction_type: transaction.transaction_type || 'deposit',
       reference_id: transaction.order_id,
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,

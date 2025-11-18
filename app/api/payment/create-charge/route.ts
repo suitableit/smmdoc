@@ -132,8 +132,7 @@ export async function POST(req: NextRequest) {
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-      const paymentCurrency = currency || 'USD';
-      const paymentAmount = currency === 'USD' ? amountUSD : convertCurrency(amountUSD, 'USD', paymentCurrency, currencies);
+      const paymentAmount = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
       
       const paymentData = {
         full_name: session.user.name || 'User',
