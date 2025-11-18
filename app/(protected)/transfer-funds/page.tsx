@@ -2,6 +2,7 @@
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import { useCurrentUser } from '@/hooks/use-current-user';
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
@@ -36,6 +37,7 @@ const Toast = ({
 
 export default function TransferFund() {
   const { appName } = useAppNameWithFallback();
+  const currentUser = useCurrentUser();
 
   const className = '';
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
@@ -54,6 +56,7 @@ export default function TransferFund() {
   const [userValidationError, setUserValidationError] = useState('');
   const [isUserValid, setIsUserValid] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selfTransferError, setSelfTransferError] = useState('');
 
   const rate = globalRate;
 
@@ -73,17 +76,34 @@ export default function TransferFund() {
     if (!usernameValue.trim()) {
       setUserValidationError('');
       setIsUserValid(false);
+      setSelfTransferError('');
       return;
     }
 
     if (usernameValue.length < 3) {
       setIsUserValid(false);
       setUserValidationError('');
+      setSelfTransferError('');
       return;
+    }
+
+    if (currentUser) {
+      const currentUsername = currentUser.username?.toLowerCase() || '';
+      const currentEmail = currentUser.email?.toLowerCase() || '';
+      const inputValue = usernameValue.toLowerCase().trim();
+
+      if (inputValue === currentUsername || inputValue === currentEmail) {
+        setIsUserValid(false);
+        setUserValidationError('');
+        setSelfTransferError('You cannot transfer fund yourself!');
+        setIsValidatingUser(false);
+        return;
+      }
     }
 
     setIsValidatingUser(true);
     setUserValidationError('');
+    setSelfTransferError('');
 
     try {
       const response = await fetch(
@@ -94,20 +114,37 @@ export default function TransferFund() {
       const result = await response.json();
 
       if (result.success) {
+        if (currentUser) {
+          const currentUsername = currentUser.username?.toLowerCase() || '';
+          const currentEmail = currentUser.email?.toLowerCase() || '';
+          const validatedUsername = result.user?.username?.toLowerCase() || '';
+          const validatedEmail = result.user?.email?.toLowerCase() || '';
+
+          if (validatedUsername === currentUsername || validatedEmail === currentEmail || 
+              validatedUsername === currentEmail || validatedEmail === currentUsername) {
+            setIsUserValid(false);
+            setUserValidationError('');
+            setSelfTransferError('You cannot transfer fund yourself!');
+            return;
+          }
+        }
         setIsUserValid(true);
         setUserValidationError('');
+        setSelfTransferError('');
       } else {
         setIsUserValid(false);
         setUserValidationError(result.error || 'User not found');
+        setSelfTransferError('');
       }
     } catch (error) {
       setIsUserValid(false);
       setUserValidationError('Error validating username');
+      setSelfTransferError('');
       console.error('Username validation error:', error);
     } finally {
       setIsValidatingUser(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -120,10 +157,24 @@ export default function TransferFund() {
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUsername(value);
+    setSelfTransferError('');
 
     if (value !== username) {
       setIsUserValid(false);
       setUserValidationError('');
+    }
+
+    if (currentUser && value.trim()) {
+      const currentUsername = currentUser.username?.toLowerCase() || '';
+      const currentEmail = currentUser.email?.toLowerCase() || '';
+      const inputValue = value.toLowerCase().trim();
+
+      if (inputValue === currentUsername || inputValue === currentEmail) {
+        setSelfTransferError('You cannot transfer fund yourself!');
+        setIsUserValid(false);
+        setUserValidationError('');
+        return;
+      }
     }
   };
 
@@ -195,10 +246,25 @@ export default function TransferFund() {
       try {
         showToast('Processing transfer...', 'pending');
 
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
         const calculatedFee = (transferAmount * feePercentage) / 100;
-        const calculatedTotal = transferAmount + calculatedFee;
+
+        const response = await fetch('/api/user/transfer-funds', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            amount: transferAmount,
+            currency: activeCurrency,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Transfer failed');
+        }
 
         showToast(
           `Successfully transferred ${transferAmount} ${activeCurrency} to ${username} (Fee: ${calculatedFee.toFixed(
@@ -211,7 +277,8 @@ export default function TransferFund() {
         setAmountBDT('');
         setAmountBDTConverted('');
       } catch (error) {
-        showToast('Transfer failed. Please try again.', 'error');
+        const errorMessage = error instanceof Error ? error.message : 'Transfer failed. Please try again.';
+        showToast(errorMessage, 'error');
       }
     });
   };
@@ -311,7 +378,7 @@ export default function TransferFund() {
                     value={username}
                     onChange={handleUsernameChange}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
-                      userValidationError
+                      userValidationError || selfTransferError
                         ? 'border-red-500 dark:border-red-400'
                         : isUserValid
                         ? 'border-green-500 dark:border-green-400'
@@ -342,7 +409,13 @@ export default function TransferFund() {
                   </p>
                 )}
 
-                {userValidationError && (
+                {selfTransferError && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200 font-medium">
+                    {selfTransferError}
+                  </p>
+                )}
+
+                {userValidationError && !selfTransferError && (
                   <p className="text-red-500 dark:text-red-400 text-sm mt-1 transition-colors duration-200">
                     {userValidationError}
                   </p>
@@ -516,15 +589,13 @@ export default function TransferFund() {
                   !username ||
                   currentAmount <= 0 ||
                   !isUserValid ||
-                  isValidatingUser
+                  isValidatingUser ||
+                  !!selfTransferError
                 }
                 className="btn btn-primary w-full"
               >
                 {isPending ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <FaSpinner className="animate-spin" />
-                    Processing...
-                  </div>
+                  'Processing...'
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <FaExchangeAlt />
