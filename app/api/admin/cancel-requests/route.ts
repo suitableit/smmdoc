@@ -54,6 +54,10 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma where condition:', JSON.stringify(whereCondition, null, 2));
 
+    whereCondition.order = {
+      isNot: null
+    };
+
     const cancelRequestsResult = await db.cancelRequests.findMany({
       where: whereCondition,
       include: {
