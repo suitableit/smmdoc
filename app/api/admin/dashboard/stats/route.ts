@@ -5,17 +5,17 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const session = await requireAdmin();
-    
+
     const totalOrders = await db.newOrders.count();
-    
+
     const totalUsers = await db.users.count({
       where: { role: 'user' }
     });
-    
+
     const totalServices = await db.services.count();
-    
+
     const totalCategories = await db.categories.count();
-    
+
     const orders = await db.newOrders.findMany({
       where: {
         status: {
@@ -26,9 +26,9 @@ export async function GET() {
         usdPrice: true
       }
     });
-    
+
     const totalRevenue = orders.reduce((acc, order) => acc + order.usdPrice, 0);
-    
+
     const recentOrders = await db.newOrders.findMany({
       take: 5,
       orderBy: {
@@ -48,19 +48,19 @@ export async function GET() {
         }
       }
     });
-    
+
     const pendingOrders = await db.newOrders.count({
       where: { status: 'pending' }
     });
-    
+
     const processingOrders = await db.newOrders.count({
       where: { status: 'processing' }
     });
-    
+
     const completedOrders = await db.newOrders.count({
       where: { status: 'completed' }
     });
-    
+
     const cancelledOrders = await db.newOrders.count({
       where: { status: 'cancelled' }
     });
@@ -109,11 +109,11 @@ export async function GET() {
         role: 'user'
       }
     });
-    
+
     const today = new Date();
     const lastWeek = new Date(today);
     lastWeek.setDate(today.getDate() - 7);
-    
+
     const dailyOrders = await db.newOrders.groupBy({
       by: ['createdAt'],
       _count: {
@@ -128,12 +128,12 @@ export async function GET() {
         createdAt: 'asc'
       }
     });
-    
+
     const formattedDailyOrders = dailyOrders.map(order => ({
       date: order.createdAt.toISOString().split('T')[0],
       orders: order._count.id
     }));
-    
+
     return NextResponse.json(
       {
         success: true,
