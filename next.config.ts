@@ -17,6 +17,16 @@ const nextConfig = {
     optimizePackageImports: ['@/components', '@/hooks', '@/lib'],
   },
 
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
+
   webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (dev && !isServer) {
       config.watchOptions = {
