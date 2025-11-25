@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { GradientSpinner } from '@/components/ui/GradientSpinner';
 
 interface PublicContactSystemGuardProps {
   children: React.ReactNode;
@@ -45,16 +44,7 @@ const PublicContactSystemGuard: React.FC<PublicContactSystemGuardProps> = ({ chi
   }, [router]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <GradientSpinner size="w-16 h-16" className="mx-auto mb-4" />
-          <p className="text-lg font-medium text-gray-600 dark:text-gray-400">
-            Loading...
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (!isEnabled) {
