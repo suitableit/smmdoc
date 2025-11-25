@@ -2,8 +2,12 @@ import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import PublicContactSystemGuard from '@/components/PublicContactSystemGuard';
 
-const Hero = dynamic(() => import('@/components/frontend/contact/hero'));
-const HowToContact = dynamic(() => import('@/components/frontend/contact/how-to-contact'));
+const Hero = dynamic(() => import('@/components/frontend/contact/hero'), {
+  loading: () => null,
+});
+const HowToContact = dynamic(() => import('@/components/frontend/contact/how-to-contact'), {
+  loading: () => null,
+});
 
 export const metadata: Metadata = {
   title: 'Contact Us - SMMDOC',
