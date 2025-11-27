@@ -4,7 +4,7 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
     FaChartLine,
@@ -121,6 +121,7 @@ function AffiliateStatsCards() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [cachedReferralCode, setCachedReferralCode] = useState<string | null>(null);
   const [stats, setStats] = useState<AffiliateStats>({
     visits: 0,
     registrations: 0,
@@ -128,11 +129,16 @@ function AffiliateStatsCards() {
     conversionRate: '0.00%',
     totalEarnings: '$0.00',
     availableEarnings: '$0.00',
-    commissionRate: '1%',
-    minimumPayout: '$100.00',
+    commissionRate: '0%',
+    minimumPayout: '$0.00',
   });
 
-  const referralLink = user?.id ? `https://smmdoc.com/ref/${user.id}` : '';
+  const referralLink = (() => {
+    if (typeof window === 'undefined') return '';
+    const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+    const code = (stats as any)?.referralCode || cachedReferralCode;
+    return code ? `${base}/ref/${code}` : '';
+  })();
 
   const showToast = (
     message: string,
@@ -143,6 +149,10 @@ function AffiliateStatsCards() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('affiliateReferralCode');
+      if (stored) setCachedReferralCode(stored);
+    }
     const fetchStats = async () => {
       try {
         setLoading(true);
@@ -161,6 +171,29 @@ function AffiliateStatsCards() {
         const data = await response.json();
         if (data.success && data.data) {
           setStats(data.data);
+          if (typeof window !== 'undefined' && data.data.referralCode) {
+            window.localStorage.setItem('affiliateReferralCode', data.data.referralCode);
+            setCachedReferralCode(data.data.referralCode);
+          }
+          if (data.data.isAffiliate === false) {
+            try {
+              const joinRes = await fetch('/api/user/affiliate/join', { method: 'POST' });
+              if (joinRes.ok) {
+                const statsRes = await fetch('/api/user/affiliate/stats');
+                if (statsRes.ok) {
+                  const statsJson = await statsRes.json();
+                  if (statsJson.success && statsJson.data) {
+                    setStats(statsJson.data);
+                    if (typeof window !== 'undefined' && statsJson.data.referralCode) {
+                      window.localStorage.setItem('affiliateReferralCode', statsJson.data.referralCode);
+                      setCachedReferralCode(statsJson.data.referralCode);
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching affiliate stats:', error);
@@ -237,7 +270,7 @@ function AffiliateStatsCards() {
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {referralLink
-                      ? referralLink.replace('https://', '')
+                      ? referralLink.replace(/^https?:\/\//, '')
                       : 'Login to generate'}
                   </p>
                   {referralLink && (
@@ -430,9 +463,12 @@ function AffiliateStatsCards() {
 
 function AffiliateEarningsSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
   const [earningsLoading, setEarningsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [pagination, setPagination] = useState<EarningsPaginationInfo>({
     page: 1,
@@ -451,28 +487,22 @@ function AffiliateEarningsSection() {
   });
   const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
 
-  const userPaymentMethods = [
-    {
-      id: '1',
-      method: 'bKash',
-      accountNumber: '01712345678'
-    },
-    {
-      id: '2', 
-      method: 'Nagad',
-      accountNumber: '01798765432'
-    },
-    {
-      id: '3',
-      method: 'Rocket',
-      accountNumber: '01655554444'
-    },
-    {
-      id: '4',
-      method: 'Bank Transfer',
-      accountNumber: 'Dutch Bangla Bank - 1234567890123'
+  const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([])
+  const getPaymentMethodDisplayName = (method: string): string => {
+    const names: Record<string, string> = {
+      bkash: 'bKash',
+      nagad: 'Nagad',
+      rocket: 'Rocket',
+      upay: 'Upay',
+      bank: 'Bank Transfer',
     }
-  ];
+    const key = (method || '').toLowerCase()
+    return names[key] || method
+  }
+  const getPaymentMethodOptionLabel = (m: any): string => {
+    const base = getPaymentMethodDisplayName(m.method)
+    return base
+  }
 
   const getPaymentMethodStyle = (method: string) => {
     switch (method.toLowerCase()) {
@@ -494,68 +524,8 @@ function AffiliateEarningsSection() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
-  const sampleEarnings: AffiliateEarning[] = [
-    {
-      id: 1,
-      signupDate: '2024-01-15T10:30:00Z',
-      service: 'Instagram Followers',
-      amount: 25.50,
-      commission: 2.55,
-      status: 'completed',
-      user: {
-        id: 101,
-        email: 'user1@example.com',
-        name: 'John Doe',
-        username: 'johndoe'
-      },
-      currency: 'USD'
-    },
-    {
-      id: 2,
-      signupDate: '2024-01-16T14:20:00Z',
-      service: 'Facebook Likes',
-      amount: 15.75,
-      commission: 1.58,
-      status: 'pending',
-      user: {
-        id: 102,
-        email: 'user2@example.com',
-        name: 'Jane Smith',
-        username: 'janesmith'
-      },
-      currency: 'USD'
-    },
-    {
-      id: 3,
-      signupDate: '2024-01-17T09:45:00Z',
-      service: 'YouTube Views',
-      amount: 45.20,
-      commission: 4.52,
-      status: 'completed',
-      user: {
-        id: 103,
-        email: 'user3@example.com',
-        name: 'Mike Johnson',
-        username: 'mikejohnson'
-      },
-      currency: 'USD'
-    },
-    {
-      id: 4,
-      signupDate: '2024-01-18T16:15:00Z',
-      service: 'TikTok Followers',
-      amount: 32.80,
-      commission: 3.28,
-      status: 'cancelled',
-      user: {
-        id: 104,
-        email: 'user4@example.com',
-        name: 'Sarah Wilson',
-        username: 'sarahwilson'
-      },
-      currency: 'USD'
-    }
-  ];
+  const [minWithdrawalValue, setMinWithdrawalValue] = useState<number>(100)
+  const [availableBalanceDisplay, setAvailableBalanceDisplay] = useState<string>('')
 
   const showToast = (
     message: string,
@@ -567,48 +537,107 @@ function AffiliateEarningsSection() {
 
   const fetchEarnings = async () => {
     try {
-      setEarningsLoading(true);
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      let filteredEarnings = sampleEarnings;
-      if (statusFilter !== 'all') {
-        filteredEarnings = sampleEarnings.filter(earning => earning.status === statusFilter);
-      }
-
-      if (searchTerm) {
-        filteredEarnings = filteredEarnings.filter(earning => 
-          earning.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          earning.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          earning.user.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      setEarnings(filteredEarnings);
+      setEarningsLoading(true)
+      const params = new URLSearchParams()
+      params.set('page', String(pagination.page))
+      params.set('limit', String(pagination.limit))
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter)
+      const res = await fetch(`/api/user/affiliate/earnings?${params.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch earnings')
+      const json = await res.json()
+      setEarnings(json.data || [])
       setPagination(prev => ({
         ...prev,
-        total: filteredEarnings.length,
-        totalPages: Math.ceil(filteredEarnings.length / prev.limit)
-      }));
-
+        total: json.pagination?.total || 0,
+        totalPages: json.pagination?.totalPages || 0,
+        hasNext: json.pagination?.hasNext || false,
+        hasPrev: json.pagination?.hasPrev || false,
+      }))
     } catch (error) {
-      console.error('Error fetching earnings:', error);
-      showToast('Error fetching earnings data', 'error');
+      showToast('Error fetching earnings data', 'error')
     } finally {
-      setEarningsLoading(false);
+      setEarningsLoading(false)
     }
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchEarnings();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm, statusFilter]);
+      setDebouncedSearch(searchTerm)
+      setPagination(prev => ({ ...prev, page: 1 }))
+    }, 500)
+    if (searchTerm.trim()) {
+      setIsSearchLoading(true)
+    } else {
+      setIsSearchLoading(false)
+    }
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
-    fetchEarnings();
+    fetchEarnings()
+  }, [debouncedSearch, statusFilter])
+
+  useEffect(() => {
+    fetchEarnings()
+    ;(async () => {
+      try {
+        const res = await fetch('/api/user/affiliate/stats')
+        if (res.ok) {
+          const json = await res.json()
+          const minPayoutText: string = json?.data?.minimumPayout || '$100.00'
+          const value = parseFloat(String(minPayoutText).replace(/[^0-9.]/g, ''))
+          setMinWithdrawalValue(isNaN(value) ? 100 : value)
+          setAvailableBalanceDisplay(json?.data?.availableEarnings || '')
+        }
+        const pmRes = await fetch('/api/user/affiliate/payment-methods')
+        if (pmRes.ok) {
+          const pmJson = await pmRes.json()
+          if (pmJson.success) {
+            const list = pmJson.data || []
+            setSavedPaymentMethods(list)
+            if (!withdrawalForm.selectedPaymentMethod && list.length > 0) {
+              setWithdrawalForm(prev => ({ ...prev, selectedPaymentMethod: list[0].id }))
+            }
+          }
+        }
+      } catch {}
+    })()
   }, []);
+
+  useEffect(() => {
+    const urlStatus = searchParams?.get('status')
+    const newStatus = urlStatus ? urlStatus.replace('_', '-') : 'all'
+    if (newStatus !== statusFilter) {
+      setStatusFilter(newStatus)
+    }
+  }, [searchParams, statusFilter])
+
+  const handleStatusChange = (key: string) => {
+    setStatusFilter(key)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    const current = searchParams?.toString() || ''
+    const params = new URLSearchParams(current)
+    if (key === 'all') {
+      params.delete('status')
+    } else {
+      params.set('status', key)
+    }
+    const newUrl = params.toString() ? `?${params.toString()}` : '/affiliate'
+    router.push(newUrl)
+  }
+
+  const getStatusCount = (key: string) => {
+    if (key === 'all') return earnings.length
+    return earnings.filter(e => e.status === key).length
+  }
+
+  const statusFilters = [
+    { key: 'all', label: 'All' },
+    { key: 'pending', label: 'Pending' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'cancelled', label: 'Cancelled' },
+  ]
 
   const safeFormatId = (id: any) => {
     return formatID(String(id || 'null'));
@@ -644,7 +673,7 @@ function AffiliateEarningsSection() {
     }
 
     const amount = parseFloat(withdrawalForm.amount);
-    const minWithdrawal = 100;
+    const minWithdrawal = minWithdrawalValue;
 
     if (amount < minWithdrawal) {
       showToast(`Minimum withdrawal amount is ${minWithdrawal}`, 'error');
@@ -672,10 +701,10 @@ function AffiliateEarningsSection() {
   };
 
   const statusCounts = {
-    all: sampleEarnings.length,
-    pending: sampleEarnings.filter(e => e.status === 'pending').length,
-    completed: sampleEarnings.filter(e => e.status === 'completed').length,
-    cancelled: sampleEarnings.filter(e => e.status === 'cancelled').length,
+    all: earnings.length,
+    pending: earnings.filter(e => e.status === 'pending').length,
+    completed: earnings.filter(e => e.status === 'completed').length,
+    cancelled: earnings.filter(e => e.status === 'cancelled').length,
   };
 
   return (
@@ -721,14 +750,14 @@ function AffiliateEarningsSection() {
               </button>
             </div>
 
-            <div className="w-full md:w-auto flex flex-col md:flex-row items-center gap-2">
-              <button
-                onClick={() => setWithdrawalModalOpen(true)}
-                className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto mb-2 md:mb-0"
-              >
-                <FaDollarSign className="w-4 h-4" />
-                Request Withdrawal
-              </button>
+              <div className="w-full md:w-auto flex flex-col md:flex-row items-center gap-2">
+                <button
+                  onClick={() => setWithdrawalModalOpen(true)}
+                  className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto mb-2 md:mb-0"
+                >
+                  <FaDollarSign className="w-4 h-4" />
+                  Request Withdrawal
+                </button>
 
               <button
                 onClick={() => router.push('/affiliate/payment-methods')}
@@ -739,104 +768,54 @@ function AffiliateEarningsSection() {
               </button>
             </div>
           </div>
-          <div className="w-full md:w-auto flex items-center gap-3">
-            <div className="relative w-full md:w-auto">
-              <FaSearch
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                style={{ color: 'var(--text-muted)' }}
-              />
-              <input
-                type="text"
-                placeholder={`Search ${
-                  statusFilter === 'all' ? 'all' : statusFilter
-                } earnings...`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-              />
+            <div className="w-full md:w-auto flex items-center gap-3">
+              <div className="relative w-full md:w-auto">
+                <FaSearch
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <input
+                  type="text"
+                  placeholder={`Search ${
+                    statusFilter === 'all' ? 'all' : statusFilter
+                  } earnings...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full md:w-80 pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                />
+                {isSearchLoading && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 gradient-shimmer rounded-full" />
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="card">
-        <div className="card-header p-4 pt-4 pb-0 md:p-6 md:pt-6 md:pb-0">
-          <div className="mb-4">
-            <div className="block space-y-2">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                  statusFilter === 'all'
-                    ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                All
-                <span
-                  className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    statusFilter === 'all' ? 'bg-white/20' : 'bg-purple-100 text-purple-700'
-                  }`}
-                >
-                  {statusCounts.all}
-                </span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('pending')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                  statusFilter === 'pending'
-                    ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Pending
-                <span
-                  className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    statusFilter === 'pending' ? 'bg-white/20' : 'bg-orange-100 text-orange-700'
-                  }`}
-                >
-                  {statusCounts.pending}
-                </span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('completed')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                  statusFilter === 'completed'
-                    ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Completed
-                <span
-                  className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    statusFilter === 'completed'
-                      ? 'bg-white/20'
-                      : 'bg-green-100 text-green-700'
-                  }`}
-                >
-                  {statusCounts.completed}
-                </span>
-              </button>
-              <button
-                onClick={() => setStatusFilter('cancelled')}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
-                  statusFilter === 'cancelled'
-                    ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Cancelled
-                <span
-                  className={`ml-2 text-xs px-2 py-1 rounded-full ${
-                    statusFilter === 'cancelled'
-                      ? 'bg-white/20'
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {statusCounts.cancelled}
-                </span>
-              </button>
+        <div className="card">
+          <div className="card-header p-4 pt-4 pb-0 md:p-6 md:pt-6 md:pb-0">
+            <div className="mb-4">
+              <div className="block space-y-2">
+              <div className="flex flex-wrap gap-3">
+                {statusFilters.map((f) => {
+                  const isActive = statusFilter === f.key
+                  const count = getStatusCount(f.key)
+                  return (
+                    <button
+                      key={f.key}
+                      onClick={() => handleStatusChange(f.key)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
+                        isActive
+                          ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
+                          : 'bg-gray-600 hover:bg-gray-700'
+                      }`}
+                    >
+                      {f.label} ({count})
+                    </button>
+                  )
+                })}
+              </div>
+              </div>
             </div>
           </div>
-        </div>
 
         <div className="px-4 md:px-6">
           {earningsLoading ? (
@@ -1066,8 +1045,8 @@ function AffiliateEarningsSection() {
             <div className="space-y-4">
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-sm text-green-600 font-medium mb-1">Available Balance</div>
-                <div className="text-2xl font-bold text-green-700">$245.50</div>
-                <div className="text-xs text-green-600 mt-1">Minimum withdrawal: $100.00</div>
+                <div className="text-2xl font-bold text-green-700">{availableBalanceDisplay || '$0.00'}</div>
+                <div className="text-xs text-green-600 mt-1">Minimum withdrawal: ${minWithdrawalValue.toFixed(2)}</div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -1104,15 +1083,25 @@ function AffiliateEarningsSection() {
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select payment method</option>
-                  {userPaymentMethods.map((method) => (
-                    <option key={method.id} value={method.id}>
-                      {method.method}
+                  {savedPaymentMethods.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {getPaymentMethodOptionLabel(m)}
                     </option>
                   ))}
                 </select>
                 <div className="text-xs text-gray-500 mt-1">
                   Choose from your configured payment methods
                 </div>
+                {withdrawalForm.selectedPaymentMethod && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Selected: {(() => {
+                      const sel = savedPaymentMethods.find(pm => String(pm.id) === String(withdrawalForm.selectedPaymentMethod))
+                      if (!sel) return ''
+                      const base = getPaymentMethodDisplayName(sel.method)
+                      return base
+                    })()}
+                  </div>
+                )}
               </div>
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-start gap-3">
