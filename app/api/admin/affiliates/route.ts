@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       const totalFunds = approvedCommissions.reduce((sum, c) => sum + c.amount, 0)
       const earnedCommission = approvedCommissions.reduce((sum, c) => sum + c.commissionAmount, 0)
       const pendingRequested = a.payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0)
-      const totalCommission = earnedCommission
+      const totalWithdrawn = a.payouts.filter(p => p.status === 'paid' || p.status === 'approved').reduce((sum, p) => sum + p.amount, 0)
       const lastActivityCandidateDates: Date[] = []
       if (a.updatedAt) lastActivityCandidateDates.push(a.updatedAt as unknown as Date)
       a.commissions.forEach(c => lastActivityCandidateDates.push(c.updatedAt as unknown as Date))
@@ -93,14 +93,18 @@ export async function GET(request: NextRequest) {
         signUps: a.totalReferrals,
         conversionRate: a.totalVisits > 0 ? (a.totalReferrals / a.totalVisits) * 100 : 0,
         totalFunds,
+        totalEarnings: a.totalEarnings || 0,
         earnedCommission,
+        availableEarnings: a.availableEarnings || 0,
         requestedCommission: pendingRequested,
-        totalCommission,
+        totalCommission: earnedCommission,
+        totalWithdrawn,
         status: a.status as 'active' | 'inactive' | 'suspended' | 'pending',
         createdAt: a.createdAt,
         lastActivity,
         commissionRate: a.commissionRate,
         paymentMethod: a.paymentMethod || '',
+        paymentDetails: a.paymentDetails || null,
         payoutHistory,
       }
     })

@@ -360,7 +360,7 @@ function AffiliateStatsCards() {
                   {statsLoading ? (
                     <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
-                    stats.visits
+                    formatNumber(stats.visits || 0)
                   )}
                 </div>
               </div>
@@ -378,7 +378,7 @@ function AffiliateStatsCards() {
                   {statsLoading ? (
                     <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
-                    stats.registrations
+                    formatNumber(stats.registrations || 0)
                   )}
                 </div>
               </div>
@@ -395,7 +395,7 @@ function AffiliateStatsCards() {
                   {statsLoading ? (
                     <div className="h-8 w-16 gradient-shimmer rounded" />
                   ) : (
-                    stats.referrals
+                    formatNumber(stats.referrals || 0)
                   )}
                 </div>
               </div>

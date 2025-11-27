@@ -129,14 +129,18 @@ interface AffiliateReferral {
   signUps: number;
   conversionRate: number;
   totalFunds: number;
+  totalEarnings: number;
   earnedCommission: number;
+  availableEarnings: number;
   requestedCommission: number;
   totalCommission: number;
+  totalWithdrawn: number;
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   createdAt: string;
   lastActivity: string;
   commissionRate: number;
   paymentMethod: string;
+  paymentDetails?: string | null;
   payoutHistory: PayoutRecord[];
 }
 
@@ -1327,20 +1331,22 @@ const AffiliateReferralsPage = () => {
                             Basic Information
                           </h4>
                           <div className="space-y-3">
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Affiliate ID
-                              </label>
-                              <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
-                                {formatID(viewDialog.affiliate.id.toString())}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">
+                                  Affiliate ID
+                                </label>
+                                <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
+                                  {formatID(viewDialog.affiliate.id.toString())}
+                                </div>
                               </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Username
-                              </label>
-                              <div className="text-sm text-gray-900 mt-1">
-                                {viewDialog.affiliate.user?.username || 'Unknown'}
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">
+                                  Username
+                                </label>
+                                <div className="text-sm text-gray-900 mt-1">
+                                  {viewDialog.affiliate.user?.username || 'Unknown'}
+                                </div>
                               </div>
                             </div>
                             <div>
@@ -1351,23 +1357,25 @@ const AffiliateReferralsPage = () => {
                                 {viewDialog.affiliate.user?.email || 'No email'}
                               </div>
                             </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Referral Code
-                              </label>
-                              <div className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
-                                {viewDialog.affiliate.referralCode || 'N/A'}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">
+                                  Referral Code
+                                </label>
+                                <div className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
+                                  {viewDialog.affiliate.referralCode || 'N/A'}
+                                </div>
                               </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Status
-                              </label>
-                              <div className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium mt-1 ${getStatusColor(viewDialog.affiliate.status)}`}>
-                                {getStatusIcon(viewDialog.affiliate.status)}
-                                <span className="capitalize">
-                                  {viewDialog.affiliate.status}
-                                </span>
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">
+                                  Status
+                                </label>
+                                <div className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium mt-1 ${getStatusColor(viewDialog.affiliate.status)}`}>
+                                  {getStatusIcon(viewDialog.affiliate.status)}
+                                  <span className="capitalize">
+                                    {viewDialog.affiliate.status}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -1388,41 +1396,85 @@ const AffiliateReferralsPage = () => {
                             </div>
                             <div>
                               <label className="text-sm font-medium text-gray-600">
-                                Sign Ups
+                                Registrations
                               </label>
                               <div className="text-lg font-semibold text-gray-900 mt-1">
                                 {formatNumber(viewDialog.affiliate.signUps)}
                               </div>
                             </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">
+                                Referrals
+                              </label>
+                              <div className="text-lg font-semibold text-blue-600 mt-1">
+                                {formatNumber(viewDialog.affiliate.signUps)}
+                              </div>
+                            </div>
                             <div>
                               <label className="text-sm font-medium text-gray-600">
                                 Conversion Rate
                               </label>
-                              <div className="text-lg font-semibold text-blue-600 mt-1">
-                                {viewDialog.affiliate.conversionRate.toFixed(2)}%
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Commission Rate
-                              </label>
                               <div className="text-lg font-semibold text-purple-600 mt-1">
-                                {viewDialog.affiliate.commissionRate?.toFixed(1) || '5.0'}%
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-600">
-                                Payment Method
-                              </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
-                                {viewDialog.affiliate.paymentMethod || 'Not set'}
+                                {viewDialog.affiliate.conversionRate.toFixed(2)}%
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
+                      {viewDialog.affiliate.paymentDetails && (() => {
+                        try {
+                          const paymentMethods = JSON.parse(viewDialog.affiliate.paymentDetails);
+                          if (Array.isArray(paymentMethods) && paymentMethods.length > 0) {
+                            const getPaymentMethodDisplayName = (method: string): string => {
+                              const names: Record<string, string> = {
+                                bkash: 'bKash',
+                                nagad: 'Nagad',
+                                rocket: 'Rocket',
+                                upay: 'Upay',
+                                bank: 'Bank Transfer',
+                              };
+                              return names[method.toLowerCase()] || method;
+                            };
+
+                            return (
+                              <div className="mb-6">
+                                <h4 className="text-md font-semibold mb-4 text-gray-800">
+                                  Payment Methods
+                                </h4>
+                                <div className="space-y-3">
+                                  {paymentMethods.map((pm: any, index: number) => (
+                                    <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-semibold text-gray-900 dark:text-white">
+                                          {getPaymentMethodDisplayName(pm.method || '')}
+                                        </span>
+                                      </div>
+                                      {pm.method === 'bank' ? (
+                                        <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
+                                          {pm.bankName && <div><strong>Bank:</strong> {pm.bankName}</div>}
+                                          {pm.accountHolderName && <div><strong>Account Holder:</strong> {pm.accountHolderName}</div>}
+                                          {pm.bankAccountNumber && <div><strong>Account Number:</strong> {pm.bankAccountNumber}</div>}
+                                          {pm.routingNumber && <div><strong>Routing Number:</strong> {pm.routingNumber}</div>}
+                                          {pm.swiftCode && <div><strong>SWIFT Code:</strong> {pm.swiftCode}</div>}
+                                        </div>
+                                      ) : (
+                                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                                          {pm.mobileNumber && <div><strong>Mobile Number:</strong> {pm.mobileNumber}</div>}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+                        } catch (e) {
+                          return null;
+                        }
+                        return null;
+                      })()}
                       <div className="mb-6">
                         <h4 className="text-md font-semibold mb-4 text-gray-800">
                           Financial Summary
@@ -1430,23 +1482,23 @@ const AffiliateReferralsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div className="bg-blue-50 rounded-lg p-4">
                             <div className="text-sm font-medium text-blue-600 mb-1">
-                              Total Funds Generated
+                              Total Earnings
                             </div>
                             <div className="text-xl font-bold text-blue-700">
-                              ${formatPrice(viewDialog.affiliate.totalFunds, 2)}
+                              ${formatPrice(viewDialog.affiliate.totalEarnings || viewDialog.affiliate.totalFunds, 2)}
                             </div>
                           </div>
                           <div className="bg-green-50 rounded-lg p-4">
                             <div className="text-sm font-medium text-green-600 mb-1">
-                              Earned Commission
+                              Available Earnings
                             </div>
                             <div className="text-xl font-bold text-green-700">
-                              ${formatPrice(viewDialog.affiliate.earnedCommission, 2)}
+                              ${formatPrice(viewDialog.affiliate.availableEarnings || viewDialog.affiliate.earnedCommission, 2)}
                             </div>
                           </div>
                           <div className="bg-yellow-50 rounded-lg p-4">
                             <div className="text-sm font-medium text-yellow-600 mb-1">
-                              Requested Commission
+                              Withdraw Requested
                             </div>
                             <div className="text-xl font-bold text-yellow-700">
                               ${formatPrice(viewDialog.affiliate.requestedCommission, 2)}
@@ -1454,10 +1506,10 @@ const AffiliateReferralsPage = () => {
                           </div>
                           <div className="bg-purple-50 rounded-lg p-4">
                             <div className="text-sm font-medium text-purple-600 mb-1">
-                              Total Commission
+                              Total Withdrawn
                             </div>
                             <div className="text-xl font-bold text-purple-700">
-                              ${formatPrice(viewDialog.affiliate.totalCommission, 2)}
+                              ${formatPrice(viewDialog.affiliate.totalWithdrawn || 0, 2)}
                             </div>
                           </div>
                         </div>

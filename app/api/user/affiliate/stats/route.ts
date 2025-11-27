@@ -64,16 +64,37 @@ export async function GET(req: NextRequest) {
     }
 
     const totalCommissions = affiliate.commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
-    const conversionRate = affiliate.totalVisits > 0 ? ((affiliate.totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
+    
+    // Count registrations from actual referral records (more reliable than totalReferrals field)
+    // Use the referrals array count as the source of truth, fallback to totalReferrals if needed
+    const actualReferralsCount = affiliate.referrals?.length ?? 0;
+    const totalReferrals = actualReferralsCount > 0 ? actualReferralsCount : (affiliate.totalReferrals ?? 0);
+    
+    // If there's a mismatch, update the database to sync
+    if (actualReferralsCount > 0 && actualReferralsCount !== (affiliate.totalReferrals ?? 0)) {
+      // Update totalReferrals to match actual count (async, don't wait)
+      db.affiliates.update({
+        where: { id: affiliate.id },
+        data: { totalReferrals: actualReferralsCount, updatedAt: new Date() }
+      }).catch(err => console.error('Error syncing totalReferrals:', err));
+    }
+    
+    const conversionRate = affiliate.totalVisits > 0 ? ((totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
+
+    // Ensure all values are properly formatted and handle null/undefined
+    const totalEarnings = affiliate.totalEarnings ?? 0;
+    const availableEarnings = affiliate.availableEarnings ?? 0;
+    const totalVisits = affiliate.totalVisits ?? 0;
+    const commissionRate = affiliate.commissionRate ?? (moduleSettings?.commissionRate ?? 5);
 
     const stats = {
-      visits: affiliate.totalVisits,
-      registrations: affiliate.totalReferrals,
-      referrals: affiliate.totalReferrals,
+      visits: totalVisits,
+      registrations: totalReferrals,
+      referrals: totalReferrals,
       conversionRate: `${conversionRate}%`,
-      totalEarnings: `$${affiliate.totalEarnings.toFixed(2)}`,
-      availableEarnings: `$${affiliate.availableEarnings.toFixed(2)}`,
-      commissionRate: `${affiliate.commissionRate}%`,
+      totalEarnings: `$${totalEarnings.toFixed(2)}`,
+      availableEarnings: `$${availableEarnings.toFixed(2)}`,
+      commissionRate: `${commissionRate}%`,
       minimumPayout: `$${moduleSettings?.minimumPayout ?? 10}.00`,
       isAffiliate: true,
       referralCode: affiliate.referralCode,
