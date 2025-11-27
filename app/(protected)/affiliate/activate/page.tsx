@@ -19,7 +19,7 @@ import {
   FaUsers
 } from 'react-icons/fa';
 
-const PaymentMethodsSection = dynamic(
+const WithdrawalMethodsSection = dynamic(
   () => import('@/components/affiliate/withdrawal-methods'),
   { ssr: false }
 );
@@ -149,7 +149,7 @@ const Toast = ({
   </div>
 );
 
-interface PaymentMethod {
+interface WithdrawalMethod {
   id: string;
   method: 'bkash' | 'nagad' | 'rocket' | 'upay' | 'bank';
   mobileNumber?: string;
@@ -161,7 +161,7 @@ interface PaymentMethod {
 }
 
 interface ActivationFormData {
-  paymentMethods: PaymentMethod[];
+  withdrawalMethods: WithdrawalMethod[];
 }
 
 
@@ -177,9 +177,9 @@ export function ActivateAffiliateContent() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [formData, setFormData] = useState<ActivationFormData>({
-    paymentMethods: [],
+    withdrawalMethods: [],
   });
-  const [errors, setErrors] = useState<{ paymentMethods?: string }>({});
+  const [errors, setErrors] = useState<{ withdrawalMethods?: string }>({});
 
   useEffect(() => {
     setPageTitle('Activate Affiliate Account', appName);
@@ -226,19 +226,19 @@ export function ActivateAffiliateContent() {
   const validateForm = (): boolean => {
     const newErrors: any = {};
 
-    if (formData.paymentMethods.length === 0) {
-      newErrors.paymentMethods = 'Please add at least one withdrawal method';
+    if (formData.withdrawalMethods.length === 0) {
+      newErrors.withdrawalMethods = 'Please add at least one withdrawal method';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddPaymentMethod = async (paymentMethod: PaymentMethod) => {
-    const updatedPaymentMethods = [...formData.paymentMethods, paymentMethod];
+  const handleAddWithdrawalMethod = async (withdrawalMethod: WithdrawalMethod) => {
+    const updatedWithdrawalMethods = [...formData.withdrawalMethods, withdrawalMethod];
     setFormData(prev => ({
       ...prev,
-      paymentMethods: updatedPaymentMethods,
+      withdrawalMethods: updatedWithdrawalMethods,
     }));
 
     try {
@@ -248,7 +248,7 @@ export function ActivateAffiliateContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paymentMethods: updatedPaymentMethods,
+          paymentMethods: updatedWithdrawalMethods,
         }),
       });
 
@@ -257,7 +257,7 @@ export function ActivateAffiliateContent() {
         console.error('Failed to save withdrawal method:', response.status, errorText);
         setFormData(prev => ({
           ...prev,
-          paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
+          withdrawalMethods: prev.withdrawalMethods.filter(wm => wm.id !== withdrawalMethod.id),
         }));
         showToast(`Failed to save withdrawal method`, 'error');
         return;
@@ -270,14 +270,14 @@ export function ActivateAffiliateContent() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
-            setFormData(prev => ({ ...prev, paymentMethods: json.data }));
+            setFormData(prev => ({ ...prev, withdrawalMethods: json.data }));
             showToast('Withdrawal method saved successfully!', 'success');
           }
         }
       } else {
         setFormData(prev => ({
           ...prev,
-          paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
+          withdrawalMethods: prev.withdrawalMethods.filter(wm => wm.id !== withdrawalMethod.id),
         }));
         showToast(data.message || 'Failed to save withdrawal method', 'error');
       }
@@ -285,19 +285,19 @@ export function ActivateAffiliateContent() {
       console.error('Error saving withdrawal method:', error);
       setFormData(prev => ({
         ...prev,
-        paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
+        withdrawalMethods: prev.withdrawalMethods.filter(wm => wm.id !== withdrawalMethod.id),
       }));
       showToast('Error saving withdrawal method. Please try again.', 'error');
     }
   };
 
-  const handleRemovePaymentMethod = async (id: string) => {
-    const paymentMethodToRemove = formData.paymentMethods.find(pm => pm.id === id);
-    const updatedPaymentMethods = formData.paymentMethods.filter(pm => pm.id !== id);
+  const handleRemoveWithdrawalMethod = async (id: string) => {
+    const withdrawalMethodToRemove = formData.withdrawalMethods.find(wm => wm.id === id);
+    const updatedWithdrawalMethods = formData.withdrawalMethods.filter(wm => wm.id !== id);
     
     setFormData(prev => ({
       ...prev,
-      paymentMethods: updatedPaymentMethods,
+      withdrawalMethods: updatedWithdrawalMethods,
     }));
 
     try {
@@ -307,7 +307,7 @@ export function ActivateAffiliateContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paymentMethods: updatedPaymentMethods,
+          paymentMethods: updatedWithdrawalMethods,
         }),
       });
 
@@ -316,7 +316,7 @@ export function ActivateAffiliateContent() {
         console.error('Failed to remove withdrawal method:', response.status, errorText);
         setFormData(prev => ({
           ...prev,
-          paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
+          withdrawalMethods: [...prev.withdrawalMethods, withdrawalMethodToRemove!].filter(Boolean),
         }));
         showToast(`Failed to remove withdrawal method`, 'error');
         return;
@@ -329,15 +329,15 @@ export function ActivateAffiliateContent() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
-            const deletedItemStillExists = json.data.some((pm: PaymentMethod) => pm.id === id);
+            const deletedItemStillExists = json.data.some((wm: WithdrawalMethod) => wm.id === id);
             if (deletedItemStillExists) {
               setFormData(prev => ({
                 ...prev,
-                paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
+                withdrawalMethods: [...prev.withdrawalMethods, withdrawalMethodToRemove!].filter(Boolean),
               }));
               showToast('Delete failed: Item still exists', 'error');
             } else {
-              setFormData(prev => ({ ...prev, paymentMethods: json.data }));
+              setFormData(prev => ({ ...prev, withdrawalMethods: json.data }));
               showToast('Withdrawal method removed successfully!', 'info');
             }
           }
@@ -345,7 +345,7 @@ export function ActivateAffiliateContent() {
       } else {
         setFormData(prev => ({
           ...prev,
-          paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
+          withdrawalMethods: [...prev.withdrawalMethods, withdrawalMethodToRemove!].filter(Boolean),
         }));
         showToast(data.message || 'Failed to remove withdrawal method', 'error');
       }
@@ -353,7 +353,7 @@ export function ActivateAffiliateContent() {
       console.error('Error removing withdrawal method:', error);
       setFormData(prev => ({
         ...prev,
-        paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
+        withdrawalMethods: [...prev.withdrawalMethods, withdrawalMethodToRemove!].filter(Boolean),
       }));
       showToast('Error removing withdrawal method. Please try again.', 'error');
     }
@@ -375,7 +375,7 @@ export function ActivateAffiliateContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          paymentMethods: formData.paymentMethods,
+          paymentMethods: formData.withdrawalMethods,
         }),
       });
 
@@ -521,17 +521,17 @@ export function ActivateAffiliateContent() {
                 <strong>Email:</strong> {user?.email || 'Not available'}
               </p>
             </div>
-            <PaymentMethodsSection
-              paymentMethods={formData.paymentMethods}
-              onAddPaymentMethod={handleAddPaymentMethod}
-              onRemovePaymentMethod={handleRemovePaymentMethod}
+            <WithdrawalMethodsSection
+              withdrawalMethods={formData.withdrawalMethods}
+              onAddWithdrawalMethod={handleAddWithdrawalMethod}
+              onRemoveWithdrawalMethod={handleRemoveWithdrawalMethod}
               errors={errors}
               onShowToast={showToast}
             />
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={loading || formData.paymentMethods.length === 0}
+                disabled={loading || formData.withdrawalMethods.length === 0}
                 className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
               >
                 {loading ? (

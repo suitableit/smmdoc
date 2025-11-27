@@ -481,13 +481,13 @@ function AffiliateEarningsSection() {
   const [withdrawalModalOpen, setWithdrawalModalOpen] = useState(false);
   const [withdrawalForm, setWithdrawalForm] = useState({
     amount: '',
-    selectedPaymentMethod: '',
+    selectedWithdrawalMethod: '',
     paymentDetails: '',
   });
   const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
 
-  const [savedPaymentMethods, setSavedPaymentMethods] = useState<any[]>([])
-  const getPaymentMethodDisplayName = (method: string): string => {
+  const [savedWithdrawalMethods, setSavedWithdrawalMethods] = useState<any[]>([])
+  const getWithdrawalMethodDisplayName = (method: string): string => {
     const names: Record<string, string> = {
       bkash: 'bKash',
       nagad: 'Nagad',
@@ -498,12 +498,12 @@ function AffiliateEarningsSection() {
     const key = (method || '').toLowerCase()
     return names[key] || method
   }
-  const getPaymentMethodOptionLabel = (m: any): string => {
-    const base = getPaymentMethodDisplayName(m.method)
+  const getWithdrawalMethodOptionLabel = (m: any): string => {
+    const base = getWithdrawalMethodDisplayName(m.method)
     return base
   }
 
-  const getPaymentMethodStyle = (method: string) => {
+  const getWithdrawalMethodStyle = (method: string) => {
     switch (method.toLowerCase()) {
       case 'bkash':
         return { bg: 'bg-gradient-to-r from-pink-500 to-red-500', icon: 'bK' };
@@ -594,9 +594,9 @@ function AffiliateEarningsSection() {
           const pmJson = await pmRes.json()
           if (pmJson.success) {
             const list = pmJson.data || []
-            setSavedPaymentMethods(list)
-            if (!withdrawalForm.selectedPaymentMethod && list.length > 0) {
-              setWithdrawalForm(prev => ({ ...prev, selectedPaymentMethod: list[0].id }))
+            setSavedWithdrawalMethods(list)
+            if (!withdrawalForm.selectedWithdrawalMethod && list.length > 0) {
+              setWithdrawalForm(prev => ({ ...prev, selectedWithdrawalMethod: list[0].id }))
             }
           }
         }
@@ -688,7 +688,7 @@ function AffiliateEarningsSection() {
       setWithdrawalModalOpen(false);
       setWithdrawalForm({
         amount: '',
-        selectedPaymentMethod: '',
+        selectedWithdrawalMethod: '',
         paymentDetails: '',
       });
     } catch (error) {
@@ -759,7 +759,7 @@ function AffiliateEarningsSection() {
                 </button>
 
               <button
-                onClick={() => router.push('/affiliate/payment-methods')}
+                onClick={() => router.push('/affiliate/withdrawal-methods')}
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
               >
                 <FaCreditCard className="w-4 h-4" />
@@ -1080,31 +1080,31 @@ function AffiliateEarningsSection() {
                   Withdrawal Method
                 </label>
                 <select
-                  value={withdrawalForm.selectedPaymentMethod}
+                  value={withdrawalForm.selectedWithdrawalMethod}
                   onChange={(e) =>
                     setWithdrawalForm(prev => ({
                       ...prev,
-                      selectedPaymentMethod: e.target.value,
+                      selectedWithdrawalMethod: e.target.value,
                     }))
                   }
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                 >
                   <option value="" disabled>Select withdrawal method</option>
-                  {savedPaymentMethods.map((m) => (
+                  {savedWithdrawalMethods.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {getPaymentMethodOptionLabel(m)}
+                      {getWithdrawalMethodOptionLabel(m)}
                     </option>
                   ))}
                 </select>
                 <div className="text-xs text-gray-500 mt-1">
                   Choose from your configured withdrawal methods
                 </div>
-                {withdrawalForm.selectedPaymentMethod && (
+                {withdrawalForm.selectedWithdrawalMethod && (
                   <div className="text-xs text-gray-600 mt-1">
                     Selected: {(() => {
-                      const sel = savedPaymentMethods.find(pm => String(pm.id) === String(withdrawalForm.selectedPaymentMethod))
+                      const sel = savedWithdrawalMethods.find(wm => String(wm.id) === String(withdrawalForm.selectedWithdrawalMethod))
                       if (!sel) return ''
-                      const base = getPaymentMethodDisplayName(sel.method)
+                      const base = getWithdrawalMethodDisplayName(sel.method)
                       return base
                     })()}
                   </div>
