@@ -251,7 +251,6 @@ const ProfileCard = ({
           const userDetailsData = await getUserDetails();
           if (userDetailsData) {
             dispatch(setUserDetails(userDetailsData));
-            // Reset image error when user data is refreshed
             setImageError(false);
             setDropdownImageError(false);
           }
@@ -269,10 +268,8 @@ const ProfileCard = ({
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
   const [isInitialLoading, setIsInitialLoading] = useState(false);
 
-  // Listen for avatar update events
   useEffect(() => {
     const handleAvatarUpdate = async () => {
-      // Refresh user data and reset image error states
       try {
         const userDetailsData = await getUserDetails();
         if (userDetailsData) {
@@ -307,7 +304,6 @@ const ProfileCard = ({
       setImageError(false);
       setDropdownImageError(false);
     } else {
-      // Reset error state when image is removed
       setImageError(false);
       setDropdownImageError(false);
     }

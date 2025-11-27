@@ -94,7 +94,6 @@ export default function SignInForm() {
 
             console.log('Redirect URL:', redirectUrl);
 
-            // Use window.location.href for full page load on redirect
             setTimeout(() => {
               window.location.href = redirectUrl;
             }, 1000);

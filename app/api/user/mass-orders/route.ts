@@ -309,12 +309,10 @@ export async function POST(request: Request) {
           },
         });
 
-        // Check if user was referred by an affiliate and create commission (pending status)
         try {
           const userId = parseInt(session.user.id);
           console.log(`[AFFILIATE_COMMISSION] Checking for referral for user ${userId}, order ${order.id}`);
           
-          // Check if affiliate system is enabled
           const moduleSettings = await prisma.moduleSettings.findFirst();
           const affiliateSystemEnabled = moduleSettings?.affiliateSystemEnabled ?? false;
           console.log(`[AFFILIATE_COMMISSION] Affiliate system enabled: ${affiliateSystemEnabled}`);
@@ -341,7 +339,6 @@ export async function POST(request: Request) {
             });
 
             if (referral && referral.affiliate && referral.affiliate.status === 'active') {
-              // Check if this is the first order from this referred user
               const existingCommission = await prisma.affiliateCommissions.findFirst({
                 where: {
                   affiliateId: referral.affiliate.id,
@@ -358,7 +355,6 @@ export async function POST(request: Request) {
                 existingOrderId: existingCommission?.orderId
               });
 
-              // Only create commission for the FIRST order from this referred user
               if (!existingCommission) {
                 const orderAmount = orderData.usdPrice || orderData.price || 0;
                 const commissionRate = referral.affiliate.commissionRate || 5;
@@ -371,7 +367,6 @@ export async function POST(request: Request) {
                 });
 
                 if (commissionAmount > 0) {
-                  // Create affiliate commission with pending status (earnings will be added when order is completed)
                   const createdCommission = await prisma.affiliateCommissions.create({
                     data: {
                       affiliateId: referral.affiliate.id,
@@ -408,7 +403,6 @@ export async function POST(request: Request) {
         } catch (affiliateError) {
           console.error('[AFFILIATE_COMMISSION] ❌ Error creating affiliate commission:', affiliateError);
           console.error('[AFFILIATE_COMMISSION] Error stack:', affiliateError instanceof Error ? affiliateError.stack : 'No stack trace');
-          // Don't fail the order creation if affiliate commission fails
         }
 
         createdOrders.push({

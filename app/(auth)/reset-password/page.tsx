@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import ResetForm from "./reset-password";
 
 async function checkPasswordResetEnabled() {
@@ -11,7 +11,7 @@ export default async function page() {
   const isPasswordResetEnabled = await checkPasswordResetEnabled();
 
   if (!isPasswordResetEnabled) {
-    notFound();
+    redirect('/sign-in');
   }
 
   return (

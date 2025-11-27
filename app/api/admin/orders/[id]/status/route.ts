@@ -232,12 +232,10 @@ export async function PUT(
         }
       });
 
-      // Update affiliate commission status based on order status
       try {
         await updateAffiliateCommissionForOrder(orderId, status, prisma);
       } catch (affiliateError) {
         console.error('Error updating affiliate commission status:', affiliateError);
-        // Don't fail the order update if affiliate commission update fails
       }
       
       return updatedOrder;
@@ -344,12 +342,10 @@ export async function PATCH(
         }
       });
 
-      // Update affiliate commission status based on order status
       try {
         await updateAffiliateCommissionForOrder(orderId, status, prisma);
       } catch (affiliateError) {
         console.error('Error updating affiliate commission status:', affiliateError);
-        // Don't fail the order update if affiliate commission update fails
       }
 
       return order;

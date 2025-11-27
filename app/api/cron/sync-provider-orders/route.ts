@@ -276,7 +276,6 @@ async function syncSingleOrder(order: any, provider: any) {
               data: updateData
             });
 
-            // Update affiliate commission if order was cancelled
             if (statusChangedToCancelled) {
               await updateAffiliateCommissionForOrder(order.id, 'cancelled', tx);
             }
@@ -290,7 +289,6 @@ async function syncSingleOrder(order: any, provider: any) {
               where: { id: order.id },
               data: updateData
             });
-            // Update affiliate commission if order was cancelled
             if (statusChangedToCancelled) {
               await updateAffiliateCommissionForOrder(order.id, 'cancelled', tx);
             }
@@ -302,7 +300,6 @@ async function syncSingleOrder(order: any, provider: any) {
             where: { id: order.id },
             data: updateData
           });
-          // Update affiliate commission if order status changed to completed or cancelled
           if (mappedStatus === 'completed' || mappedStatus === 'cancelled') {
             await updateAffiliateCommissionForOrder(order.id, mappedStatus, tx);
           }

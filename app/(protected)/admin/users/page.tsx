@@ -566,21 +566,17 @@ const UsersListPage = () => {
   };
 
   const formatCurrency = useCallback((amount: number, userCurrency?: string) => {
-    // Balance is stored in USD in the database
     if (userCurrency && availableCurrencies && currencySettings) {
       const userCurrencyData = availableCurrencies.find(c => c.code === userCurrency);
       if (userCurrencyData) {
-        // Convert from USD (database storage) to user's currency
         const convertedAmount = convertCurrency(amount, 'USD', userCurrency, availableCurrencies);
         return formatCurrencyAmount(convertedAmount, userCurrency, availableCurrencies, currencySettings);
       }
     }
-    // Fallback: convert from USD to admin's currency
     if (availableCurrencies && currencySettings) {
       const convertedAmount = convertCurrency(amount, 'USD', currency, availableCurrencies);
       return formatCurrencyAmount(convertedAmount, currency, availableCurrencies, currencySettings);
     }
-    // Final fallback: show as USD
     return `$${amount.toFixed(2)}`;
   }, [currency, availableCurrencies, currencySettings]);
 
@@ -2257,7 +2253,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           } balance ${balanceForm.action === 'add' ? 'to' : 'from'} ${currentUser.username}`,
           toastType
         );
-        // Delay closing the modal to allow toast to be visible
         setTimeout(() => {
           onClose();
           onBalanceUpdate();
@@ -2279,7 +2274,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     setMounted(true);
   }, []);
 
-  // Render toast portal even when modal is closed (to persist after close)
   const toastPortal = mounted && toast && createPortal(
     <div className="toast-container" style={{ zIndex: 9999 }}>
       <Toast
@@ -2292,7 +2286,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
   );
 
   if (!isOpen || !currentUser) {
-    // Still render toast even when modal is closed
     return toastPortal || null;
   }
 
