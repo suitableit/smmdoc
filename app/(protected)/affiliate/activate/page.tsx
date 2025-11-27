@@ -174,7 +174,7 @@ interface NewPaymentMethodForm {
   swiftCode: string;
 }
 
-export default function ActivateAffiliatePage() {
+export function ActivateAffiliateContent() {
   const { appName } = useAppNameWithFallback();
 
   const user = useCurrentUser();
@@ -944,4 +944,13 @@ export default function ActivateAffiliatePage() {
       </div>
     </div>
   );
+}
+
+import { useRouter } from 'next/navigation';
+export default function ActivateRouteGate() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/affiliate');
+  }, [router]);
+  return null;
 }

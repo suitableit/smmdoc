@@ -16,6 +16,7 @@ export default {
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       async authorize(credentials): Promise<any> {
@@ -172,23 +173,33 @@ export default {
         token.balance = existingUser.balance;
         token.image = existingUser.image;
       } else {
-
         if (token.email) {
-          const existingUser = await getUserByEmail(token.email);
-          if (existingUser) {
-            token.sub = existingUser.id;
-            token.role = existingUser.role;
-            token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
-            token.currency = existingUser.currency;
-            token.name = existingUser.name;
-            token.username = existingUser.username;
-            token.email = existingUser.email;
-            token.balance = existingUser.balance;
-            token.image = existingUser.image;
+          let existingUser = await getUserByEmail(token.email);
+          if (!existingUser) {
+            const created = await db.users.create({
+              data: {
+                email: token.email,
+                name: token.name || token.email.split('@')[0],
+                image: token.picture || null,
+                username: token.email.split('@')[0],
+                role: 'user',
+                status: 'active',
+              },
+            });
+            existingUser = created as any;
           }
+          token.sub = existingUser.id;
+          token.role = existingUser.role;
+          token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+          token.currency = existingUser.currency;
+          token.name = existingUser.name;
+          token.username = existingUser.username;
+          token.email = existingUser.email;
+          token.balance = existingUser.balance;
+          token.image = existingUser.image;
         }
       }
-
+      
       return token;
     },
   },
@@ -196,4 +207,5 @@ export default {
     signIn: "/sign-in",
     error: "/sign-error",
   },
+  trustHost: true,
 } satisfies NextAuthConfig;

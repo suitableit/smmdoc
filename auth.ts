@@ -1,6 +1,6 @@
 
 import authConfig from '@/auth.config';
-import { PrismaAdapter } from '@auth/prisma-adapter';
+import { CustomAdapter } from '@/lib/custom-adapter';
 import NextAuth from 'next-auth';
 import { db } from './lib/db';
 
@@ -52,7 +52,7 @@ export const {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  adapter: PrismaAdapter(db),
+  adapter: CustomAdapter(),
   session: { strategy: 'jwt' },
   ...authConfig,
 });
