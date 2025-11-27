@@ -21,6 +21,12 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         userSettings: defaultUserSettings
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
       });
     }
 
@@ -38,6 +44,12 @@ export async function GET() {
         paymentBonusEnabled: settings.paymentBonusEnabled,
         bonusPercentage: settings.bonusPercentage,
       }
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
 
   } catch (error) {
@@ -45,6 +57,12 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       userSettings: defaultUserSettings
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
     });
   }
 }

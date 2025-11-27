@@ -1247,7 +1247,7 @@ const GeneralSettingsPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Reset Link Max</label>
+                  <label className="form-label">Password Reset Max</label>
                   <input
                     type="number"
                     min="1"
