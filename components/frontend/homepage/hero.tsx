@@ -6,9 +6,9 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';
 import {
-    signInDefaultValues,
-    SignInSchema,
-    signInSchema,
+  signInDefaultValues,
+  SignInSchema,
+  signInSchema,
 } from '@/lib/validators/auth.validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn, useSession } from 'next-auth/react';
@@ -18,16 +18,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
-    FaBriefcase,
-    FaEye,
-    FaEyeSlash,
-    FaHome,
-    FaLock,
-    FaTachometerAlt,
-    FaUser,
-    FaUserShield,
+  FaBriefcase,
+  FaEye,
+  FaEyeSlash,
+  FaHome,
+  FaLock,
+  FaTachometerAlt,
+  FaUser,
+  FaUserShield,
 } from 'react-icons/fa';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
+import { useUserSettings } from '@/hooks/use-user-settings';
 
 const Hero: React.FC = () => {
 
@@ -49,6 +50,7 @@ const Hero: React.FC = () => {
 
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const { recaptchaSettings, isEnabledForForm } = useReCAPTCHA();
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -84,17 +86,17 @@ const Hero: React.FC = () => {
           cache: 'no-store',
         });
         console.log('Hero: Response status:', res.status, res.ok);
-        
+
         const json = await res.json();
         console.log('Hero: Full API response:', json);
-        
+
         if (!res.ok || !json.success) {
           console.error('Hero: API error response:', json);
           throw new Error(json.error || json.message || 'Failed to fetch homepage stats');
         }
-        
+
         const { totalUsers, completedOrders, activeUsers, totalOrders } = json?.data || {};
-        
+
         console.log('Hero: Extracted data:', { totalUsers, completedOrders, activeUsers, totalOrders });
         console.log('Hero: Data types:', {
           totalUsers: typeof totalUsers,
@@ -102,17 +104,17 @@ const Hero: React.FC = () => {
           activeUsers: typeof activeUsers,
           totalOrders: typeof totalOrders,
         });
-        
+
         if (!isMountedRef.current) {
           console.log('Hero: Component unmounted, skipping state update');
           return;
         }
-        
+
         const finalUsersCount = typeof totalUsers === 'number' ? totalUsers : (totalUsers === null || totalUsers === undefined ? 0 : Number(totalUsers) || 0);
         const finalCompletedOrders = typeof completedOrders === 'number' ? completedOrders : (completedOrders === null || completedOrders === undefined ? 0 : Number(completedOrders) || 0);
         const finalTotalOrders = typeof totalOrders === 'number' ? totalOrders : (totalOrders === null || totalOrders === undefined ? 0 : Number(totalOrders) || 0);
         const finalActiveUsers = typeof activeUsers === 'number' ? activeUsers : (activeUsers === null || activeUsers === undefined ? 0 : Number(activeUsers) || 0);
-        
+
         console.log('Hero: Setting state with values:', {
           finalUsersCount,
           finalCompletedOrders,
@@ -120,18 +122,18 @@ const Hero: React.FC = () => {
           finalActiveUsers,
           'raw values': { totalUsers, completedOrders, totalOrders, activeUsers },
         });
-        
+
         setUsersCount(finalUsersCount);
         setCompletedOrdersCount(finalCompletedOrders);
         setTotalOrdersCount(finalTotalOrders);
         setActiveUsersCount(finalActiveUsers);
-        
+
         console.log('Hero: State updated. Current values will be:', {
           usersCount: finalUsersCount,
           totalOrdersCount: finalTotalOrders,
           activeUsersCount: finalActiveUsers,
         });
-        
+
         setDebugInfo({
           apiResponse: json,
           extracted: { totalUsers, completedOrders, activeUsers, totalOrders },
@@ -210,7 +212,7 @@ const Hero: React.FC = () => {
 
     startTransition(() => {
 
-      const submitData = recaptchaToken 
+      const submitData = recaptchaToken
         ? { ...values, recaptchaToken }
         : values;
 
@@ -268,15 +270,15 @@ const Hero: React.FC = () => {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 transition-colors duration-200">
           Welcome back,{' '}
           <span className="text-[var(--primary)] dark:text-[var(--secondary)] transition-colors duration-200">
-            {session?.user?.username || 
-             session?.user?.email?.split('@')[0] || 
-             session?.user?.name || 
-             'User'}!
+            {session?.user?.username ||
+              session?.user?.email?.split('@')[0] ||
+              session?.user?.name ||
+              'User'}!
           </span>
         </h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6 transition-colors duration-200">
-          {isAdmin 
-            ? 'Ready to manage the platform?' 
+          {isAdmin
+            ? 'Ready to manage the platform?'
             : 'Ready to boost your social media presence?'}
         </p>
 
@@ -313,7 +315,7 @@ const Hero: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin 
+                {isAdmin
                   ? (typeof totalOrdersCount === 'number' ? totalOrdersCount.toString() : '0')
                   : (typeof activeOrdersCountUser === 'number' ? activeOrdersCountUser.toString() : (userStatsLoading ? '0' : '0'))
                 }
@@ -324,7 +326,7 @@ const Hero: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin 
+                {isAdmin
                   ? (typeof activeUsersCount === 'number' ? activeUsersCount.toString() : '0')
                   : (typeof userBalance === 'number' ? `$${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : (userStatsLoading ? '0' : '$0.00'))
                 }
@@ -382,7 +384,7 @@ const Hero: React.FC = () => {
                 SMM Panel with more then 3 years on the market and 1,000+
                 Orders processed successfully until now!
               </p>
-              {!isAuthenticated && !isLoading && (
+              {!isAuthenticated && !isLoading && (!settingsLoading && userSettings?.signUpPageEnabled !== false) && (
                 <Link
                   href="/sign-up"
                   className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white px-7 py-4 rounded-lg text-lg font-semibold inline-flex items-center justify-center space-x-2 hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 mb-4 hover:-translate-y-1"
@@ -434,7 +436,7 @@ const Hero: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {process.env.NODE_ENV === 'development' && debugInfo && (
             <div className="mt-4 p-4 bg-yellow-100 dark:bg-yellow-900/20 rounded text-xs">
               <strong>Debug Info:</strong>
@@ -460,13 +462,17 @@ const Hero: React.FC = () => {
                     </span>
                   </h2>
                   <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
-                    New Here?{' '}
-                    <Link
-                      href="/sign-up"
-                      className="text-[var(--primary)] dark:text-[var(--secondary)] font-bold hover:underline transition-colors duration-200"
-                    >
-                      Create an account.
-                    </Link>
+                    {(!settingsLoading && userSettings?.signUpPageEnabled !== false) && (
+                      <>
+                        New Here?{' '}
+                        <Link
+                          href="/sign-up"
+                          className="text-[var(--primary)] dark:text-[var(--secondary)] font-bold hover:underline transition-colors duration-200"
+                        >
+                          Create an account.
+                        </Link>
+                      </>
+                    )}
                   </p>
                 </div>
 
@@ -599,12 +605,14 @@ const Hero: React.FC = () => {
                             Remember me
                           </label>
                         </div>
-                        <Link
-                          href="/reset-password"
-                          className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
-                        >
-                          Forget Password?
-                        </Link>
+                        {(!settingsLoading && userSettings?.resetPasswordEnabled !== false) && (
+                          <Link
+                            href="/reset-password"
+                            className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
+                          >
+                            Forget Password?
+                          </Link>
+                        )}
                       </div>
                     </>
                   )}
