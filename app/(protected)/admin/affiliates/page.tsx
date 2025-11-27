@@ -174,245 +174,7 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-const dummyAffiliates: AffiliateReferral[] = [
-  {
-    id: 1001,
-    user: {
-      id: 2001,
-      username: 'social_king',
-      email: 'socialking@gmail.com',
-      name: 'Alex Rodriguez',
-      joinedAt: '2024-01-15T10:30:00Z',
-    },
-    referralCode: 'SOCIAL2024',
-    totalVisits: 2847,
-    signUps: 142,
-    conversionRate: 4.99,
-    totalFunds: 15420.50,
-    earnedCommission: 1542.05,
-    requestedCommission: 450.00,
-    totalCommission: 1992.05,
-    status: 'active',
-    createdAt: '2024-01-15T10:30:00Z',
-    lastActivity: '2025-07-01T14:22:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'PayPal',
-    payoutHistory: [
-      {
-        id: 1,
-        amount: 250.00,
-        requestedAt: '2024-06-15T09:00:00Z',
-        processedAt: '2024-06-16T11:30:00Z',
-        status: 'paid',
-        method: 'paypal',
-        notes: 'Regular monthly payout'
-      }
-    ]
-  },
-  {
-    id: 1002,
-    user: {
-      id: 2002,
-      username: 'insta_guru',
-      email: 'instaguru99@outlook.com',
-      name: 'Sarah Chen',
-      joinedAt: '2024-02-03T08:15:00Z',
-    },
-    referralCode: 'INSTA99',
-    totalVisits: 1923,
-    signUps: 89,
-    conversionRate: 4.63,
-    totalFunds: 8750.25,
-    earnedCommission: 875.03,
-    requestedCommission: 200.00,
-    totalCommission: 1075.03,
-    status: 'active',
-    createdAt: '2024-02-03T08:15:00Z',
-    lastActivity: '2025-06-30T16:45:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'Bank Transfer',
-    payoutHistory: []
-  },
-  {
-    id: 1003,
-    user: {
-      id: 2003,
-      username: 'tiktok_master',
-      email: 'tiktokmaster@yahoo.com',
-      name: 'Mike Johnson',
-      joinedAt: '2024-03-20T12:00:00Z',
-    },
-    referralCode: 'TIKTOK2024',
-    totalVisits: 3256,
-    signUps: 198,
-    conversionRate: 6.08,
-    totalFunds: 22840.75,
-    earnedCommission: 2284.08,
-    requestedCommission: 800.00,
-    totalCommission: 3084.08,
-    status: 'active',
-    createdAt: '2024-03-20T12:00:00Z',
-    lastActivity: '2025-07-02T09:30:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'Cryptocurrency (Bitcoin)',
-    payoutHistory: [
-      {
-        id: 2,
-        amount: 500.00,
-        requestedAt: '2024-05-20T10:00:00Z',
-        processedAt: '2024-05-21T14:15:00Z',
-        status: 'paid',
-        method: 'bank_transfer',
-        notes: 'First major payout'
-      }
-    ]
-  },
-  {
-    id: 1004,
-    user: {
-      id: 2004,
-      username: 'youtube_pro',
-      email: 'youtubepro@gmail.com',
-      name: 'Emma Wilson',
-      joinedAt: '2024-01-08T14:20:00Z',
-    },
-    referralCode: 'YTPRO2024',
-    totalVisits: 1567,
-    signUps: 67,
-    conversionRate: 4.28,
-    totalFunds: 5890.30,
-    earnedCommission: 589.03,
-    requestedCommission: 0.00,
-    totalCommission: 589.03,
-    status: 'inactive',
-    createdAt: '2024-01-08T14:20:00Z',
-    lastActivity: '2025-05-15T11:20:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'PayPal',
-    payoutHistory: []
-  },
-  {
-    id: 1005,
-    user: {
-      id: 2005,
-      username: 'smm_expert',
-      email: 'smmexpert@protonmail.com',
-      name: 'David Kim',
-      joinedAt: '2024-04-12T09:45:00Z',
-    },
-    referralCode: 'SMMEXP24',
-    totalVisits: 4521,
-    signUps: 267,
-    conversionRate: 5.91,
-    totalFunds: 31250.80,
-    earnedCommission: 3125.08,
-    requestedCommission: 1200.00,
-    totalCommission: 4325.08,
-    status: 'active',
-    createdAt: '2024-04-12T09:45:00Z',
-    lastActivity: '2025-07-02T13:10:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'Cryptocurrency (USDT)',
-    payoutHistory: [
-      {
-        id: 3,
-        amount: 750.00,
-        requestedAt: '2024-06-01T08:00:00Z',
-        processedAt: '2024-06-02T10:30:00Z',
-        status: 'paid',
-        method: 'crypto',
-        notes: 'BTC payout as requested'
-      }
-    ]
-  },
-  {
-    id: 1006,
-    user: {
-      id: 2006,
-      username: 'social_boost',
-      email: 'socialboost@gmail.com',
-      name: 'Lisa Anderson',
-      joinedAt: '2024-05-25T11:30:00Z',
-    },
-    referralCode: 'BOOST2024',
-    totalVisits: 892,
-    signUps: 34,
-    conversionRate: 3.81,
-    totalFunds: 2140.50,
-    earnedCommission: 214.05,
-    requestedCommission: 100.00,
-    totalCommission: 314.05,
-    status: 'pending',
-    createdAt: '2024-05-25T11:30:00Z',
-    lastActivity: '2025-06-28T15:45:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'Bank Transfer',
-    payoutHistory: []
-  },
-  {
-    id: 1007,
-    user: {
-      id: 2007,
-      username: 'viral_marketer',
-      email: 'viralmarketer@hotmail.com',
-      name: 'James Thompson',
-      joinedAt: '2024-02-14T16:00:00Z',
-    },
-    referralCode: 'VIRAL24',
-    totalVisits: 756,
-    signUps: 12,
-    conversionRate: 1.59,
-    totalFunds: 450.25,
-    earnedCommission: 45.03,
-    requestedCommission: 0.00,
-    totalCommission: 45.03,
-    status: 'suspended',
-    createdAt: '2024-02-14T16:00:00Z',
-    lastActivity: '2025-04-10T08:20:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'PayPal',
-    payoutHistory: []
-  },
-  {
-    id: 1008,
-    user: {
-      id: 2008,
-      username: 'growth_hacker',
-      email: 'growthhacker@icloud.com',
-      name: 'Rachel Green',
-      joinedAt: '2024-06-10T13:15:00Z',
-    },
-    referralCode: 'GROWTH24',
-    totalVisits: 1245,
-    signUps: 78,
-    conversionRate: 6.27,
-    totalFunds: 6820.40,
-    earnedCommission: 682.04,
-    requestedCommission: 300.00,
-    totalCommission: 982.04,
-    status: 'active',
-    createdAt: '2024-06-10T13:15:00Z',
-    lastActivity: '2025-07-01T12:30:00Z',
-    commissionRate: 10.0,
-    paymentMethod: 'Wise (formerly TransferWise)',
-    payoutHistory: []
-  }
-];
 
-const dummyStats: AffiliateStats = {
-  totalAffiliates: 8,
-  activeAffiliates: 5,
-  inactiveAffiliates: 1,
-  suspendedAffiliates: 1,
-  totalVisits: 17007,
-  totalSignUps: 887,
-  totalCommissionEarned: 9356.39,
-  totalCommissionPaid: 1500.00,
-  pendingPayouts: 3050.00,
-  averageConversionRate: 4.82,
-  topPerformers: 3,
-  todaySignUps: 12,
-};
 
 const AffiliateReferralsPage = () => {
   const { appName } = useAppNameWithFallback();
@@ -421,8 +183,21 @@ const AffiliateReferralsPage = () => {
     setPageTitle('Affiliate Referrals', appName);
   }, [appName]);
 
-  const [affiliates, setAffiliates] = useState<AffiliateReferral[]>(dummyAffiliates);
-  const [stats, setStats] = useState<AffiliateStats>(dummyStats);
+  const [affiliates, setAffiliates] = useState<AffiliateReferral[]>([]);
+  const [stats, setStats] = useState<AffiliateStats>({
+    totalAffiliates: 0,
+    activeAffiliates: 0,
+    inactiveAffiliates: 0,
+    suspendedAffiliates: 0,
+    totalVisits: 0,
+    totalSignUps: 0,
+    totalCommissionEarned: 0,
+    totalCommissionPaid: 0,
+    pendingPayouts: 0,
+    averageConversionRate: 0,
+    topPerformers: 0,
+    todaySignUps: 0,
+  });
 
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -503,92 +278,56 @@ const AffiliateReferralsPage = () => {
 
   const fetchAllAffiliatesForCounts = async () => {
     try {
-      console.log('Calculating status counts from dummy data...');
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const statusCounts = calculateStatusCounts(dummyAffiliates);
-
-      console.log('Calculated status counts:', statusCounts);
-
-      setStats((prev) => ({
-        ...prev,
-        activeAffiliates: statusCounts.active,
-        inactiveAffiliates: statusCounts.inactive,
-        suspendedAffiliates: statusCounts.suspended,
-        totalAffiliates: dummyAffiliates.length,
-      }));
-    } catch (error) {
-      console.error('Error calculating affiliate counts:', error);
-    }
+      const res = await fetch('/api/admin/affiliates/stats')
+      if (!res.ok) return
+      const json = await res.json()
+      if (json.success && json.data) {
+        setStats(prev => ({
+          ...prev,
+          totalAffiliates: json.data.totalAffiliates,
+          activeAffiliates: json.data.activeAffiliates,
+          inactiveAffiliates: json.data.inactiveAffiliates,
+          suspendedAffiliates: json.data.suspendedAffiliates,
+        }))
+      }
+    } catch {}
   };
 
   const fetchAffiliates = async () => {
     try {
-      setAffiliatesLoading(true);
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      let filteredAffiliates = [...dummyAffiliates];
-
-      if (statusFilter !== 'all') {
-        filteredAffiliates = filteredAffiliates.filter(
-          affiliate => affiliate.status === statusFilter
-        );
-      }
-
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredAffiliates = filteredAffiliates.filter(
-          affiliate =>
-            affiliate.user.username?.toLowerCase().includes(searchLower) ||
-            affiliate.user.email?.toLowerCase().includes(searchLower) ||
-            affiliate.referralCode?.toLowerCase().includes(searchLower)
-        );
-      }
-
-      const startIndex = (pagination.page - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedAffiliates = filteredAffiliates.slice(startIndex, endIndex);
-
-      console.log('Affiliates fetched successfully with filters applied');
-
-      setAffiliates(paginatedAffiliates);
+      setAffiliatesLoading(true)
+      const params = new URLSearchParams()
+      params.set('page', String(pagination.page))
+      params.set('limit', String(pagination.limit))
+      if (searchTerm) params.set('search', searchTerm)
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter)
+      const res = await fetch(`/api/admin/affiliates?${params.toString()}`)
+      if (!res.ok) throw new Error('Failed to fetch affiliates')
+      const json = await res.json()
+      setAffiliates(json.data || [])
       setPagination(prev => ({
         ...prev,
-        total: filteredAffiliates.length,
-        totalPages: Math.ceil(filteredAffiliates.length / pagination.limit),
-        hasNext: endIndex < filteredAffiliates.length,
-        hasPrev: pagination.page > 1,
-      }));
+        total: json.pagination?.total || 0,
+        totalPages: json.pagination?.totalPages || 0,
+        hasNext: json.pagination?.hasNext || false,
+        hasPrev: json.pagination?.hasPrev || false,
+      }))
     } catch (error) {
-      console.error('Error fetching affiliates:', error);
-      showToast('Error fetching affiliates. Please try again.', 'error');
-      setAffiliates([]);
-      setPagination({
-        page: 1,
-        limit: 20,
-        total: 0,
-        totalPages: 0,
-        hasNext: false,
-        hasPrev: false,
-      });
+      showToast('Error fetching affiliates. Please try again.', 'error')
+      setAffiliates([])
+      setPagination({ page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false })
     } finally {
-      setAffiliatesLoading(false);
+      setAffiliatesLoading(false)
     }
   };
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      console.log('Stats loaded successfully:', dummyStats);
-
-      setStats(dummyStats);
+      const res = await fetch('/api/admin/affiliates/stats')
+      if (!res.ok) throw new Error('Failed to fetch stats')
+      const json = await res.json()
+      if (json.success && json.data) setStats(json.data)
     } catch (error) {
-      console.error('Error fetching stats:', error);
       setStats({
         totalAffiliates: 0,
         activeAffiliates: 0,
@@ -602,8 +341,8 @@ const AffiliateReferralsPage = () => {
         averageConversionRate: 0,
         topPerformers: 0,
         todaySignUps: 0,
-      });
-      showToast('Error fetching statistics. Please refresh the page.', 'error');
+      })
+      showToast('Error fetching statistics. Please refresh the page.', 'error')
     }
   };
 
@@ -623,11 +362,11 @@ const AffiliateReferralsPage = () => {
     setStatsLoading(true);
 
     const loadData = async () => {
-      await Promise.all([fetchStats(), fetchAllAffiliatesForCounts()]);
-      setStatsLoading(false);
-    };
-
-    loadData();
+      await fetchStats()
+      await fetchAllAffiliatesForCounts()
+      setStatsLoading(false)
+    }
+    loadData()
   }, []);
 
   useEffect(() => {

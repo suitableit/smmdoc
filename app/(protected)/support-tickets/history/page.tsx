@@ -66,62 +66,6 @@ const Toast = ({
   </div>
 );
 
-const dummyTickets: Ticket[] = [
-  {
-    id: 1,
-    subject: 'Order #123 - Issue',
-    status: 'open',
-    createdAt: '2024-03-20T10:30:00',
-    priority: 'high',
-    lastUpdated: '2024-03-20T14:45:00',
-    type: 'human',
-  },
-  {
-    id: 2,
-    subject: 'Payment Issue',
-    status: 'closed',
-    createdAt: '2024-03-19T09:15:00',
-    priority: undefined,
-    lastUpdated: '2024-03-19T16:30:00',
-    type: 'ai',
-  },
-  {
-    id: 3,
-    subject: 'Account Access Problem',
-    status: 'customer_reply',
-    createdAt: '2024-03-18T14:20:00',
-    priority: 'low',
-    lastUpdated: '2024-03-19T11:00:00',
-    type: 'human',
-  },
-  {
-    id: 4,
-    subject: 'Refund Request',
-    status: 'closed',
-    createdAt: '2024-03-17T11:45:00',
-    priority: undefined,
-    lastUpdated: '2024-03-18T09:30:00',
-    type: 'ai',
-  },
-  {
-    id: 5,
-    subject: 'Technical Support',
-    status: 'on_hold',
-    createdAt: '2024-03-16T16:00:00',
-    priority: 'low',
-    lastUpdated: '2024-03-17T10:15:00',
-    type: 'human',
-  },
-  {
-    id: 6,
-    subject: 'Billing Inquiry',
-    status: 'closed',
-    createdAt: '2024-03-15T13:20:00',
-    priority: undefined,
-    lastUpdated: '2024-03-16T15:45:00',
-    type: 'ai',
-  },
-];
 
 export default function TicketsHistory() {
   const { appName } = useAppNameWithFallback();

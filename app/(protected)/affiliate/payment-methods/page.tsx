@@ -154,6 +154,7 @@ export default function ActivateAffiliatePage() {
   });
   const [showAddForm, setShowAddForm] = useState(false);
   const [errors, setErrors] = useState<Partial<ActivationFormData>>({});
+  const methodExists = (method: string) => formData.paymentMethods.some(pm => pm.method === method);
 
   useEffect(() => {
     setPageTitle('Activate Affiliate Account', appName);
@@ -253,6 +254,11 @@ export default function ActivateAffiliatePage() {
       return;
     }
 
+    if (methodExists(newPaymentMethod.method)) {
+      showToast(`You can add only one ${getPaymentMethodDisplayName(newPaymentMethod.method)} payment method`, 'error');
+      return;
+    }
+
     const paymentMethod: PaymentMethod = {
       id: Date.now().toString(),
       method: newPaymentMethod.method as any,
@@ -307,7 +313,7 @@ export default function ActivateAffiliatePage() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/user/affiliate/activate', {
+      const response = await fetch('/api/user/affiliate/payment-methods', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -321,9 +327,9 @@ export default function ActivateAffiliatePage() {
 
       if (response.ok && data.success) {
         setIsActivated(true);
-        showToast('Affiliate account activated successfully!', 'success');
+        showToast('Payment methods saved successfully!', 'success');
       } else {
-        showToast(data.message || 'Failed to activate affiliate account', 'error');
+        showToast(data.message || 'Failed to save payment methods', 'error');
       }
     } catch (error) {
       console.error('Error activating affiliate account:', error);
@@ -332,6 +338,20 @@ export default function ActivateAffiliatePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/user/affiliate/payment-methods')
+        if (res.ok) {
+          const json = await res.json()
+          if (json.success && Array.isArray(json.data)) {
+            setFormData(prev => ({ ...prev, paymentMethods: json.data }))
+          }
+        }
+      } catch {}
+    })()
+  }, [])
 
   const handleInputChange = (field: keyof ActivationFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -545,11 +565,11 @@ export default function ActivateAffiliatePage() {
                       }`}
                     >
                       <option value="">Select a payment method</option>
-                      <option value="bkash">bKash</option>
-                      <option value="nagad">Nagad</option>
-                      <option value="rocket">Rocket</option>
-                      <option value="upay">Upay</option>
-                      <option value="bank">Bank Transfer</option>
+                      <option value="bkash" disabled={methodExists('bkash')}>bKash</option>
+                      <option value="nagad" disabled={methodExists('nagad')}>Nagad</option>
+                      <option value="rocket" disabled={methodExists('rocket')}>Rocket</option>
+                      <option value="upay" disabled={methodExists('upay')}>Upay</option>
+                      <option value="bank" disabled={methodExists('bank')}>Bank Transfer</option>
                     </select>
                     {(errors as any).method && (
                       <p className="text-red-500 text-sm mt-1">{(errors as any).method}</p>
@@ -719,44 +739,7 @@ export default function ActivateAffiliatePage() {
                 </div>
               </div>
             )}
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-                  className="mt-1 w-4 h-4 text-[var(--primary)] bg-gray-100 border-gray-300 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--primary)] dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  disabled={loading}
-                />
-                <div>
-                  <label htmlFor="agreeToTerms" className="text-sm text-gray-700 dark:text-gray-300">
-                    I agree to the <a href="/terms" className="text-[var(--primary)] hover:underline">Terms & Conditions</a> *
-                  </label>
-                  {(errors as any).agreeToTerms && (
-                    <p className="text-red-500 text-xs mt-1">{(errors as any).agreeToTerms}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={loading || formData.paymentMethods.length === 0}
-                className="flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Activating...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <span>Save Changes</span>
-                  </div>
-                )}
-              </button>
-            </div>
+            
           </form>
         </div>
       </div>

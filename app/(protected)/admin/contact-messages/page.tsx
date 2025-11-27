@@ -143,118 +143,6 @@ const ContactMessagesPage = () => {
     replied: 0
   });
 
-  const dummyContactMessages: ContactMessage[] = [
-    {
-      id: '001',
-      userId: 'user_001',
-      username: 'socialmarketer_john',
-      email: 'john.doe@agency.com',
-      category: 'Instagram Services',
-      subject: 'Instagram followers delivery time inquiry',
-      message: 'Hi, I placed an order for 10K Instagram followers. How long does delivery usually take?',
-      createdAt: '2024-06-28T10:30:00Z',
-      status: 'Unread' as const,
-    },
-    {
-      id: '002',
-      userId: 'user_002',
-      username: 'sarah_influencer',
-      email: 'sarah.smith@gmail.com',
-      category: 'YouTube Services',
-      subject: 'YouTube subscribers quality question',
-      message: 'I want to buy YouTube subscribers but need high-quality, active accounts. Do you provide this?',
-      createdAt: '2024-06-27T15:45:00Z',
-      status: 'Read' as const,
-    },
-    {
-      id: '003',
-      userId: 'user_003',
-      username: 'mike_business',
-      email: 'mike.johnson@company.com',
-      category: 'Bulk Orders',
-      subject: 'Enterprise package for multiple accounts',
-      message: 'We need SMM services for 50+ business accounts. Do you offer enterprise packages with discounts?',
-      createdAt: '2024-06-26T08:20:00Z',
-      status: 'Replied' as const,
-    },
-    {
-      id: '004',
-      userId: 'user_004',
-      username: 'emily_creator',
-      email: 'emily.wilson@outlook.com',
-      category: 'TikTok Services',
-      subject: 'TikTok views and likes package',
-      message: 'I need a combination package for TikTok views and likes. What are your best rates?',
-      createdAt: '2024-06-25T13:10:00Z',
-      status: 'Read' as const,
-    },
-    {
-      id: '005',
-      userId: 'user_005',
-      username: 'alex_developer',
-      email: 'alex.brown@techstartup.com',
-      category: 'API Integration',
-      subject: 'API access for automated orders',
-      message: 'We want to integrate your SMM services into our platform. Can you provide API documentation?',
-      createdAt: '2024-06-24T16:55:00Z',
-      status: 'Replied' as const,
-    },
-    {
-      id: '006',
-      userId: 'user_006',
-      username: 'lisa_blogger',
-      email: 'lisa.davis@blog.com',
-      category: 'Facebook Services',
-      subject: 'Facebook page likes and engagement',
-      message: 'I need to boost my Facebook business page. What services do you recommend for engagement?',
-      createdAt: '2024-06-23T11:30:00Z',
-      status: 'Unread' as const,
-    },
-    {
-      id: '007',
-      userId: 'user_007',
-      username: 'robert_marketer',
-      email: 'robert.clark@agency.com',
-      category: 'Twitter Services',
-      subject: 'Twitter followers and retweets service',
-      message: 'Looking for high-quality Twitter followers and retweet services for client campaigns.',
-      createdAt: '2024-06-22T09:15:00Z',
-      status: 'Read' as const,
-    },
-    {
-      id: '008',
-      userId: 'user_008',
-      username: 'jennifer_ecommerce',
-      email: 'jen.taylor@shop.com',
-      category: 'Instagram Services',
-      subject: 'Instagram story views for product promotion',
-      message: 'We sell products online and need Instagram story views to increase our product visibility.',
-      createdAt: '2024-06-21T14:40:00Z',
-      status: 'Replied' as const,
-    },
-    {
-      id: '009',
-      userId: 'user_009',
-      username: 'david_startup',
-      email: 'david.martinez@startup.io',
-      category: 'Pricing Inquiry',
-      subject: 'Startup discount and payment plans',
-      message: 'As a new startup, do you offer any discounts or flexible payment plans for SMM services?',
-      createdAt: '2024-06-20T12:25:00Z',
-      status: 'Unread' as const,
-    },
-    {
-      id: '010',
-      userId: 'user_010',
-      username: 'amanda_agency',
-      email: 'amanda.lee@digitalagency.com',
-      category: 'Partnership',
-      subject: 'White label SMM panel partnership',
-      message: 'We are a digital agency interested in white label partnership. Can we discuss terms?',
-      createdAt: '2024-06-19T17:10:00Z',
-      status: 'Read' as const,
-    },
-  ];
 
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -318,19 +206,17 @@ const ContactMessagesPage = () => {
         }));
       } else {
         console.error('Failed to fetch contact messages:', data.error);
-
-        setContactMessages(dummyContactMessages);
-        setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
-        setFallbackMode(true);
-        setWarningMessage('Database connection failed. Showing sample data.');
+        setContactMessages([]);
+        setMessageCounts({ total: 0, unread: 0, read: 0, replied: 0 });
+        setFallbackMode(false);
+        setWarningMessage('');
       }
     } catch (error) {
       console.error('Error fetching contact messages:', error);
-
-      setContactMessages(dummyContactMessages);
-      setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
-      setFallbackMode(true);
-      setWarningMessage('Database connection failed. Showing sample data.');
+      setContactMessages([]);
+      setMessageCounts({ total: 0, unread: 0, read: 0, replied: 0 });
+      setFallbackMode(false);
+      setWarningMessage('');
     } finally {
       setMessagesLoading(false);
     }
@@ -418,12 +304,11 @@ const ContactMessagesPage = () => {
       }
     } catch (error) {
       console.error('Error loading contact messages:', error);
-
-      setContactMessages(dummyContactMessages);
-      setMessageCounts({ total: 10, unread: 7, read: 1, replied: 2 });
-      setFallbackMode(true);
-      setWarningMessage('Database connection failed. Showing sample data.');
-      showToast('Database connection failed. Showing sample data.', 'error');
+      setContactMessages([]);
+      setMessageCounts({ total: 0, unread: 0, read: 0, replied: 0 });
+      setFallbackMode(false);
+      setWarningMessage('');
+      showToast('Failed to load contact messages', 'error');
     } finally {
       setMessagesLoading(false);
     }
