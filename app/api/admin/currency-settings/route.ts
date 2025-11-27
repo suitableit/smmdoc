@@ -140,14 +140,42 @@ export async function POST(request: Request) {
     const { currencySettings, currencies } = await request.json();
 
     if (currencySettings) {
-      await db.currencySettings.upsert({
-        where: { id: 1 },
-        update: currencySettings,
-        create: { id: 1, ...currencySettings }
-      });
+      try {
+        await db.currencySettings.upsert({
+          where: { id: 1 },
+          update: {
+            ...currencySettings,
+            updatedAt: new Date()
+          },
+          create: { 
+            id: 1, 
+            ...currencySettings,
+            updatedAt: new Date()
+          }
+        });
+      } catch (settingsError) {
+        console.error('Error saving currency settings:', settingsError);
+        throw new Error(`Failed to save currency settings: ${settingsError instanceof Error ? settingsError.message : String(settingsError)}`);
+      }
     }
 
     if (currencies && Array.isArray(currencies)) {
+      // Validate currencies data
+      for (const currency of currencies) {
+        if (!currency.code || typeof currency.code !== 'string') {
+          throw new Error(`Invalid currency code: ${currency.code}`);
+        }
+        if (!currency.name || typeof currency.name !== 'string') {
+          throw new Error(`Invalid currency name for ${currency.code}`);
+        }
+        if (!currency.symbol || typeof currency.symbol !== 'string') {
+          throw new Error(`Invalid currency symbol for ${currency.code}`);
+        }
+        if (currency.rate === undefined || currency.rate === null) {
+          throw new Error(`Invalid currency rate for ${currency.code}`);
+        }
+      }
+
       const existingCurrencies = await db.currencies.findMany({
         select: { code: true }
       });
@@ -166,24 +194,41 @@ export async function POST(request: Request) {
         }
       }
 
+      // Use transaction to ensure all updates succeed or fail together
       for (const currency of currencies) {
-        await db.currencies.upsert({
-          where: { code: currency.code },
-          update: {
-            name: currency.name,
-            symbol: currency.symbol,
-            rate: currency.rate,
-            enabled: currency.enabled
-          },
-          create: {
-            code: currency.code,
-            name: currency.name,
-            symbol: currency.symbol,
-            rate: currency.rate,
-            enabled: currency.enabled,
-            updatedAt: new Date()
-          }
-        });
+        // Ensure rate is properly converted to Decimal
+        const rateValue = typeof currency.rate === 'number' 
+          ? currency.rate 
+          : parseFloat(String(currency.rate)) || 1;
+
+        // Validate rate is a valid number
+        if (isNaN(rateValue) || rateValue <= 0) {
+          throw new Error(`Invalid rate value for ${currency.code}: ${currency.rate}`);
+        }
+
+        try {
+          await db.currencies.upsert({
+            where: { code: currency.code },
+            update: {
+              name: currency.name,
+              symbol: currency.symbol,
+              rate: rateValue,
+              enabled: currency.enabled,
+              updatedAt: new Date()
+            },
+            create: {
+              code: currency.code,
+              name: currency.name,
+              symbol: currency.symbol,
+              rate: rateValue,
+              enabled: currency.enabled,
+              updatedAt: new Date()
+            }
+          });
+        } catch (dbError) {
+          console.error(`Error upserting currency ${currency.code}:`, dbError);
+          throw new Error(`Failed to save currency ${currency.code}: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+        }
       }
     }
 
@@ -194,8 +239,16 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Error saving currency settings:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error ? error.stack : String(error);
+    console.error('Error details:', errorDetails);
     return NextResponse.json(
-      { error: 'Failed to save currency settings' },
+      { 
+        success: false,
+        error: 'Failed to save currency settings',
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     );
   }

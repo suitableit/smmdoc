@@ -198,7 +198,7 @@ const CurrencyItem = ({
               type="number"
               value={editValues.rate}
               onChange={(e) => setEditValues(prev => ({ ...prev, rate: parseFloat(e.target.value) || 1 }))}
-              step="0.0001"
+              step="0.01"
               min="0"
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none col-span-2"
             />
@@ -233,7 +233,7 @@ const CurrencyItem = ({
             <span className="font-mono font-semibold text-left col-span-2">{currency.code}</span>
             <span className="text-left col-span-4">{currency.name}</span>
             <span className="font-mono text-left col-span-2">{currency.symbol}</span>
-            <span className="text-left font-mono col-span-2">{currency.rate.toFixed(4)}</span>
+            <span className="text-left font-mono col-span-2">{currency.rate.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-center gap-2 w-20">
             <button
@@ -365,19 +365,28 @@ const PaymentCurrencyPage = () => {
   const saveCurrencySettings = async () => {
     setIsLoading(true);
     try {
+      // Ensure all rates are properly formatted as numbers
+      const formattedCurrencies = currencies.map(c => ({
+        ...c,
+        rate: typeof c.rate === 'number' ? c.rate : parseFloat(String(c.rate)) || 1
+      }));
+
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currencySettings, currencies }),
+        body: JSON.stringify({ currencySettings, currencies: formattedCurrencies }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
 
+      if (response.ok && data.success) {
         clearCurrencyCache();
         await refreshCurrencyData();
         showToast('Currency settings saved successfully!', 'success');
       } else {
-        showToast('Failed to save currency settings', 'error');
+        const errorMessage = data.error || 'Failed to save currency settings';
+        console.error('Save failed:', errorMessage);
+        showToast(errorMessage, 'error');
       }
     } catch (error) {
       console.error('Error saving currency settings:', error);
@@ -431,26 +440,39 @@ const PaymentCurrencyPage = () => {
     setCurrencies(updatedCurrencies);
 
     try {
+      // Ensure rate is a number if it's being updated
+      const formattedCurrencies = updatedCurrencies.map(c => ({
+        ...c,
+        rate: typeof c.rate === 'number' ? c.rate : parseFloat(String(c.rate)) || 1
+      }));
+
+      // Only send currencies when editing, not currencySettings to avoid validation issues
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currencySettings, currencies: updatedCurrencies }),
+        body: JSON.stringify({ currencies: formattedCurrencies }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
 
+      if (response.ok && data.success) {
         clearCurrencyCache();
         await refreshCurrencyData();
         showToast('Currency updated and saved successfully!', 'success');
       } else {
-        showToast('Currency updated but failed to save', 'error');
-
+        const errorMessage = data.message || data.error || 'Failed to save currency';
+        console.error('Save failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+          error: errorMessage
+        });
+        showToast(`Currency updated but failed to save: ${errorMessage}`, 'error');
         setCurrencies(currencies);
       }
     } catch (error) {
       console.error('Error auto-saving currency:', error);
       showToast('Currency updated but failed to save', 'error');
-
       setCurrencies(currencies);
     }
   };
@@ -640,8 +662,8 @@ const PaymentCurrencyPage = () => {
                     <label className="form-label">Exchange Rate</label>
                     <input
                       type="number"
-                      placeholder="1.0000"
-                      step="0.0001"
+                      placeholder="1.00"
+                      step="0.01"
                       min="0"
                       value={newCurrency.rate}
                       onChange={(e) => setNewCurrency(prev => ({ ...prev, rate: parseFloat(e.target.value) || 1 }))}

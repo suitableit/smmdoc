@@ -3,19 +3,11 @@
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUserSettings } from '@/hooks/use-user-settings';
+import useCurrency from '@/hooks/useCurrency';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useState, useTransition, useMemo } from 'react';
 import { FaExchangeAlt, FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-
-const useCurrency = () => ({
-  currency: 'BDT' as 'USD' | 'BDT',
-  rate: 110,
-});
-
-const useUserSettings = () => ({
-  settings: { currency: 'BDT', transferFundsPercentage: 3 },
-  loading: false,
-});
 
 const Toast = ({
   message,
@@ -40,8 +32,16 @@ export default function TransferFund() {
   const currentUser = useCurrentUser();
 
   const className = '';
-  const { currency: globalCurrency, rate: globalRate } = useCurrency();
+  const { rate: globalRate, availableCurrencies } = useCurrency();
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+  
+  // Get BDT rate from available currencies, fallback to context rate or 110
+  const bdtRate = useMemo(() => {
+    const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
+    const rate = bdtCurrency?.rate || globalRate || 110;
+    // Ensure rate is a number and preserve decimal precision
+    return typeof rate === 'number' ? rate : parseFloat(String(rate)) || 110;
+  }, [availableCurrencies, globalRate]);
   const [username, setUsername] = useState('');
   const [amountUSD, setAmountUSD] = useState('');
   const [amountBDT, setAmountBDT] = useState('');
@@ -58,7 +58,7 @@ export default function TransferFund() {
   const [isLoading, setIsLoading] = useState(true);
   const [selfTransferError, setSelfTransferError] = useState('');
 
-  const rate = globalRate;
+  const rate = bdtRate;
 
   useEffect(() => {
     setPageTitle('Transfer Funds', appName);
@@ -366,7 +366,7 @@ export default function TransferFund() {
               <h3 className="card-title">Transfer Funds</h3>
             </div>
             <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              You can transfer funds to your friends with %3 fees only.
+              You can transfer funds to your friends with {userSettings?.transferFundsPercentage || 3}% fees only.
             </p>
 
             <form onSubmit={handleTransfer} className="space-y-6">
@@ -444,7 +444,7 @@ export default function TransferFund() {
                 <div className="flex flex-wrap items-center justify-between mb-4">
                   <h3 className="card-title">Amount Details</h3>
                   <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
-                    Rate: 1 USD = {rate} BDT
+                    Rate: 1 USD = {bdtRate.toFixed(2)} BDT
                   </div>
                 </div>
 
