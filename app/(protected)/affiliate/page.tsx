@@ -1,6 +1,7 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { ActivateAffiliateContent } from '@/app/(protected)/affiliate/activate/page';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
@@ -60,11 +61,26 @@ const Toast = ({
 
 export default function AffiliateProgram() {
   const { appName } = useAppNameWithFallback();
+  const [isActive, setIsActive] = useState<boolean>(true);
 
   useEffect(() => {
     setPageTitle('Affiliate Program', appName);
   }, [appName]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/user/affiliate/stats');
+        if (res.ok) {
+          const json = await res.json();
+          const status = (json?.data?.status || '') as string;
+          setIsActive(status === 'active');
+        }
+      } catch {}
+    })();
+  }, []);
+
+  if (!isActive) return <ActivateAffiliateContent />;
   return (
     <div className="min-h-screen bg-[var(--page-bg)] dark:bg-[var(--page-bg)] transition-colors duration-200">
       <div className="space-y-6">
@@ -174,25 +190,6 @@ function AffiliateStatsCards() {
           if (typeof window !== 'undefined' && data.data.referralCode) {
             window.localStorage.setItem('affiliateReferralCode', data.data.referralCode);
             setCachedReferralCode(data.data.referralCode);
-          }
-          if (data.data.isAffiliate === false) {
-            try {
-              const joinRes = await fetch('/api/user/affiliate/join', { method: 'POST' });
-              if (joinRes.ok) {
-                const statsRes = await fetch('/api/user/affiliate/stats');
-                if (statsRes.ok) {
-                  const statsJson = await statsRes.json();
-                  if (statsJson.success && statsJson.data) {
-                    setStats(statsJson.data);
-                    if (typeof window !== 'undefined' && statsJson.data.referralCode) {
-                      window.localStorage.setItem('affiliateReferralCode', statsJson.data.referralCode);
-                      setCachedReferralCode(statsJson.data.referralCode);
-                    }
-                  }
-                }
-              }
-            } catch (e) {
-            }
           }
         }
       } catch (error) {
@@ -327,32 +324,32 @@ function AffiliateStatsCards() {
           <label className="text-sm font-medium text-white/80 whitespace-nowrap">
             Your Unique Referral Link
           </label>
-          <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm w-full md:flex-1">
-            <input
-              type="text"
-              value={referralLink}
-              readOnly
-              className="flex-1 bg-white px-4 py-3 text-gray-800 font-medium text-sm outline-none border-none"
-            />
-            <button
-              onClick={copyToClipboard}
-              className="px-4 py-3 text-[var(--primary)] hover:text-[var(--secondary)] hover:bg-gray-50 transition-colors duration-200 border-none"
-              title={copied ? 'Copied!' : 'Copy link'}
-            >
-              <FaCopy className="h-4 w-4" />
-            </button>
-          </div>
+                <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm w-full md:flex-1">
+                  <input
+                    type="text"
+                    value={referralLink}
+                    readOnly
+                    className="flex-1 bg-white px-4 py-3 text-gray-800 font-medium text-sm outline-none border-none"
+                  />
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-4 py-3 text-[var(--primary)] hover:text-[var(--secondary)] hover:bg-gray-50 transition-colors duration-200 border-none"
+                    title={copied ? 'Copied!' : 'Copy link'}
+                  >
+                    <FaCopy className="h-4 w-4" />
+                  </button>
+                </div>
         </div>
       </div>
-      <div className="card card-padding">
-        <div className="card-header mb-4">
-          <div className="card-icon">
-            <FaChartLine />
-          </div>
-          <h3 className="card-title">Affiliate Statistics Overview</h3>
-        </div>
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaChartLine />
+              </div>
+              <h3 className="card-title">Affiliate Statistics Overview</h3>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -370,6 +367,7 @@ function AffiliateStatsCards() {
               <FaMousePointer className="text-blue-500 w-5 h-5" />
             </div>
           </div>
+
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>

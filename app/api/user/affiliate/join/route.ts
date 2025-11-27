@@ -1,4 +1,4 @@
-﻿import { auth } from '@/auth';
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         userId,
         referralCode,
         commissionRate,
-        status: 'active',
+        status: 'pending',
         updatedAt: new Date()
       }
     });
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Successfully joined the affiliate program',
+      message: 'Successfully joined the affiliate program. Please activate to start earning.',
       data: {
         referralCode: affiliate.referralCode,
         commissionRate: affiliate.commissionRate,

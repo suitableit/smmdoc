@@ -19,7 +19,9 @@ export default auth(async (req) => {
   const isApiAuthRoute = apiAuthPrefixes.some((prefix) =>
     nextUrl.pathname.startsWith(prefix)
   );
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  const isPublicRoute = publicRoutes.some((route) =>
+    nextUrl.pathname === route || nextUrl.pathname.startsWith(route + '/')
+  );
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
   const clientIP = getClientIP(req);
