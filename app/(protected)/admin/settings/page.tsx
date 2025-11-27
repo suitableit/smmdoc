@@ -1281,28 +1281,8 @@ const GeneralSettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div className="flex-1">
-                    <label className="form-label mb-1">User Free Balance</label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Enable or disable free balance for new users
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 md:ml-4">
-                    <Switch
-                      checked={userSettings.userFreeBalanceEnabled}
-                      onCheckedChange={(checked) =>
-                        setUserSettings(prev => ({
-                          ...prev,
-                          userFreeBalanceEnabled: checked
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
                 <div className="form-group">
-                  <label className="form-label">Free Amount (in USD)</label>
+                  <label className="form-label">Free balance for new user (in USD)</label>
                   <input
                     type="number"
                     min="0"
@@ -1318,28 +1298,8 @@ const GeneralSettingsPage = () => {
                   />
                 </div>
 
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div className="flex-1">
-                    <label className="form-label mb-1">Payment Bonus</label>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Get a bonus when the user add funds using payment gateway
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 md:ml-4">
-                    <Switch
-                      checked={userSettings.paymentBonusEnabled}
-                      onCheckedChange={(checked) =>
-                        setUserSettings(prev => ({
-                          ...prev,
-                          paymentBonusEnabled: checked
-                        }))
-                      }
-                    />
-                  </div>
-                </div>
-
                 <div className="form-group">
-                  <label className="form-label">Bonus Percentage</label>
+                  <label className="form-label">Payment bonus for gateway transactions (%)</label>
                   <input
                     type="number"
                     min="0"

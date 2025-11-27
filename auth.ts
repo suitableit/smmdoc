@@ -24,7 +24,7 @@ export const {
         const userSettings = await db.userSettings.findFirst();
         let initialBalance = 0;
 
-        if (userSettings?.userFreeBalanceEnabled && userSettings?.freeAmount > 0) {
+        if (userSettings?.freeAmount > 0) {
           initialBalance = userSettings.freeAmount;
         }
 

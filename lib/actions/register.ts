@@ -6,11 +6,11 @@ import { getUserByEmail } from "@/data/user";
 import { db } from "../db";
 import { sendVerificationCodeEmail } from "../nodemailer";
 import { generateVerificationCode } from "../tokens";
-import { signUpSchema } from "../validators/auth.validator";
+import { signUpSchema, createSignUpSchema } from "../validators/auth.validator";
 import { verifyReCAPTCHA, getReCAPTCHASettings } from "../recaptcha";
 import { processAffiliateReferral } from "../affiliate-referral-helper";
 
-export const register = async (values: z.infer<typeof signUpSchema> & { recaptchaToken?: string }) => {
+export const register = async (values: any & { recaptchaToken?: string }) => {
   console.log('Received values:', values);
 
   if (!values.confirmPassword && values.password) {
@@ -36,7 +36,11 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
     }
   }
 
-  const validatedFields = signUpSchema.safeParse(values);
+  const userSettings = await db.userSettings.findFirst();
+  const nameFieldEnabled = userSettings?.nameFieldEnabled ?? true;
+  
+  const dynamicSchema = createSignUpSchema(nameFieldEnabled);
+  const validatedFields = dynamicSchema.safeParse(values);
   console.log('Validation result:', validatedFields);
 
   if (!validatedFields.success) {
@@ -63,20 +67,20 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
     return { success: false, error: "Username is already exist" };
   }
   try {
-
-    const userSettings = await db.userSettings.findFirst();
     let initialBalance = 0;
 
-    if (userSettings?.userFreeBalanceEnabled && userSettings?.freeAmount > 0) {
+    if (userSettings && userSettings.freeAmount > 0) {
       initialBalance = userSettings.freeAmount;
     }
 
     const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
 
+    const userName = nameFieldEnabled ? name : (name || null);
+
     const newUser = await db.users.create({
       data: {
         username,
-        name,
+        name: userName,
         email,
         password: hashedPassword,
         balance: initialBalance,
@@ -93,7 +97,7 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
         const emailSent = await sendVerificationCodeEmail(
           email,
           verificationToken.token,
-          name || username
+          userName || username
         );
 
         if (!emailSent) {
@@ -118,7 +122,9 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
       success: true, 
       error: "", 
       message: successMessage,
-      email: emailConfirmationEnabled ? email : undefined
+      email: emailConfirmationEnabled ? email : undefined,
+      shouldAutoLogin: !emailConfirmationEnabled,
+      userEmail: email
     };
   } catch (error) {
     console.error('Database error during user creation:', error);

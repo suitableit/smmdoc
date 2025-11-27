@@ -123,7 +123,7 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
     
     if (referralCreated) {
       try {
-        const registrationExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
+        const registrationExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
         cookieStore.set(`affiliate_registration_${affiliateId}`, registrationFingerprint, {
           httpOnly: true,
           sameSite: 'lax',

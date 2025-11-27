@@ -456,7 +456,7 @@ const ProfileCard = ({
                       className="text-sm sm:text-xl font-bold truncate"
                       style={{ color: 'var(--header-text)' }}
                     >
-                      {user?.username || user?.name || 'User Name'}
+                      {user?.username || user?.name || 'User'}
                     </h3>
                     <p
                       className="truncate text-xs sm:text-sm"
