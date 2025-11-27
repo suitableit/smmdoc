@@ -20,7 +20,6 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { convertCurrency } from '@/lib/currency-utils';
 const formatID = (id: any) => id;
 const formatNumber = (num: number) => num.toLocaleString();
 const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
@@ -2149,27 +2148,6 @@ const AdminAllTransactionsPage = () => {
                             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           />
                         </div>
-                        {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && userFound && (
-                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="text-sm text-blue-800">
-                              <div className="font-medium mb-1">Conversion Preview:</div>
-                              <div>Admin Amount: {currentCurrencyData?.symbol || '$'}{balanceForm.amount} ({currency})</div>
-                              <div>Will be stored as: ৳{(() => {
-                                const amount = parseFloat(balanceForm.amount);
-                                if (currency === 'BDT') {
-                                  return amount.toFixed(2);
-                                }
-
-                                if (availableCurrencies && availableCurrencies.length > 0) {
-                                  const convertedAmount = convertCurrency(amount, currency, 'BDT', availableCurrencies);
-                                  return convertedAmount.toFixed(2);
-                                }
-                                return '0.00';
-                              })()} (BDT)</div>
-                              <div className="text-xs text-blue-600 mt-1">User: {userFound.username}</div>
-                            </div>
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex gap-3 justify-end">
@@ -2197,7 +2175,6 @@ const AdminAllTransactionsPage = () => {
                         >
                           {balanceSubmitting ? (
                             <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                               {balanceForm.action === 'add' ? 'Adding...' : 'Deducting...'}
                             </>
                           ) : (

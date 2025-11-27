@@ -136,13 +136,90 @@ export async function PATCH(req: NextRequest) {
           },
           data: updateData
         });
+
+        // Update affiliate commissions for cancelled orders
+        const commissions = await prisma.affiliateCommissions.findMany({
+          where: {
+            orderId: { in: orderIdNumbers },
+            status: 'pending'
+          },
+          include: {
+            affiliate: {
+              select: {
+                id: true,
+                status: true,
+              }
+            }
+          }
+        });
+
+        for (const commission of commissions) {
+          if (commission.affiliate && commission.affiliate.status === 'active') {
+            await prisma.affiliateCommissions.update({
+              where: { id: commission.id },
+              data: {
+                status: 'cancelled',
+                updatedAt: new Date(),
+              }
+            });
+          }
+        }
       });
     } else {
-      await db.newOrders.updateMany({
-        where: {
-          id: { in: orderIdNumbers }
-        },
-        data: updateData
+      await db.$transaction(async (prisma) => {
+        await prisma.newOrders.updateMany({
+          where: {
+            id: { in: orderIdNumbers }
+          },
+          data: updateData
+        });
+
+        // Update affiliate commissions for completed orders
+        if (status === 'completed') {
+          const commissions = await prisma.affiliateCommissions.findMany({
+            where: {
+              orderId: { in: orderIdNumbers },
+              status: 'pending'
+            },
+            include: {
+              affiliate: {
+                select: {
+                  id: true,
+                  status: true,
+                }
+              }
+            }
+          });
+
+          for (const commission of commissions) {
+            if (commission.affiliate && commission.affiliate.status === 'active') {
+              // Update commission to approved
+              await prisma.affiliateCommissions.update({
+                where: { id: commission.id },
+                data: {
+                  status: 'approved',
+                  updatedAt: new Date(),
+                }
+              });
+
+              // Add earnings to affiliate
+              await prisma.affiliates.update({
+                where: { id: commission.affiliateId },
+                data: {
+                  totalEarnings: {
+                    increment: commission.commissionAmount
+                  },
+                  availableEarnings: {
+                    increment: commission.commissionAmount
+                  },
+                  updatedAt: new Date(),
+                }
+              });
+
+              console.log(`Affiliate commission ${commission.id} approved and $${commission.commissionAmount.toFixed(2)} added to affiliate ${commission.affiliateId} earnings for completed order ${commission.orderId}`);
+            }
+          }
+        }
       });
     }
 

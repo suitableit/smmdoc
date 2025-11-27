@@ -246,11 +246,14 @@ const ProfileCard = ({
 
   useEffect(() => {
     const loadUserData = async () => {
-      if ((currentUser?.id || user?.id) && !userData?.id) {
+      if (currentUser?.id || user?.id) {
         try {
           const userDetailsData = await getUserDetails();
           if (userDetailsData) {
             dispatch(setUserDetails(userDetailsData));
+            // Reset image error when user data is refreshed
+            setImageError(false);
+            setDropdownImageError(false);
           }
         } catch (error) {
           console.error('Failed to load user details in header:', error);
@@ -259,12 +262,34 @@ const ProfileCard = ({
     };
 
     loadUserData();
-  }, [currentUser?.id, user?.id, userData?.id, dispatch]);
+  }, [currentUser?.id, user?.id, dispatch]);
 
   const { data: userStatsResponse, isLoading: isLoadingStats } = useGetUserStatsQuery(undefined);
   const balance = userStatsResponse?.data?.balance || userData?.balance || 0;
   const userStoredCurrency = userStatsResponse?.data?.currency || userData?.currency || 'USD';
   const [isInitialLoading, setIsInitialLoading] = useState(false);
+
+  // Listen for avatar update events
+  useEffect(() => {
+    const handleAvatarUpdate = async () => {
+      // Refresh user data and reset image error states
+      try {
+        const userDetailsData = await getUserDetails();
+        if (userDetailsData) {
+          dispatch(setUserDetails(userDetailsData));
+          setImageError(false);
+          setDropdownImageError(false);
+        }
+      } catch (error) {
+        console.error('Failed to refresh user data after avatar update:', error);
+      }
+    };
+
+    window.addEventListener('avatarUpdated', handleAvatarUpdate);
+    return () => {
+      window.removeEventListener('avatarUpdated', handleAvatarUpdate);
+    };
+  }, [dispatch]);
   
   useEffect(() => {
     if (isOpen) {
@@ -277,11 +302,16 @@ const ProfileCard = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (user?.photo || user?.image) {
+    const imageUrl = user?.photo || user?.image || userData?.image;
+    if (imageUrl) {
+      setImageError(false);
+      setDropdownImageError(false);
+    } else {
+      // Reset error state when image is removed
       setImageError(false);
       setDropdownImageError(false);
     }
-  }, [user?.photo, user?.image]);
+  }, [user?.photo, user?.image, userData?.image]);
   
   const isLoading = isInitialLoading || isLoadingStats || !user;
 
@@ -343,18 +373,22 @@ const ProfileCard = ({
         disabled={isLoggingOut}
       >
         <Avatar className="h-10 w-10 sm:h-10 sm:w-10">
-          {(user?.photo || user?.image) && !imageError ? (
+          {(user?.photo || user?.image || userData?.image) && !imageError ? (
             <img
-              src={user?.photo || user?.image || ''}
-              alt={user?.name || 'User'}
+              key={`avatar-${user?.photo || user?.image || userData?.image || ''}-${Date.now()}`}
+              src={`${user?.photo || user?.image || userData?.image || ''}${(user?.photo || user?.image || userData?.image) ? ((user?.photo || user?.image || userData?.image)?.includes('?') ? '&' : '?') + '_t=' + Date.now() : ''}`}
+              alt={user?.name || userData?.name || 'User'}
               className="w-full h-full object-cover relative z-10"
               onError={() => {
                 setImageError(true);
               }}
+              onLoad={() => {
+                setImageError(false);
+              }}
             />
           ) : null}
           <AvatarFallback>
-            {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
+            {(user?.username || user?.name || user?.email || userData?.username || userData?.name || userData?.email)?.charAt(0)?.toUpperCase()}
           </AvatarFallback>
         </Avatar>
       </button>
@@ -403,18 +437,22 @@ const ProfileCard = ({
               >
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
-                    {(user?.photo || user?.image) && !dropdownImageError ? (
+                    {(user?.photo || user?.image || userData?.image) && !dropdownImageError ? (
                       <img
-                        src={user?.photo || user?.image || ''}
-                        alt={user?.name || 'User'}
+                        key={`dropdown-avatar-${user?.photo || user?.image || userData?.image || ''}-${Date.now()}`}
+                        src={`${user?.photo || user?.image || userData?.image || ''}${(user?.photo || user?.image || userData?.image) ? ((user?.photo || user?.image || userData?.image)?.includes('?') ? '&' : '?') + '_t=' + Date.now() : ''}`}
+                        alt={user?.name || userData?.name || 'User'}
                         className="w-full h-full object-cover relative z-10"
                         onError={() => {
                           setDropdownImageError(true);
                         }}
+                        onLoad={() => {
+                          setDropdownImageError(false);
+                        }}
                       />
                     ) : null}
                     <AvatarFallback>
-                      {(user?.username || user?.name || user?.email)?.charAt(0)?.toUpperCase()}
+                      {(user?.username || user?.name || user?.email || userData?.username || userData?.name || userData?.email)?.charAt(0)?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">

@@ -188,9 +188,7 @@ export default {
               },
             });
             existingUser = created as any;
-            
-            // Process affiliate referral if cookie exists (for Google OAuth registration)
-            // Don't await to avoid blocking token generation
+
             processAffiliateReferral(created.id).catch(err => {
               console.error('Error processing affiliate referral in jwt callback:', err)
             })

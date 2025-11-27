@@ -2,6 +2,7 @@
 import { db } from '@/lib/db';
 import { serializeOrder } from '@/lib/utils';
 import { NextRequest, NextResponse } from 'next/server';
+import { updateAffiliateCommissionForOrder } from '@/lib/affiliate-commission-helper';
 
 export async function PUT(
   req: NextRequest,
@@ -230,6 +231,14 @@ export async function PUT(
           }
         }
       });
+
+      // Update affiliate commission status based on order status
+      try {
+        await updateAffiliateCommissionForOrder(orderId, status, prisma);
+      } catch (affiliateError) {
+        console.error('Error updating affiliate commission status:', affiliateError);
+        // Don't fail the order update if affiliate commission update fails
+      }
       
       return updatedOrder;
     });
@@ -311,27 +320,39 @@ export async function PATCH(
       );
     }
 
-    const updatedOrder = await db.newOrders.update({
-      where: { id: orderId },
-      data: {
-        status,
-        updatedAt: new Date()
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
+    const updatedOrder = await db.$transaction(async (prisma) => {
+      const order = await prisma.newOrders.update({
+        where: { id: orderId },
+        data: {
+          status,
+          updatedAt: new Date()
         },
-        service: {
-          select: {
-            id: true,
-            name: true
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true
+            }
           }
         }
+      });
+
+      // Update affiliate commission status based on order status
+      try {
+        await updateAffiliateCommissionForOrder(orderId, status, prisma);
+      } catch (affiliateError) {
+        console.error('Error updating affiliate commission status:', affiliateError);
+        // Don't fail the order update if affiliate commission update fails
       }
+
+      return order;
     });
 
     return NextResponse.json({

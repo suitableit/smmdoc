@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
     FaBan,
     FaCheckCircle,
@@ -24,6 +25,7 @@ import useCurrency from '@/hooks/useCurrency';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { invalidateUserSessions } from '@/lib/session-invalidation';
+import { convertCurrency, formatCurrencyAmount } from '@/lib/currency-utils';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -120,6 +122,7 @@ const Toast = ({
 }) => (
   <div className={`toast toast-${type} toast-enter`}>
     {type === 'success' && <FaCheckCircle className="toast-icon" />}
+    {type === 'pending' && <FaExclamationCircle className="toast-icon" />}
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
       <FaTimes className="toast-close-icon" />
@@ -324,7 +327,7 @@ const UsersListPage = () => {
     setPageTitle('All Users', appName);
   }, [appName]);
 
-  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext } = useCurrency();
+  const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext, availableCurrencies, currencySettings, convertAmount } = useCurrency();
 
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<UserStats>({
@@ -562,9 +565,24 @@ const UsersListPage = () => {
     return icons[status as keyof typeof icons] || icons.active;
   };
 
-  const formatCurrency = useCallback((amount: number) => {
-    return formatCurrencyFromContext(amount);
-  }, [formatCurrencyFromContext]);
+  const formatCurrency = useCallback((amount: number, userCurrency?: string) => {
+    // Balance is stored in USD in the database
+    if (userCurrency && availableCurrencies && currencySettings) {
+      const userCurrencyData = availableCurrencies.find(c => c.code === userCurrency);
+      if (userCurrencyData) {
+        // Convert from USD (database storage) to user's currency
+        const convertedAmount = convertCurrency(amount, 'USD', userCurrency, availableCurrencies);
+        return formatCurrencyAmount(convertedAmount, userCurrency, availableCurrencies, currencySettings);
+      }
+    }
+    // Fallback: convert from USD to admin's currency
+    if (availableCurrencies && currencySettings) {
+      const convertedAmount = convertCurrency(amount, 'USD', currency, availableCurrencies);
+      return formatCurrencyAmount(convertedAmount, currency, availableCurrencies, currencySettings);
+    }
+    // Final fallback: show as USD
+    return `$${amount.toFixed(2)}`;
+  }, [currency, availableCurrencies, currencySettings]);
 
   const handleSelectAll = useCallback(() => {
     setSelectedUsers((prev) =>
@@ -1370,7 +1388,7 @@ const UsersListPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {formatCurrency(user.balance || 0)}
+                                {formatCurrency(user.balance || 0, user.currency)}
                               </div>
                             </div>
                           </td>
@@ -2164,6 +2182,10 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     username: '',
   });
   const [balanceSubmitting, setBalanceSubmitting] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'pending';
+  } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -2193,20 +2215,9 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     }
   };
 
-  const showModalToast = (message: string, type: 'success' | 'error') => {
-
-    const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg text-white font-medium ${
-      type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    }`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-      if (document.body.contains(toast)) {
-        document.body.removeChild(toast);
-      }
-    }, 3000);
+  const showModalToast = (message: string, type: 'success' | 'error' | 'info' | 'pending' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
   };
 
   const handleBalanceSubmit = async () => {
@@ -2239,14 +2250,18 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
       const result = await response.json();
 
       if (result.success) {
+        const toastType = balanceForm.action === 'deduct' ? 'pending' : 'success';
         showModalToast(
           result.message || `Successfully ${
             balanceForm.action === 'add' ? 'added' : 'deducted'
           } balance ${balanceForm.action === 'add' ? 'to' : 'from'} ${currentUser.username}`,
-          'success'
+          toastType
         );
-        onClose();
-        onBalanceUpdate();
+        // Delay closing the modal to allow toast to be visible
+        setTimeout(() => {
+          onClose();
+          onBalanceUpdate();
+        }, 500);
       } else {
         showModalToast(result.error || 'Failed to update user balance', 'error');
       }
@@ -2258,19 +2273,35 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     }
   };
 
-  if (!isOpen || !currentUser) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render toast portal even when modal is closed (to persist after close)
+  const toastPortal = mounted && toast && createPortal(
+    <div className="toast-container" style={{ zIndex: 9999 }}>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(null)}
+      />
+    </div>,
+    document.body
+  );
+
+  if (!isOpen || !currentUser) {
+    // Still render toast even when modal is closed
+    return toastPortal || null;
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-        <h3 className="text-lg font-semibold mb-4">Add/Deduct User Balance</h3>
-
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">User: <span className="font-medium">{currentUser.username}</span></div>
-          <div className="text-sm text-gray-600">User Currency: <span className="font-medium">{currentUser.currency || 'USD'}</span></div>
-          <div className="text-sm text-gray-600">Current Balance: <span className="font-medium">৳{currentUser.balance?.toFixed(2) || '0.00'}</span> <span className="text-xs text-gray-500">(stored in BDT)</span></div>
-          <div className="text-sm text-gray-600">Admin Currency: <span className="font-medium">{currency}</span></div>
-        </div>
+    <>
+      {toastPortal}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+          <h3 className="text-lg font-semibold mb-4">Add/Deduct User Balance</h3>
 
         <div className="space-y-4 mb-6">
           <div>
@@ -2328,23 +2359,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
             />
           </div>
-          {balanceForm.amount && parseFloat(balanceForm.amount) > 0 && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm text-blue-800">
-                <div className="font-medium mb-1">Conversion Preview:</div>
-                <div>Admin Amount: {currentCurrencyData?.symbol || '$'}{balanceForm.amount} ({currency})</div>
-                <div>Will be stored as: ৳{(() => {
-                  const amount = parseFloat(balanceForm.amount);
-                  if (currency === 'BDT') {
-                    return amount.toFixed(2);
-                  }
-
-                  const convertedAmount = convertAmount(amount, currency, 'BDT');
-                  return convertedAmount.toFixed(2);
-                })()} (BDT)</div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex gap-3 justify-end">
@@ -2361,7 +2375,6 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           >
             {balanceSubmitting ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 {balanceForm.action === 'add' ? 'Adding...' : 'Deducting...'}
               </>
             ) : (
@@ -2376,6 +2389,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -73,7 +73,6 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
 
     const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
 
-    // Create user first
     const newUser = await db.users.create({
       data: {
         username,
@@ -86,7 +85,6 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
       },
     });
 
-    // Process affiliate referral if cookie exists (for both custom and OAuth registration)
     await processAffiliateReferral(newUser.id);
 
     if (emailConfirmationEnabled) {

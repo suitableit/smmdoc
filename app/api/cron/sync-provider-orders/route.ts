@@ -1,4 +1,5 @@
 ﻿import { db } from '@/lib/db';
+import { updateAffiliateCommissionForOrder } from '@/lib/affiliate-commission-helper';
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
@@ -274,20 +275,37 @@ async function syncSingleOrder(order: any, provider: any) {
               where: { id: order.id },
               data: updateData
             });
+
+            // Update affiliate commission if order was cancelled
+            if (statusChangedToCancelled) {
+              await updateAffiliateCommissionForOrder(order.id, 'cancelled', tx);
+            }
           });
 
           console.log(`Refund processed successfully for order ${order.id}. User ${user.id} received ${refundAmount} ${user.currency}`);
         } else {
           console.warn(`Could not find user for order ${order.id}, skipping refund`);
-          await db.newOrders.update({
-            where: { id: order.id },
-            data: updateData
+          await db.$transaction(async (tx) => {
+            await tx.newOrders.update({
+              where: { id: order.id },
+              data: updateData
+            });
+            // Update affiliate commission if order was cancelled
+            if (statusChangedToCancelled) {
+              await updateAffiliateCommissionForOrder(order.id, 'cancelled', tx);
+            }
           });
         }
       } else {
-        await db.newOrders.update({
-          where: { id: order.id },
-          data: updateData
+        await db.$transaction(async (tx) => {
+          await tx.newOrders.update({
+            where: { id: order.id },
+            data: updateData
+          });
+          // Update affiliate commission if order status changed to completed or cancelled
+          if (mappedStatus === 'completed' || mappedStatus === 'cancelled') {
+            await updateAffiliateCommissionForOrder(order.id, mappedStatus, tx);
+          }
         });
       }
 
@@ -314,9 +332,10 @@ async function syncSingleOrder(order: any, provider: any) {
         }
       };
     } else {
-      await db.newOrders.update({
-        where: { id: order.id },
-        data: {
+      await db.$transaction(async (tx) => {
+        await tx.newOrders.update({
+          where: { id: order.id },
+          data: {
           lastSyncAt: new Date()
         }
       });

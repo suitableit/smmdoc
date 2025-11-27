@@ -302,6 +302,10 @@ const Header: React.FC<HeaderProps> = ({
       if (user?.photo || user?.image) {
         setImageError(false);
         setDropdownImageError(false);
+      } else {
+        // Reset error state when image is removed
+        setImageError(false);
+        setDropdownImageError(false);
       }
     }, [user?.photo, user?.image]);
 
@@ -321,11 +325,14 @@ const Header: React.FC<HeaderProps> = ({
           <Avatar className="h-12 w-12">
             {(user?.photo || user?.image) && !imageError ? (
               <img
-                src={user?.photo || user?.image || ''}
+                src={`${user?.photo || user?.image || ''}${(user?.photo || user?.image) ? ((user.photo || user.image)?.includes('?') ? '&' : '?') + '_t=' + Date.now() : ''}`}
                 alt={user?.name || 'User'}
                 className="w-full h-full object-cover relative z-10"
                 onError={() => {
                   setImageError(true);
+                }}
+                onLoad={() => {
+                  setImageError(false);
                 }}
               />
             ) : null}
@@ -342,11 +349,14 @@ const Header: React.FC<HeaderProps> = ({
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
                     {(user?.photo || user?.image) && !dropdownImageError ? (
                       <img
-                        src={user?.photo || user?.image || ''}
+                        src={`${user?.photo || user?.image || ''}${(user?.photo || user?.image) ? ((user.photo || user.image)?.includes('?') ? '&' : '?') + '_t=' + Date.now() : ''}`}
                         alt={user?.name || 'User'}
                         className="w-full h-full object-cover relative z-10"
                         onError={() => {
                           setDropdownImageError(true);
+                        }}
+                        onLoad={() => {
+                          setDropdownImageError(false);
                         }}
                       />
                     ) : null}
@@ -429,7 +439,11 @@ const Header: React.FC<HeaderProps> = ({
   }, []);
 
   useEffect(() => {
-    if (propSession?.user?.photo || propSession?.user?.image) {
+    const imageUrl = propSession?.user?.photo || propSession?.user?.image;
+    if (imageUrl) {
+      setMobileImageError(false);
+    } else {
+      // Reset error state when image is removed
       setMobileImageError(false);
     }
   }, [propSession?.user?.photo, propSession?.user?.image]);
@@ -517,11 +531,15 @@ const Header: React.FC<HeaderProps> = ({
                     <Avatar className="h-10 w-10">
                       {(session.user?.photo || session.user?.image) && !mobileImageError ? (
                         <img
-                          src={session.user?.photo || session.user?.image || ''}
+                          key={`mobile-avatar-${session.user?.photo || session.user?.image || ''}-${Date.now()}`}
+                          src={`${session.user?.photo || session.user?.image || ''}${(session.user?.photo || session.user?.image) ? ((session.user.photo || session.user.image)?.includes('?') ? '&' : '?') + '_t=' + Date.now() : ''}`}
                           alt={session.user?.name || 'User'}
                           className="w-full h-full object-cover relative z-10"
                           onError={() => {
                             setMobileImageError(true);
+                          }}
+                          onLoad={() => {
+                            setMobileImageError(false);
                           }}
                         />
                       ) : null}

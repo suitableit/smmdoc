@@ -251,32 +251,95 @@ export async function PUT(
       }
     }
     
-    const updatedOrder = await db.newOrders.update({
-      where: { id: orderId },
-      data: updateData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            currency: true
-          }
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            rate: true
-          }
-        },
-        category: {
-          select: {
-            id: true,
-            category_name: true
+    const updatedOrder = await db.$transaction(async (prisma) => {
+      const order = await prisma.newOrders.update({
+        where: { id: orderId },
+        data: updateData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              currency: true
+            }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              rate: true
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              category_name: true
+            }
           }
         }
+      });
+
+      // Update affiliate commission status if order status changed
+      if (body.status && body.status !== currentOrder.status) {
+        try {
+          const commission = await prisma.affiliateCommissions.findFirst({
+            where: { orderId: orderId },
+            include: {
+              affiliate: {
+                select: {
+                  id: true,
+                  status: true,
+                }
+              }
+            }
+          });
+
+          if (commission && commission.affiliate && commission.affiliate.status === 'active') {
+            if (body.status === 'cancelled' && commission.status === 'pending') {
+              // Update commission to cancelled
+              await prisma.affiliateCommissions.update({
+                where: { id: commission.id },
+                data: {
+                  status: 'cancelled',
+                  updatedAt: new Date(),
+                }
+              });
+              console.log(`Affiliate commission ${commission.id} marked as cancelled for order ${orderId}`);
+            } else if (body.status === 'completed' && commission.status === 'pending') {
+              // Update commission to approved and add earnings
+              await prisma.affiliateCommissions.update({
+                where: { id: commission.id },
+                data: {
+                  status: 'approved',
+                  updatedAt: new Date(),
+                }
+              });
+
+              // Add earnings to affiliate
+              await prisma.affiliates.update({
+                where: { id: commission.affiliateId },
+                data: {
+                  totalEarnings: {
+                    increment: commission.commissionAmount
+                  },
+                  availableEarnings: {
+                    increment: commission.commissionAmount
+                  },
+                  updatedAt: new Date(),
+                }
+              });
+
+              console.log(`Affiliate commission ${commission.id} approved and $${commission.commissionAmount.toFixed(2)} added to affiliate ${commission.affiliateId} earnings for completed order ${orderId}`);
+            }
+          }
+        } catch (affiliateError) {
+          console.error('Error updating affiliate commission status:', affiliateError);
+          // Don't fail the order update if affiliate commission update fails
+        }
       }
+
+      return order;
     });
     
     console.log(`Admin ${session.user.email} updated order ${id}`, {

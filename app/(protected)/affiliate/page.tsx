@@ -106,6 +106,7 @@ interface AffiliateEarning {
   id: number;
   signupDate: string;
   service: string;
+  category: string | null;
   amount: number;
   commission: number;
   status: 'completed' | 'pending' | 'cancelled';
@@ -419,23 +420,6 @@ function AffiliateStatsCards() {
               <FaChartLine className="text-orange-500 w-5 h-5" />
             </div>
           </div>
-          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                  Total Earnings
-                </div>
-                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                  {statsLoading ? (
-                    <div className="h-8 w-24 gradient-shimmer rounded" />
-                  ) : (
-                    stats.totalEarnings
-                  )}
-                </div>
-              </div>
-              <FaDollarSign className="text-emerald-500 w-5 h-5" />
-            </div>
-          </div>
           <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -451,6 +435,23 @@ function AffiliateStatsCards() {
                 </div>
               </div>
               <FaCoins className="text-indigo-500 w-5 h-5" />
+            </div>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Total Earnings
+                </div>
+                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                  {statsLoading ? (
+                    <div className="h-8 w-24 gradient-shimmer rounded" />
+                  ) : (
+                    stats.totalEarnings
+                  )}
+                </div>
+              </div>
+              <FaDollarSign className="text-emerald-500 w-5 h-5" />
             </div>
           </div>
         </div>
@@ -817,74 +818,68 @@ function AffiliateEarningsSection() {
 
         <div className="px-4 md:px-6">
           {earningsLoading ? (
-            <div className="overflow-x-auto" style={{ minHeight: '400px' }}>
-              <table className="w-full text-sm min-w-[700px]">
-                <thead className="sticky top-0 bg-white border-b z-10">
-                  <tr>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
                       ID
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">
                       User
                     </th>
-                    <th className="text-left p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
-                      Signup Date
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                      Registration
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">
                       Service
                     </th>
-                    <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-right py-3 px-4 font-medium text-gray-900">
                       Amount
                     </th>
-                    <th className="text-right p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-right py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
                       Commission
                     </th>
-                    <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
                       Status
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: 10 }).map((_, index) => (
-                    <tr key={index} className="border-t">
-                      <td className="p-3">
-                        <div className="h-6 w-16 gradient-shimmer rounded" />
-                      </td>
-                      <td className="p-3">
-                        <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
-                        <div className="h-3 w-32 gradient-shimmer rounded" />
-                      </td>
-                      <td className="p-3 hidden md:table-cell">
-                        <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
-                        <div className="h-3 w-16 gradient-shimmer rounded" />
-                      </td>
-                      <td className="p-3">
-                        <div className="h-4 w-32 gradient-shimmer rounded" />
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="h-4 w-20 gradient-shimmer rounded mb-1 ml-auto" />
-                        <div className="h-3 w-12 gradient-shimmer rounded ml-auto" />
-                      </td>
-                      <td className="p-3 text-right hidden md:table-cell">
-                        <div className="h-4 w-20 gradient-shimmer rounded mb-1 ml-auto" />
-                        <div className="h-3 w-12 gradient-shimmer rounded ml-auto" />
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="h-6 w-20 gradient-shimmer rounded-full mx-auto" />
-                      </td>
-                    </tr>
-                  ))}
+                  {Array.from({ length: 10 }).map((_, index) => {
+                    const isLastRow = index === 9;
+                    return (
+                      <tr key={index} className={`border-b border-gray-100 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                        <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
+                          <div className="h-4 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-32 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <div className="h-4 w-24 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-16 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4 max-w-[200px]">
+                          <div className="h-4 w-32 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-24 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="h-4 w-20 gradient-shimmer rounded" />
+                        </td>
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                          <div className="h-3 w-12 gradient-shimmer rounded" />
+                        </td>
+                        <td className={`py-3 px-4 ${isLastRow ? 'last:rounded-br-lg' : ''}`}>
+                          <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 md:pb-6 border-t gap-3">
-                <div className="h-4 w-48 gradient-shimmer rounded" />
-                <div className="flex flex-row items-center justify-center gap-2 w-full sm:w-auto">
-                  <div className="h-10 w-20 gradient-shimmer rounded-lg" />
-                  <div className="h-4 w-24 gradient-shimmer rounded" />
-                  <div className="h-10 w-16 gradient-shimmer rounded-lg" />
-                </div>
-              </div>
             </div>
           ) : earnings.length === 0 ? (
             <div className="text-center py-12">
@@ -901,123 +896,137 @@ function AffiliateEarningsSection() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[700px]">
-                  <thead className="sticky top-0 bg-white border-b z-10">
-                    <tr>
-                      <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
                         ID
                       </th>
-                      <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
                         User
                       </th>
-                      <th className="text-left p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
-                        Signup Date
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                        Registration
                       </th>
-                      <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
                         Service
                       </th>
-                      <th className="text-right p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900">
                         Amount
                       </th>
-                      <th className="text-right p-3 font-semibold hidden md:table-cell" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
                         Commission
                       </th>
-                      <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
                         Status
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {earnings.map((earning) => (
-                      <tr
-                        key={earning.id}
-                        className="border-t hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        <td className="p-3">
-                          <div className="font-mono text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                            {safeFormatId(earning.id)}
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div>
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                    {earnings.map((earning, index) => {
+                      const isLastRow = index === earnings.length - 1;
+                      return (
+                        <tr
+                          key={earning.id}
+                          className={`border-b border-gray-100 hover:bg-gray-50 ${
+                            isLastRow ? 'last:border-b-0' : ''
+                          }`}
+                        >
+                          <td
+                            className={`py-3 px-4 ${
+                              isLastRow ? 'first:rounded-bl-lg' : ''
+                            }`}
+                          >
+                            <span className="text-sm font-mono text-gray-700">
+                              {safeFormatId(earning.id)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-medium text-gray-900">
                               {earning.user?.username ||
                                 earning.user?.email?.split('@')[0] ||
                                 earning.user?.name ||
                                 'Unknown'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 hidden md:table-cell">
+                            <div>
+                              <div className="text-sm font-medium text-gray-700">
+                                {new Date(earning.signupDate).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(earning.signupDate).toLocaleTimeString()}
+                              </div>
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                              {earning.user?.email || 'No email'}
+                          </td>
+                          <td className="py-3 px-4 max-w-[200px]">
+                            <div className="truncate text-sm font-medium text-gray-900">
+                              {earning.service}
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-3 hidden md:table-cell">
-                          <div>
-                            <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                              {new Date(earning.signupDate).toLocaleDateString()}
+                            {earning.category && (
+                              <div className="text-xs text-gray-500 mt-1 truncate" title={earning.category}>
+                                {earning.category.length > 30 ? `${earning.category.substring(0, 30)}...` : earning.category}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-sm font-medium text-gray-900">
+                              ${formatPrice(earning.amount, 2)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 hidden md:table-cell">
+                            <span className="text-sm font-medium text-green-600">
+                              ${formatPrice(earning.commission, 2)}
+                            </span>
+                            <div className="text-xs text-gray-500">
+                              {((earning.commission / earning.amount) * 100).toFixed(1)}%
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                              {new Date(earning.signupDate).toLocaleTimeString()}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3">
-                          <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                            {earning.service}
-                          </div>
-                        </td>
-                        <td className="p-3 text-right">
-                          <div className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                            ${formatPrice(earning.amount, 2)}
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {earning.currency}
-                          </div>
-                        </td>
-                        <td className="p-3 text-right hidden md:table-cell">
-                          <div className="text-sm font-semibold text-green-600">
-                            ${formatPrice(earning.commission, 2)}
-                          </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {((earning.commission / earning.amount) * 100).toFixed(1)}%
-                          </div>
-                        </td>
-                        <td className="p-3 text-center">
-                          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mx-auto">
-                            {getStatusIcon(earning.status)}
-                            <span className="text-xs font-medium capitalize">{earning.status}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td
+                            className={`py-3 px-4 ${
+                              isLastRow ? 'last:rounded-br-lg' : ''
+                            }`}
+                          >
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                earning.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : earning.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {getStatusIcon(earning.status)}
+                              <span className="ml-1 capitalize">{earning.status}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 md:pb-6 border-t gap-3">
-                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Showing {formatNumber((pagination.page - 1) * pagination.limit + 1)} to {formatNumber(Math.min(pagination.page * pagination.limit, pagination.total))} of {formatNumber(pagination.total)} earnings
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 border-t border-gray-200 gap-3">
+                <div className="text-sm text-gray-600">
+                  Page <span className="font-medium">{pagination.page}</span> of{' '}
+                  <span className="font-medium">{pagination.totalPages}</span>
+                  {' '}({pagination.total || 0} earnings total)
                 </div>
-                <div className="flex flex-row items-center justify-center gap-2 w-full sm:w-auto">
+                <div className="flex gap-2">
                   <button
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-                    disabled={pagination.page <= 1}
-                    className="btn btn-secondary w-full sm:w-auto"
+                    disabled={pagination.page <= 1 || earningsLoading}
+                    className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     Previous
                   </button>
-                  <span className="text-sm text-center w-full sm:w-auto" style={{ color: 'var(--text-muted)' }}>
-                    Page {formatNumber(pagination.page)} of {formatNumber(pagination.totalPages)}
-                  </span>
                   <button
                     onClick={() =>
                       setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))
                     }
-                    disabled={pagination.page >= pagination.totalPages}
-                    className="btn btn-secondary w-full sm:w-auto"
+                    disabled={pagination.page >= pagination.totalPages || earningsLoading}
+                    className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     Next
                   </button>
