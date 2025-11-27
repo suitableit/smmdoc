@@ -763,7 +763,7 @@ function AffiliateEarningsSection() {
                 className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto"
               >
                 <FaCreditCard className="w-4 h-4" />
-                Payment Methods
+                Withdrawal Methods
               </button>
             </div>
           </div>
@@ -1077,7 +1077,7 @@ function AffiliateEarningsSection() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Payment Method
+                  Withdrawal Method
                 </label>
                 <select
                   value={withdrawalForm.selectedPaymentMethod}
@@ -1089,7 +1089,7 @@ function AffiliateEarningsSection() {
                   }
                   className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                 >
-                  <option value="" disabled>Select payment method</option>
+                  <option value="" disabled>Select withdrawal method</option>
                   {savedPaymentMethods.map((m) => (
                     <option key={m.id} value={m.id}>
                       {getPaymentMethodOptionLabel(m)}
@@ -1097,7 +1097,7 @@ function AffiliateEarningsSection() {
                   ))}
                 </select>
                 <div className="text-xs text-gray-500 mt-1">
-                  Choose from your configured payment methods
+                  Choose from your configured withdrawal methods
                 </div>
                 {withdrawalForm.selectedPaymentMethod && (
                   <div className="text-xs text-gray-600 mt-1">
@@ -1122,7 +1122,7 @@ function AffiliateEarningsSection() {
                     <div className="text-xs text-blue-700">
                       • Withdrawals are processed within 1-3 business days<br/>
                       • Minimum withdrawal amount is $100.00<br/>
-                      • Processing fees may apply depending on payment method
+                      • Processing fees may apply depending on withdrawal method
                     </div>
                   </div>
                 </div>

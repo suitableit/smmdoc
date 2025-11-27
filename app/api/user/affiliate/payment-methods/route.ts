@@ -32,7 +32,7 @@ export async function GET() {
     if (error.message === 'Authentication required') {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ success: false, error: 'Failed to load payment methods' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to load withdrawal methods' }, { status: 500 })
   }
 }
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const paymentMethods = body?.paymentMethods
     if (!Array.isArray(paymentMethods)) {
-      return NextResponse.json({ success: false, message: 'Invalid payment methods' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Invalid withdrawal methods' }, { status: 400 })
     }
 
     const map = new Map<string, any>()
@@ -73,11 +73,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ success: true, message: 'Payment methods saved' })
+    return NextResponse.json({ success: true, message: 'Withdrawal methods saved' })
   } catch (error: any) {
     if (error.message === 'Authentication required') {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ success: false, error: 'Failed to save payment methods' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to save withdrawal methods' }, { status: 500 })
   }
 }

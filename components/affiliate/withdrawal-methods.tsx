@@ -77,7 +77,7 @@ export default function PaymentMethodsSection({
     const newErrors: Record<string, string> = {};
 
     if (!newPaymentMethod.method) {
-      newErrors.method = 'Please select a payment method';
+      newErrors.method = 'Please select a withdrawal method';
     }
 
     if (newPaymentMethod.method === 'bank') {
@@ -126,7 +126,7 @@ export default function PaymentMethodsSection({
     }
 
     if (methodExists(newPaymentMethod.method)) {
-      onShowToast?.(`You can add only one ${getPaymentMethodDisplayName(newPaymentMethod.method)} payment method`, 'error');
+      onShowToast?.(`You can add only one ${getPaymentMethodDisplayName(newPaymentMethod.method)} withdrawal method`, 'error');
       return;
     }
 
@@ -160,7 +160,7 @@ export default function PaymentMethodsSection({
     });
     setShowAddForm(false);
     setFormErrors({});
-    onShowToast?.('Payment method added successfully!', 'success');
+    onShowToast?.('Withdrawal method added successfully!', 'success');
   };
 
   const handleCloseForm = () => {
@@ -182,7 +182,7 @@ export default function PaymentMethodsSection({
       <div>
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Payment Methods *
+            Withdrawal Methods *
           </label>
           <button
             type="button"
@@ -190,7 +190,7 @@ export default function PaymentMethodsSection({
             className="inline-flex items-center btn-primary px-3 py-1.5 text-sm font-medium rounded-lg hover:opacity-90 transition-opacity duration-200"
           >
             <FaPlus className="w-3 h-3 mr-1" />
-            Add Payment Method
+            Add Withdrawal Method
           </button>
         </div>
         {paymentMethods.length > 0 ? (
@@ -232,7 +232,7 @@ export default function PaymentMethodsSection({
                     type="button"
                     onClick={() => onRemovePaymentMethod(paymentMethod.id)}
                     className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
-                    title="Remove payment method"
+                    title="Remove withdrawal method"
                   >
                     <FaTrash className="w-4 h-4" />
                   </button>
@@ -244,7 +244,7 @@ export default function PaymentMethodsSection({
           <div className="text-center py-8 bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg">
             <FaWallet className="w-8 h-8 text-gray-400 mx-auto mb-2" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              No payment methods added yet. Click "Add Payment Method" to get started.
+              No withdrawal methods added yet. Click "Add Withdrawal Method" to get started.
             </p>
           </div>
         )}
@@ -257,7 +257,7 @@ export default function PaymentMethodsSection({
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Add New Payment Method
+              Add New Withdrawal Method
             </h3>
             <button
               type="button"
@@ -271,7 +271,7 @@ export default function PaymentMethodsSection({
           <div className="space-y-4">
             <div>
               <label htmlFor="newPaymentMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Payment Method *
+                Withdrawal Method *
               </label>
               <select
                 id="newPaymentMethod"
@@ -283,7 +283,7 @@ export default function PaymentMethodsSection({
                     : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
-                <option value="">Select a payment method</option>
+                <option value="">Select a withdrawal method</option>
                 <option value="bkash" disabled={methodExists('bkash')}>bKash</option>
                 <option value="nagad" disabled={methodExists('nagad')}>Nagad</option>
                 <option value="rocket" disabled={methodExists('rocket')}>Rocket</option>
@@ -433,7 +433,7 @@ export default function PaymentMethodsSection({
                 onClick={addPaymentMethod}
                 className="w-full md:flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
               >
-                Add Payment Method
+                Add Withdrawal Method
               </button>
               <button
                 type="button"

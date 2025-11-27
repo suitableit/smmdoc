@@ -16,7 +16,7 @@ import {
 } from 'react-icons/fa';
 
 const PaymentMethodsSection = dynamic(
-  () => import('@/components/affiliate/payment-methods'),
+  () => import('@/components/affiliate/withdrawal-methods'),
   { ssr: false }
 );
 
@@ -181,7 +181,7 @@ export default function ActivateAffiliatePage() {
     const newErrors: any = {};
 
     if (formData.paymentMethods.length === 0) {
-      newErrors.paymentMethods = 'Please add at least one payment method';
+      newErrors.paymentMethods = 'Please add at least one withdrawal method';
     }
 
     setErrors(newErrors);
@@ -208,12 +208,12 @@ export default function ActivateAffiliatePage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Failed to save payment method:', response.status, errorText);
+        console.error('Failed to save withdrawal method:', response.status, errorText);
         setFormData(prev => ({
           ...prev,
           paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
         }));
-        showToast(`Failed to save payment method`, 'error');
+        showToast(`Failed to save withdrawal method`, 'error');
         return;
       }
 
@@ -225,7 +225,7 @@ export default function ActivateAffiliatePage() {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
             setFormData(prev => ({ ...prev, paymentMethods: json.data }));
-            showToast('Payment method saved successfully!', 'success');
+            showToast('Withdrawal method saved successfully!', 'success');
           }
         }
       } else {
@@ -233,15 +233,15 @@ export default function ActivateAffiliatePage() {
           ...prev,
           paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
         }));
-        showToast(data.message || 'Failed to save payment method', 'error');
+        showToast(data.message || 'Failed to save withdrawal method', 'error');
       }
     } catch (error: any) {
-      console.error('Error saving payment method:', error);
+      console.error('Error saving withdrawal method:', error);
       setFormData(prev => ({
         ...prev,
         paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
       }));
-      showToast('Error saving payment method. Please try again.', 'error');
+      showToast('Error saving withdrawal method. Please try again.', 'error');
     }
   };
 
@@ -267,12 +267,12 @@ export default function ActivateAffiliatePage() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Failed to remove payment method:', response.status, errorText);
+        console.error('Failed to remove withdrawal method:', response.status, errorText);
         setFormData(prev => ({
           ...prev,
           paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
         }));
-        showToast(`Failed to remove payment method`, 'error');
+        showToast(`Failed to remove withdrawal method`, 'error');
         return;
       }
 
@@ -292,7 +292,7 @@ export default function ActivateAffiliatePage() {
               showToast('Delete failed: Item still exists', 'error');
             } else {
               setFormData(prev => ({ ...prev, paymentMethods: json.data }));
-              showToast('Payment method removed successfully!', 'info');
+              showToast('Withdrawal method removed successfully!', 'info');
             }
           }
         }
@@ -301,15 +301,15 @@ export default function ActivateAffiliatePage() {
           ...prev,
           paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
         }));
-        showToast(data.message || 'Failed to remove payment method', 'error');
+        showToast(data.message || 'Failed to remove withdrawal method', 'error');
       }
     } catch (error: any) {
-      console.error('Error removing payment method:', error);
+      console.error('Error removing withdrawal method:', error);
       setFormData(prev => ({
         ...prev,
         paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
       }));
-      showToast('Error removing payment method. Please try again.', 'error');
+      showToast('Error removing withdrawal method. Please try again.', 'error');
     }
   };
 
@@ -418,7 +418,7 @@ export default function ActivateAffiliatePage() {
             <div className="card-icon">
               <FaDollarSign />
             </div>
-            <h2 className="card-title">Configure Payment Methods</h2>
+            <h2 className="card-title">Configure Withdrawal Methods</h2>
           </div>
 
           <form onSubmit={handleActivateAccount} className="space-y-6">
