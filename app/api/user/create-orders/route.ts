@@ -732,6 +732,108 @@ export async function POST(request: Request) {
           }
         }
 
+        // Check if user was referred by an affiliate and create commission (pending status)
+        try {
+          const userId = parseInt(session.user.id);
+          console.log(`[AFFILIATE_COMMISSION] Checking for referral for user ${userId}, order ${order.id}`);
+          
+          // Check if affiliate system is enabled
+          const moduleSettings = await prisma.moduleSettings.findFirst();
+          const affiliateSystemEnabled = moduleSettings?.affiliateSystemEnabled ?? false;
+          console.log(`[AFFILIATE_COMMISSION] Affiliate system enabled: ${affiliateSystemEnabled}`);
+
+          if (affiliateSystemEnabled) {
+            const referral = await prisma.affiliateReferrals.findUnique({
+              where: { referredUserId: userId },
+              include: {
+                affiliate: {
+                  select: {
+                    id: true,
+                    status: true,
+                    commissionRate: true,
+                  }
+                }
+              }
+            });
+
+            console.log(`[AFFILIATE_COMMISSION] Referral lookup result:`, {
+              found: !!referral,
+              affiliateId: referral?.affiliateId,
+              affiliateStatus: referral?.affiliate?.status,
+              commissionRate: referral?.affiliate?.commissionRate
+            });
+
+            if (referral && referral.affiliate && referral.affiliate.status === 'active') {
+              // Check if this is the first order from this referred user
+              const existingCommission = await prisma.affiliateCommissions.findFirst({
+                where: {
+                  affiliateId: referral.affiliate.id,
+                  referredUserId: userId,
+                },
+                orderBy: {
+                  createdAt: 'asc'
+                }
+              });
+
+              console.log(`[AFFILIATE_COMMISSION] Existing commission check:`, {
+                hasExistingCommission: !!existingCommission,
+                existingCommissionId: existingCommission?.id,
+                existingOrderId: existingCommission?.orderId
+              });
+
+              // Only create commission for the FIRST order from this referred user
+              if (!existingCommission) {
+                const orderAmount = orderData.usdPrice || orderData.price || 0;
+                const commissionRate = referral.affiliate.commissionRate || 5;
+                const commissionAmount = (orderAmount * commissionRate) / 100;
+
+                console.log(`[AFFILIATE_COMMISSION] First order commission calculation:`, {
+                  orderAmount,
+                  commissionRate,
+                  commissionAmount
+                });
+
+                if (commissionAmount > 0) {
+                  // Create affiliate commission with pending status (earnings will be added when order is completed)
+                  const createdCommission = await prisma.affiliateCommissions.create({
+                    data: {
+                      affiliateId: referral.affiliate.id,
+                      referredUserId: userId,
+                      orderId: order.id,
+                      amount: orderAmount,
+                      commissionRate: commissionRate,
+                      commissionAmount: commissionAmount,
+                      status: 'pending',
+                      updatedAt: new Date(),
+                    }
+                  });
+
+                  console.log(`[AFFILIATE_COMMISSION] ✅ First order commission created successfully:`, {
+                    commissionId: createdCommission.id,
+                    affiliateId: referral.affiliate.id,
+                    orderId: order.id,
+                    amount: orderAmount,
+                    commissionAmount: commissionAmount,
+                    status: 'pending'
+                  });
+                } else {
+                  console.log(`[AFFILIATE_COMMISSION] ⚠️ Commission amount is 0, skipping creation`);
+                }
+              } else {
+                console.log(`[AFFILIATE_COMMISSION] ⚠️ Commission already exists for referred user ${userId} (first order was order ${existingCommission.orderId}). Skipping commission for order ${order.id}.`);
+              }
+            } else {
+              console.log(`[AFFILIATE_COMMISSION] ⚠️ No active referral found for user ${userId}`);
+            }
+          } else {
+            console.log(`[AFFILIATE_COMMISSION] ⚠️ Affiliate system is disabled`);
+          }
+        } catch (affiliateError) {
+          console.error('[AFFILIATE_COMMISSION] ❌ Error creating affiliate commission:', affiliateError);
+          console.error('[AFFILIATE_COMMISSION] Error stack:', affiliateError instanceof Error ? affiliateError.stack : 'No stack trace');
+          // Don't fail the order creation if affiliate commission fails
+        }
+
         createdOrders.push(order);
       }
 

@@ -94,16 +94,10 @@ export default function SignInForm() {
 
             console.log('Redirect URL:', redirectUrl);
 
-            if (isAdmin) {
-              setTimeout(() => {
-                window.location.href = redirectUrl;
-              }, 1000);
-            } else {
-
-              setTimeout(() => {
-                router.push(redirectUrl);
-              }, 1000);
-            }
+            // Use window.location.href for full page load on redirect
+            setTimeout(() => {
+              window.location.href = redirectUrl;
+            }, 1000);
           }
         })
         .catch((err) => {

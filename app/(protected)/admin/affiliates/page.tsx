@@ -28,7 +28,7 @@ const AffiliatesTableSkeleton = () => {
         <table className="w-full text-sm min-w-[1400px]">
           <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
             <tr>
-              {Array.from({ length: 12 }).map((_, idx) => (
+              {Array.from({ length: 11 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
                   <div className="h-4 rounded w-3/4 gradient-shimmer" />
                 </th>
@@ -49,19 +49,13 @@ const AffiliatesTableSkeleton = () => {
                   <div className="h-3 w-32 gradient-shimmer rounded" />
                 </td>
                 <td className="p-3">
-                  <div className="h-4 w-16 gradient-shimmer rounded" />
+                  <div className="h-4 w-12 gradient-shimmer rounded" />
                 </td>
                 <td className="p-3">
                   <div className="h-4 w-12 gradient-shimmer rounded" />
                 </td>
                 <td className="p-3">
                   <div className="h-4 w-16 gradient-shimmer rounded" />
-                </td>
-                <td className="p-3">
-                  <div className="h-4 w-20 gradient-shimmer rounded" />
-                </td>
-                <td className="p-3">
-                  <div className="h-4 w-20 gradient-shimmer rounded" />
                 </td>
                 <td className="p-3">
                   <div className="h-4 w-20 gradient-shimmer rounded" />
@@ -883,7 +877,13 @@ const AffiliateReferralsPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Sign Up
+                          Registrations
+                        </th>
+                        <th
+                          className="text-left p-3 font-semibold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          Referrals
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -895,25 +895,13 @@ const AffiliateReferralsPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Total Funds
+                          Available Funds
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Earned Commission
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Requested Commission
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Total Commission
+                          Total Earned
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -987,6 +975,14 @@ const AffiliateReferralsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
+                            <div
+                              className="font-semibold text-sm"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              {formatNumber(affiliate.signUps)}
+                            </div>
+                          </td>
+                          <td className="p-3">
                             <div className="flex items-center">
                               <div
                                 className="font-semibold text-sm"
@@ -1001,32 +997,14 @@ const AffiliateReferralsPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              ${formatPrice(affiliate.totalFunds, 2)}
+                              ${formatPrice(affiliate.availableEarnings, 2)}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
                               className="font-semibold text-sm text-green-600"
                             >
-                              ${formatPrice(affiliate.earnedCommission, 2)}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className={`font-semibold text-sm ${
-                                affiliate.requestedCommission > 0 
-                                  ? 'text-yellow-600' 
-                                  : 'text-gray-500'
-                              }`}
-                            >
-                              ${formatPrice(affiliate.requestedCommission, 2)}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="font-semibold text-sm text-blue-600"
-                            >
-                              ${formatPrice(affiliate.totalCommission, 2)}
+                              ${formatPrice(affiliate.totalEarnings, 2)}
                             </div>
                           </td>
                           <td className="p-3">

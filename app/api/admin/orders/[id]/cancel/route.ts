@@ -192,6 +192,35 @@ export async function POST(
         });
       }
       
+      // Update affiliate commission status to cancelled
+      try {
+        const commission = await prisma.affiliateCommissions.findFirst({
+          where: { orderId: Number(id) },
+          include: {
+            affiliate: {
+              select: {
+                id: true,
+                status: true,
+              }
+            }
+          }
+        });
+
+        if (commission && commission.status === 'pending') {
+          await prisma.affiliateCommissions.update({
+            where: { id: commission.id },
+            data: {
+              status: 'cancelled',
+              updatedAt: new Date(),
+            }
+          });
+          console.log(`Affiliate commission ${commission.id} marked as cancelled for cancelled order ${id}`);
+        }
+      } catch (affiliateError) {
+        console.error('Error updating affiliate commission status:', affiliateError);
+        // Don't fail the cancellation if affiliate commission update fails
+      }
+
       return { cancelledOrder, updatedUser, refundAmount };
     });
     
