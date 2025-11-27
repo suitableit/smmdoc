@@ -1167,13 +1167,13 @@ const AffiliateReferralsPage = () => {
                         </div>
                       </div>
                       <div className="mb-4">
-                        <label className="form-label mb-2">Payment Method</label>
+                        <label className="form-label mb-2">Withdrawal Method</label>
                         <input
                           type="text"
                           value={payoutMethod}
                           readOnly
                           className="form-field w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 cursor-not-allowed transition-all duration-200"
-                          placeholder="Payment method selected by affiliate"
+                          placeholder="Withdrawal method selected by affiliate"
                         />
                       </div>
                       <div className="mb-4">
@@ -1419,7 +1419,7 @@ const AffiliateReferralsPage = () => {
                             return (
                               <div className="mb-6">
                                 <h4 className="text-md font-semibold mb-4 text-gray-800">
-                                  Payment Methods
+                                  Withdrawal Methods
                                 </h4>
                                 <div className="space-y-3">
                                   {paymentMethods.map((pm: any, index: number) => (
