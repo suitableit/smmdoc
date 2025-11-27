@@ -10,6 +10,7 @@ import { getUserByEmail, getUserById, getUserByUsername } from './data/user';
 import { ActivityLogger } from './lib/activity-logger';
 import { db } from './lib/db';
 import { signInSchema } from './lib/validators/auth.validator';
+import { processAffiliateReferral } from './lib/affiliate-referral-helper';
 
 export default {
   providers: [
@@ -187,6 +188,12 @@ export default {
               },
             });
             existingUser = created as any;
+            
+            // Process affiliate referral if cookie exists (for Google OAuth registration)
+            // Don't await to avoid blocking token generation
+            processAffiliateReferral(created.id).catch(err => {
+              console.error('Error processing affiliate referral in jwt callback:', err)
+            })
           }
           token.sub = existingUser.id;
           token.role = existingUser.role;

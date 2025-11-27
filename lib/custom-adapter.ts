@@ -1,5 +1,6 @@
 import { Adapter, AdapterAccount, AdapterUser, VerificationToken } from 'next-auth/adapters'
 import { db } from '@/lib/db'
+import { processAffiliateReferral } from '@/lib/affiliate-referral-helper'
 
 const toAdapterUser = (u: any): AdapterUser => ({
   id: String(u.id),
@@ -22,6 +23,13 @@ export const CustomAdapter = (): Adapter => ({
         status: 'active',
       },
     })
+    
+    // Process affiliate referral if cookie exists (for Google OAuth registration)
+    // Don't await to avoid blocking user creation
+    processAffiliateReferral(u.id).catch(err => {
+      console.error('Error processing affiliate referral in createUser:', err)
+    })
+    
     return toAdapterUser(u)
   },
   getUser: async (id) => {

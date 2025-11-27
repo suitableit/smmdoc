@@ -8,6 +8,7 @@ import { sendVerificationCodeEmail } from "../nodemailer";
 import { generateVerificationCode } from "../tokens";
 import { signUpSchema } from "../validators/auth.validator";
 import { verifyReCAPTCHA, getReCAPTCHASettings } from "../recaptcha";
+import { processAffiliateReferral } from "../affiliate-referral-helper";
 
 export const register = async (values: z.infer<typeof signUpSchema> & { recaptchaToken?: string }) => {
   console.log('Received values:', values);
@@ -72,7 +73,8 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
 
     const emailConfirmationEnabled = userSettings?.emailConfirmationEnabled ?? true;
 
-    await db.users.create({
+    // Create user first
+    const newUser = await db.users.create({
       data: {
         username,
         name,
@@ -83,6 +85,9 @@ export const register = async (values: z.infer<typeof signUpSchema> & { recaptch
         emailVerified: emailConfirmationEnabled ? null : new Date(),
       },
     });
+
+    // Process affiliate referral if cookie exists (for both custom and OAuth registration)
+    await processAffiliateReferral(newUser.id);
 
     if (emailConfirmationEnabled) {
       const verificationToken = await generateVerificationCode(email);
