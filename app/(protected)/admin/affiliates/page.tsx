@@ -1403,9 +1403,9 @@ const AffiliateReferralsPage = () => {
                       </div>
                       {viewDialog.affiliate.paymentDetails && (() => {
                         try {
-                          const paymentMethods = JSON.parse(viewDialog.affiliate.paymentDetails);
-                          if (Array.isArray(paymentMethods) && paymentMethods.length > 0) {
-                            const getPaymentMethodDisplayName = (method: string): string => {
+                          const withdrawalMethods = JSON.parse(viewDialog.affiliate.paymentDetails);
+                          if (Array.isArray(withdrawalMethods) && withdrawalMethods.length > 0) {
+                            const getWithdrawalMethodDisplayName = (method: string): string => {
                               const names: Record<string, string> = {
                                 bkash: 'bKash',
                                 nagad: 'Nagad',
@@ -1422,24 +1422,24 @@ const AffiliateReferralsPage = () => {
                                   Withdrawal Methods
                                 </h4>
                                 <div className="space-y-3">
-                                  {paymentMethods.map((pm: any, index: number) => (
+                                  {withdrawalMethods.map((wm: any, index: number) => (
                                     <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                                       <div className="flex items-center justify-between mb-2">
                                         <span className="font-semibold text-gray-900 dark:text-white">
-                                          {getPaymentMethodDisplayName(pm.method || '')}
+                                          {getWithdrawalMethodDisplayName(wm.method || '')}
                                         </span>
                                       </div>
-                                      {pm.method === 'bank' ? (
+                                      {wm.method === 'bank' ? (
                                         <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                                          {pm.bankName && <div><strong>Bank:</strong> {pm.bankName}</div>}
-                                          {pm.accountHolderName && <div><strong>Account Holder:</strong> {pm.accountHolderName}</div>}
-                                          {pm.bankAccountNumber && <div><strong>Account Number:</strong> {pm.bankAccountNumber}</div>}
-                                          {pm.routingNumber && <div><strong>Routing Number:</strong> {pm.routingNumber}</div>}
-                                          {pm.swiftCode && <div><strong>SWIFT Code:</strong> {pm.swiftCode}</div>}
+                                          {wm.bankName && <div><strong>Bank:</strong> {wm.bankName}</div>}
+                                          {wm.accountHolderName && <div><strong>Account Holder:</strong> {wm.accountHolderName}</div>}
+                                          {wm.bankAccountNumber && <div><strong>Account Number:</strong> {wm.bankAccountNumber}</div>}
+                                          {wm.routingNumber && <div><strong>Routing Number:</strong> {wm.routingNumber}</div>}
+                                          {wm.swiftCode && <div><strong>SWIFT Code:</strong> {wm.swiftCode}</div>}
                                         </div>
                                       ) : (
                                         <div className="text-sm text-gray-600 dark:text-gray-300">
-                                          {pm.mobileNumber && <div><strong>Mobile Number:</strong> {pm.mobileNumber}</div>}
+                                          {wm.mobileNumber && <div><strong>Mobile Number:</strong> {wm.mobileNumber}</div>}
                                         </div>
                                       )}
                                     </div>

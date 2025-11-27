@@ -10,7 +10,7 @@ import {
   FaWallet
 } from 'react-icons/fa';
 
-interface PaymentMethod {
+interface WithdrawalMethod {
   id: string;
   method: 'bkash' | 'nagad' | 'rocket' | 'upay' | 'bank';
   mobileNumber?: string;
@@ -21,7 +21,7 @@ interface PaymentMethod {
   swiftCode?: string;
 }
 
-interface NewPaymentMethodForm {
+interface NewWithdrawalMethodForm {
   method: 'bkash' | 'nagad' | 'rocket' | 'upay' | 'bank' | '';
   mobileNumber: string;
   bankAccountNumber: string;
@@ -31,25 +31,25 @@ interface NewPaymentMethodForm {
   swiftCode: string;
 }
 
-interface PaymentMethodsSectionProps {
-  paymentMethods: PaymentMethod[];
-  onAddPaymentMethod: (paymentMethod: PaymentMethod) => void;
-  onRemovePaymentMethod: (id: string) => void;
+interface WithdrawalMethodsSectionProps {
+  withdrawalMethods: WithdrawalMethod[];
+  onAddWithdrawalMethod: (withdrawalMethod: WithdrawalMethod) => void;
+  onRemoveWithdrawalMethod: (id: string) => void;
   errors?: {
-    paymentMethods?: string;
+    withdrawalMethods?: string;
   };
   onShowToast?: (message: string, type?: 'success' | 'error' | 'info' | 'pending') => void;
 }
 
-export default function PaymentMethodsSection({
-  paymentMethods,
-  onAddPaymentMethod,
-  onRemovePaymentMethod,
+export default function WithdrawalMethodsSection({
+  withdrawalMethods,
+  onAddWithdrawalMethod,
+  onRemoveWithdrawalMethod,
   errors = {},
   onShowToast,
-}: PaymentMethodsSectionProps) {
+}: WithdrawalMethodsSectionProps) {
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newPaymentMethod, setNewPaymentMethod] = useState<NewPaymentMethodForm>({
+  const [newWithdrawalMethod, setNewWithdrawalMethod] = useState<NewWithdrawalMethodForm>({
     method: '',
     mobileNumber: '',
     bankAccountNumber: '',
@@ -60,9 +60,9 @@ export default function PaymentMethodsSection({
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const methodExists = (method: string) => paymentMethods.some(pm => pm.method === method);
+  const methodExists = (method: string) => withdrawalMethods.some(wm => wm.method === method);
 
-  const getPaymentMethodDisplayName = (method: string): string => {
+  const getWithdrawalMethodDisplayName = (method: string): string => {
     const names: Record<string, string> = {
       bkash: 'bKash',
       nagad: 'Nagad',
@@ -73,33 +73,33 @@ export default function PaymentMethodsSection({
     return names[method] || method;
   };
 
-  const validateNewPaymentMethod = (): boolean => {
+  const validateNewWithdrawalMethod = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!newPaymentMethod.method) {
+    if (!newWithdrawalMethod.method) {
       newErrors.method = 'Please select a withdrawal method';
     }
 
-    if (newPaymentMethod.method === 'bank') {
-      if (!newPaymentMethod.bankName.trim()) {
+    if (newWithdrawalMethod.method === 'bank') {
+      if (!newWithdrawalMethod.bankName.trim()) {
         newErrors.bankName = 'Bank name is required';
       }
-      if (!newPaymentMethod.accountHolderName.trim()) {
+      if (!newWithdrawalMethod.accountHolderName.trim()) {
         newErrors.accountHolderName = 'Account holder name is required';
       }
-      if (!newPaymentMethod.bankAccountNumber.trim()) {
+      if (!newWithdrawalMethod.bankAccountNumber.trim()) {
         newErrors.bankAccountNumber = 'Account number is required';
       }
-      if (!newPaymentMethod.routingNumber.trim()) {
+      if (!newWithdrawalMethod.routingNumber.trim()) {
         newErrors.routingNumber = 'Routing number/Branch name is required';
       }
-      if (!newPaymentMethod.swiftCode.trim()) {
+      if (!newWithdrawalMethod.swiftCode.trim()) {
         newErrors.swiftCode = 'Swift code is required';
       }
-    } else if (newPaymentMethod.method && !['bank'].includes(newPaymentMethod.method)) {
-      if (!newPaymentMethod.mobileNumber.trim()) {
+    } else if (newWithdrawalMethod.method && !['bank'].includes(newWithdrawalMethod.method)) {
+      if (!newWithdrawalMethod.mobileNumber.trim()) {
         newErrors.mobileNumber = 'Mobile number is required';
-      } else if (!/^(\+88)?01[3-9]\d{8}$/.test(newPaymentMethod.mobileNumber.replace(/\s/g, ''))) {
+      } else if (!/^(\+88)?01[3-9]\d{8}$/.test(newWithdrawalMethod.mobileNumber.replace(/\s/g, ''))) {
         newErrors.mobileNumber = 'Please enter a valid Bangladeshi mobile number';
       }
     }
@@ -108,8 +108,8 @@ export default function PaymentMethodsSection({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNewPaymentMethodChange = (field: keyof NewPaymentMethodForm, value: string) => {
-    setNewPaymentMethod(prev => ({ ...prev, [field]: value }));
+  const handleNewWithdrawalMethodChange = (field: keyof NewWithdrawalMethodForm, value: string) => {
+    setNewWithdrawalMethod(prev => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -119,37 +119,37 @@ export default function PaymentMethodsSection({
     }
   };
 
-  const addPaymentMethod = () => {
-    if (!validateNewPaymentMethod()) {
+  const addWithdrawalMethod = () => {
+    if (!validateNewWithdrawalMethod()) {
       onShowToast?.('Please fix the errors below', 'error');
       return;
     }
 
-    if (methodExists(newPaymentMethod.method)) {
-      onShowToast?.(`You can add only one ${getPaymentMethodDisplayName(newPaymentMethod.method)} withdrawal method`, 'error');
+    if (methodExists(newWithdrawalMethod.method)) {
+      onShowToast?.(`You can add only one ${getWithdrawalMethodDisplayName(newWithdrawalMethod.method)} withdrawal method`, 'error');
       return;
     }
 
-    const paymentMethod: PaymentMethod = {
+    const withdrawalMethod: WithdrawalMethod = {
       id: Date.now().toString(),
-      method: newPaymentMethod.method as any,
-      ...(newPaymentMethod.method === 'bank' 
+      method: newWithdrawalMethod.method as any,
+      ...(newWithdrawalMethod.method === 'bank' 
         ? {
-            bankName: newPaymentMethod.bankName,
-            accountHolderName: newPaymentMethod.accountHolderName,
-            bankAccountNumber: newPaymentMethod.bankAccountNumber,
-            routingNumber: newPaymentMethod.routingNumber,
-            swiftCode: newPaymentMethod.swiftCode,
+            bankName: newWithdrawalMethod.bankName,
+            accountHolderName: newWithdrawalMethod.accountHolderName,
+            bankAccountNumber: newWithdrawalMethod.bankAccountNumber,
+            routingNumber: newWithdrawalMethod.routingNumber,
+            swiftCode: newWithdrawalMethod.swiftCode,
           }
         : {
-            mobileNumber: newPaymentMethod.mobileNumber,
+            mobileNumber: newWithdrawalMethod.mobileNumber,
           }
       ),
     };
 
-    onAddPaymentMethod(paymentMethod);
+    onAddWithdrawalMethod(withdrawalMethod);
 
-    setNewPaymentMethod({
+    setNewWithdrawalMethod({
       method: '',
       mobileNumber: '',
       bankAccountNumber: '',
@@ -165,7 +165,7 @@ export default function PaymentMethodsSection({
 
   const handleCloseForm = () => {
     setShowAddForm(false);
-    setNewPaymentMethod({
+    setNewWithdrawalMethod({
       method: '',
       mobileNumber: '',
       bankAccountNumber: '',
@@ -193,44 +193,44 @@ export default function PaymentMethodsSection({
             Add Withdrawal Method
           </button>
         </div>
-        {paymentMethods.length > 0 ? (
+        {withdrawalMethods.length > 0 ? (
           <div className="space-y-3 mb-4">
-            {paymentMethods.map((paymentMethod) => (
+            {withdrawalMethods.map((withdrawalMethod) => (
               <div
-                key={paymentMethod.id}
+                key={withdrawalMethod.id}
                 className="bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-8 h-8 bg-[var(--primary)] rounded-lg flex items-center justify-center">
-                        {paymentMethod.method === 'bank' ? (
+                        {withdrawalMethod.method === 'bank' ? (
                           <FaUniversity className="w-4 h-4 text-white" />
                         ) : (
                           <FaMobile className="w-4 h-4 text-white" />
                         )}
                       </div>
                       <h4 className="font-medium text-gray-900 dark:text-white">
-                        {getPaymentMethodDisplayName(paymentMethod.method)}
+                        {getWithdrawalMethodDisplayName(withdrawalMethod.method)}
                       </h4>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {paymentMethod.method === 'bank' ? (
+                      {withdrawalMethod.method === 'bank' ? (
                         <div className="space-y-1">
-                          <p><strong>Bank:</strong> {paymentMethod.bankName}</p>
-                          <p><strong>A/C Holder:</strong> {paymentMethod.accountHolderName}</p>
-                          <p><strong>A/C Number:</strong> {paymentMethod.bankAccountNumber}</p>
-                          <p><strong>Routing/Branch:</strong> {paymentMethod.routingNumber}</p>
-                          <p><strong>Swift Code:</strong> {paymentMethod.swiftCode}</p>
+                          <p><strong>Bank:</strong> {withdrawalMethod.bankName}</p>
+                          <p><strong>A/C Holder:</strong> {withdrawalMethod.accountHolderName}</p>
+                          <p><strong>A/C Number:</strong> {withdrawalMethod.bankAccountNumber}</p>
+                          <p><strong>Routing/Branch:</strong> {withdrawalMethod.routingNumber}</p>
+                          <p><strong>Swift Code:</strong> {withdrawalMethod.swiftCode}</p>
                         </div>
                       ) : (
-                        <p><strong>Mobile Number:</strong> {paymentMethod.mobileNumber}</p>
+                        <p><strong>Mobile Number:</strong> {withdrawalMethod.mobileNumber}</p>
                       )}
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => onRemovePaymentMethod(paymentMethod.id)}
+                    onClick={() => onRemoveWithdrawalMethod(withdrawalMethod.id)}
                     className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
                     title="Remove withdrawal method"
                   >
@@ -249,8 +249,8 @@ export default function PaymentMethodsSection({
           </div>
         )}
 
-        {errors.paymentMethods && (
-          <p className="text-red-500 text-sm mt-1">{String(errors.paymentMethods)}</p>
+        {errors.withdrawalMethods && (
+          <p className="text-red-500 text-sm mt-1">{String(errors.withdrawalMethods)}</p>
         )}
       </div>
       {showAddForm && (
@@ -270,13 +270,13 @@ export default function PaymentMethodsSection({
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="newPaymentMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="newWithdrawalMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Withdrawal Method *
               </label>
               <select
-                id="newPaymentMethod"
-                value={newPaymentMethod.method}
-                onChange={(e) => handleNewPaymentMethodChange('method', e.target.value)}
+                id="newWithdrawalMethod"
+                value={newWithdrawalMethod.method}
+                onChange={(e) => handleNewWithdrawalMethodChange('method', e.target.value)}
                 className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer ${
                   formErrors.method
                     ? 'border-red-500 dark:border-red-500'
@@ -294,16 +294,16 @@ export default function PaymentMethodsSection({
                 <p className="text-red-500 text-sm mt-1">{formErrors.method}</p>
               )}
             </div>
-            {newPaymentMethod.method && newPaymentMethod.method !== 'bank' && (
+            {newWithdrawalMethod.method && newWithdrawalMethod.method !== 'bank' && (
               <div>
                 <label htmlFor="newMobileNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {newPaymentMethod.method.charAt(0).toUpperCase() + newPaymentMethod.method.slice(1)} Mobile Number *
+                  {newWithdrawalMethod.method.charAt(0).toUpperCase() + newWithdrawalMethod.method.slice(1)} Mobile Number *
                 </label>
                 <input
                   type="tel"
                   id="newMobileNumber"
-                  value={newPaymentMethod.mobileNumber}
-                  onChange={(e) => handleNewPaymentMethodChange('mobileNumber', e.target.value)}
+                  value={newWithdrawalMethod.mobileNumber}
+                  onChange={(e) => handleNewWithdrawalMethodChange('mobileNumber', e.target.value)}
                   className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                     formErrors.mobileNumber
                       ? 'border-red-500 dark:border-red-500'
@@ -315,11 +315,11 @@ export default function PaymentMethodsSection({
                   <p className="text-red-500 text-sm mt-1">{formErrors.mobileNumber}</p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Enter your {newPaymentMethod.method} registered mobile number
+                  Enter your {newWithdrawalMethod.method} registered mobile number
                 </p>
               </div>
             )}
-            {newPaymentMethod.method === 'bank' && (
+            {newWithdrawalMethod.method === 'bank' && (
               <div className="space-y-4">
                 <div>
                   <label htmlFor="newBankName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -328,8 +328,8 @@ export default function PaymentMethodsSection({
                   <input
                     type="text"
                     id="newBankName"
-                    value={newPaymentMethod.bankName}
-                    onChange={(e) => handleNewPaymentMethodChange('bankName', e.target.value)}
+                    value={newWithdrawalMethod.bankName}
+                    onChange={(e) => handleNewWithdrawalMethodChange('bankName', e.target.value)}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.bankName
                         ? 'border-red-500 dark:border-red-500'
@@ -349,8 +349,8 @@ export default function PaymentMethodsSection({
                   <input
                     type="text"
                     id="newAccountHolderName"
-                    value={newPaymentMethod.accountHolderName}
-                    onChange={(e) => handleNewPaymentMethodChange('accountHolderName', e.target.value)}
+                    value={newWithdrawalMethod.accountHolderName}
+                    onChange={(e) => handleNewWithdrawalMethodChange('accountHolderName', e.target.value)}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.accountHolderName
                         ? 'border-red-500 dark:border-red-500'
@@ -370,8 +370,8 @@ export default function PaymentMethodsSection({
                   <input
                     type="text"
                     id="newBankAccountNumber"
-                    value={newPaymentMethod.bankAccountNumber}
-                    onChange={(e) => handleNewPaymentMethodChange('bankAccountNumber', e.target.value)}
+                    value={newWithdrawalMethod.bankAccountNumber}
+                    onChange={(e) => handleNewWithdrawalMethodChange('bankAccountNumber', e.target.value)}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.bankAccountNumber
                         ? 'border-red-500 dark:border-red-500'
@@ -391,8 +391,8 @@ export default function PaymentMethodsSection({
                   <input
                     type="text"
                     id="newRoutingNumber"
-                    value={newPaymentMethod.routingNumber}
-                    onChange={(e) => handleNewPaymentMethodChange('routingNumber', e.target.value)}
+                    value={newWithdrawalMethod.routingNumber}
+                    onChange={(e) => handleNewWithdrawalMethodChange('routingNumber', e.target.value)}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.routingNumber
                         ? 'border-red-500 dark:border-red-500'
@@ -412,8 +412,8 @@ export default function PaymentMethodsSection({
                   <input
                     type="text"
                     id="newSwiftCode"
-                    value={newPaymentMethod.swiftCode}
-                    onChange={(e) => handleNewPaymentMethodChange('swiftCode', e.target.value)}
+                    value={newWithdrawalMethod.swiftCode}
+                    onChange={(e) => handleNewWithdrawalMethodChange('swiftCode', e.target.value)}
                     className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.swiftCode
                         ? 'border-red-500 dark:border-red-500'
@@ -430,7 +430,7 @@ export default function PaymentMethodsSection({
             <div className="flex flex-col md:flex-row gap-3">
               <button
                 type="button"
-                onClick={addPaymentMethod}
+                onClick={addWithdrawalMethod}
                 className="w-full md:flex-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-200"
               >
                 Add Withdrawal Method
