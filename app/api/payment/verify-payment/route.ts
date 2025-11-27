@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
 
-            if (userSettings?.paymentBonusEnabled && userSettings?.bonusPercentage > 0) {
+            if (userSettings && userSettings.bonusPercentage > 0) {
               bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
             }
 

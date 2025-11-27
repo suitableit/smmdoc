@@ -323,17 +323,37 @@ export default function SignUpForm() {
 
     startTransition(() => {
       register(submitData)
-        .then((data) => {
+        .then(async (data) => {
           if (data?.error) {
             setError(data.error);
             return;
           }
           if (data?.success) {
             if (data?.email) {
+              // Email confirmation is enabled - redirect to verification page
               if (typeof window !== 'undefined') {
                 sessionStorage.setItem('pendingVerificationEmail', data.email);
               }
               router.push('/verify-email');
+            } else if (data?.shouldAutoLogin) {
+              // Email confirmation is disabled - automatically sign in and redirect to dashboard
+              try {
+                const signInResult = await signIn('credentials', {
+                  email: data.userEmail,
+                  password: submitData.password,
+                  redirect: false
+                });
+
+                if (signInResult?.ok) {
+                  // Full page reload to ensure session is properly set
+                  window.location.href = DEFAULT_SIGN_IN_REDIRECT;
+                } else {
+                  setError('Registration successful but automatic login failed. Please sign in manually.');
+                }
+              } catch (loginError) {
+                console.error('Auto-login error:', loginError);
+                setError('Registration successful but automatic login failed. Please sign in manually.');
+              }
             }
           }
         })

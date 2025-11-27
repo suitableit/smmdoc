@@ -2,6 +2,36 @@ import { requireAdmin } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
+function convertBigIntToNumber(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+  
+  if (obj instanceof Date) {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToNumber);
+  }
+  
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const converted: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        converted[key] = convertBigIntToNumber(obj[key]);
+      }
+    }
+    return converted;
+  }
+  
+  return obj;
+}
+
 export async function GET() {
   try {
     const session = await requireAdmin();
@@ -131,34 +161,35 @@ export async function GET() {
 
     const formattedDailyOrders = dailyOrders.map(order => ({
       date: order.createdAt.toISOString().split('T')[0],
-      orders: order._count.id
+      orders: typeof order._count.id === 'bigint' ? Number(order._count.id) : order._count.id
     }));
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          totalOrders,
-          totalUsers,
-          totalServices,
-          totalCategories,
-          totalRevenue,
-          recentOrders,
-          ordersByStatus: {
-            pending: pendingOrders,
-            processing: processingOrders,
-            completed: completedOrders,
-            cancelled: cancelledOrders,
-            partial: partialOrders
-          },
-          dailyOrders: formattedDailyOrders,
-          todaysOrders,
-          todaysProfit,
-          newUsersToday
-        }
-      },
-      { status: 200 }
-    );
+    const responseData = {
+      success: true,
+      data: {
+        totalOrders: typeof totalOrders === 'bigint' ? Number(totalOrders) : totalOrders,
+        totalUsers: typeof totalUsers === 'bigint' ? Number(totalUsers) : totalUsers,
+        totalServices: typeof totalServices === 'bigint' ? Number(totalServices) : totalServices,
+        totalCategories: typeof totalCategories === 'bigint' ? Number(totalCategories) : totalCategories,
+        totalRevenue,
+        recentOrders,
+        ordersByStatus: {
+          pending: typeof pendingOrders === 'bigint' ? Number(pendingOrders) : pendingOrders,
+          processing: typeof processingOrders === 'bigint' ? Number(processingOrders) : processingOrders,
+          completed: typeof completedOrders === 'bigint' ? Number(completedOrders) : completedOrders,
+          cancelled: typeof cancelledOrders === 'bigint' ? Number(cancelledOrders) : cancelledOrders,
+          partial: typeof partialOrders === 'bigint' ? Number(partialOrders) : partialOrders
+        },
+        dailyOrders: formattedDailyOrders,
+        todaysOrders: typeof todaysOrders === 'bigint' ? Number(todaysOrders) : todaysOrders,
+        todaysProfit,
+        newUsersToday: typeof newUsersToday === 'bigint' ? Number(newUsersToday) : newUsersToday
+      }
+    };
+
+    const serializedData = convertBigIntToNumber(responseData);
+
+    return NextResponse.json(serializedData, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
