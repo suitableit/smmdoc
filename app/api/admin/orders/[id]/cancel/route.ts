@@ -192,7 +192,6 @@ export async function POST(
         });
       }
       
-      // Update affiliate commission status to cancelled
       try {
         const commission = await prisma.affiliateCommissions.findFirst({
           where: { orderId: Number(id) },
@@ -218,7 +217,6 @@ export async function POST(
         }
       } catch (affiliateError) {
         console.error('Error updating affiliate commission status:', affiliateError);
-        // Don't fail the cancellation if affiliate commission update fails
       }
 
       return { cancelledOrder, updatedUser, refundAmount };

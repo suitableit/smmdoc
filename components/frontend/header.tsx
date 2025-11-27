@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FaChevronDown, FaDesktop, FaHome, FaMoon, FaSignOutAlt, FaSun, FaTachometerAlt, FaUserCog, FaWallet } from 'react-icons/fa';
+import { useUserSettings } from '@/hooks/use-user-settings';
 
 const useSafeSession = () => {
   const [sessionData, setSessionData] = useState({
@@ -51,6 +52,7 @@ const Header: React.FC<HeaderProps> = ({
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileImageError, setMobileImageError] = useState(false);
+  const { settings: userSettings, loading: settingsLoading } = useUserSettings();
 
   let session = propSession;
   let status = propStatus;
@@ -303,7 +305,6 @@ const Header: React.FC<HeaderProps> = ({
         setImageError(false);
         setDropdownImageError(false);
       } else {
-        // Reset error state when image is removed
         setImageError(false);
         setDropdownImageError(false);
       }
@@ -443,7 +444,6 @@ const Header: React.FC<HeaderProps> = ({
     if (imageUrl) {
       setMobileImageError(false);
     } else {
-      // Reset error state when image is removed
       setMobileImageError(false);
     }
   }, [propSession?.user?.photo, propSession?.user?.image]);
@@ -468,9 +468,11 @@ const Header: React.FC<HeaderProps> = ({
               {!isLoading && !isAuthenticated && (
                 <>
                   <Link href="/sign-in" className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] font-medium transition-colors duration-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50">Sign In</Link>
-                  <Link href="/sign-up" className="inline-flex items-center bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-[#4F0FD8] hover:to-[#A121E8]">
-                    <span>Sign Up</span>
-                  </Link>
+                  {!settingsLoading && userSettings?.signUpPageEnabled !== false && (
+                    <Link href="/sign-up" className="inline-flex items-center bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-8 py-4 rounded-lg hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:from-[#4F0FD8] hover:to-[#A121E8]">
+                      <span>Sign Up</span>
+                    </Link>
+                  )}
                 </>
               )}
 
@@ -571,9 +573,11 @@ const Header: React.FC<HeaderProps> = ({
                 <Link href="/our-services" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Services</Link>
                 <Link href="/blogs" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Blogs</Link>
                 <Link href="/contact" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium transition-colors rounded-md" onClick={closeMenu}>Contact</Link>
-                <div className="pt-2 px-4">
-                  <Link href="/sign-up" className="block w-full px-4 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold rounded-md hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-200 text-center" onClick={closeMenu}>Sign Up</Link>
-                </div>
+                {!settingsLoading && userSettings?.signUpPageEnabled !== false && (
+                  <div className="pt-2 px-4">
+                    <Link href="/sign-up" className="block w-full px-4 py-3 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold rounded-md hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-200 text-center" onClick={closeMenu}>Sign Up</Link>
+                  </div>
+                )}
               </>
             )}
 

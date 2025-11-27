@@ -280,7 +280,6 @@ export async function PUT(
         }
       });
 
-      // Update affiliate commission status if order status changed
       if (body.status && body.status !== currentOrder.status) {
         try {
           const commission = await prisma.affiliateCommissions.findFirst({
@@ -297,7 +296,6 @@ export async function PUT(
 
           if (commission && commission.affiliate && commission.affiliate.status === 'active') {
             if (body.status === 'cancelled' && commission.status === 'pending') {
-              // Update commission to cancelled
               await prisma.affiliateCommissions.update({
                 where: { id: commission.id },
                 data: {
@@ -307,7 +305,6 @@ export async function PUT(
               });
               console.log(`Affiliate commission ${commission.id} marked as cancelled for order ${orderId}`);
             } else if (body.status === 'completed' && commission.status === 'pending') {
-              // Update commission to approved and add earnings
               await prisma.affiliateCommissions.update({
                 where: { id: commission.id },
                 data: {
@@ -316,7 +313,6 @@ export async function PUT(
                 }
               });
 
-              // Add earnings to affiliate
               await prisma.affiliates.update({
                 where: { id: commission.affiliateId },
                 data: {
@@ -335,7 +331,6 @@ export async function PUT(
           }
         } catch (affiliateError) {
           console.error('Error updating affiliate commission status:', affiliateError);
-          // Don't fail the order update if affiliate commission update fails
         }
       }
 

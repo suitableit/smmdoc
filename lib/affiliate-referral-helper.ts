@@ -9,7 +9,6 @@ import crypto from 'crypto';
  */
 export async function processAffiliateReferral(userId: number, requestHeaders?: Headers): Promise<void> {
   try {
-    // Check for affiliate referral cookie
     const cookieStore = await cookies();
     const affiliateCookie = cookieStore.get('affiliate_referral');
     const affiliateMetaCookie = cookieStore.get('affiliate_referral_meta');
@@ -28,7 +27,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       return;
     }
 
-    // Get IP and User-Agent for unique browser fingerprint
     let ip = '';
     let ua = '';
     
@@ -46,14 +44,12 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       }
     }
 
-    // Create unique browser fingerprint for registration tracking
     const registrationFingerprint = crypto
       .createHash('sha256')
       .update(`${ip}:${ua}:${affiliateId}:registration`)
       .digest('hex')
       .substring(0, 16);
 
-    // Check if this browser has already registered (prevent multiple registrations from same browser)
     const registrationCookie = cookieStore.get(`affiliate_registration_${affiliateId}`);
     const hasRegisteredBefore = registrationCookie && registrationCookie.value === registrationFingerprint;
 
@@ -64,7 +60,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
 
     console.log('Processing referral for affiliate:', affiliateId, 'referralCode:', referralCode, 'userId:', userId);
 
-    // Verify the affiliate exists and is active
     const affiliate = await db.affiliates.findUnique({
       where: { id: affiliateId }
     });
@@ -78,7 +73,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       return;
     }
 
-    // Parse metadata if available
     let ipAddress: string | null = null;
     let userAgent: string | null = null;
 
@@ -92,10 +86,8 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       }
     }
 
-    // Create referral record (using transaction to ensure atomicity)
     let referralCreated = false;
     await db.$transaction(async (tx) => {
-      // Check if referral already exists (prevent duplicates by user ID)
       const existingReferral = await tx.affiliateReferrals.findUnique({
         where: { referredUserId: userId }
       });
@@ -103,7 +95,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       if (!existingReferral) {
         console.log('Creating new referral record and incrementing count');
 
-        // Create the referral record
         await tx.affiliateReferrals.create({
           data: {
             affiliateId,
@@ -113,7 +104,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
           },
         });
 
-        // Increment totalReferrals count
         const updated = await tx.affiliates.update({
           where: { id: affiliateId },
           data: {
@@ -131,8 +121,6 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
       }
     });
     
-    // Set registration cookie after successful referral creation to prevent multiple registrations from same browser
-    // This must be done outside the transaction and only if a new referral was created
     if (referralCreated) {
       try {
         const registrationExpires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year
@@ -146,11 +134,9 @@ export async function processAffiliateReferral(userId: number, requestHeaders?: 
         console.log('Registration cookie set to prevent duplicate registrations from same browser');
       } catch (cookieError) {
         console.error('Error setting registration cookie:', cookieError);
-        // Don't fail if cookie setting fails
       }
     }
   } catch (error) {
-    // Log error but don't fail registration
     console.error('Error processing affiliate referral:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
   }

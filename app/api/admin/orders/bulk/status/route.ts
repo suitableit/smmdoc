@@ -137,7 +137,6 @@ export async function PATCH(req: NextRequest) {
           data: updateData
         });
 
-        // Update affiliate commissions for cancelled orders
         const commissions = await prisma.affiliateCommissions.findMany({
           where: {
             orderId: { in: orderIdNumbers },
@@ -174,7 +173,6 @@ export async function PATCH(req: NextRequest) {
           data: updateData
         });
 
-        // Update affiliate commissions for completed orders
         if (status === 'completed') {
           const commissions = await prisma.affiliateCommissions.findMany({
             where: {
@@ -193,7 +191,6 @@ export async function PATCH(req: NextRequest) {
 
           for (const commission of commissions) {
             if (commission.affiliate && commission.affiliate.status === 'active') {
-              // Update commission to approved
               await prisma.affiliateCommissions.update({
                 where: { id: commission.id },
                 data: {
@@ -202,7 +199,6 @@ export async function PATCH(req: NextRequest) {
                 }
               });
 
-              // Add earnings to affiliate
               await prisma.affiliates.update({
                 where: { id: commission.affiliateId },
                 data: {

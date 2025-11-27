@@ -189,14 +189,12 @@ export default function ActivateAffiliatePage() {
   };
 
   const handleAddPaymentMethod = async (paymentMethod: PaymentMethod) => {
-    // Update local state immediately
     const updatedPaymentMethods = [...formData.paymentMethods, paymentMethod];
     setFormData(prev => ({
       ...prev,
       paymentMethods: updatedPaymentMethods,
     }));
 
-    // Save to backend immediately (self-contained, no Save button needed)
     try {
       const response = await fetch('/api/user/affiliate/payment-methods', {
         method: 'POST',
@@ -211,7 +209,6 @@ export default function ActivateAffiliatePage() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Failed to save payment method:', response.status, errorText);
-        // Revert local state if save failed
         setFormData(prev => ({
           ...prev,
           paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
@@ -222,9 +219,7 @@ export default function ActivateAffiliatePage() {
 
       const data = await response.json();
       if (data.success) {
-        // Small delay to ensure database commit
         await new Promise(resolve => setTimeout(resolve, 100));
-        // Reload to verify and sync with server
         const res = await fetch('/api/user/affiliate/payment-methods');
         if (res.ok) {
           const json = await res.json();
@@ -234,7 +229,6 @@ export default function ActivateAffiliatePage() {
           }
         }
       } else {
-        // Revert local state if save failed
         setFormData(prev => ({
           ...prev,
           paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
@@ -243,7 +237,6 @@ export default function ActivateAffiliatePage() {
       }
     } catch (error: any) {
       console.error('Error saving payment method:', error);
-      // Revert local state if save failed
       setFormData(prev => ({
         ...prev,
         paymentMethods: prev.paymentMethods.filter(pm => pm.id !== paymentMethod.id),
@@ -256,13 +249,11 @@ export default function ActivateAffiliatePage() {
     const paymentMethodToRemove = formData.paymentMethods.find(pm => pm.id === id);
     const updatedPaymentMethods = formData.paymentMethods.filter(pm => pm.id !== id);
     
-    // Update local state immediately
     setFormData(prev => ({
       ...prev,
       paymentMethods: updatedPaymentMethods,
     }));
 
-    // Save to backend immediately (self-contained, no Save button needed)
     try {
       const response = await fetch('/api/user/affiliate/payment-methods', {
         method: 'POST',
@@ -277,7 +268,6 @@ export default function ActivateAffiliatePage() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Failed to remove payment method:', response.status, errorText);
-        // Revert local state if save failed
         setFormData(prev => ({
           ...prev,
           paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
@@ -288,17 +278,13 @@ export default function ActivateAffiliatePage() {
 
       const data = await response.json();
       if (data.success) {
-        // Small delay to ensure database commit
         await new Promise(resolve => setTimeout(resolve, 100));
-        // Reload to verify and sync with server
         const res = await fetch('/api/user/affiliate/payment-methods');
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
-            // Verify the deleted item is actually gone
             const deletedItemStillExists = json.data.some((pm: PaymentMethod) => pm.id === id);
             if (deletedItemStillExists) {
-              // Revert local state
               setFormData(prev => ({
                 ...prev,
                 paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
@@ -311,7 +297,6 @@ export default function ActivateAffiliatePage() {
           }
         }
       } else {
-        // Revert local state if save failed
         setFormData(prev => ({
           ...prev,
           paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
@@ -320,7 +305,6 @@ export default function ActivateAffiliatePage() {
       }
     } catch (error: any) {
       console.error('Error removing payment method:', error);
-      // Revert local state if save failed
       setFormData(prev => ({
         ...prev,
         paymentMethods: [...prev.paymentMethods, paymentMethodToRemove!].filter(Boolean),
@@ -337,8 +321,6 @@ export default function ActivateAffiliatePage() {
       return;
     }
 
-    // Payment methods are already saved immediately when added/removed
-    // So we just need to activate the affiliate account
     setLoading(true);
     try {
       const response = await fetch('/api/user/affiliate/activate', {

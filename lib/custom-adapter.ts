@@ -24,8 +24,6 @@ export const CustomAdapter = (): Adapter => ({
       },
     })
     
-    // Process affiliate referral if cookie exists (for Google OAuth registration)
-    // Don't await to avoid blocking user creation
     processAffiliateReferral(u.id).catch(err => {
       console.error('Error processing affiliate referral in createUser:', err)
     })

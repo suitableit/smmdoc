@@ -65,14 +65,10 @@ export async function GET(req: NextRequest) {
 
     const totalCommissions = affiliate.commissions.reduce((sum, commission) => sum + commission.commissionAmount, 0);
     
-    // Count registrations from actual referral records (more reliable than totalReferrals field)
-    // Use the referrals array count as the source of truth, fallback to totalReferrals if needed
     const actualReferralsCount = affiliate.referrals?.length ?? 0;
     const totalReferrals = actualReferralsCount > 0 ? actualReferralsCount : (affiliate.totalReferrals ?? 0);
     
-    // If there's a mismatch, update the database to sync
     if (actualReferralsCount > 0 && actualReferralsCount !== (affiliate.totalReferrals ?? 0)) {
-      // Update totalReferrals to match actual count (async, don't wait)
       db.affiliates.update({
         where: { id: affiliate.id },
         data: { totalReferrals: actualReferralsCount, updatedAt: new Date() }
@@ -81,7 +77,6 @@ export async function GET(req: NextRequest) {
     
     const conversionRate = affiliate.totalVisits > 0 ? ((totalReferrals / affiliate.totalVisits) * 100).toFixed(2) : '0.00';
 
-    // Ensure all values are properly formatted and handle null/undefined
     const totalEarnings = affiliate.totalEarnings ?? 0;
     const availableEarnings = affiliate.availableEarnings ?? 0;
     const totalVisits = affiliate.totalVisits ?? 0;
