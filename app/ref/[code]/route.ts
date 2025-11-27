@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: { code: st
     })
 
     const res = NextResponse.redirect(home)
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     const isHttps = home.protocol === 'https:'
     res.cookies.set('affiliate_referral', `${affiliate.id}:${referralCode}`, {
       httpOnly: true,
