@@ -228,14 +228,16 @@ export default function WithdrawalMethodsSection({
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveWithdrawalMethod(withdrawalMethod.id)}
-                    className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
-                    title="Remove withdrawal method"
-                  >
-                    <FaTrash className="w-4 h-4" />
-                  </button>
+                  {withdrawalMethods.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveWithdrawalMethod(withdrawalMethod.id)}
+                      className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
+                      title="Remove withdrawal method"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

@@ -6,6 +6,7 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
+    FaArrowLeft,
     FaCheckCircle,
     FaDollarSign,
     FaExclamationTriangle,
@@ -14,6 +15,7 @@ import {
     FaTimes,
     FaUser
 } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 const WithdrawalMethodsSection = dynamic(
   () => import('@/components/affiliate/withdrawal-methods'),
@@ -121,6 +123,7 @@ interface ActivationFormData {
 
 export default function ActivateAffiliatePage() {
   const { appName } = useAppNameWithFallback();
+  const router = useRouter();
 
   const user = useCurrentUser();
   const [loading, setLoading] = useState(false);
@@ -246,6 +249,12 @@ export default function ActivateAffiliatePage() {
   };
 
   const handleRemoveWithdrawalMethod = async (id: string) => {
+    // Prevent deletion if only one method exists
+    if (formData.withdrawalMethods.length <= 1) {
+      showToast('You must have at least one payment method', 'error');
+      return;
+    }
+
     const withdrawalMethodToRemove = formData.withdrawalMethods.find(wm => wm.id === id);
     const updatedWithdrawalMethods = formData.withdrawalMethods.filter(wm => wm.id !== id);
     
@@ -413,6 +422,15 @@ export default function ActivateAffiliatePage() {
             onClose={() => setToastMessage(null)}
           />
         )}
+        <div className="mb-4">
+          <button
+            onClick={() => router.push('/affiliate')}
+            className="btn btn-primary inline-flex items-center"
+          >
+            <FaArrowLeft className="w-4 h-4 mr-2" />
+            Back to Affiliate Page
+          </button>
+        </div>
         <div className="card card-padding">
           <div className="card-header mb-6">
             <div className="card-icon">

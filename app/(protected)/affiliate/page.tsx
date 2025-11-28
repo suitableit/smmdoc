@@ -19,6 +19,7 @@ import {
     FaMousePointer,
     FaPercent,
     FaSearch,
+    FaShareAlt,
     FaSync,
     FaTimes,
     FaUser,
@@ -345,7 +346,7 @@ function AffiliateStatsCards() {
           <div className="card card-padding">
             <div className="card-header mb-4">
               <div className="card-icon">
-                <FaChartLine />
+                <FaShareAlt />
               </div>
               <h3 className="card-title">Affiliate Statistics Overview</h3>
             </div>
@@ -1187,7 +1188,6 @@ function AffiliateEarningsSection() {
                 >
                   {withdrawalProcessing ? (
                     <>
-                      <FaSync className="h-4 w-4 animate-spin" />
                       Submitting...
                     </>
                   ) : (

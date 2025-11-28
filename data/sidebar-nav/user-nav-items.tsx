@@ -1,12 +1,14 @@
 
-export const userNavItems = [
+export const userNavItems = [
+
   {
     title: 'Dashboard',
     href: '/dashboard',
     icon: 'FaTachometerAlt',
     label: 'Dashboard',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'New Order',
     href: '/new-order',
@@ -27,7 +29,8 @@ export const userNavItems = [
     icon: 'FaClipboardList',
     label: 'My Orders',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'All Services',
     href: '/services',
@@ -48,7 +51,8 @@ export const userNavItems = [
     icon: 'FaBell',
     label: 'Service Updates',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'Add Funds',
     href: '/add-funds',
@@ -69,7 +73,8 @@ export const userNavItems = [
     icon: 'FaHistory',
     label: 'Transactions',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'Support Tickets',
     href: '/support-tickets',
@@ -98,7 +103,8 @@ export const userNavItems = [
     icon: 'FaQuestionCircle',
     label: 'FAQs',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'API Integration',
     href: '/api',
@@ -112,11 +118,12 @@ export const userNavItems = [
     icon: 'FaSitemap',
     label: 'Child Panel',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'Affiliate Program',
     href: '/affiliate',
-    icon: 'FaNetworkWired',
+    icon: 'FaShareAlt',
     label: 'Affiliate Program',
     roles: ['user'],
   },
@@ -126,7 +133,8 @@ export const userNavItems = [
     icon: 'FaGavel',
     label: 'Terms',
     roles: ['user'],
-  },
+  },
+
   {
     title: 'Account Settings',
     href: '/account-settings',
