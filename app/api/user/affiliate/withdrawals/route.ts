@@ -127,8 +127,6 @@ export async function GET(request: NextRequest) {
       let adminNotes = null
       let cancelReason = null
       
-      // Only generate/extract transaction ID for approved (Success) withdrawals
-      // Pending and Cancelled withdrawals should show "-" (null)
       if (transactionStatus === 'Success') {
         if (payout.notes) {
           try {
@@ -151,7 +149,6 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Extract cancel reason from notes if cancelled
       if (transactionStatus === 'Cancelled' && payout.notes) {
         try {
           const notesParsed = JSON.parse(payout.notes)
