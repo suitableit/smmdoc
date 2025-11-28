@@ -11,7 +11,7 @@ type Transaction = {
   status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
   method: string;
   payment_method?: string;
-  transaction_id?: string;
+  transaction_id?: string | null;
   createdAt: string;
   transaction_type?: 'deposit' | 'withdrawal' | 'purchase' | 'refund';
   reference_id?: string;
@@ -22,10 +22,14 @@ type Transaction = {
 
 interface TransactionsListProps {
   transactions: Transaction[];
+  page: number;
+  limit: number;
 }
 
 export function TransactionsList({
   transactions,
+  page,
+  limit,
 }: TransactionsListProps) {
 
   const formatTransactionCurrency = (amount: number, transactionCurrency?: string) => {
@@ -56,66 +60,68 @@ export function TransactionsList({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
-                ID
+            <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-800">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Sl. No.
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Transaction ID
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Amount
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Phone Number
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Method
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Date and Time
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Status
               </th>
 
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction, index) => (
+            {transactions.map((transaction, index) => {
+              const serialNumber = (page - 1) * limit + index + 1;
+              return (
               <tr
                 key={transaction.id}
-                className="border-b border-gray-100 hover:bg-gray-50"
+                className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 <td className="py-3 px-4">
-                  <span className="text-sm font-medium text-gray-900">
-                    {index + 1}
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {serialNumber}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="text-sm font-mono text-gray-700">
-                    {transaction.transaction_id || 'N/A'}
+                  <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                    {transaction.transaction_id ? transaction.transaction_id : 'N/A'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {formatTransactionCurrency(transaction.amount, transaction.currency)}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     {transaction.phone || transaction.sender_number || 'N/A'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     {transaction.payment_method ||
                       transaction.method ||
                       'UddoktaPay'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     {new Intl.DateTimeFormat('en', {
                       dateStyle: 'medium',
                       timeStyle: 'short',
@@ -129,7 +135,8 @@ export function TransactionsList({
                 </td>
 
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
@@ -141,31 +148,31 @@ function StatusBadge({ status }: { status: Transaction['status'] }) {
   switch (status) {
     case 'Success':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
           Success
         </span>
       );
     case 'Processing':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">
           Processing
         </span>
       );
     case 'Cancelled':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
           Cancelled
         </span>
       );
     case 'Failed':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
           Failed
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
           {status}
         </span>
       );

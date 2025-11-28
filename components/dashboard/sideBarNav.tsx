@@ -45,6 +45,7 @@ interface UserSections {
   funds: NavItem[];
   support: NavItem[];
   integrations: NavItem[];
+  affiliate: NavItem[];
   more: NavItem[];
   account: NavItem[];
   [key: string]: NavItem[];
@@ -257,7 +258,6 @@ export default function SideBarNav({
             'Support Tickets',
             'Tickets History',
             'Contact Support',
-            'FAQs',
           ];
           if (!ticketSystemEnabled && (item.title === 'Support Tickets' || item.title === 'Tickets History')) {
             return false;
@@ -274,11 +274,15 @@ export default function SideBarNav({
           }
           return integrationItems.includes(item.title);
         }),
-        more: items.filter((item) => {
-          const moreItems = ['Affiliate Program', 'Terms'];
+        affiliate: items.filter((item) => {
+          const affiliateItems = ['Affiliate Program'];
           if (!affiliateSystemEnabled && item.title === 'Affiliate Program') {
             return false;
           }
+          return affiliateItems.includes(item.title);
+        }),
+        more: items.filter((item) => {
+          const moreItems = ['FAQs', 'Terms'];
           return moreItems.includes(item.title);
         }),
         account: items.filter((item) =>
@@ -596,6 +600,7 @@ export default function SideBarNav({
             {renderNavSection('Funds', getSectionItems('funds'))}
             {renderNavSection('Support', getSectionItems('support'))}
             {renderNavSection('Integrations', getSectionItems('integrations'))}
+            {renderNavSection('Affiliate', getSectionItems('affiliate'))}
             {renderNavSection('More', getSectionItems('more'))}
             {renderNavSection('Account', getSectionItems('account'))}
           </>

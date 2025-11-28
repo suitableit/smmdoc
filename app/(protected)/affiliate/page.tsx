@@ -526,6 +526,7 @@ function AffiliateEarningsSection() {
 
   const [minWithdrawalValue, setMinWithdrawalValue] = useState<number>(100)
   const [availableBalanceDisplay, setAvailableBalanceDisplay] = useState<string>('')
+  const [availableBalance, setAvailableBalance] = useState<number>(0)
 
   const showToast = (
     message: string,
@@ -589,6 +590,9 @@ function AffiliateEarningsSection() {
           const value = parseFloat(String(minPayoutText).replace(/[^0-9.]/g, ''))
           setMinWithdrawalValue(isNaN(value) ? 10 : value)
           setAvailableBalanceDisplay(json?.data?.availableEarnings || '')
+          const availableEarningsText = json?.data?.availableEarnings || '$0.00'
+          const availableBalanceValue = parseFloat(String(availableEarningsText).replace(/[^0-9.]/g, ''))
+          setAvailableBalance(isNaN(availableBalanceValue) ? 0 : availableBalanceValue)
         }
         const pmRes = await fetch('/api/user/affiliate/payment-methods')
         if (pmRes.ok) {
@@ -686,11 +690,14 @@ function AffiliateEarningsSection() {
       return false;
     }
     
+    if (amount > availableBalance) {
+      return false;
+    }
+    
     if (!withdrawalForm.selectedWithdrawalMethod) {
       return false;
     }
     
-    // Verify that the selected withdrawal method exists
     const selectedMethod = savedWithdrawalMethods.find(wm => String(wm.id) === String(withdrawalForm.selectedWithdrawalMethod));
     if (!selectedMethod) {
       return false;
@@ -721,18 +728,50 @@ function AffiliateEarningsSection() {
     try {
       setWithdrawalProcessing(true);
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const response = await fetch('/api/user/affiliate/withdrawal-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          withdrawalMethodId: withdrawalForm.selectedWithdrawalMethod,
+        }),
+      });
 
-      showToast('Withdrawal request submitted successfully!', 'success');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Failed to submit withdrawal request');
+      }
+
+      showToast(data.message || 'Withdrawal request submitted successfully!', 'success');
       setWithdrawalModalOpen(false);
       setWithdrawalForm({
         amount: '',
         selectedWithdrawalMethod: '',
-        paymentDetails: '', // Keep for backwards compatibility but not used
+        paymentDetails: '',
       });
+      
+      await fetchEarnings();
+      try {
+        const res = await fetch('/api/user/affiliate/stats')
+        if (res.ok) {
+          const json = await res.json()
+          setAvailableBalanceDisplay(json?.data?.availableEarnings || '')
+          const availableEarningsText = json?.data?.availableEarnings || '$0.00'
+          const availableBalanceValue = parseFloat(String(availableEarningsText).replace(/[^0-9.]/g, ''))
+          setAvailableBalance(isNaN(availableBalanceValue) ? 0 : availableBalanceValue)
+        }
+      } catch (e) {
+        console.error('Error refreshing stats:', e)
+      }
     } catch (error) {
       console.error('Error submitting withdrawal request:', error);
-      showToast('Error submitting withdrawal request', 'error');
+      showToast(
+        error instanceof Error ? error.message : 'Error submitting withdrawal request', 
+        'error'
+      );
     } finally {
       setWithdrawalProcessing(false);
     }
@@ -1094,31 +1133,63 @@ function AffiliateEarningsSection() {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-sm text-green-600 font-medium mb-1">Available Balance</div>
-                <div className="text-2xl font-bold text-green-700">{availableBalanceDisplay || '$0.00'}</div>
-                <div className="text-xs text-green-600 mt-1">Minimum withdrawal: ${minWithdrawalValue.toFixed(2)}</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                  Withdrawal Amount
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    placeholder="0.00"
-                    value={withdrawalForm.amount}
-                    onChange={(e) =>
-                      setWithdrawalForm(prev => ({
-                        ...prev,
-                        amount: e.target.value,
-                      }))
-                    }
-                    className="form-field w-full pl-8 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-              </div>
+              {(() => {
+                const withdrawalAmount = parseFloat(withdrawalForm.amount) || 0
+                const remainingBalance = availableBalance - withdrawalAmount
+                const exceedsBalance = withdrawalAmount > availableBalance
+                const isNegative = remainingBalance < 0
+                const hasError = exceedsBalance || isNegative
+                
+                return (
+                  <>
+                    <div className={`p-4 rounded-lg border ${hasError ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' : 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'}`}>
+                      <div className={`text-sm font-medium mb-1 ${hasError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                        {hasError ? 'Available Balance (After Withdrawal)' : 'Available Balance'}
+                      </div>
+                      <div className={`text-2xl font-bold ${hasError ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>
+                        ${remainingBalance.toFixed(2)}
+                      </div>
+                      {!hasError && (
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Original balance: {availableBalanceDisplay || '$0.00'} • Minimum withdrawal: ${minWithdrawalValue.toFixed(2)}
+                        </div>
+                      )}
+                      {hasError && (
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                          Insufficient balance! Withdrawal amount exceeds available balance.
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                        Withdrawal Amount
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={withdrawalForm.amount}
+                          onChange={(e) =>
+                            setWithdrawalForm(prev => ({
+                              ...prev,
+                              amount: e.target.value,
+                            }))
+                          }
+                          className="form-field w-full pl-8 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      {hasError && (
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                          Available balance: ${availableBalance.toFixed(2)} • You're trying to withdraw: ${withdrawalAmount.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )
+              })()}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
                   Withdrawal Method

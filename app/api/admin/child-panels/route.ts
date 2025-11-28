@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
         { panelName: { contains: searchTrimmed } },
       ];
 
-      // Also search by user - find matching user IDs
       const matchingUsers = await db.users.findMany({
         where: {
           OR: [

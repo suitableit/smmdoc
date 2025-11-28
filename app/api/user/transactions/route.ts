@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
     const status = searchParams.get('status');
     const search = searchParams.get('search') || '';
 
@@ -41,22 +41,29 @@ export async function GET(request: NextRequest) {
 
     await db.$queryRaw`SELECT 1`;
 
-    const transactions = await db.addFunds.findMany({
-      where,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      skip: offset,
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
+    const skip = (page - 1) * limit;
+
+    const [transactions, total] = await Promise.all([
+      db.addFunds.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: limit,
+        skip: skip,
+        include: {
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      }),
+      db.addFunds.count({ where })
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
 
     const transformedTransactions = transactions.map((transaction) => ({
       id: transaction.id,
@@ -65,7 +72,7 @@ export async function GET(request: NextRequest) {
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.method || 'uddoktapay',
       payment_method: transaction.payment_method || 'UddoktaPay',
-      transaction_id: transaction.transaction_id || transaction.id,
+      transaction_id: transaction.transaction_id || null,
       createdAt: transaction.createdAt.toISOString(),
       transaction_type: transaction.transaction_type || 'deposit',
       reference_id: transaction.order_id,
@@ -76,7 +83,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       transactions: transformedTransactions,
-      total: transactions.length,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      }
     });
 
   } catch (error) {
