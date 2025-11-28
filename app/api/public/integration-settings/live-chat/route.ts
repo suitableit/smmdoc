@@ -46,7 +46,5 @@ export async function GET() {
       { error: 'Failed to fetch live chat settings' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
