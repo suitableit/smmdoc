@@ -46,20 +46,16 @@ export async function GET(request: NextRequest) {
       const searchTrimmed = search.trim().toUpperCase()
       const searchNum = parseInt(searchTrimmed)
       
-      // Search by payout ID (numeric)
       if (!isNaN(searchNum) && searchNum > 0) {
         wherePayouts.id = searchNum
       } 
-      // Search by old format WD-{id}
       else if (searchTrimmed.startsWith('WD-')) {
         const idFromWd = parseInt(searchTrimmed.replace(/^WD-/, ''))
         if (!isNaN(idFromWd) && idFromWd > 0) {
           wherePayouts.id = idFromWd
         }
       }
-      // Search by withdrawal ID (10-character alphanumeric) or any text in notes
       else {
-        // Search in notes field for withdrawal ID
         wherePayouts.notes = {
           contains: searchTrimmed,
         }
@@ -127,22 +123,47 @@ export async function GET(request: NextRequest) {
         paymentMethodDisplay = getMethodDisplayName(paymentMethod || payout.method || '')
       }
 
-      // Extract withdrawal ID from notes
-      let withdrawalId = `WD-${payout.id}` // Fallback to old format
+      let withdrawalId: string | null = null
       let adminNotes = null
-      if (payout.notes) {
+      let cancelReason = null
+      
+      // Only generate/extract transaction ID if withdrawal is not cancelled
+      if (transactionStatus !== 'Cancelled') {
+        withdrawalId = `WD-${payout.id}`
+        if (payout.notes) {
+          try {
+            const notesParsed = JSON.parse(payout.notes)
+            if (notesParsed && typeof notesParsed === 'object') {
+              if (notesParsed.transactionId && typeof notesParsed.transactionId === 'string') {
+                withdrawalId = notesParsed.transactionId
+              } else if (notesParsed.withdrawalId && typeof notesParsed.withdrawalId === 'string') {
+                withdrawalId = notesParsed.withdrawalId
+              }
+              if (notesParsed.adminNotes) {
+                adminNotes = notesParsed.adminNotes
+              }
+            }
+          } catch (e) {
+            if (typeof payout.notes === 'string' && payout.notes.trim()) {
+              adminNotes = payout.notes
+            }
+          }
+        }
+      }
+      
+      // Extract cancel reason from notes if cancelled
+      if (transactionStatus === 'Cancelled' && payout.notes) {
         try {
           const notesParsed = JSON.parse(payout.notes)
           if (notesParsed && typeof notesParsed === 'object') {
-            if (notesParsed.withdrawalId && typeof notesParsed.withdrawalId === 'string') {
-              withdrawalId = notesParsed.withdrawalId
+            if (notesParsed.cancelReason) {
+              cancelReason = notesParsed.cancelReason
             }
             if (notesParsed.adminNotes) {
               adminNotes = notesParsed.adminNotes
             }
           }
         } catch (e) {
-          // If notes is not JSON, treat it as admin notes
           if (typeof payout.notes === 'string' && payout.notes.trim()) {
             adminNotes = payout.notes
           }
@@ -161,6 +182,7 @@ export async function GET(request: NextRequest) {
         transaction_type: 'withdrawal' as const,
         processedAt: payout.processedAt?.toISOString(),
         notes: adminNotes,
+        cancelReason: cancelReason,
       }
     })
 

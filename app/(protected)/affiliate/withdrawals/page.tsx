@@ -42,6 +42,7 @@ type Withdrawal = {
   createdAt: string;
   processedAt?: string;
   notes?: string;
+  cancelReason?: string | null;
 };
 
 export default function WithdrawalsPage() {
@@ -71,6 +72,20 @@ export default function WithdrawalsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [cancelReasonModal, setCancelReasonModal] = useState<{
+    open: boolean;
+    reason: string;
+  }>({
+    open: false,
+    reason: '',
+  });
+
+  const handleViewCancelReason = (reason: string) => {
+    setCancelReasonModal({
+      open: true,
+      reason: reason,
+    });
+  };
 
   useEffect(() => {
     setPageTitle('Withdrawals', appName);
@@ -154,12 +169,10 @@ export default function WithdrawalsPage() {
 
   useEffect(() => {
     const loadWithdrawals = async () => {
-      // Only show full loading on initial mount
       if (isInitialMount.current) {
         setLoading(true);
         isInitialMount.current = false;
       } else {
-        // Show table loading for subsequent loads (tab changes, pagination, etc.)
         setTableLoading(true);
       }
       await fetchWithdrawals();
@@ -256,7 +269,7 @@ export default function WithdrawalsPage() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
-                        {Array.from({ length: 6 }).map((_, idx) => (
+                        {Array.from({ length: 7 }).map((_, idx) => (
                           <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
                             <div className="h-4 w-24 gradient-shimmer rounded" />
                           </th>
@@ -340,7 +353,7 @@ export default function WithdrawalsPage() {
                         </div>
                         <input
                           type="search"
-                          placeholder="Search by ID or Withdrawal ID..."
+                          placeholder="Search by ID or Transaction ID..."
                           value={searchTerm}
                           onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -496,6 +509,7 @@ export default function WithdrawalsPage() {
                       withdrawals={filteredWithdrawals}
                       page={page}
                       limit={limit}
+                      onViewCancelReason={handleViewCancelReason}
                     />
                   )}
                   {pagination.totalPages > 1 && (
@@ -529,6 +543,37 @@ export default function WithdrawalsPage() {
           )}
         </div>
       </div>
+
+      {/* Cancel Reason Modal */}
+      {cancelReasonModal.open && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 relative">
+            <button
+              onClick={() =>
+                setCancelReasonModal({
+                  open: false,
+                  reason: '',
+                })
+              }
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 pr-8">
+              Cancellation Reason
+            </h3>
+
+            <div>
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  {cancelReasonModal.reason || 'No reason provided.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -212,7 +212,6 @@ function AffiliateStatsCards() {
     fetchStats();
     loadUserInfo();
 
-    // Listen for stats refresh events
     const handleStatsRefresh = () => {
       fetchStats();
     };
@@ -765,7 +764,6 @@ function AffiliateEarningsSection() {
         paymentDetails: '',
       });
       
-      // Refresh earnings and stats immediately
       await fetchEarnings();
       try {
         const res = await fetch('/api/user/affiliate/stats')
@@ -776,7 +774,6 @@ function AffiliateEarningsSection() {
           const availableBalanceValue = parseFloat(String(availableEarningsText).replace(/[^0-9.]/g, ''))
           setAvailableBalance(isNaN(availableBalanceValue) ? 0 : availableBalanceValue)
           
-          // Trigger stats refresh event to update AffiliateStatsCards component
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('affiliateStatsRefresh'))
           }
@@ -785,7 +782,6 @@ function AffiliateEarningsSection() {
         console.error('Error refreshing stats:', e)
       }
       
-      // Redirect to withdrawals page after a brief delay to allow stats to update
       setTimeout(() => {
         router.push('/affiliate/withdrawals')
       }, 500)

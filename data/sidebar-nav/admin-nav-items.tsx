@@ -136,10 +136,17 @@ export const adminNavItems = [
 
 
   {
-    title: 'Affiliates',
+    title: 'Affiliate Users',
     href: '/admin/affiliates',
     icon: 'FaShareAlt',
     label: 'Affiliate Referrals',
+    roles: ['admin'],
+  },
+  {
+    title: 'Withdrawals',
+    href: '/admin/affiliates/withdrawals',
+    icon: 'FaMoneyBillWave',
+    label: 'Withdrawals',
     roles: ['admin'],
   },
   {
@@ -153,7 +160,7 @@ export const adminNavItems = [
   {
     title: 'Child Panels',
     href: '/admin/child-panels',
-    icon: 'FaUserFriends',
+    icon: 'FaSitemap',
     label: 'Child Panels',
     roles: ['admin'],
   },

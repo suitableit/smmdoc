@@ -87,24 +87,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Generate 10-character alphanumeric ID (uppercase letters and numbers)
-    const generateWithdrawalId = (): string => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-      let result = ''
-      for (let i = 0; i < 10; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      return result
-    }
-
-    const withdrawalId = generateWithdrawalId()
-
     const now = new Date()
-    // Store withdrawal ID in notes as JSON (preserves admin notes if any)
-    const notesData = {
-      withdrawalId,
-      adminNotes: null as string | null,
-    }
     
     const payout = await db.affiliatePayouts.create({
       data: {
@@ -115,7 +98,7 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         requestedAt: now,
         updatedAt: now,
-        notes: JSON.stringify(notesData),
+        notes: null, // No withdrawal ID generated for pending requests
       },
     })
 
