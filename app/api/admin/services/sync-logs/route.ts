@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -19,118 +20,271 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
-    const status = searchParams.get('status');
-    const provider = searchParams.get('provider');
-    const search = searchParams.get('search');
+    const search = searchParams.get('search') || '';
+    const searchBy = searchParams.get('searchBy') || 'all';
     
     const skip = (page - 1) * limit;
     
     const whereClause: any = {};
     
-    if (status && status !== 'all') {
-      whereClause.status = status;
-    }
-    
-    if (provider && provider !== 'all') {
-      whereClause.provider = provider;
-    }
-    
     if (search) {
-      whereClause.OR = [
-        { provider: { contains: search, mode: 'insensitive' } },
-        { action: { contains: search, mode: 'insensitive' } },
-        { message: { contains: search, mode: 'insensitive' } }
-      ];
-    }
-    
-    const mockLogs = [
-      {
-        id: '1',
-        provider: 'SMM Provider A',
-        action: 'Service Update',
-        status: 'success',
-        message: 'Successfully synchronized 45 services',
-        servicesAffected: 45,
-        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        duration: 2.5,
-        errorDetails: null
-      },
-      {
-        id: '2',
-        provider: 'SMM Provider B',
-        action: 'Price Sync',
-        status: 'failed',
-        message: 'Failed to sync pricing data',
-        servicesAffected: 0,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        duration: 1.2,
-        errorDetails: 'Connection timeout after 30 seconds'
-      },
-      {
-        id: '3',
-        provider: 'SMM Provider C',
-        action: 'Full Sync',
-        status: 'in_progress',
-        message: 'Synchronizing all services...',
-        servicesAffected: 120,
-        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        duration: null,
-        errorDetails: null
-      },
-      {
-        id: '4',
-        provider: 'SMM Provider A',
-        action: 'Status Check',
-        status: 'success',
-        message: 'All services status verified',
-        servicesAffected: 45,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-        duration: 0.8,
-        errorDetails: null
-      },
-      {
-        id: '5',
-        provider: 'SMM Provider D',
-        action: 'New Services',
-        status: 'pending',
-        message: 'Waiting for provider response',
-        servicesAffected: 0,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-        duration: null,
-        errorDetails: null
+      const searchTrimmed = search.trim();
+      if (searchBy === 'api_provider') {
+        // Search in serviceName field which may contain provider info
+        whereClause.serviceName = { contains: searchTrimmed };
+      } else if (searchBy === 'service_name') {
+        whereClause.serviceName = { contains: searchTrimmed };
+      } else {
+        whereClause.OR = [
+          { serviceName: { contains: searchTrimmed } },
+          { action: { contains: searchTrimmed } },
+          { changes: { contains: searchTrimmed } }
+        ];
       }
-    ];
-    
-    let filteredLogs = mockLogs;
-    
-    if (status && status !== 'all') {
-      filteredLogs = filteredLogs.filter(log => log.status === status);
     }
     
-    if (provider && provider !== 'all') {
-      filteredLogs = filteredLogs.filter(log => log.provider === provider);
-    }
-    
+    // Fetch services with updateText (same as services/updates page)
+    const servicesWhereClause: any = {
+      status: 'active',
+      updateText: {
+        not: null,
+      },
+    };
+
+    // Apply search filter
     if (search) {
-      const searchLower = search.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => 
-        log.provider.toLowerCase().includes(searchLower) ||
-        log.action.toLowerCase().includes(searchLower) ||
-        log.message.toLowerCase().includes(searchLower)
-      );
+      const searchTrimmed = search.trim();
+      if (searchBy === 'api_provider') {
+        // We'll search by provider name later after fetching
+      } else if (searchBy === 'service_name') {
+        servicesWhereClause.name = { contains: searchTrimmed };
+      } else {
+        servicesWhereClause.OR = [
+          { name: { contains: searchTrimmed } },
+          { description: { contains: searchTrimmed } },
+        ];
+      }
     }
-    
-    const paginatedLogs = filteredLogs.slice(skip, skip + limit);
+
+    // Fetch all services with updateText (similar to services/updates)
+    const allServices = await db.services.findMany({
+      where: servicesWhereClause,
+      select: {
+        id: true,
+        name: true,
+        updateText: true,
+        updatedAt: true,
+        providerId: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+      take: 1000, // Max fetch limit like services/updates
+    });
+
+    // Filter services with valid updateText
+    let filteredServices = allServices.filter(
+      (service) => service.updateText && service.updateText.trim().length > 0
+    );
+
+    // Fetch all API providers first for filtering and mapping
+    const apiProviders = await db.apiProviders.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const providerMap = new Map(apiProviders.map(p => [p.id, p.name]));
+
+    // If searching by API provider, filter by provider name
+    if (search && searchBy === 'api_provider') {
+      const searchTrimmed = search.trim().toLowerCase();
+      filteredServices = filteredServices.filter((service) => {
+        if (!service.providerId) return false;
+        const providerName = providerMap.get(service.providerId);
+        return providerName && providerName.toLowerCase().includes(searchTrimmed);
+      });
+    }
+
+    const total = filteredServices.length;
+    const paginatedServices = filteredServices.slice(skip, skip + limit);
+
+    // Helper function to format changes exactly like services/updates page
+    const formatChanges = (updateText: string): string => {
+      try {
+        const updateData = JSON.parse(updateText || '{}');
+
+        if (updateData.action === 'created' || updateData.type === 'new_service' || updateData.action === 'create') {
+          return 'New service';
+        }
+
+        if (updateData.action === 'added' || updateData.type === 'service_added' || updateData.action === 'import') {
+          return 'New service';
+        }
+
+        const updates: string[] = [];
+        let hasRateChange = false;
+        let hasStatusChange = false;
+
+        const rateChange = updateData.changes?.rate || updateData.rate;
+        if (rateChange && rateChange.from !== undefined && rateChange.to !== undefined) {
+          const oldRate = parseFloat(rateChange.from);
+          const newRate = parseFloat(rateChange.to);
+
+          const formatRate = (rate: number) => {
+            const formatted = rate.toFixed(6);
+            return parseFloat(formatted).toString();
+          };
+
+          if (newRate > oldRate) {
+            updates.push(`Rate increased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
+            hasRateChange = true;
+          } else if (newRate < oldRate) {
+            updates.push(`Rate decreased from $${formatRate(oldRate)} to $${formatRate(newRate)}`);
+            hasRateChange = true;
+          }
+        }
+
+        const statusChange = updateData.changes?.status || updateData.status;
+        if (statusChange && statusChange.from !== undefined && statusChange.to !== undefined) {
+          const oldStatus = statusChange.from;
+          const newStatus = statusChange.to;
+          if (newStatus === 'active' && oldStatus !== 'active') {
+            updates.push('Service enabled');
+            hasStatusChange = true;
+          } else if (newStatus !== 'active' && oldStatus === 'active') {
+            updates.push('Service disabled');
+            hasStatusChange = true;
+          }
+        }
+
+        const infoUpdates: string[] = [];
+
+        const minOrderChange = updateData.changes?.min_order || updateData.min_order;
+        if (minOrderChange && minOrderChange.from !== undefined && minOrderChange.to !== undefined) {
+          infoUpdates.push('min order');
+        }
+
+        const maxOrderChange = updateData.changes?.max_order || updateData.max_order;
+        if (maxOrderChange && maxOrderChange.from !== undefined && maxOrderChange.to !== undefined) {
+          infoUpdates.push('max order');
+        }
+
+        const nameChange = updateData.changes?.name || updateData.name;
+        if (nameChange && nameChange.from !== undefined && nameChange.to !== undefined) {
+          infoUpdates.push('name');
+        }
+
+        const descriptionChange = updateData.changes?.description || updateData.description;
+        if (descriptionChange && descriptionChange.from !== undefined && descriptionChange.to !== undefined) {
+          infoUpdates.push('description');
+        }
+
+        const categoryChange = updateData.changes?.categoryId || updateData.changes?.category || updateData.category;
+        if (categoryChange && categoryChange.from !== undefined && categoryChange.to !== undefined) {
+          infoUpdates.push('category');
+        }
+
+        if (infoUpdates.length > 0 && !hasRateChange && !hasStatusChange) {
+          updates.push('Service info updated');
+        }
+
+        return updates.length > 0 ? updates.join(', ') : 'Service updated';
+
+      } catch (error) {
+        // Fallback parsing
+        const text = updateText || '';
+        if (text.toLowerCase().includes('created') || text.toLowerCase().includes('new')) {
+          return 'New service';
+        }
+        if (text.toLowerCase().includes('added') || text.toLowerCase().includes('imported')) {
+          return 'Service added';
+        }
+        if (text.toLowerCase().includes('disabled')) {
+          return 'Service disabled';
+        }
+        if (text.toLowerCase().includes('enabled')) {
+          return 'Service enabled';
+        }
+        return 'Service updated';
+      }
+    };
+
+    // Map services to sync log format
+    const logs = paginatedServices.map((service, index) => {
+      // Determine if this is a self (admin) modified service or from API provider
+      let apiProvider = 'Self'; // Default to Self
+      
+      try {
+        const updateData = JSON.parse(service.updateText || '{}');
+        
+        // Check if updateText has updatedBy field (indicates manual admin update)
+        if (updateData.updatedBy) {
+          // This is a self (admin) modified service
+          apiProvider = 'Self';
+        } else if (updateData.provider || updateData.providerId) {
+          // This is from an API provider sync - get provider name
+          const providerIdFromUpdate = updateData.providerId;
+          const serviceProviderId = service.providerId || providerIdFromUpdate;
+          
+          if (serviceProviderId && providerMap.has(serviceProviderId)) {
+            apiProvider = providerMap.get(serviceProviderId)!;
+          } else if (updateData.provider) {
+            // Use provider name directly from updateText if available
+            apiProvider = updateData.provider;
+          }
+        } else if (service.providerId && providerMap.has(service.providerId)) {
+          // Service has providerId but updateText doesn't have provider info - still show provider
+          apiProvider = providerMap.get(service.providerId)!;
+        }
+      } catch {
+        // If parsing fails, check providerId directly
+        if (service.providerId && providerMap.has(service.providerId)) {
+          apiProvider = providerMap.get(service.providerId)!;
+        }
+      }
+
+      // Determine change type from updateText
+      let changeType: 'added' | 'updated' | 'deleted' | 'error' = 'updated';
+      try {
+        const updateData = JSON.parse(service.updateText || '{}');
+        const action = (updateData.action || '').toLowerCase();
+        if (action === 'created' || action === 'create' || action === 'added' || action === 'import') {
+          changeType = 'added';
+        } else if (action === 'delete' || action === 'deleted' || action === 'remove') {
+          changeType = 'deleted';
+        } else if (action.includes('error') || action.includes('fail')) {
+          changeType = 'error';
+        }
+      } catch {
+        // Default to updated
+      }
+
+      // Format changes text
+      const changesText = formatChanges(service.updateText || '');
+
+      return {
+        id: service.id, // Use service ID
+        apiProvider,
+        serviceName: service.name,
+        changes: changesText,
+        changeType,
+        when: service.updatedAt.toISOString(),
+      };
+    });
     
     return NextResponse.json({
       success: true,
       data: {
-        logs: paginatedLogs,
+        logs,
         pagination: {
           page,
           limit,
-          total: filteredLogs.length,
-          totalPages: Math.ceil(filteredLogs.length / limit)
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1,
         }
       },
       error: null
@@ -223,7 +377,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function DELETE(req: NextRequest) {
   try {
     const session = await auth();
     
@@ -238,45 +392,45 @@ export async function PUT(req: NextRequest) {
       );
     }
     
-    const stats = {
-      totalSyncs: 156,
-      successfulSyncs: 142,
-      failedSyncs: 8,
-      pendingSyncs: 6,
-      lastSyncTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      providers: [
-        {
-          name: 'SMM Provider A',
-          totalSyncs: 45,
-          successRate: 95,
-          lastSync: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+    const body = await req.json();
+    const { ids } = body;
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { 
+          error: 'IDs array is required',
+          success: false,
+          data: null 
         },
-        {
-          name: 'SMM Provider B',
-          totalSyncs: 32,
-          successRate: 87,
-          lastSync: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
-        },
-        {
-          name: 'SMM Provider C',
-          totalSyncs: 28,
-          successRate: 92,
-          lastSync: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-        }
-      ]
-    };
+        { status: 400 }
+      );
+    }
+    
+    // For delete, we'll clear the updateText from services instead
+    // Since we're showing services with updateText, deleting means clearing the updateText
+    const result = await db.services.updateMany({
+      where: {
+        id: { in: ids.map((id: string | number) => parseInt(String(id))) },
+      },
+      data: {
+        updateText: null,
+      },
+    });
     
     return NextResponse.json({
       success: true,
-      data: stats,
+      message: `Successfully deleted ${result.count} sync log(s)`,
+      data: {
+        deletedCount: result.count,
+      },
       error: null
     });
     
   } catch (error) {
-    console.error('Error fetching sync stats:', error);
+    console.error('Error deleting sync logs:', error);
     return NextResponse.json(
       {
-        error: 'Failed to fetch sync stats: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        error: 'Failed to delete sync logs: ' + (error instanceof Error ? error.message : 'Unknown error'),
         success: false,
         data: null
       },

@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { serializeService } from '@/lib/utils';
 
 function getClientIP(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -330,10 +331,13 @@ export async function GET(request: Request) {
       });
     }
 
+    // Serialize BigInt values to strings for JSON serialization
+    const serializedResult = serializeService(result);
+
     return NextResponse.json(
       {
         error: null,
-        data: result,
+        data: serializedResult,
         success: true,
       },
       { status: 200 }
