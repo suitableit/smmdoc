@@ -40,7 +40,5 @@ export async function GET() {
       { error: 'Failed to get database stats' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
