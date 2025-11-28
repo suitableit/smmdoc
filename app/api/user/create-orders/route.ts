@@ -573,6 +573,9 @@ export async function POST(request: Request) {
 
     let result;
     try {
+      const moduleSettings = await db.moduleSettings.findFirst();
+      const globalCommissionRate = moduleSettings?.commissionRate ?? 5;
+
       result = await db.$transaction(async (prisma) => {
         const createdOrders = [];
         
@@ -780,7 +783,7 @@ export async function POST(request: Request) {
 
               if (!existingCommission) {
                 const orderAmount = orderData.usdPrice || orderData.price || 0;
-                const commissionRate = referral.affiliate.commissionRate || 5;
+                const commissionRate = globalCommissionRate;
                 const commissionAmount = (orderAmount * commissionRate) / 100;
 
                 console.log(`[AFFILIATE_COMMISSION] First order commission calculation:`, {

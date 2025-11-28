@@ -9,6 +9,7 @@ import {
     publicRoutes,
 } from './lib/routes';
 import { getTicketSettings } from './lib/utils/ticket-settings';
+import { getModuleSettings } from './lib/utils/module-settings';
 
 export const { auth } = NextAuth(authConfig);
 
@@ -153,6 +154,53 @@ export default auth(async (req) => {
       console.error('Error checking contact system status in proxy:', error);
 
       const redirectPath = isAdmin ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
+  const affiliatePages = [
+    '/admin/affiliates',
+    '/affiliate',
+    '/ref',
+  ];
+
+  const isAffiliatePage = affiliatePages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+
+  if (isAffiliatePage && isLoggedIn) {
+    try {
+      const moduleSettings = await getModuleSettings(true);
+      if (!moduleSettings.affiliateSystemEnabled) {
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking affiliate system status in proxy:', error);
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
+  const childPanelPages = [
+    '/admin/child-panels',
+    '/child-panel',
+  ];
+
+  const isChildPanelPage = childPanelPages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+
+  if (isChildPanelPage && isLoggedIn) {
+    try {
+      const moduleSettings = await getModuleSettings(true);
+      if (!moduleSettings.childPanelSellingEnabled) {
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking child panel system status in proxy:', error);
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
       return NextResponse.redirect(new URL(redirectPath, nextUrl));
     }
   }

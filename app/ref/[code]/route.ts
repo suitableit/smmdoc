@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
+import { getModuleSettings } from '@/lib/utils/module-settings'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ code: string }> }) {
   try {
+    const moduleSettings = await getModuleSettings(true);
+    if (!moduleSettings.affiliateSystemEnabled) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
     const { code } = await params
     const referralCode = (code || '').trim()
     const home = new URL('/', request.url)

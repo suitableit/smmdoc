@@ -330,13 +330,11 @@ export default function SignUpForm() {
           }
           if (data?.success) {
             if (data?.email) {
-              // Email confirmation is enabled - redirect to verification page
               if (typeof window !== 'undefined') {
                 sessionStorage.setItem('pendingVerificationEmail', data.email);
               }
               router.push('/verify-email');
             } else if (data?.shouldAutoLogin) {
-              // Email confirmation is disabled - automatically sign in and redirect to dashboard
               try {
                 const signInResult = await signIn('credentials', {
                   email: data.userEmail,
@@ -345,7 +343,6 @@ export default function SignUpForm() {
                 });
 
                 if (signInResult?.ok) {
-                  // Full page reload to ensure session is properly set
                   window.location.href = DEFAULT_SIGN_IN_REDIRECT;
                 } else {
                   setError('Registration successful but automatic login failed. Please sign in manually.');

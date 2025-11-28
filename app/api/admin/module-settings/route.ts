@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { clearModuleSettingsCache } from '@/lib/utils/module-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 const defaultModuleSettings = {
@@ -115,6 +116,8 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       }
     });
+
+    clearModuleSettingsCache();
 
     return NextResponse.json({
       success: true,

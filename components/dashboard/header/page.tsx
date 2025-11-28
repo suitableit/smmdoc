@@ -353,6 +353,7 @@ const Header = () => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+  const [childPanelSellingEnabled, setChildPanelSellingEnabled] = useState(true);
 
   const [openDropdowns, setOpenDropdowns] = useState({
     notifications: false,
@@ -388,6 +389,24 @@ const Header = () => {
     };
 
     fetchContactSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchChildPanelSettings = async () => {
+      try {
+        const response = await fetch('/api/child-panel-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setChildPanelSellingEnabled(data.childPanelSellingEnabled ?? false);
+        }
+      } catch (error) {
+        console.error('Error fetching child panel settings:', error);
+
+        setChildPanelSellingEnabled(false);
+      }
+    };
+
+    fetchChildPanelSettings();
   }, []);
 
   const isAdmin =
@@ -550,6 +569,7 @@ const Header = () => {
             open={openDropdowns.plus}
             onOpenChange={(isOpen) => handleDropdownChange('plus', isOpen)}
             contactSystemEnabled={contactSystemEnabled}
+            childPanelSellingEnabled={childPanelSellingEnabled}
           />
         )}
       </div>

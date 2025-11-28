@@ -35,11 +35,9 @@ export default function TransferFund() {
   const { rate: globalRate, availableCurrencies } = useCurrency();
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
   
-  // Get BDT rate from available currencies, fallback to context rate or 110
   const bdtRate = useMemo(() => {
     const bdtCurrency = availableCurrencies.find(c => c.code === 'BDT');
     const rate = bdtCurrency?.rate || globalRate || 110;
-    // Ensure rate is a number and preserve decimal precision
     return typeof rate === 'number' ? rate : parseFloat(String(rate)) || 110;
   }, [availableCurrencies, globalRate]);
   const [username, setUsername] = useState('');

@@ -1,5 +1,4 @@
 import { PriceDisplay } from '@/components/PriceDisplay';
-import { Button } from '@/components/ui/button';
 import { formatNumber } from '@/lib/utils';
 import Link from 'next/link';
 import {
@@ -188,7 +187,7 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
                   <span className="text-gray-700 font-medium">Link Type</span>
                 </div>
                 <span className="text-gray-800 font-semibold">
-                  {service?.link_type || 'Profile link or Username'}
+                  {service?.orderLink === 'username' ? 'Username' : 'Order Link'}
                 </span>
               </div>
             </div>
@@ -208,12 +207,12 @@ export default function ServiceViewModal({ service, setIsOpen, isOpen }: any) {
           </div>
           <div className="px-6 pb-6">
             <Link href={`/new-order?sId=${service?.id}`}>
-              <Button 
-                className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+              <button 
+                className="btn btn-primary w-full h-12 text-lg font-semibold"
                 onClick={handleClose}
               >
                 Buy Now
-              </Button>
+              </button>
             </Link>
           </div>
         </div>

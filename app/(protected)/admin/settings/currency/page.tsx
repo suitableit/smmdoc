@@ -365,7 +365,6 @@ const PaymentCurrencyPage = () => {
   const saveCurrencySettings = async () => {
     setIsLoading(true);
     try {
-      // Ensure all rates are properly formatted as numbers
       const formattedCurrencies = currencies.map(c => ({
         ...c,
         rate: typeof c.rate === 'number' ? c.rate : parseFloat(String(c.rate)) || 1
@@ -440,13 +439,11 @@ const PaymentCurrencyPage = () => {
     setCurrencies(updatedCurrencies);
 
     try {
-      // Ensure rate is a number if it's being updated
       const formattedCurrencies = updatedCurrencies.map(c => ({
         ...c,
         rate: typeof c.rate === 'number' ? c.rate : parseFloat(String(c.rate)) || 1
       }));
 
-      // Only send currencies when editing, not currencySettings to avoid validation issues
       const response = await fetch('/api/admin/currency-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
