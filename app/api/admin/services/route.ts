@@ -2,7 +2,7 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth-helpers';
 import { NextResponse } from 'next/server';
-import { serializeServices } from '@/lib/utils';
+import { serializeServices, serializeService } from '@/lib/utils';
 
 export async function GET(request: Request) {
   try {
@@ -462,11 +462,14 @@ export async function POST(request: Request) {
     });
     console.log('Service created successfully:', newService.id);
 
+    // Serialize BigInt values to strings for JSON serialization
+    const serializedService = serializeService(newService);
+
     return NextResponse.json(
       {
         error: null,
         message: 'Service created successfully',
-        data: newService,
+        data: serializedService,
         success: true,
       },
       { status: 201 }

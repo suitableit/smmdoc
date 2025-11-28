@@ -93,6 +93,11 @@ export async function PUT(request: Request) {
         serviceType: { select: { name: true } }
       }
     });
+    
+    console.log(`[Update Service] Service ID: ${id}`);
+    console.log(`[Update Service] Current serviceTypeId from DB: ${currentService?.serviceTypeId} (type: ${typeof currentService?.serviceTypeId})`);
+    console.log(`[Update Service] Request body serviceTypeId: ${body.serviceTypeId} (type: ${typeof body.serviceTypeId})`);
+    console.log(`[Update Service] Full request body keys:`, Object.keys(body));
 
     if (!currentService) {
       return NextResponse.json({
@@ -127,6 +132,13 @@ export async function PUT(request: Request) {
       return undefined;
     };
 
+    const convertBigIntToString = (value: any): any => {
+      if (typeof value === 'bigint') {
+        return value.toString();
+      }
+      return value;
+    };
+
     const updateData: any = {};
 
     if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
@@ -157,7 +169,64 @@ export async function PUT(request: Request) {
       updateData.updateText = updateText;
     }
     if (serviceTypeId !== undefined && serviceTypeId !== null && serviceTypeId !== '') {
-      updateData.serviceTypeId = toInt(serviceTypeId);
+      const serviceTypeIdInt = toInt(serviceTypeId);
+      if (serviceTypeIdInt !== undefined && serviceTypeIdInt !== null) {
+        const currentServiceTypeId = currentService.serviceTypeId;
+        
+        const currentIdStr = currentServiceTypeId !== null && currentServiceTypeId !== undefined 
+          ? String(currentServiceTypeId) 
+          : '';
+        const newIdStr = String(serviceTypeIdInt);
+        
+        let currentIdNum: number | null = null;
+        if (currentIdStr !== '') {
+          const num = Number(currentServiceTypeId);
+          currentIdNum = isNaN(num) ? null : num;
+        }
+        const newIdNum = Number(serviceTypeIdInt);
+        
+        console.log(`[ServiceTypeId Debug] Service ID: ${id}`);
+        console.log(`[ServiceTypeId Debug] Current from DB: ${currentServiceTypeId} (type: ${typeof currentServiceTypeId})`);
+        console.log(`[ServiceTypeId Debug] Submitted: ${serviceTypeId} (type: ${typeof serviceTypeId})`);
+        console.log(`[ServiceTypeId Debug] Current as string: "${currentIdStr}"`);
+        console.log(`[ServiceTypeId Debug] New as string: "${newIdStr}"`);
+        console.log(`[ServiceTypeId Debug] Current as number: ${currentIdNum}`);
+        console.log(`[ServiceTypeId Debug] New as number: ${newIdNum}`);
+        console.log(`[ServiceTypeId Debug] String match: ${currentIdStr === newIdStr}`);
+        console.log(`[ServiceTypeId Debug] Number match: ${currentIdNum !== null && !isNaN(newIdNum) && currentIdNum === newIdNum}`);
+        
+        const valuesMatch = (currentIdStr === newIdStr) || 
+                           (currentIdNum !== null && !isNaN(newIdNum) && currentIdNum === newIdNum);
+        
+        if (valuesMatch) {
+          const serviceTypeExists = await db.serviceTypes.findUnique({
+            where: { id: serviceTypeIdInt }
+          });
+          
+          if (serviceTypeExists) {
+            console.log(`[ServiceTypeId] ✅ Values match (${currentIdStr}/${currentIdNum}) and service type exists - skipping update`);
+          } else {
+            console.log(`[ServiceTypeId] ✅ Values match (${currentIdStr}/${currentIdNum}) but service type doesn't exist - skipping update (not changing invalid ID)`);
+          }
+        } else {
+          console.log(`[ServiceTypeId] ⚠️ Values differ ("${currentIdStr}"/${currentIdNum} !== "${newIdStr}"/${newIdNum}) - validating new service type...`);
+          const serviceTypeExists = await db.serviceTypes.findUnique({
+            where: { id: serviceTypeIdInt }
+          });
+
+          if (serviceTypeExists) {
+            updateData.serviceTypeId = serviceTypeIdInt;
+            console.log(`[ServiceTypeId] ✅ Service type ${serviceTypeIdInt} exists, will update`);
+          } else {
+            console.log(`[ServiceTypeId] ❌ Service type ${serviceTypeIdInt} does not exist, returning error`);
+            return NextResponse.json({
+              error: `Service type with ID ${serviceTypeIdInt} does not exist. Please select a valid service type from the dropdown.`,
+              data: null,
+              success: false,
+            }, { status: 400 });
+          }
+        }
+      }
     }
     if (refill !== undefined && refill !== null) {
       updateData.refill = toBool(refill);
@@ -221,8 +290,8 @@ export async function PUT(request: Request) {
       const newValue = (updateData as any)[key];
       if (oldValue !== newValue) {
         changes[key] = {
-          from: oldValue,
-          to: newValue
+          from: convertBigIntToString(oldValue),
+          to: convertBigIntToString(newValue)
         };
       }
     });
@@ -258,11 +327,11 @@ export async function PUT(request: Request) {
 
           if (oldValue !== newValue) {
             changes[key] = {
-              from: oldValue,
-              to: newValue
+              from: convertBigIntToString(oldValue),
+              to: convertBigIntToString(newValue)
             };
-            oldValues[key] = oldValue;
-            newValues[key] = newValue;
+            oldValues[key] = convertBigIntToString(oldValue);
+            newValues[key] = convertBigIntToString(newValue);
           }
         });
 
@@ -293,12 +362,50 @@ export async function PUT(request: Request) {
       data: null,
       success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error updating service:', error);
+    console.error('Error code:', error?.code);
+    console.error('Error meta:', error?.meta);
+    
+    if (error?.code === 'P2003') {
+      const fieldName = error?.meta?.field_name || 'unknown field';
+      const targetModel = error?.meta?.target || 'unknown model';
+      console.error(`Foreign key constraint violation on field: ${fieldName}, target: ${targetModel}`);
+      
+      if (fieldName.includes('serviceType') || targetModel.includes('ServiceType')) {
+        return NextResponse.json({
+          error: 'The selected service type does not exist. Please select a valid service type from the dropdown.',
+          data: null,
+          success: false,
+        }, { status: 400 });
+      } else if (fieldName.includes('category') || targetModel.includes('Category')) {
+        return NextResponse.json({
+          error: 'The selected category does not exist. Please select a valid category from the dropdown.',
+          data: null,
+          success: false,
+        }, { status: 400 });
+      } else {
+        return NextResponse.json({
+          error: `Foreign key constraint violation on ${fieldName}. The referenced record does not exist. Please check service type, category, or other related fields.`,
+          data: null,
+          success: false,
+        }, { status: 400 });
+      }
+    }
+    
+    if (error?.code === 'P2025') {
+      return NextResponse.json({
+        error: 'Service not found or has been deleted.',
+        data: null,
+        success: false,
+      }, { status: 404 });
+    }
+
     return NextResponse.json({
-      error: 'Failed to update services' + error,
+      error: 'Failed to update service: ' + (error?.message || String(error)),
       data: null,
       success: false,
-    });
+    }, { status: 500 });
   }
 }
 
@@ -331,7 +438,6 @@ export async function GET(request: Request) {
       });
     }
 
-    // Serialize BigInt values to strings for JSON serialization
     const serializedResult = serializeService(result);
 
     return NextResponse.json(
