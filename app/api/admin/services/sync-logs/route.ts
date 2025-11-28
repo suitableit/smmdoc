@@ -30,7 +30,6 @@ export async function GET(req: NextRequest) {
     if (search) {
       const searchTrimmed = search.trim();
       if (searchBy === 'api_provider') {
-        // Search in serviceName field which may contain provider info
         whereClause.serviceName = { contains: searchTrimmed };
       } else if (searchBy === 'service_name') {
         whereClause.serviceName = { contains: searchTrimmed };
@@ -43,7 +42,6 @@ export async function GET(req: NextRequest) {
       }
     }
     
-    // Fetch services with updateText (same as services/updates page)
     const servicesWhereClause: any = {
       status: 'active',
       updateText: {
@@ -51,11 +49,9 @@ export async function GET(req: NextRequest) {
       },
     };
 
-    // Apply search filter
     if (search) {
       const searchTrimmed = search.trim();
       if (searchBy === 'api_provider') {
-        // We'll search by provider name later after fetching
       } else if (searchBy === 'service_name') {
         servicesWhereClause.name = { contains: searchTrimmed };
       } else {
@@ -66,7 +62,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fetch all services with updateText (similar to services/updates)
     const allServices = await db.services.findMany({
       where: servicesWhereClause,
       select: {
@@ -79,15 +74,13 @@ export async function GET(req: NextRequest) {
       orderBy: {
         updatedAt: 'desc',
       },
-      take: 1000, // Max fetch limit like services/updates
+      take: 1000,
     });
 
-    // Filter services with valid updateText
     let filteredServices = allServices.filter(
       (service) => service.updateText && service.updateText.trim().length > 0
     );
 
-    // Fetch all API providers first for filtering and mapping
     const apiProviders = await db.apiProviders.findMany({
       select: {
         id: true,
@@ -97,7 +90,6 @@ export async function GET(req: NextRequest) {
 
     const providerMap = new Map(apiProviders.map(p => [p.id, p.name]));
 
-    // If searching by API provider, filter by provider name
     if (search && searchBy === 'api_provider') {
       const searchTrimmed = search.trim().toLowerCase();
       filteredServices = filteredServices.filter((service) => {
@@ -110,7 +102,6 @@ export async function GET(req: NextRequest) {
     const total = filteredServices.length;
     const paginatedServices = filteredServices.slice(skip, skip + limit);
 
-    // Helper function to format changes exactly like services/updates page
     const formatChanges = (updateText: string): string => {
       try {
         const updateData = JSON.parse(updateText || '{}');
@@ -193,7 +184,6 @@ export async function GET(req: NextRequest) {
         return updates.length > 0 ? updates.join(', ') : 'Service updated';
 
       } catch (error) {
-        // Fallback parsing
         const text = updateText || '';
         if (text.toLowerCase().includes('created') || text.toLowerCase().includes('new')) {
           return 'New service';
@@ -211,41 +201,32 @@ export async function GET(req: NextRequest) {
       }
     };
 
-    // Map services to sync log format
     const logs = paginatedServices.map((service, index) => {
-      // Determine if this is a self (admin) modified service or from API provider
-      let apiProvider = 'Self'; // Default to Self
+      let apiProvider = 'Self';
       
       try {
         const updateData = JSON.parse(service.updateText || '{}');
         
-        // Check if updateText has updatedBy field (indicates manual admin update)
         if (updateData.updatedBy) {
-          // This is a self (admin) modified service
           apiProvider = 'Self';
         } else if (updateData.provider || updateData.providerId) {
-          // This is from an API provider sync - get provider name
           const providerIdFromUpdate = updateData.providerId;
           const serviceProviderId = service.providerId || providerIdFromUpdate;
           
           if (serviceProviderId && providerMap.has(serviceProviderId)) {
             apiProvider = providerMap.get(serviceProviderId)!;
           } else if (updateData.provider) {
-            // Use provider name directly from updateText if available
             apiProvider = updateData.provider;
           }
         } else if (service.providerId && providerMap.has(service.providerId)) {
-          // Service has providerId but updateText doesn't have provider info - still show provider
           apiProvider = providerMap.get(service.providerId)!;
         }
       } catch {
-        // If parsing fails, check providerId directly
         if (service.providerId && providerMap.has(service.providerId)) {
           apiProvider = providerMap.get(service.providerId)!;
         }
       }
 
-      // Determine change type from updateText
       let changeType: 'added' | 'updated' | 'deleted' | 'error' = 'updated';
       try {
         const updateData = JSON.parse(service.updateText || '{}');
@@ -258,14 +239,12 @@ export async function GET(req: NextRequest) {
           changeType = 'error';
         }
       } catch {
-        // Default to updated
       }
 
-      // Format changes text
       const changesText = formatChanges(service.updateText || '');
 
       return {
-        id: service.id, // Use service ID
+        id: service.id,
         apiProvider,
         serviceName: service.name,
         changes: changesText,
@@ -406,8 +385,6 @@ export async function DELETE(req: NextRequest) {
       );
     }
     
-    // For delete, we'll clear the updateText from services instead
-    // Since we're showing services with updateText, deleting means clearing the updateText
     const result = await db.services.updateMany({
       where: {
         id: { in: ids.map((id: string | number) => parseInt(String(id))) },

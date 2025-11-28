@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useTransition } from 'react';
+import React, { useCallback, useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
   FaExclamationTriangle,
@@ -97,6 +97,26 @@ export const EditServiceForm = ({
     isLoading: providersLoading,
   } = useSWR('/api/admin/providers?filter=active', fetcher);
   const [isPending, startTransition] = useTransition();
+  const [orderLinkType, setOrderLinkType] = useState<'link' | 'username'>('link');
+
+  const detectOrderLinkType = useCallback((serviceName: string, serviceType?: string): 'link' | 'username' => {
+    const name = serviceName.toLowerCase();
+    const type = serviceType?.toLowerCase() || '';
+
+    const usernameKeywords = ['comment', 'mention', 'reply', 'custom', 'dm', 'message', 'tag'];
+
+    const linkKeywords = ['follower', 'like', 'view', 'subscriber', 'share', 'watch', 'impression'];
+
+    if (usernameKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
+      return 'username';
+    }
+
+    if (linkKeywords.some(keyword => name.includes(keyword) || type.includes(keyword))) {
+      return 'link';
+    }
+
+    return 'link';
+  }, []);
 
   const {
     register,
@@ -117,6 +137,132 @@ export const EditServiceForm = ({
   const refillValue = watch('refill');
 
   const modeValue = watch('mode');
+
+  const providerIdValue = watch('providerId');
+
+  const {
+    data: apiServicesData,
+    error: apiServicesError,
+    isLoading: apiServicesLoading,
+  } = useSWR(
+    modeValue === 'auto' && providerIdValue ? `/api/admin/providers/${providerIdValue}/services` : null,
+    fetcher
+  );
+
+  const providerServiceIdValue = watch('providerServiceId');
+
+  const mapApiServiceTypeToInternalType = (apiServiceType: string): string | null => {
+    if (!apiServiceType || !serviceTypesData?.data) return null;
+
+    const normalizedApiType = apiServiceType.toLowerCase().trim();
+
+    const typeMapping: { [key: string]: string[] } = {
+      '1': ['default', 'standard', 'normal', 'regular', 'basic'],
+      '2': ['package', 'pack', 'bundle', 'fixed'],
+      '3': ['special comments', 'custom comments', 'comments', 'special comment'],
+      '4': ['package comments', 'pack comments', 'bundle comments', 'package comment'],
+      '11': ['auto likes', 'auto like', 'subscription likes', 'auto-likes'],
+      '12': ['auto views', 'auto view', 'subscription views', 'auto-views'],
+      '13': ['auto comments', 'auto comment', 'subscription comments', 'auto-comments'],
+      '14': ['limited auto likes', 'limited likes', 'limited auto like'],
+      '15': ['limited auto views', 'limited views', 'limited auto view'],
+    };
+
+    for (const [internalTypeId, apiTypeVariants] of Object.entries(typeMapping)) {
+      if (apiTypeVariants.some(variant => normalizedApiType.includes(variant))) {
+
+        const serviceTypeExists = serviceTypesData.data.find(
+          (type: any) => type.id.toString() === internalTypeId
+        );
+        if (serviceTypeExists) {
+          return internalTypeId;
+        }
+      }
+    }
+
+    for (const serviceType of serviceTypesData.data) {
+      const normalizedInternalName = serviceType.name.toLowerCase();
+      if (normalizedApiType.includes(normalizedInternalName) || 
+          normalizedInternalName.includes(normalizedApiType)) {
+        return serviceType.id.toString();
+      }
+    }
+
+    return null;
+  };
+
+  useEffect(() => {
+    if (providerServiceIdValue && apiServicesData?.data?.services) {
+      const selectedService = apiServicesData.data.services.find(
+        (service: any) => service.id.toString() === providerServiceIdValue
+      );
+
+      if (selectedService) {
+        setValue('name', selectedService.name || '');
+        setValue('description', selectedService.description || '');
+        setValue('rate', selectedService.rate?.toString() || '');
+        setValue('min_order', selectedService.min?.toString() || '');
+        setValue('max_order', selectedService.max?.toString() || '');
+        setValue('perqty', '1000');
+        setValue('avg_time', '0-1 hours');
+
+        if (selectedService.type && serviceTypesData?.data) {
+          const mappedServiceTypeId = mapApiServiceTypeToInternalType(selectedService.type);
+          if (mappedServiceTypeId) {
+            setValue('serviceTypeId', mappedServiceTypeId);
+            console.log(`🎯 Auto-filled service type: ${selectedService.type} → ID ${mappedServiceTypeId}`);
+          } else {
+            console.log(`⚠️ No mapping found for service type: ${selectedService.type}`);
+          }
+        }
+
+        let refillBoolValue = false;
+        if (selectedService.refill !== undefined && selectedService.refill !== null) {
+          if (typeof selectedService.refill === 'boolean') {
+            refillBoolValue = selectedService.refill;
+          } else if (typeof selectedService.refill === 'string') {
+            const refillStr = selectedService.refill.toLowerCase();
+            refillBoolValue = (refillStr === 'true' || refillStr === '1' || refillStr === 'on' || refillStr === 'yes');
+          } else if (typeof selectedService.refill === 'number') {
+            refillBoolValue = selectedService.refill > 0;
+          }
+        }
+
+        let cancelBoolValue = false;
+        if (selectedService.cancel !== undefined && selectedService.cancel !== null) {
+          if (typeof selectedService.cancel === 'boolean') {
+            cancelBoolValue = selectedService.cancel;
+          } else if (typeof selectedService.cancel === 'string') {
+            const cancelStr = selectedService.cancel.toLowerCase();
+            cancelBoolValue = (cancelStr === 'true' || cancelStr === '1' || cancelStr === 'on' || cancelStr === 'yes');
+          } else if (typeof selectedService.cancel === 'number') {
+            cancelBoolValue = selectedService.cancel > 0;
+          }
+        }
+
+        setValue('refill', refillBoolValue);
+        setValue('cancel', cancelBoolValue);
+
+        if (refillBoolValue) {
+          const refillDays = selectedService.refillDays || selectedService.refill_days || 30;
+          const refillDisplay = selectedService.refillDisplay || selectedService.refill_display || 24;
+
+          setValue('refillDays', Number(refillDays) as any);
+          setValue('refillDisplay', Number(refillDisplay) as any);
+        } else {
+          setValue('refillDays', undefined as any);
+          setValue('refillDisplay', undefined as any);
+        }
+
+        const detectedType = detectOrderLinkType(selectedService.name, selectedService.type);
+        setValue('orderLink', detectedType);
+        setOrderLinkType(detectedType);
+      }
+    } else if (!providerServiceIdValue) {
+      setValue('orderLink', 'link');
+      setOrderLinkType('link');
+    }
+  }, [providerServiceIdValue, apiServicesData, serviceTypesData, detectOrderLinkType, setValue]);
 
   useEffect(() => {
     console.log('Refill value changed:', refillValue, typeof refillValue);
@@ -147,6 +293,9 @@ export const EditServiceForm = ({
 
       const providerIdValue = serviceData.data.providerId ? String(serviceData.data.providerId) : '';
 
+      const orderLinkValue = serviceData.data.orderLink || createServiceDefaultValues.orderLink;
+      setOrderLinkType(orderLinkValue as 'link' | 'username');
+
       const resetData = {
         categoryId: serviceData.data.categoryId ? String(serviceData.data.categoryId) : '',
         name: serviceData.data.name || '',
@@ -165,7 +314,7 @@ export const EditServiceForm = ({
         cancel: Boolean(serviceData.data.cancel),
         serviceSpeed: serviceSpeedValue,
         exampleLink: serviceData.data.exampleLink || createServiceDefaultValues.exampleLink,
-        orderLink: serviceData.data.orderLink || createServiceDefaultValues.orderLink,
+        orderLink: orderLinkValue,
         providerId: providerIdValue,
         providerServiceId: serviceData.data.providerServiceId || createServiceDefaultValues.providerServiceId,
       };
@@ -237,7 +386,10 @@ export const EditServiceForm = ({
         }
       } catch (error: any) {
         console.error('Edit API Error:', error);
-        showToast(`Error: ${error.message || 'Something went wrong'}`, 'error');
+        console.error('Error response:', error.response?.data);
+        
+        const errorMessage = error.response?.data?.error || error.message || 'Something went wrong';
+        showToast(`Error: ${errorMessage}`, 'error');
       }
     });
   };
@@ -425,6 +577,39 @@ export const EditServiceForm = ({
                   </select>
                 </FormControl>
                 <FormMessage>{errors.providerId?.message}</FormMessage>
+              </FormItem>
+            )}
+            {modeValue === 'auto' && providerIdValue && (
+              <FormItem className="md:col-span-2">
+                <FormLabel
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  API Service <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <select
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    {...register('providerServiceId')}
+                    disabled={isPending || apiServicesLoading}
+                    required={modeValue === 'auto' && !!providerIdValue}
+                  >
+                    <option value="">
+                      {apiServicesLoading ? 'Loading services...' : 'Select API Service'}
+                    </option>
+                    {apiServicesData?.data?.services?.map((service: any) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name}
+                      </option>
+                    ))}
+                  </select>
+                </FormControl>
+                <FormMessage>{errors.providerServiceId?.message}</FormMessage>
+                {apiServicesError && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Failed to load services. Please try again.
+                  </p>
+                )}
               </FormItem>
             )}
             <div className="md:col-span-2 grid grid-cols-3 gap-6">
