@@ -30,6 +30,7 @@ interface AdminSections {
   transactions: NavItem[];
   support: NavItem[];
   posts: NavItem[];
+  affiliates: NavItem[];
   additional: NavItem[];
   reseller: NavItem[];
   settings: NavItem[];
@@ -203,13 +204,16 @@ export default function SideBarNav({
         posts: items.filter((item) =>
           ['Blogs', 'Announcements'].includes(item.title)
         ),
-        additional: items.filter((item) => {
-          const additionalItems = ['Affiliates', 'Analytics & Reports'];
-          if (!affiliateSystemEnabled && item.title === 'Affiliates') {
+        affiliates: items.filter((item) => {
+          const affiliateItems = ['Affiliate Users', 'Withdrawals'];
+          if (!affiliateSystemEnabled && affiliateItems.includes(item.title)) {
             return false;
           }
-          return additionalItems.includes(item.title);
+          return affiliateItems.includes(item.title);
         }),
+        additional: items.filter((item) =>
+          ['Analytics & Reports'].includes(item.title)
+        ),
         reseller: items.filter((item) => {
           const resellerItems = ['Child Panels'];
           if (!childPanelSellingEnabled && item.title === 'Child Panels') {
@@ -586,6 +590,7 @@ export default function SideBarNav({
             {renderNavSection('Transactions', getSectionItems('transactions'))}
             {renderNavSection('Support', getSectionItems('support'))}
             {renderNavSection('Posts', getSectionItems('posts'))}
+            {renderNavSection('Affiliates', getSectionItems('affiliates'))}
             {renderNavSection('Additional', getSectionItems('additional'))}
             {renderNavSection('Reseller Panels', getSectionItems('reseller'))}
             {renderNavSection('Settings', getSectionItems('settings'))}

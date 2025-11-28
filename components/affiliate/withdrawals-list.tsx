@@ -1,7 +1,8 @@
 'use client';
 
 import {
-    FaSearch
+    FaSearch,
+    FaEye
 } from 'react-icons/fa';
 
 type Withdrawal = {
@@ -15,18 +16,21 @@ type Withdrawal = {
   createdAt: string;
   processedAt?: string;
   notes?: string;
+  cancelReason?: string | null;
 };
 
 interface WithdrawalsListProps {
   withdrawals: Withdrawal[];
   page: number;
   limit: number;
+  onViewCancelReason?: (reason: string) => void;
 }
 
 export function WithdrawalsList({
   withdrawals,
   page,
   limit,
+  onViewCancelReason,
 }: WithdrawalsListProps) {
 
   const formatAmount = (amount: number) => {
@@ -62,7 +66,7 @@ export function WithdrawalsList({
                 Sl. No.
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
-                Withdrawal ID
+                Transaction ID
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Amount
@@ -75,6 +79,9 @@ export function WithdrawalsList({
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Status
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Action
               </th>
             </tr>
           </thead>
@@ -93,7 +100,7 @@ export function WithdrawalsList({
                 </td>
                 <td className="py-3 px-4">
                   <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
-                    {withdrawal.transaction_id || `WD-${withdrawal.id}`}
+                    {withdrawal.transaction_id || '-'}
                   </span>
                 </td>
                 <td className="py-3 px-4">
@@ -117,6 +124,17 @@ export function WithdrawalsList({
                 </td>
                 <td className="py-3 px-4">
                   <StatusBadge status={withdrawal.status} />
+                </td>
+                <td className="py-3 px-4">
+                  {withdrawal.status === 'Cancelled' && withdrawal.cancelReason && onViewCancelReason ? (
+                    <button
+                      onClick={() => onViewCancelReason(withdrawal.cancelReason!)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md transition-colors duration-200"
+                    >
+                      <FaEye className="h-3 w-3" />
+                      View
+                    </button>
+                  ) : null}
                 </td>
               </tr>
             );
