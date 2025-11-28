@@ -41,7 +41,6 @@ export async function POST(
       )
     }
 
-    // Prepare notes with cancellation reason if provided
     const updateData: any = {
       status: 'cancelled',
       updatedAt: new Date(),

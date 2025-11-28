@@ -48,7 +48,6 @@ export async function POST(
       )
     }
 
-    // Store transaction ID in notes (not marked as edited yet since it's initial approval)
     const notesData = JSON.stringify({ 
       transactionId: transactionId.trim(),
       transactionIdEdited: false 

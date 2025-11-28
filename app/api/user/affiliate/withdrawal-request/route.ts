@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         status: 'pending',
         requestedAt: now,
         updatedAt: now,
-        notes: null, // No withdrawal ID generated for pending requests
+        notes: null,
       },
     })
 

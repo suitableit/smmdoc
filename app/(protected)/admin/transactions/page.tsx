@@ -186,182 +186,6 @@ const AdminAllTransactionsPage = () => {
     }
   }, [availableCurrencies]);
 
-  const dummyTransactions: Transaction[] = [
-    {
-      id: 1,
-      user: {
-        id: 1,
-        email: 'john.doe@example.com',
-        name: 'John Doe',
-        username: 'johndoe',
-      },
-      transactionId: '',
-      amount: 500,
-      currency: 'BDT',
-      phone: '+8801712345678',
-      method: 'bkash',
-      type: 'withdrawal',
-      status: 'pending',
-      admin_status: 'pending',
-      notes: 'Pending withdrawal - awaiting approval',
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-15T10:30:00Z',
-    },
-    {
-      id: 2,
-      user: {
-        id: 2,
-        email: 'jane.smith@example.com',
-        name: 'Jane Smith',
-        username: 'janesmith',
-      },
-      transactionId: 'TXN202401002',
-      amount: 1000,
-      currency: 'BDT',
-      phone: '+8801887654321',
-      method: 'nagad',
-      type: 'deposit',
-      status: 'completed',
-      admin_status: 'Success',
-      createdAt: '2024-01-14T15:45:00Z',
-      updatedAt: '2024-01-14T16:00:00Z',
-      processedAt: '2024-01-14T16:00:00Z',
-    },
-    {
-      id: 3,
-      user: {
-        id: 3,
-        email: 'alex.johnson@example.com',
-        name: 'Alex Johnson',
-        username: 'alexj',
-      },
-      transactionId: '',
-      amount: 250,
-      currency: 'USD',
-      phone: '+8801555123456',
-      method: 'rocket',
-      type: 'withdrawal',
-      status: 'pending',
-      admin_status: 'pending',
-      createdAt: '2024-01-13T09:20:00Z',
-      updatedAt: '2024-01-13T09:35:00Z',
-    },
-    {
-      id: 4,
-      user: {
-        id: 4,
-        email: 'sarah.wilson@example.com',
-        name: 'Sarah Wilson',
-        username: 'sarahw',
-      },
-      transactionId: 'TXN202401004',
-      amount: 750,
-      currency: 'BDT',
-      phone: '+8801666789012',
-      method: 'bkash',
-      type: 'deposit',
-      status: 'pending',
-      admin_status: 'pending',
-      createdAt: '2024-01-12T14:10:00Z',
-      updatedAt: '2024-01-12T14:10:00Z',
-    },
-    {
-      id: 5,
-      user: {
-        id: 5,
-        email: 'mike.brown@example.com',
-        name: 'Mike Brown',
-        username: 'mikeb',
-      },
-      transactionId: 'TXN202401005',
-      amount: 2000,
-      currency: 'BDT',
-      phone: '+8801777345678',
-      method: 'card',
-      type: 'deposit',
-      status: 'completed',
-      admin_status: 'Suspicious',
-      createdAt: '2024-01-11T11:25:00Z',
-      updatedAt: '2024-01-11T11:40:00Z',
-    },
-    {
-      id: 6,
-      user: {
-        id: 6,
-        email: 'robert.taylor@example.com',
-        name: 'Robert Taylor',
-        username: 'robertt',
-      },
-      transactionId: '',
-      amount: 600,
-      currency: 'BDT',
-      phone: '+8801444567890',
-      method: 'nagad',
-      type: 'withdrawal',
-      status: 'pending',
-      admin_status: 'pending',
-      createdAt: '2024-01-09T16:20:00Z',
-      updatedAt: '2024-01-09T16:20:00Z',
-    },
-    {
-      id: 7,
-      user: {
-        id: 7,
-        email: 'lisa.garcia@example.com',
-        name: 'Lisa Garcia',
-        username: 'lisag',
-      },
-      transactionId: 'TXN202401008',
-      amount: 850,
-      currency: 'BDT',
-      phone: '+8801111234567',
-      method: 'bkash',
-      type: 'deposit',
-      status: 'pending',
-      admin_status: 'pending',
-      createdAt: '2024-01-08T08:45:00Z',
-      updatedAt: '2024-01-08T08:45:00Z',
-    },
-    {
-      id: 8,
-      user: {
-        id: 8,
-        email: 'chris.martinez@example.com',
-        name: 'Chris Martinez',
-        username: 'chrism',
-      },
-      transactionId: 'TXN202401009',
-      amount: 400,
-      currency: 'USD',
-      phone: '+8801222345678',
-      method: 'card',
-      type: 'withdrawal',
-      status: 'pending',
-      admin_status: 'pending',
-      createdAt: '2024-01-07T12:20:00Z',
-      updatedAt: '2024-01-07T12:20:00Z',
-    },
-    {
-      id: 9,
-      user: {
-        id: 9,
-        email: 'anna.robinson@example.com',
-        name: 'Anna Robinson',
-        username: 'annar',
-      },
-      transactionId: 'TXN202401010',
-      amount: 1200,
-      currency: 'BDT',
-      phone: '+8801333456789',
-      method: 'nagad',
-      type: 'deposit',
-      status: 'completed',
-      admin_status: 'Success',
-      createdAt: '2024-01-06T17:10:00Z',
-      updatedAt: '2024-01-06T17:25:00Z',
-      processedAt: '2024-01-06T17:25:00Z',
-    },
-  ];
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState<TransactionStats>({
@@ -466,41 +290,6 @@ const AdminAllTransactionsPage = () => {
   } | null>(null);
   const [balanceSubmitting, setBalanceSubmitting] = useState(false);
 
-  const calculateStatusCounts = (transactionsData: Transaction[]) => {
-    const counts = {
-      pending: 0,
-      completed: 0,
-      cancelled: 0,
-    };
-
-    transactionsData.forEach((transaction) => {
-      if (transaction.status && counts.hasOwnProperty(transaction.status)) {
-        counts[transaction.status as keyof typeof counts]++;
-      }
-    });
-
-    return counts;
-  };
-
-  const fetchAllTransactionsForCounts = useCallback(async () => {
-    try {
-      const statusCounts = calculateStatusCounts(dummyTransactions);
-
-      setStats((prev) => ({
-        ...prev,
-        pendingTransactions: statusCounts.pending,
-        completedTransactions: statusCounts.completed,
-        statusBreakdown: {
-          ...prev.statusBreakdown,
-          pending: statusCounts.pending,
-          completed: statusCounts.completed,
-          cancelled: statusCounts.cancelled,
-        },
-      }));
-    } catch (error) {
-      console.error('Error fetching transactions for counts:', error);
-    }
-  }, []);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -670,8 +459,7 @@ const AdminAllTransactionsPage = () => {
 
   useEffect(() => {
     fetchStats();
-    fetchAllTransactionsForCounts();
-  }, [fetchStats, fetchAllTransactionsForCounts]);
+  }, [fetchStats]);
 
   useEffect(() => {
     if (pagination.total > 0) {
@@ -778,7 +566,6 @@ const AdminAllTransactionsPage = () => {
     setTransactionsLoading(true);
     fetchTransactions();
     fetchStats();
-    fetchAllTransactionsForCounts();
     showToast('Transactions refreshed successfully!', 'success');
   };
 
@@ -946,7 +733,6 @@ const AdminAllTransactionsPage = () => {
 
         showToast('Transaction approved successfully!', 'success');
         fetchStats();
-        fetchAllTransactionsForCounts();
       } else {
         showToast(result.error || 'Failed to approve transaction', 'error');
       }
@@ -998,7 +784,6 @@ const AdminAllTransactionsPage = () => {
 
         showToast('Transaction cancelled successfully!', 'success');
         fetchStats();
-        fetchAllTransactionsForCounts();
       } else {
         showToast(result.error || 'Failed to cancel transaction', 'error');
       }
@@ -1048,7 +833,6 @@ const AdminAllTransactionsPage = () => {
         );
 
         fetchStats();
-        fetchAllTransactionsForCounts();
       } else {
         showToast(
           result.error || 'Failed to update transaction status',

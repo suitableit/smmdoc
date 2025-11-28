@@ -48,7 +48,6 @@ export async function POST(
       )
     }
 
-    // Check if transaction ID has already been edited
     let notesData: any = {}
     let transactionIdEdited = false
 
@@ -60,7 +59,6 @@ export async function POST(
           transactionIdEdited = parsedNotes.transactionIdEdited === true
         }
       } catch (e) {
-        // If notes is not JSON, create new structure
       }
     }
 
@@ -71,7 +69,6 @@ export async function POST(
       )
     }
 
-    // Update transaction ID and mark as edited
     notesData.transactionId = transactionId.trim()
     notesData.transactionIdEdited = true
 
