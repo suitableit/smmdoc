@@ -97,13 +97,6 @@ export const userNavItems = [
     label: 'Contact Support',
     roles: ['user'],
   },
-  {
-    title: 'FAQs',
-    href: '/faqs',
-    icon: 'FaQuestionCircle',
-    label: 'FAQs',
-    roles: ['user'],
-  },
 
   {
     title: 'API Integration',
@@ -125,6 +118,13 @@ export const userNavItems = [
     href: '/affiliate',
     icon: 'FaShareAlt',
     label: 'Affiliate Program',
+    roles: ['user'],
+  },
+  {
+    title: 'FAQs',
+    href: '/faqs',
+    icon: 'FaQuestionCircle',
+    label: 'FAQs',
     roles: ['user'],
   },
   {

@@ -1,6 +1,5 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
@@ -10,12 +9,10 @@ import {
     FaExclamationTriangle,
     FaReceipt,
     FaSearch,
-    FaSync,
     FaTimes,
+    FaSync,
 } from 'react-icons/fa';
-import { TransactionsList } from '../../../components/transactions/transactions-list';
-
-const ButtonLoader = () => <div className="loading-spinner"></div>;
+import { WithdrawalsList } from '../../../../components/affiliate/withdrawals-list';
 
 const Toast = ({
   message,
@@ -34,69 +31,23 @@ const Toast = ({
   </div>
 );
 
-type Transaction = {
+type Withdrawal = {
   id: number;
   invoice_id: number;
   amount: number;
   status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
   method: string;
   payment_method?: string;
-  transaction_id?: string | null;
+  transaction_id?: string;
   createdAt: string;
-  transaction_type?: 'deposit' | 'withdrawal' | 'purchase' | 'refund';
-  reference_id?: string;
-  sender_number?: string;
-  phone?: string;
-  currency?: string;
+  processedAt?: string;
+  notes?: string;
 };
 
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-}
-
-function StatusBadge({ status }: { status: Transaction['status'] }) {
-  switch (status) {
-    case 'Success':
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-          Success
-        </span>
-      );
-    case 'Processing':
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
-          Processing
-        </span>
-      );
-    case 'Cancelled':
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-          Cancelled
-        </span>
-      );
-    case 'Failed':
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-          Failed
-        </span>
-      );
-    default:
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-          {status}
-        </span>
-      );
-  }
-}
-
-export default function TransactionsPage() {
+export default function WithdrawalsPage() {
   const { appName } = useAppNameWithFallback();
 
-  const { currency, rate } = useCurrency();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -121,7 +72,7 @@ export default function TransactionsPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    setPageTitle('Transactions', appName);
+    setPageTitle('Withdrawals', appName);
   }, [appName]);
 
   useEffect(() => {
@@ -142,74 +93,6 @@ export default function TransactionsPage() {
     setIsSearching(hasSearchTerm);
   }, [searchTerm]);
 
-  const mockTransactions = [
-    {
-      id: 1,
-      invoice_id: 123456789,
-      amount: 500,
-      status: 'Success' as const,
-      method: 'uddoktapay',
-      payment_method: 'bKash',
-      transaction_id: 'TRX-123456',
-      createdAt: new Date().toISOString(),
-      transaction_type: 'deposit' as const,
-      sender_number: '01712345678',
-      phone: '01712345678',
-    },
-    {
-      id: 2,
-      invoice_id: 987654321,
-      amount: 1000,
-      status: 'Success' as const,
-      method: 'uddoktapay',
-      payment_method: 'Nagad',
-      transaction_id: 'TRX-987654',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      transaction_type: 'deposit' as const,
-      sender_number: '01823456789',
-      phone: '01823456789',
-    },
-    {
-      id: 3,
-      invoice_id: 456789123,
-      amount: 750,
-      status: 'Processing' as const,
-      method: 'uddoktapay',
-      payment_method: 'Rocket',
-      transaction_id: 'TRX-456789',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      transaction_type: 'deposit' as const,
-      sender_number: '01934567890',
-      phone: '01934567890',
-    },
-    {
-      id: 4,
-      invoice_id: 111222333,
-      amount: 300,
-      status: 'Failed' as const,
-      method: 'uddoktapay',
-      payment_method: 'bKash',
-      transaction_id: 'TRX-111222',
-      createdAt: new Date(Date.now() - 259200000).toISOString(),
-      transaction_type: 'deposit' as const,
-      sender_number: '01645678901',
-      phone: '01645678901',
-    },
-    {
-      id: 5,
-      invoice_id: 444555666,
-      amount: 1200,
-      status: 'Cancelled' as const,
-      method: 'uddoktapay',
-      payment_method: 'Nagad',
-      transaction_id: 'TRX-444555',
-      createdAt: new Date(Date.now() - 345600000).toISOString(),
-      transaction_type: 'deposit' as const,
-      sender_number: '01756789012',
-      phone: '01756789012',
-    },
-  ];
-
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -218,10 +101,9 @@ export default function TransactionsPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const fetchTransactions = async () => {
+  const fetchWithdrawals = async () => {
     try {
-      setLoading(true);
-
+      setError(null);
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -231,15 +113,26 @@ export default function TransactionsPage() {
         params.append('status', activeTab);
       }
 
-      const response = await fetch(`/api/user/transactions?${params.toString()}`);
+      if (debouncedSearchTerm.trim()) {
+        params.append('search', debouncedSearchTerm.trim());
+      }
+
+      const response = await fetch(`/api/user/affiliate/withdrawals?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch withdrawals');
       }
 
       const data = await response.json();
-      console.log('API Response:', data);
-      const transactionsToShow = data.transactions || [];
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch withdrawals');
+      }
+
+      const withdrawalsToShow = data.transactions || [];
+
+      setWithdrawals(withdrawalsToShow);
       setPagination(data.pagination || {
         page: 1,
         limit: 10,
@@ -248,104 +141,29 @@ export default function TransactionsPage() {
         hasNext: false,
         hasPrev: false,
       });
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const invoiceId = urlParams.get('invoice_id');
-      const amount = urlParams.get('amount');
-      const transactionId = urlParams.get('transaction_id');
-      const status = urlParams.get('status');
-      const phone = urlParams.get('phone');
-
-        if (invoiceId && amount && transactionId) {
-          const existingTransaction = transactionsToShow.find(
-            (tx: Transaction) =>
-              tx.invoice_id === Number(invoiceId) || tx.transaction_id === transactionId
-          );
-
-          if (!existingTransaction) {
-            const newTransaction = {
-              id: `url-${Date.now()}`,
-              invoice_id: invoiceId,
-              amount: parseFloat(amount),
-              status:
-                status === 'success'
-                  ? ('Success' as const)
-                  : ('Processing' as const),
-              method: 'uddoktapay',
-              payment_method:
-                status === 'success' ? 'Payment Gateway' : 'Manual Payment',
-              transaction_id: transactionId || null,
-              createdAt: new Date().toISOString(),
-              transaction_type: 'deposit' as const,
-              sender_number: phone || 'N/A',
-              phone: phone || 'N/A',
-            };
-
-            transactionsToShow.unshift(newTransaction);
-
-            if (status === 'success') {
-              showToast(
-                `Successful transaction ${invoiceId} loaded`,
-                'success'
-              );
-            } else {
-              showToast(`Pending transaction ${invoiceId} loaded`, 'info');
-            }
-          }
-        }
-
-      setTransactions(transactionsToShow);
-
-      if (!invoiceId && transactionsToShow.length > 0) {
-        showToast('Transactions loaded successfully!', 'success');
-      }
+      setError(null);
     } catch (err) {
-      console.error('Error fetching transactions:', err);
-      setError('Failed to load transactions');
-
-      const fallbackTransactions: Transaction[] = [...mockTransactions];
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const invoiceId = urlParams.get('invoice_id');
-      const amount = urlParams.get('amount');
-      const transactionId = urlParams.get('transaction_id');
-      const status = urlParams.get('status');
-      const phone = urlParams.get('phone');
-
-        if (invoiceId && amount && transactionId) {
-          const newTransaction = {
-            id: Date.now(),
-            invoice_id: Number(invoiceId),
-            amount: parseFloat(amount),
-            status:
-              status === 'success'
-                ? ('Success' as const)
-                : ('Processing' as const),
-            method: 'uddoktapay',
-            payment_method:
-              status === 'success' ? 'Payment Gateway' : 'Manual Payment',
-            transaction_id: transactionId || null,
-            createdAt: new Date().toISOString(),
-            transaction_type: 'deposit' as const,
-            sender_number: phone || 'N/A',
-            phone: phone || 'N/A',
-          };
-          fallbackTransactions.unshift(newTransaction);
-        }
-
-      setTransactions(fallbackTransactions);
-      showToast('Using demo data - check your connection', 'error');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching withdrawals:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load withdrawals');
+      setWithdrawals([]);
     }
   };
 
   useEffect(() => {
-    fetchTransactions();
-  }, [activeTab, page, limit]);
+    const loadWithdrawals = async () => {
+      setLoading(true);
+      await fetchWithdrawals();
+      setLoading(false);
+    };
 
-  const handleViewDetails = (invoiceId: string) => {
-    showToast(`Viewing details for ${invoiceId}`, 'info');
+    loadWithdrawals();
+  }, [activeTab, page, limit, debouncedSearchTerm]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchWithdrawals();
+    setRefreshing(false);
+    showToast('Withdrawals refreshed successfully!', 'success');
   };
 
   const handlePrevious = () => {
@@ -370,31 +188,16 @@ export default function TransactionsPage() {
     setPage(1);
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await fetchTransactions();
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const filteredWithdrawals = withdrawals;
 
-  const filteredTransactions = transactions.filter((tx) => {
-    const matchesSearch =
-      tx.id.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (tx.transaction_id && String(tx.transaction_id).toLowerCase().includes(searchTerm.toLowerCase()));
-
-    return matchesSearch;
-  });
-
-  const successTransactions = transactions.filter(
-    (tx) => tx.status === 'Success'
+  const successWithdrawals = withdrawals.filter(
+    (wd) => wd.status === 'Success'
   );
-  const pendingTransactions = transactions.filter(
-    (tx) => tx.status === 'Processing'
+  const pendingWithdrawals = withdrawals.filter(
+    (wd) => wd.status === 'Processing'
   );
-  const failedTransactions = transactions.filter(
-    (tx) => tx.status === 'Failed' || tx.status === 'Cancelled'
+  const failedWithdrawals = withdrawals.filter(
+    (wd) => wd.status === 'Failed' || wd.status === 'Cancelled'
   );
 
   return (
@@ -442,7 +245,7 @@ export default function TransactionsPage() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
-                        {Array.from({ length: 7 }).map((_, idx) => (
+                        {Array.from({ length: 6 }).map((_, idx) => (
                           <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
                             <div className="h-4 w-24 gradient-shimmer rounded" />
                           </th>
@@ -463,9 +266,6 @@ export default function TransactionsPage() {
                           </td>
                           <td className="py-3 px-4">
                             <div className="h-4 w-24 gradient-shimmer rounded" />
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="h-4 w-20 gradient-shimmer rounded" />
                           </td>
                           <td className="py-3 px-4">
                             <div className="h-4 w-32 gradient-shimmer rounded" />
@@ -508,7 +308,7 @@ export default function TransactionsPage() {
                           </>
                         )}
                         {pagination.total === 0 && (
-                          <option value="10">No transactions found</option>
+                          <option value="10">No withdrawals found</option>
                         )}
                       </select>
                     </div>
@@ -529,7 +329,7 @@ export default function TransactionsPage() {
                         </div>
                         <input
                           type="search"
-                          placeholder="Search by ID or Transaction ID..."
+                          placeholder="Search by ID or Withdrawal ID..."
                           value={searchTerm}
                           onChange={(e) => {
                             setSearchTerm(e.target.value);
@@ -570,7 +370,7 @@ export default function TransactionsPage() {
                     }`}
                   >
                     <FaCheckCircle className="w-4 h-4" />
-                    Success ({successTransactions.length})
+                    Success ({successWithdrawals.length})
                   </button>
 
                   <button
@@ -582,7 +382,7 @@ export default function TransactionsPage() {
                     }`}
                   >
                     <FaClock className="w-4 h-4" />
-                    Pending ({pendingTransactions.length})
+                    Pending ({pendingWithdrawals.length})
                   </button>
 
                   <button
@@ -594,7 +394,7 @@ export default function TransactionsPage() {
                     }`}
                   >
                     <FaExclamationTriangle className="w-4 h-4" />
-                    Failed ({failedTransactions.length})
+                    Failed ({failedWithdrawals.length})
                   </button>
                 </div>
               </div>
@@ -604,7 +404,7 @@ export default function TransactionsPage() {
                     <table className="w-full border-collapse">
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50">
-                          {Array.from({ length: 7 }).map((_, idx) => (
+                          {Array.from({ length: 6 }).map((_, idx) => (
                             <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
                               <div className="h-4 w-24 gradient-shimmer rounded" />
                             </th>
@@ -627,9 +427,6 @@ export default function TransactionsPage() {
                               <div className="h-4 w-24 gradient-shimmer rounded" />
                             </td>
                             <td className="py-3 px-4">
-                              <div className="h-4 w-20 gradient-shimmer rounded" />
-                            </td>
-                            <td className="py-3 px-4">
                               <div className="h-4 w-32 gradient-shimmer rounded" />
                             </td>
                             <td className="py-3 px-4">
@@ -643,8 +440,8 @@ export default function TransactionsPage() {
                 </div>
               ) : (
                 <>
-                  <TransactionsList
-                    transactions={filteredTransactions}
+                  <WithdrawalsList
+                    withdrawals={filteredWithdrawals}
                     page={page}
                     limit={limit}
                   />
@@ -653,7 +450,7 @@ export default function TransactionsPage() {
                       <div className="text-sm text-gray-600 dark:text-gray-300">
                         Page <span className="font-medium">{pagination.page}</span> of{' '}
                         <span className="font-medium">{pagination.totalPages}</span>
-                        {' '}({pagination.total || 0} transactions total)
+                        {' '}({pagination.total || 0} withdrawals total)
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -682,3 +479,4 @@ export default function TransactionsPage() {
     </div>
   );
 }
+

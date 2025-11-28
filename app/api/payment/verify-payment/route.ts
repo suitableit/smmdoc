@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
         where: { invoice_id },
         data: {
           status: paymentStatus,
-          transaction_id: payment.transaction_id || `TX-${Date.now().toString().slice(-8)}`,
+          transaction_id: payment.transaction_id || null,
           payment_method: payment.payment_method || "UddoktaPay",
           sender_number: payment.sender_number || "N/A",
         }

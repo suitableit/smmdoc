@@ -86,7 +86,6 @@ const ChildPanel: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // Static nameservers
   const nameservers = {
     ns1: 'ns1.smmdoc.com',
     ns2: 'ns2.smmdoc.com',

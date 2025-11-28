@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
       const success_url = body.success_url || `${appUrl}/transactions/success`;
       const cancel_url =

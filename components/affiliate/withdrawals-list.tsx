@@ -1,0 +1,165 @@
+'use client';
+
+import {
+    FaSearch
+} from 'react-icons/fa';
+
+type Withdrawal = {
+  id: number;
+  invoice_id: number;
+  amount: number;
+  status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
+  method: string;
+  payment_method?: string;
+  transaction_id?: string;
+  createdAt: string;
+  processedAt?: string;
+  notes?: string;
+};
+
+interface WithdrawalsListProps {
+  withdrawals: Withdrawal[];
+  page: number;
+  limit: number;
+}
+
+export function WithdrawalsList({
+  withdrawals,
+  page,
+  limit,
+}: WithdrawalsListProps) {
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  if (!withdrawals.length) {
+    return (
+      <div className="card card-padding">
+        <div className="text-center py-8 flex flex-col items-center">
+          <FaSearch className="text-4xl text-gray-400 mb-4" />
+          <div className="text-lg font-medium">No withdrawals found</div>
+          <div className="text-sm text-gray-500">
+            You haven't made any withdrawal requests yet.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-800">
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Sl. No.
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Withdrawal ID
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Amount
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Method
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Requested Date
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {withdrawals.map((withdrawal, index) => {
+              const serialNumber = (page - 1) * limit + index + 1;
+              return (
+              <tr
+                key={withdrawal.id}
+                className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {serialNumber}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                    {withdrawal.transaction_id || `WD-${withdrawal.id}`}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {formatAmount(withdrawal.amount)}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {withdrawal.payment_method || withdrawal.method || 'N/A'}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {new Intl.DateTimeFormat('en', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      hour12: false,
+                    }).format(new Date(withdrawal.createdAt))}
+                  </span>
+                </td>
+                <td className="py-3 px-4">
+                  <StatusBadge status={withdrawal.status} />
+                </td>
+              </tr>
+            );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: Withdrawal['status'] }) {
+  switch (status) {
+    case 'Success':
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
+          Success
+        </span>
+      );
+    case 'Processing':
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">
+          Processing
+        </span>
+      );
+    case 'Cancelled':
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
+          Cancelled
+        </span>
+      );
+    case 'Failed':
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+          Failed
+        </span>
+      );
+    default:
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
+          {status}
+        </span>
+      );
+  }
+}
+

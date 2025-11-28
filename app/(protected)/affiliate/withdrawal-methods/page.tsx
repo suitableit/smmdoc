@@ -249,7 +249,6 @@ export default function ActivateAffiliatePage() {
   };
 
   const handleRemoveWithdrawalMethod = async (id: string) => {
-    // Prevent deletion if only one method exists
     if (formData.withdrawalMethods.length <= 1) {
       showToast('You must have at least one payment method', 'error');
       return;
