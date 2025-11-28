@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     const totalEarnings = affiliate.totalEarnings ?? 0;
     const availableEarnings = affiliate.availableEarnings ?? 0;
     const totalVisits = affiliate.totalVisits ?? 0;
-    const commissionRate = affiliate.commissionRate ?? (moduleSettings?.commissionRate ?? 5);
+    const commissionRate = moduleSettings?.commissionRate ?? 5;
 
     const stats = {
       visits: totalVisits,

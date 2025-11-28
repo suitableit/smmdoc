@@ -20,12 +20,14 @@ interface DropdownMenuContentProps {
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   contactSystemEnabled: boolean;
+  childPanelSellingEnabled?: boolean;
 }
 
 const DropdownMenuContentComponent = ({ 
   open, 
   onOpenChange, 
-  contactSystemEnabled 
+  contactSystemEnabled,
+  childPanelSellingEnabled = true
 }: DropdownMenuContentProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,7 +62,7 @@ const DropdownMenuContentComponent = ({
       >
         {isLoading ? (
           <div className="p-1">
-            {Array.from({ length: contactSystemEnabled ? 5 : 4 }).map((_, index) => (
+            {Array.from({ length: (contactSystemEnabled ? 1 : 0) + (childPanelSellingEnabled ? 1 : 0) + 3 }).map((_, index) => (
               <div
                 key={index}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-md"
@@ -193,35 +195,37 @@ const DropdownMenuContentComponent = ({
               </div>
             </Link>
           )}
-          <Link
-            href="/child-panel"
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
-            style={{
-              backgroundColor: 'transparent',
-              color: 'var(--header-text)',
-            }}
-          >
-            <div
-              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
+          {childPanelSellingEnabled && (
+            <Link
+              href="/child-panel"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-all duration-200 hover:opacity-80 block"
               style={{
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                backgroundColor: 'transparent',
+                color: 'var(--header-text)',
               }}
             >
-              <FaUsers className="h-4 w-4 text-pink-500" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-medium text-sm">Create Child Panel</span>
-              <span
-                className="text-xs"
+              <div
+                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
                 style={{
-                  color: 'var(--header-text)',
-                  opacity: 0.7,
+                  backgroundColor: 'rgba(236, 72, 153, 0.1)',
                 }}
               >
-                Manage sub-accounts
-              </span>
-            </div>
-          </Link>
+                <FaUsers className="h-4 w-4 text-pink-500" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium text-sm">Create Child Panel</span>
+                <span
+                  className="text-xs"
+                  style={{
+                    color: 'var(--header-text)',
+                    opacity: 0.7,
+                  }}
+                >
+                  Manage sub-accounts
+                </span>
+              </div>
+            </Link>
+          )}
           </div>
         )}
       </DropdownMenuContent>

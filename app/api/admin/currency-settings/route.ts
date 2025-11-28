@@ -160,7 +160,6 @@ export async function POST(request: Request) {
     }
 
     if (currencies && Array.isArray(currencies)) {
-      // Validate currencies data
       for (const currency of currencies) {
         if (!currency.code || typeof currency.code !== 'string') {
           throw new Error(`Invalid currency code: ${currency.code}`);
@@ -194,14 +193,11 @@ export async function POST(request: Request) {
         }
       }
 
-      // Use transaction to ensure all updates succeed or fail together
       for (const currency of currencies) {
-        // Ensure rate is properly converted to Decimal
         const rateValue = typeof currency.rate === 'number' 
           ? currency.rate 
           : parseFloat(String(currency.rate)) || 1;
 
-        // Validate rate is a valid number
         if (isNaN(rateValue) || rateValue <= 0) {
           throw new Error(`Invalid rate value for ${currency.code}: ${currency.rate}`);
         }

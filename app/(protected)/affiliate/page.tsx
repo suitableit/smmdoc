@@ -584,9 +584,9 @@ function AffiliateEarningsSection() {
         const res = await fetch('/api/user/affiliate/stats')
         if (res.ok) {
           const json = await res.json()
-          const minPayoutText: string = json?.data?.minimumPayout || '$100.00'
+          const minPayoutText: string = json?.data?.minimumPayout || '$10.00'
           const value = parseFloat(String(minPayoutText).replace(/[^0-9.]/g, ''))
-          setMinWithdrawalValue(isNaN(value) ? 100 : value)
+          setMinWithdrawalValue(isNaN(value) ? 10 : value)
           setAvailableBalanceDisplay(json?.data?.availableEarnings || '')
         }
         const pmRes = await fetch('/api/user/affiliate/payment-methods')
@@ -603,6 +603,17 @@ function AffiliateEarningsSection() {
       } catch {}
     })()
   }, []);
+
+  useEffect(() => {
+    if (withdrawalModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [withdrawalModalOpen]);
 
   useEffect(() => {
     const urlStatus = searchParams?.get('status')
@@ -658,6 +669,27 @@ function AffiliateEarningsSection() {
   const handleRefresh = async () => {
     await fetchEarnings();
     showToast('Affiliate earnings refreshed successfully!', 'success');
+  };
+
+  const isWithdrawalFormValid = () => {
+    if (!withdrawalForm.amount || !withdrawalForm.amount.trim()) {
+      return false;
+    }
+    
+    const amount = parseFloat(withdrawalForm.amount);
+    if (isNaN(amount) || amount <= 0) {
+      return false;
+    }
+    
+    if (amount < minWithdrawalValue) {
+      return false;
+    }
+    
+    if (!withdrawalForm.selectedWithdrawalMethod) {
+      return false;
+    }
+    
+    return true;
   };
 
   const handleWithdrawalRequest = async () => {
@@ -1037,8 +1069,13 @@ function AffiliateEarningsSection() {
         </div>
       </div>
       {withdrawalModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+            onClick={() => setWithdrawalModalOpen(false)}
+          />
+          <div className="relative w-full max-w-md max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+            <div className="max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold">Request Withdrawal</h3>
               <button
@@ -1121,7 +1158,7 @@ function AffiliateEarningsSection() {
                     <div className="text-sm font-medium text-blue-800 mb-1">Processing Information</div>
                     <div className="text-xs text-blue-700">
                       • Withdrawals are processed within 1-3 business days<br/>
-                      • Minimum withdrawal amount is $100.00<br/>
+                      • Minimum withdrawal amount is ${minWithdrawalValue.toFixed(2)}<br/>
                       • Processing fees may apply depending on withdrawal method
                     </div>
                   </div>
@@ -1129,31 +1166,32 @@ function AffiliateEarningsSection() {
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end mt-6">
-              <button 
-                onClick={() => setWithdrawalModalOpen(false)} 
-                className="btn btn-secondary"
-                disabled={withdrawalProcessing}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleWithdrawalRequest}
-                disabled={withdrawalProcessing}
-                className="btn btn-primary flex items-center gap-2"
-              >
-                {withdrawalProcessing ? (
-                  <>
-                    <FaSync className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <FaDollarSign className="h-4 w-4" />
-                    Submit Request
-                  </>
-                )}
-              </button>
+              <div className="flex gap-3 justify-end mt-6">
+                <button 
+                  onClick={() => setWithdrawalModalOpen(false)} 
+                  className="btn btn-secondary"
+                  disabled={withdrawalProcessing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleWithdrawalRequest}
+                  disabled={withdrawalProcessing || !isWithdrawalFormValid()}
+                  className="btn btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {withdrawalProcessing ? (
+                    <>
+                      <FaSync className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FaDollarSign className="h-4 w-4" />
+                      Submit Request
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

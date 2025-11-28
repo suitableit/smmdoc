@@ -65,6 +65,8 @@ export default function SideBarNav({
   const isAdmin = session?.user?.role === 'admin';
   const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
   const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
+  const [affiliateSystemEnabled, setAffiliateSystemEnabled] = useState(true);
+  const [childPanelSellingEnabled, setChildPanelSellingEnabled] = useState(true);
 
   useEffect(() => {
     const fetchTicketSettings = async () => {
@@ -100,6 +102,42 @@ export default function SideBarNav({
     };
 
     fetchContactSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchAffiliateSettings = async () => {
+      try {
+        const response = await fetch('/api/affiliate-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setAffiliateSystemEnabled(data.affiliateSystemEnabled ?? false);
+        }
+      } catch (error) {
+        console.error('Error fetching affiliate settings:', error);
+
+        setAffiliateSystemEnabled(false);
+      }
+    };
+
+    fetchAffiliateSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchChildPanelSettings = async () => {
+      try {
+        const response = await fetch('/api/child-panel-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setChildPanelSellingEnabled(data.childPanelSellingEnabled ?? false);
+        }
+      } catch (error) {
+        console.error('Error fetching child panel settings:', error);
+
+        setChildPanelSellingEnabled(false);
+      }
+    };
+
+    fetchChildPanelSettings();
   }, []);
 
   const items = useMemo(() => {
@@ -164,16 +202,20 @@ export default function SideBarNav({
         posts: items.filter((item) =>
           ['Blogs', 'Announcements'].includes(item.title)
         ),
-        additional: items.filter((item) =>
-          ['Affiliates', 'Analytics & Reports'].includes(
-            item.title
-          )
-        ),
-        reseller: items.filter((item) =>
-          ['Child Panels'].includes(
-            item.title
-          )
-        ),
+        additional: items.filter((item) => {
+          const additionalItems = ['Affiliates', 'Analytics & Reports'];
+          if (!affiliateSystemEnabled && item.title === 'Affiliates') {
+            return false;
+          }
+          return additionalItems.includes(item.title);
+        }),
+        reseller: items.filter((item) => {
+          const resellerItems = ['Child Panels'];
+          if (!childPanelSellingEnabled && item.title === 'Child Panels') {
+            return false;
+          }
+          return resellerItems.includes(item.title);
+        }),
         settings: items.filter((item) =>
           [
             'General Settings',
@@ -225,18 +267,26 @@ export default function SideBarNav({
           }
           return supportItems.includes(item.title);
         }),
-        integrations: items.filter((item) =>
-          ['API Integration', 'Child Panel'].includes(item.title)
-        ),
-        more: items.filter((item) =>
-          ['Affiliate Program', 'Terms'].includes(item.title)
-        ),
+        integrations: items.filter((item) => {
+          const integrationItems = ['API Integration', 'Child Panel'];
+          if (!childPanelSellingEnabled && item.title === 'Child Panel') {
+            return false;
+          }
+          return integrationItems.includes(item.title);
+        }),
+        more: items.filter((item) => {
+          const moreItems = ['Affiliate Program', 'Terms'];
+          if (!affiliateSystemEnabled && item.title === 'Affiliate Program') {
+            return false;
+          }
+          return moreItems.includes(item.title);
+        }),
         account: items.filter((item) =>
           ['Account Settings', 'Logout'].includes(item.title)
         ),
       } as UserSections;
     }
-  }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled]);
+  }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled, affiliateSystemEnabled, childPanelSellingEnabled]);
 
   const isActive = (itemPath: string) => {
 

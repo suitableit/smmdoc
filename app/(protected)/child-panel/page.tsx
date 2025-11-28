@@ -2,10 +2,13 @@
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
     FaCheckCircle,
     FaChevronDown,
+    FaCopy,
+    FaEye,
+    FaEyeSlash,
     FaInfoCircle,
     FaQuestionCircle,
     FaServer,
@@ -24,6 +27,15 @@ interface FormData {
 interface FAQ {
   question: string;
   answer: string;
+}
+
+interface Currency {
+  id: number;
+  code: string;
+  name: string;
+  symbol: string;
+  rate: number;
+  enabled: boolean;
 }
 
 const GradientSpinner = ({ size = 'w-5 h-5', className = '' }) => (
@@ -69,12 +81,59 @@ const ChildPanel: React.FC = () => {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [childPanelPriceUSD, setChildPanelPriceUSD] = useState<number>(10);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     setPageTitle('Child Panel', appName);
   }, [appName]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsDataLoading(true);
+        
+        const currenciesResponse = await fetch('/api/currencies/enabled');
+        if (currenciesResponse.ok) {
+          const currenciesData = await currenciesResponse.json();
+          if (currenciesData.success && currenciesData.currencies) {
+            setCurrencies(currenciesData.currencies);
+            if (currenciesData.currencies.length > 0) {
+              const defaultCurrency = currenciesData.currencies.find((c: Currency) => c.code === 'USD') || currenciesData.currencies[0];
+              setFormData(prev => {
+                const currencyExists = currenciesData.currencies.find((c: Currency) => c.code === prev.currency);
+                if (!currencyExists) {
+                  return { ...prev, currency: defaultCurrency.code };
+                }
+                return prev;
+              });
+            }
+          }
+        }
+
+        const priceResponse = await fetch('/api/user/child-panel/price');
+        if (priceResponse.ok) {
+          const priceData = await priceResponse.json();
+          if (priceData.success && priceData.price !== undefined) {
+            setChildPanelPriceUSD(priceData.price);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setCurrencies([
+          { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0, enabled: true },
+          { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0, enabled: true },
+        ]);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchData();
+    
     const timer = setTimeout(() => {
       setIsPageLoading(false);
     }, 1000);
@@ -82,12 +141,21 @@ const ChildPanel: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const currencies = [
-    { value: 'USD', label: 'United States Dollars (USD)' },
-    { value: 'BDT', label: 'Bangladeshi Taka (BDT)' },
-  ];
+  const getPriceInCurrency = (usdPrice: number, currencyCode: string): number => {
+    const selectedCurrency = currencies.find(c => c.code === currencyCode);
+    if (!selectedCurrency) return usdPrice;
+    return usdPrice * selectedCurrency.rate;
+  };
 
-  const faqs: FAQ[] = [
+  const formatPrice = (price: number, currencyCode: string): string => {
+    const selectedCurrency = currencies.find(c => c.code === currencyCode);
+    if (!selectedCurrency) return `$${price.toFixed(2)}`;
+    
+    const formattedPrice = price.toFixed(2);
+    return `${selectedCurrency.symbol}${formattedPrice}`;
+  };
+
+  const faqs: FAQ[] = useMemo(() => [
     {
       question: 'What is child panel?',
       answer:
@@ -96,7 +164,7 @@ const ChildPanel: React.FC = () => {
     {
       question: 'How much cost for a child panel?',
       answer:
-        'It will cost you $10.00 per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from SMMDOC',
+        `It will cost you ${formatPrice(childPanelPriceUSD, 'USD')} per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from SMMDOC`,
     },
     {
       question: 'How long it will take to activate the child panel?',
@@ -154,7 +222,7 @@ const ChildPanel: React.FC = () => {
       answer:
         'No, your customer will never know about SMMDOC.com. They will place order on your website and your order will automatically place to SMMDOC.com under your user account.',
     },
-  ];
+  ], [childPanelPriceUSD, currencies]);
 
   const showToast = (
     message: string,
@@ -162,6 +230,18 @@ const ChildPanel: React.FC = () => {
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const copyToClipboard = (text: string, message: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        showToast(message, 'success');
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+        showToast('Failed to copy to clipboard', 'error');
+      }
+    );
   };
 
   const handleInputChange = (
@@ -391,8 +471,28 @@ const ChildPanel: React.FC = () => {
                         Please change nameservers to:
                       </div>
                       <ul className="ml-4 space-y-1">
-                        <li>• ns1.smmdoc.com</li>
-                        <li>• ns2.smmdoc.com</li>
+                        <li className="flex items-center justify-between group">
+                          <span>• ns1.smmdoc.com</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard('ns1.smmdoc.com', 'Nameserver copied!')}
+                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
+                            title="Copy nameserver"
+                          >
+                            <FaCopy className="h-3.5 w-3.5" />
+                          </button>
+                        </li>
+                        <li className="flex items-center justify-between group">
+                          <span>• ns2.smmdoc.com</span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard('ns2.smmdoc.com', 'Nameserver copied!')}
+                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
+                            title="Copy nameserver"
+                          >
+                            <FaCopy className="h-3.5 w-3.5" />
+                          </button>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -406,14 +506,21 @@ const ChildPanel: React.FC = () => {
                       name="currency"
                       value={formData.currency}
                       onChange={handleInputChange}
-                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                      disabled={isDataLoading || currencies.length === 0}
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       required
                     >
-                      {currencies.map((currency) => (
-                        <option key={currency.value} value={currency.value}>
-                          {currency.label}
-                        </option>
-                      ))}
+                      {isDataLoading ? (
+                        <option value="">Loading currencies...</option>
+                      ) : currencies.length === 0 ? (
+                        <option value="">No currencies available</option>
+                      ) : (
+                        currencies.map((currency) => (
+                          <option key={currency.code} value={currency.code}>
+                            {currency.name} ({currency.code})
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
 
@@ -441,32 +548,58 @@ const ChildPanel: React.FC = () => {
                     <label htmlFor="password" className="form-label">
                       Admin password
                     </label>
-                    <input
-                      type="password"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="Enter admin password"
-                      required
-                    />
+                    <div className="password-input-container">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="form-field w-full px-4 py-3 pr-10 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="Enter admin password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="password-toggle"
+                      >
+                        {showPassword ? (
+                          <FaEyeSlash className="h-4 w-4" />
+                        ) : (
+                          <FaEye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="form-group">
                     <label htmlFor="passwordConfirm" className="form-label">
                       Confirm password
                     </label>
-                    <input
-                      type="password"
-                      id="passwordConfirm"
-                      name="passwordConfirm"
-                      value={formData.passwordConfirm}
-                      onChange={handleInputChange}
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                      placeholder="Confirm admin password"
-                      required
-                    />
+                    <div className="password-input-container">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        id="passwordConfirm"
+                        name="passwordConfirm"
+                        value={formData.passwordConfirm}
+                        onChange={handleInputChange}
+                        className="form-field w-full px-4 py-3 pr-10 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                        placeholder="Confirm admin password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="password-toggle"
+                      >
+                        {showConfirmPassword ? (
+                          <FaEyeSlash className="h-4 w-4" />
+                        ) : (
+                          <FaEye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="form-group">
@@ -476,7 +609,7 @@ const ChildPanel: React.FC = () => {
                     <input
                       type="text"
                       id="price"
-                      value="$10.00"
+                      value={isDataLoading ? 'Loading...' : formatPrice(getPriceInCurrency(childPanelPriceUSD, formData.currency), formData.currency)}
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                       readOnly
                     />
