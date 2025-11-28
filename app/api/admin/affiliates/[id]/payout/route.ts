@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireAdmin()
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     const { amount, method, notes } = await request.json()
 
     if (!id || !amount || amount <= 0 || !method) {
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         processedAt: new Date(),
         notes: notes || null,
         adminId: session.user.id,
+        updatedAt: new Date(),
       },
     })
 
