@@ -13,8 +13,10 @@ import axiosInstance from '@/lib/axiosInstance';
 import {
   createServiceDefaultValues,
   CreateServiceSchema,
-} from '@/lib/validators/admin/services/services.validator';
-const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
+} from '@/lib/validators/admin/services/services.validator';
+
+const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);
+
 const FormItem = ({
   className = '',
   children,
@@ -50,14 +52,16 @@ const FormMessage = ({
 }) =>
   children ? (
     <div className={`text-xs text-red-500 mt-1 ${className}`}>{children}</div>
-  ) : null;
+  ) : null;
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 export const EditServiceForm = ({
   serviceId,
   onClose,
@@ -102,14 +106,18 @@ export const EditServiceForm = ({
     setValue,
     formState: { errors },
   } = useForm<CreateServiceSchema>({
-    mode: 'onChange',
+    mode: 'onChange',
+
     defaultValues: {
       ...createServiceDefaultValues,
       mode: 'manual',
     },
-  });
-  const refillValue = watch('refill');
-  const modeValue = watch('mode');
+  });
+
+  const refillValue = watch('refill');
+
+  const modeValue = watch('mode');
+
   useEffect(() => {
     console.log('Refill value changed:', refillValue, typeof refillValue);
   }, [refillValue]);
@@ -119,19 +127,24 @@ export const EditServiceForm = ({
       console.log('=== EDIT SERVICE FORM DEBUG ===');
       console.log('Raw serviceTypeId from database:', serviceData.data.serviceTypeId, typeof serviceData.data.serviceTypeId);
       console.log('Available service types:', serviceTypesData.data);
-      console.log('Service types IDs:', serviceTypesData.data?.map((st: any) => ({ id: st.id, name: st.name, type: typeof st.id })));
+      console.log('Service types IDs:', serviceTypesData.data?.map((st: any) => ({ id: st.id, name: st.name, type: typeof st.id })));
+
       const serviceTypeIdValue = serviceData.data.serviceTypeId ? String(serviceData.data.serviceTypeId) : '';
-      console.log('Converted serviceTypeIdValue:', serviceTypeIdValue, typeof serviceTypeIdValue);
+      console.log('Converted serviceTypeIdValue:', serviceTypeIdValue, typeof serviceTypeIdValue);
+
       const matchingServiceType = serviceTypesData.data?.find((st: any) => String(st.id) === serviceTypeIdValue);
-      console.log('Matching service type found:', matchingServiceType);
+      console.log('Matching service type found:', matchingServiceType);
+
       let serviceSpeedValue = serviceData.data.serviceSpeed || createServiceDefaultValues.serviceSpeed;
       if (serviceSpeedValue === 'medium') {
         serviceSpeedValue = 'normal';
-      }
+      }
+
       const validSpeeds = ['slow', 'sometimes_slow', 'normal', 'fast'];
       if (!validSpeeds.includes(serviceSpeedValue)) {
         serviceSpeedValue = 'normal';
-      }
+      }
+
       const providerIdValue = serviceData.data.providerId ? String(serviceData.data.providerId) : '';
 
       const resetData = {
@@ -160,11 +173,13 @@ export const EditServiceForm = ({
       console.log('Reset data being passed to form:', resetData);
       console.log('serviceTypeId in reset data:', resetData.serviceTypeId);
 
-      reset(resetData);
+      reset(resetData);
+
       setTimeout(() => {
         console.log('Form values after reset:', watch());
         console.log('serviceTypeId field value after reset:', watch('serviceTypeId'));
-      }, 50);
+      }, 50);
+
       setTimeout(() => {
         setValue('refill', Boolean(serviceData.data.refill));
       }, 100);
@@ -173,7 +188,8 @@ export const EditServiceForm = ({
 
   const onSubmit: SubmitHandler<CreateServiceSchema> = async (values) => {
     console.log('Edit form submitted with values:', values);
-    console.log('Service ID:', serviceId);
+    console.log('Service ID:', serviceId);
+
     if (!values.categoryId || values.categoryId === '') {
       showToast('Please select a service category', 'error');
       return;
@@ -182,11 +198,13 @@ export const EditServiceForm = ({
     if (!values.serviceTypeId || values.serviceTypeId === '') {
       showToast('Please select a service type', 'error');
       return;
-    }
+    }
+
     if (values.mode === 'auto' && (!values.providerId || values.providerId === '')) {
       showToast('Please select an API provider when mode is Auto (API)', 'error');
       return;
-    }
+    }
+
     const filteredValues = Object.fromEntries(
       Object.entries(values).filter(([key, value]) => {
         if (value === '' || value === null || value === undefined) return false;
@@ -208,7 +226,8 @@ export const EditServiceForm = ({
           showToast(
             response.data.message || 'Service updated successfully',
             'success'
-          );
+          );
+
           if (refreshAllData) {
             await refreshAllData();
           }

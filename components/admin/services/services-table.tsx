@@ -1,5 +1,5 @@
 'use client';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import {
   FaBriefcase,
   FaChevronDown,
@@ -14,9 +14,35 @@ import {
   FaToggleOn,
   FaTrash,
   FaCheckCircle,
+  FaUndo,
 } from 'react-icons/fa';
 import { PriceDisplay } from '@/components/PriceDisplay';
 import { formatID } from '@/lib/utils';
+
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement | null>,
+  handler: () => void
+) => {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || !event.target || !(event.target instanceof Node)) {
+        return;
+      }
+      if (ref.current.contains(event.target)) {
+        return;
+      }
+      handler();
+    };
+
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+};
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -45,66 +71,75 @@ const ServiceActionsDropdown = React.memo(({
   onRestore: () => void;
   onDelete: () => void;
 }) => {
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const handleToggle = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const handleAction = (action: () => void) => {
-    action();
-    setIsOpen(false);
-  };
+  useClickOutside(dropdownRef, () => setIsOpen(false));
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
-        onClick={handleToggle}
-        className="btn btn-secondary p-2 hover:bg-gray-100"
-        title="Actions"
+        className="btn btn-secondary p-2"
+        title="More Actions"
+        onClick={() => setIsOpen(!isOpen)}
       >
         <FaEllipsisH className="h-3 w-3" />
       </button>
 
       {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-10" 
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-200">
-            <div className="py-1">
-              {statusFilter !== 'trash' && (
-                <button
-                  onClick={() => handleAction(onToggleStatus)}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  {service.status === 'active' ? 'Deactivate' : 'Activate'}
-                </button>
-              )}
-              {statusFilter === 'trash' && (
-                <button
-                  onClick={() => handleAction(onRestore)}
-                  className="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50"
-                >
-                  Restore
-                </button>
-              )}
+        <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="py-1">
+            {statusFilter !== 'trash' && (
               <button
-                onClick={() => handleAction(onEdit)}
-                className="block w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                onClick={() => {
+                  onToggleStatus();
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
               >
-                Edit
+                {service.status === 'active' ? (
+                  <FaTimesCircle className="h-3 w-3" />
+                ) : (
+                  <FaCheckCircle className="h-3 w-3" />
+                )}
+                {service.status === 'active' ? 'Deactivate' : 'Activate'}
               </button>
+            )}
+            {statusFilter === 'trash' && (
               <button
-                onClick={() => handleAction(onDelete)}
-                className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                onClick={() => {
+                  onRestore();
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
               >
-                {statusFilter === 'trash' ? 'Delete Permanently' : 'Delete'}
+                <FaUndo className="h-3 w-3" />
+                Restore
               </button>
-            </div>
+            )}
+            <button
+              onClick={() => {
+                onEdit();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+            >
+              <FaEdit className="h-3 w-3" />
+              Edit
+            </button>
+            <hr className="my-1" />
+            <button
+              onClick={() => {
+                onDelete();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+            >
+              <FaTrash className="h-3 w-3" />
+              {statusFilter === 'trash' ? 'Delete Permanently' : 'Delete'}
+            </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

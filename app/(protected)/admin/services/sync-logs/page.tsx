@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     FaBox,
     FaCheckCircle,
@@ -138,7 +138,6 @@ const Toast = ({
 
 interface SyncLog {
   id: number;
-  slNo: number;
   apiProvider: string;
   serviceName: string;
   changes: string;
@@ -162,105 +161,12 @@ const SyncLogsPage = () => {
     setPageTitle('API Sync Logs', appName);
   }, [appName]);
 
-  const dummySyncLogs: SyncLog[] = [
-    {
-      id: 1,
-      slNo: 1,
-      apiProvider: 'SMM Panel Pro',
-      serviceName: 'Instagram Followers',
-      changes: 'Service rate updated: $0.50 → $0.45',
-      changeType: 'updated',
-      when: '2024-01-15T10:30:00Z',
-    },
-    {
-      id: 2,
-      slNo: 2,
-      apiProvider: 'Social Boost API',
-      serviceName: 'YouTube Views',
-      changes: 'New service added with rate $1.20',
-      changeType: 'added',
-      when: '2024-01-15T09:45:00Z',
-    },
-    {
-      id: 3,
-      slNo: 3,
-      apiProvider: 'Growth Engine',
-      serviceName: 'TikTok Likes',
-      changes: 'Service discontinued',
-      changeType: 'deleted',
-      when: '2024-01-15T08:15:00Z',
-    },
-    {
-      id: 4,
-      slNo: 4,
-      apiProvider: 'Viral Marketing',
-      serviceName: 'Facebook Page Likes',
-      changes: 'Min/Max quantity updated: 100-50000',
-      changeType: 'updated',
-      when: '2024-01-14T16:20:00Z',
-    },
-    {
-      id: 5,
-      slNo: 5,
-      apiProvider: 'SMM Panel Pro',
-      serviceName: 'Twitter Retweets',
-      changes: 'API connection failed during sync',
-      changeType: 'error',
-      when: '2024-01-14T14:10:00Z',
-    },
-    {
-      id: 6,
-      slNo: 6,
-      apiProvider: 'Boost Central',
-      serviceName: 'LinkedIn Connections',
-      changes: 'Service status changed to active',
-      changeType: 'updated',
-      when: '2024-01-14T12:30:00Z',
-    },
-    {
-      id: 7,
-      slNo: 7,
-      apiProvider: 'Social Boost API',
-      serviceName: 'Instagram Story Views',
-      changes: 'New service added with rate $0.30',
-      changeType: 'added',
-      when: '2024-01-14T11:45:00Z',
-    },
-    {
-      id: 8,
-      slNo: 8,
-      apiProvider: 'Growth Engine',
-      serviceName: 'Pinterest Saves',
-      changes: 'Service temporarily disabled',
-      changeType: 'updated',
-      when: '2024-01-13T15:25:00Z',
-    },
-    {
-      id: 9,
-      slNo: 9,
-      apiProvider: 'Viral Marketing',
-      serviceName: 'Telegram Members',
-      changes: 'Rate increased: $0.80 → $0.95',
-      changeType: 'updated',
-      when: '2024-01-13T13:15:00Z',
-    },
-    {
-      id: 10,
-      slNo: 10,
-      apiProvider: 'SMM Panel Pro',
-      serviceName: 'Discord Members',
-      changes: 'Service removed from catalog',
-      changeType: 'deleted',
-      when: '2024-01-13T10:40:00Z',
-    },
-  ];
-
-  const [syncLogs, setSyncLogs] = useState<SyncLog[]>(dummySyncLogs);
+  const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
     limit: 20,
-    total: dummySyncLogs.length,
-    totalPages: 1,
+    total: 0,
+    totalPages: 0,
     hasNext: false,
     hasPrev: false,
   });
@@ -314,50 +220,56 @@ const SyncLogsPage = () => {
     }
   };
 
-  const filteredSyncLogs = syncLogs.filter((log) => {
-    if (!searchTerm) return true;
+  const fetchSyncLogs = useCallback(async () => {
+    try {
+      setLogsLoading(true);
 
-    const searchLower = searchTerm.toLowerCase();
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
 
-    switch (searchBy) {
-      case 'api_provider':
-        return log.apiProvider.toLowerCase().includes(searchLower);
-      case 'service_name':
-        return log.serviceName.toLowerCase().includes(searchLower);
-      case 'all':
-      default:
-        return (
-          log.apiProvider.toLowerCase().includes(searchLower) ||
-          log.serviceName.toLowerCase().includes(searchLower) ||
-          log.changes.toLowerCase().includes(searchLower) ||
-          log.id.toString().toLowerCase().includes(searchLower)
-        );
-    }
-  });
+      if (searchTerm) {
+        params.append('search', searchTerm);
+        params.append('searchBy', searchBy);
+      }
 
-  useEffect(() => {
-    const total = filteredSyncLogs.length;
-    const totalPages = Math.ceil(total / pagination.limit);
-    setPagination((prev) => ({
-      ...prev,
-      total,
-      totalPages,
-      hasNext: prev.page < totalPages,
-      hasPrev: prev.page > 1,
-    }));
-  }, [filteredSyncLogs.length, pagination.limit]);
+      const response = await fetch(`/api/admin/services/sync-logs?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sync logs');
+      }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setSyncLogs(result.data.logs || []);
+        if (result.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            total: result.data.pagination.total,
+            totalPages: result.data.pagination.totalPages,
+            hasNext: result.data.pagination.hasNext,
+            hasPrev: result.data.pagination.hasPrev,
+          }));
+        }
+      } else {
+        throw new Error(result.error || 'Failed to fetch sync logs');
+      }
+    } catch (error) {
+      console.error('Error fetching sync logs:', error);
+      showToast('Failed to fetch sync logs', 'error');
+    } finally {
       setLogsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [pagination.page, pagination.limit, searchTerm, searchBy]);
+
+  useEffect(() => {
+    fetchSyncLogs();
+  }, [fetchSyncLogs]);
 
   const getPaginatedData = () => {
-    const startIndex = (pagination.page - 1) * pagination.limit;
-    const endIndex = startIndex + pagination.limit;
-    return filteredSyncLogs.slice(startIndex, endIndex);
+    return syncLogs;
   };
 
   const showToast = (
@@ -386,24 +298,31 @@ const SyncLogsPage = () => {
   };
 
   const handleRefresh = () => {
-    setLogsLoading(true);
-
-    setTimeout(() => {
-      setLogsLoading(false);
-      showToast('Sync logs refreshed successfully!', 'success');
-    }, 1000);
+    fetchSyncLogs();
+    showToast('Sync logs refreshed successfully!', 'success');
   };
 
   const handleDeleteLog = async (logId: string | number) => {
     setDeleteLoading(true);
     try {
+      const response = await fetch('/api/admin/services/sync-logs', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: [logId] }),
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const result = await response.json();
 
-      setSyncLogs((prev) => prev.filter((log) => log.id.toString() !== logId.toString()));
-      showToast('Sync log deleted successfully', 'success');
-      setDeleteDialogOpen(false);
-      setLogToDelete(null);
+      if (result.success) {
+        showToast('Sync log deleted successfully', 'success');
+        setDeleteDialogOpen(false);
+        setLogToDelete(null);
+        fetchSyncLogs();
+      } else {
+        throw new Error(result.error || 'Failed to delete sync log');
+      }
     } catch (error) {
       console.error('Error deleting sync log:', error);
       showToast('Error deleting sync log', 'error');
@@ -413,21 +332,34 @@ const SyncLogsPage = () => {
   };
 
   const handleBulkDelete = async () => {
+    setDeleteLoading(true);
     try {
+      const response = await fetch('/api/admin/services/sync-logs', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: selectedLogs }),
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const result = await response.json();
 
-      setSyncLogs((prev) =>
-        prev.filter((log) => !selectedLogs.includes(log.id.toString()))
-      );
-      showToast(
-        `${selectedLogs.length} sync logs deleted successfully`,
-        'success'
-      );
-      setSelectedLogs([]);
+      if (result.success) {
+        showToast(
+          `${selectedLogs.length} sync logs deleted successfully`,
+          'success'
+        );
+        setSelectedLogs([]);
+        setBulkDeleteDialogOpen(false);
+        fetchSyncLogs();
+      } else {
+        throw new Error(result.error || 'Failed to delete sync logs');
+      }
     } catch (error) {
       console.error('Error deleting sync logs:', error);
       showToast('Error deleting sync logs', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -449,7 +381,7 @@ const SyncLogsPage = () => {
             <div className="flex items-center gap-2">
               <select
                 value={pagination.limit}
-                onChange={(e) =>
+                onChange={(e) => {
                   setPagination((prev) => ({
                     ...prev,
                     limit:
@@ -457,8 +389,8 @@ const SyncLogsPage = () => {
                         ? 1000
                         : parseInt(e.target.value),
                     page: 1,
-                  }))
-                }
+                  }));
+                }}
                 className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
               >
                 <option value="25">25</option>
@@ -600,11 +532,11 @@ const SyncLogsPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getPaginatedData().map((log) => (
-                        <tr
-                          key={log.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
-                        >
+                    {getPaginatedData().map((log, index) => (
+                      <tr
+                        key={log.id}
+                        className="border-t hover:bg-gray-50 transition-colors duration-200"
+                      >
                           <td className="p-3">
                             <input
                               type="checkbox"
@@ -618,7 +550,7 @@ const SyncLogsPage = () => {
                               className="font-medium text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {log.slNo}
+                              {(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                           </td>
                           <td className="p-3">
@@ -680,7 +612,7 @@ const SyncLogsPage = () => {
                 </div>
                 <div className="lg:hidden">
                   <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
-                    {getPaginatedData().map((log) => (
+                    {getPaginatedData().map((log, index) => (
                       <div
                         key={log.id}
                         className="card card-padding border-l-4 border-blue-500 mb-4"
@@ -694,7 +626,7 @@ const SyncLogsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
                             <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {log.slNo}
+                              {(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                             {getChangeTypeBadge(log.changeType)}
                           </div>
