@@ -689,6 +689,12 @@ function AffiliateEarningsSection() {
       return false;
     }
     
+    // Verify that the selected withdrawal method exists
+    const selectedMethod = savedWithdrawalMethods.find(wm => String(wm.id) === String(withdrawalForm.selectedWithdrawalMethod));
+    if (!selectedMethod) {
+      return false;
+    }
+    
     return true;
   };
 
@@ -698,8 +704,8 @@ function AffiliateEarningsSection() {
       return;
     }
 
-    if (!withdrawalForm.paymentDetails.trim()) {
-      showToast('Please enter your payment details', 'error');
+    if (!withdrawalForm.selectedWithdrawalMethod) {
+      showToast('Please select a withdrawal method', 'error');
       return;
     }
 
@@ -721,7 +727,7 @@ function AffiliateEarningsSection() {
       setWithdrawalForm({
         amount: '',
         selectedWithdrawalMethod: '',
-        paymentDetails: '',
+        paymentDetails: '', // Keep for backwards compatibility but not used
       });
     } catch (error) {
       console.error('Error submitting withdrawal request:', error);

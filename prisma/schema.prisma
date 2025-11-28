@@ -613,6 +613,8 @@ model ModuleSettings {
   minimumPayout            Float    @default(10)
   childPanelSellingEnabled Boolean  @default(false)
   childPanelPrice          Float    @default(10)
+  childPanelNameserver1    String?  @default("ns1.smmdoc.com")
+  childPanelNameserver2    String?  @default("ns2.smmdoc.com")
   serviceUpdateLogsEnabled Boolean  @default(true)
   massOrderEnabled         Boolean  @default(false)
   servicesListPublic       Boolean  @default(true)

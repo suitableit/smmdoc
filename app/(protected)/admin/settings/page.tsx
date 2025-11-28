@@ -656,14 +656,18 @@ const GeneralSettingsPage = () => {
         body: JSON.stringify({ moduleSettings }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         showToast('Module settings saved successfully!', 'success');
       } else {
-        showToast('Failed to save module settings', 'error');
+        const errorMessage = data.error || 'Failed to save module settings';
+        console.error('Failed to save module settings:', errorMessage);
+        showToast(errorMessage, 'error');
       }
     } catch (error) {
       console.error('Error saving module settings:', error);
-      showToast('Error saving module settings', 'error');
+      showToast('Error saving module settings. Please try again.', 'error');
     } finally {
       setLoadingStates(prev => ({ ...prev, module: false }));
     }

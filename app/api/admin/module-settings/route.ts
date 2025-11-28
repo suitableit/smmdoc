@@ -126,8 +126,17 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error saving module settings:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Full error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { error: 'Failed to save module settings' },
+      { 
+        success: false,
+        error: 'Failed to save module settings',
+        details: errorMessage 
+      },
       { status: 500 }
     );
   }
