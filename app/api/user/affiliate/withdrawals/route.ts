@@ -37,19 +37,31 @@ export async function GET(request: NextRequest) {
         wherePayouts.status = 'paid'
       } else if (status === 'pending') {
         wherePayouts.status = 'pending'
-      } else if (status === 'failed') {
+      } else if (status === 'cancelled') {
         wherePayouts.status = { in: ['declined', 'cancelled'] }
       }
     }
 
     if (search) {
-      const searchNum = parseInt(search)
+      const searchTrimmed = search.trim().toUpperCase()
+      const searchNum = parseInt(searchTrimmed)
+      
+      // Search by payout ID (numeric)
       if (!isNaN(searchNum) && searchNum > 0) {
         wherePayouts.id = searchNum
-      } else if (search.toLowerCase().startsWith('wd-')) {
-        const idFromWd = parseInt(search.replace(/^wd-/i, ''))
+      } 
+      // Search by old format WD-{id}
+      else if (searchTrimmed.startsWith('WD-')) {
+        const idFromWd = parseInt(searchTrimmed.replace(/^WD-/, ''))
         if (!isNaN(idFromWd) && idFromWd > 0) {
           wherePayouts.id = idFromWd
+        }
+      }
+      // Search by withdrawal ID (10-character alphanumeric) or any text in notes
+      else {
+        // Search in notes field for withdrawal ID
+        wherePayouts.notes = {
+          contains: searchTrimmed,
         }
       }
     }
@@ -69,13 +81,13 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
 
     const transactions = payouts.map((payout) => {
-      let transactionStatus: 'Success' | 'Processing' | 'Cancelled' | 'Failed' = 'Processing'
+      let transactionStatus: 'Success' | 'Pending' | 'Cancelled' = 'Pending'
       if (payout.status === 'paid') {
         transactionStatus = 'Success'
       } else if (payout.status === 'pending') {
-        transactionStatus = 'Processing'
+        transactionStatus = 'Pending'
       } else if (payout.status === 'declined' || payout.status === 'cancelled') {
-        transactionStatus = 'Failed'
+        transactionStatus = 'Cancelled'
       }
 
       let paymentMethod = payout.method
@@ -115,6 +127,28 @@ export async function GET(request: NextRequest) {
         paymentMethodDisplay = getMethodDisplayName(paymentMethod || payout.method || '')
       }
 
+      // Extract withdrawal ID from notes
+      let withdrawalId = `WD-${payout.id}` // Fallback to old format
+      let adminNotes = null
+      if (payout.notes) {
+        try {
+          const notesParsed = JSON.parse(payout.notes)
+          if (notesParsed && typeof notesParsed === 'object') {
+            if (notesParsed.withdrawalId && typeof notesParsed.withdrawalId === 'string') {
+              withdrawalId = notesParsed.withdrawalId
+            }
+            if (notesParsed.adminNotes) {
+              adminNotes = notesParsed.adminNotes
+            }
+          }
+        } catch (e) {
+          // If notes is not JSON, treat it as admin notes
+          if (typeof payout.notes === 'string' && payout.notes.trim()) {
+            adminNotes = payout.notes
+          }
+        }
+      }
+
       return {
         id: payout.id,
         invoice_id: payout.id,
@@ -122,11 +156,11 @@ export async function GET(request: NextRequest) {
         status: transactionStatus,
         method: (payout.method || '').toLowerCase(),
         payment_method: paymentMethodDisplay,
-        transaction_id: `WD-${payout.id}`,
+        transaction_id: withdrawalId,
         createdAt: payout.requestedAt.toISOString(),
         transaction_type: 'withdrawal' as const,
         processedAt: payout.processedAt?.toISOString(),
-        notes: payout.notes,
+        notes: adminNotes,
       }
     })
 

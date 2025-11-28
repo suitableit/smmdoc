@@ -121,6 +121,13 @@ export const userNavItems = [
     roles: ['user'],
   },
   {
+    title: 'Withdrawals',
+    href: '/affiliate/withdrawals',
+    icon: 'FaMoneyBillWave',
+    label: 'Withdrawals',
+    roles: ['user'],
+  },
+  {
     title: 'FAQs',
     href: '/faqs',
     icon: 'FaQuestionCircle',

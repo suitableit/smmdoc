@@ -14,6 +14,7 @@ import {
     FaCopy,
     FaCreditCard,
     FaDollarSign,
+    FaMoneyBillWave,
     FaExclamationTriangle,
     FaLink,
     FaMousePointer,
@@ -210,6 +211,17 @@ function AffiliateStatsCards() {
 
     fetchStats();
     loadUserInfo();
+
+    // Listen for stats refresh events
+    const handleStatsRefresh = () => {
+      fetchStats();
+    };
+
+    window.addEventListener('affiliateStatsRefresh', handleStatsRefresh);
+
+    return () => {
+      window.removeEventListener('affiliateStatsRefresh', handleStatsRefresh);
+    };
   }, []);
 
   const copyToClipboard = () => {
@@ -753,6 +765,7 @@ function AffiliateEarningsSection() {
         paymentDetails: '',
       });
       
+      // Refresh earnings and stats immediately
       await fetchEarnings();
       try {
         const res = await fetch('/api/user/affiliate/stats')
@@ -762,10 +775,20 @@ function AffiliateEarningsSection() {
           const availableEarningsText = json?.data?.availableEarnings || '$0.00'
           const availableBalanceValue = parseFloat(String(availableEarningsText).replace(/[^0-9.]/g, ''))
           setAvailableBalance(isNaN(availableBalanceValue) ? 0 : availableBalanceValue)
+          
+          // Trigger stats refresh event to update AffiliateStatsCards component
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('affiliateStatsRefresh'))
+          }
         }
       } catch (e) {
         console.error('Error refreshing stats:', e)
       }
+      
+      // Redirect to withdrawals page after a brief delay to allow stats to update
+      setTimeout(() => {
+        router.push('/affiliate/withdrawals')
+      }, 500)
     } catch (error) {
       console.error('Error submitting withdrawal request:', error);
       showToast(
@@ -832,7 +855,7 @@ function AffiliateEarningsSection() {
                   onClick={() => setWithdrawalModalOpen(true)}
                   className="btn btn-primary flex items-center gap-2 px-3 py-2.5 w-full md:w-auto mb-2 md:mb-0"
                 >
-                  <FaDollarSign className="w-4 h-4" />
+                  <FaMoneyBillWave className="w-4 h-4" />
                   Request Withdrawal
                 </button>
 

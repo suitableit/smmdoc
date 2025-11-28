@@ -275,8 +275,8 @@ export default function SideBarNav({
           return integrationItems.includes(item.title);
         }),
         affiliate: items.filter((item) => {
-          const affiliateItems = ['Affiliate Program'];
-          if (!affiliateSystemEnabled && item.title === 'Affiliate Program') {
+          const affiliateItems = ['Affiliate Program', 'Withdrawals'];
+          if (!affiliateSystemEnabled && (item.title === 'Affiliate Program' || item.title === 'Withdrawals')) {
             return false;
           }
           return affiliateItems.includes(item.title);

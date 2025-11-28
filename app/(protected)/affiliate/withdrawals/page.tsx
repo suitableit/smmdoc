@@ -2,7 +2,7 @@
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
     FaCheckCircle,
     FaClock,
@@ -35,7 +35,7 @@ type Withdrawal = {
   id: number;
   invoice_id: number;
   amount: number;
-  status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
+  status: 'Success' | 'Pending' | 'Cancelled';
   method: string;
   payment_method?: string;
   transaction_id?: string;
@@ -49,6 +49,7 @@ export default function WithdrawalsPage() {
 
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,11 +150,21 @@ export default function WithdrawalsPage() {
     }
   };
 
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
     const loadWithdrawals = async () => {
-      setLoading(true);
+      // Only show full loading on initial mount
+      if (isInitialMount.current) {
+        setLoading(true);
+        isInitialMount.current = false;
+      } else {
+        // Show table loading for subsequent loads (tab changes, pagination, etc.)
+        setTableLoading(true);
+      }
       await fetchWithdrawals();
       setLoading(false);
+      setTableLoading(false);
     };
 
     loadWithdrawals();
@@ -194,10 +205,10 @@ export default function WithdrawalsPage() {
     (wd) => wd.status === 'Success'
   );
   const pendingWithdrawals = withdrawals.filter(
-    (wd) => wd.status === 'Processing'
+    (wd) => wd.status === 'Pending'
   );
-  const failedWithdrawals = withdrawals.filter(
-    (wd) => wd.status === 'Failed' || wd.status === 'Cancelled'
+  const cancelledWithdrawals = withdrawals.filter(
+    (wd) => wd.status === 'Cancelled'
   );
 
   return (
@@ -386,15 +397,15 @@ export default function WithdrawalsPage() {
                   </button>
 
                   <button
-                    onClick={() => handleTabChange('failed')}
+                    onClick={() => handleTabChange('cancelled')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'failed'
+                      activeTab === 'cancelled'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
                     }`}
                   >
-                    <FaExclamationTriangle className="w-4 h-4" />
-                    Failed ({failedWithdrawals.length})
+                    <FaTimes className="w-4 h-4" />
+                    Cancelled ({cancelledWithdrawals.length})
                   </button>
                 </div>
               </div>
@@ -440,11 +451,53 @@ export default function WithdrawalsPage() {
                 </div>
               ) : (
                 <>
-                  <WithdrawalsList
-                    withdrawals={filteredWithdrawals}
-                    page={page}
-                    limit={limit}
-                  />
+                  {tableLoading ? (
+                    <div className="card">
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-800">
+                              {Array.from({ length: 6 }).map((_, idx) => (
+                                <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Array.from({ length: 10 }).map((_, idx) => (
+                              <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
+                                <td className="py-3 px-4">
+                                  <div className="h-4 w-8 gradient-shimmer rounded" />
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="h-4 w-20 gradient-shimmer rounded" />
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="h-4 w-24 gradient-shimmer rounded" />
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="h-4 w-32 gradient-shimmer rounded" />
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="h-6 w-20 gradient-shimmer rounded-full" />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <WithdrawalsList
+                      withdrawals={filteredWithdrawals}
+                      page={page}
+                      limit={limit}
+                    />
+                  )}
                   {pagination.totalPages > 1 && (
                     <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                       <div className="text-sm text-gray-600 dark:text-gray-300">

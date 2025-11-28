@@ -8,7 +8,7 @@ type Withdrawal = {
   id: number;
   invoice_id: number;
   amount: number;
-  status: 'Success' | 'Processing' | 'Cancelled' | 'Failed';
+  status: 'Success' | 'Pending' | 'Cancelled';
   method: string;
   payment_method?: string;
   transaction_id?: string;
@@ -136,22 +136,16 @@ function StatusBadge({ status }: { status: Withdrawal['status'] }) {
           Success
         </span>
       );
-    case 'Processing':
+    case 'Pending':
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">
-          Processing
+          Pending
         </span>
       );
     case 'Cancelled':
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
           Cancelled
-        </span>
-      );
-    case 'Failed':
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
-          Failed
         </span>
       );
     default:
