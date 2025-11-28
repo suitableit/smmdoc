@@ -186,218 +186,6 @@ interface PaginationInfo {
   hasPrev: boolean;
 }
 
-const dummyChildPanels: ChildPanel[] = [
-  {
-    id: 3001,
-    user: {
-      id: 4001,
-      username: 'panel_master',
-      email: 'panelmaster@gmail.com',
-      name: 'John Smith',
-      joinedAt: '2024-01-10T09:00:00Z',
-    },
-    domain: 'socialmedia-boost.com',
-    panelName: 'SocialMedia Boost',
-    apiKey: 'abc123def456',
-    totalOrders: 1250,
-    totalRevenue: 8750.50,
-    status: 'active',
-    createdAt: '2024-01-10T09:00:00Z',
-    lastActivity: '2025-07-02T14:30:00Z',
-    expiryDate: '2025-01-10T09:00:00Z',
-    theme: 'Dark Blue',
-    customBranding: true,
-    apiCallsToday: 145,
-    apiCallsTotal: 15420,
-    plan: 'Premium'
-  },
-  {
-    id: 3002,
-    user: {
-      id: 4002,
-      username: 'smm_reseller',
-      email: 'smmreseller@outlook.com',
-      name: 'Maria Garcia',
-      joinedAt: '2024-02-15T11:20:00Z',
-    },
-    domain: 'fastgrowth.panel.mysmm.com',
-    subdomain: 'fastgrowth',
-    panelName: 'Fast Growth SMM',
-    apiKey: 'xyz789uvw012',
-    totalOrders: 890,
-    totalRevenue: 4250.75,
-    status: 'active',
-    createdAt: '2024-02-15T11:20:00Z',
-    lastActivity: '2025-07-01T18:45:00Z',
-    expiryDate: '2025-02-15T11:20:00Z',
-    theme: 'Green',
-    customBranding: false,
-    apiCallsToday: 89,
-    apiCallsTotal: 8950,
-    plan: 'Standard'
-  },
-  {
-    id: 3003,
-    user: {
-      id: 4003,
-      username: 'viral_solutions',
-      email: 'viralsolutions@yahoo.com',
-      name: 'Ahmed Hassan',
-      joinedAt: '2024-03-05T14:00:00Z',
-    },
-    domain: 'viral-smm-solutions.net',
-    panelName: 'Viral SMM Solutions',
-    apiKey: 'pqr345stu678',
-    totalOrders: 2150,
-    totalRevenue: 12840.25,
-    status: 'active',
-    createdAt: '2024-03-05T14:00:00Z',
-    lastActivity: '2025-07-02T12:15:00Z',
-    expiryDate: '2025-03-05T14:00:00Z',
-    theme: 'Purple',
-    customBranding: true,
-    apiCallsToday: 234,
-    apiCallsTotal: 28750,
-    plan: 'Enterprise'
-  },
-  {
-    id: 3004,
-    user: {
-      id: 4004,
-      username: 'social_hub',
-      email: 'socialhub@gmail.com',
-      name: 'Lisa Chen',
-      joinedAt: '2024-04-20T16:30:00Z',
-    },
-    domain: 'socialhub.panel.mysmm.com',
-    subdomain: 'socialhub',
-    panelName: 'Social Hub',
-    apiKey: 'mno901klm234',
-    totalOrders: 456,
-    totalRevenue: 2180.60,
-    status: 'inactive',
-    createdAt: '2024-04-20T16:30:00Z',
-    lastActivity: '2025-06-10T09:20:00Z',
-    expiryDate: '2025-04-20T16:30:00Z',
-    theme: 'Blue',
-    customBranding: false,
-    apiCallsToday: 0,
-    apiCallsTotal: 4560,
-    plan: 'Basic'
-  },
-  {
-    id: 3005,
-    user: {
-      id: 4005,
-      username: 'insta_pro_panel',
-      email: 'instapro@protonmail.com',
-      name: 'David Rodriguez',
-      joinedAt: '2024-05-12T10:45:00Z',
-    },
-    domain: 'insta-pro-services.com',
-    panelName: 'Instagram Pro Services',
-    apiKey: 'hij567ghi890',
-    totalOrders: 1680,
-    totalRevenue: 9420.80,
-    status: 'suspended',
-    createdAt: '2024-05-12T10:45:00Z',
-    lastActivity: '2025-06-25T15:30:00Z',
-    expiryDate: '2025-05-12T10:45:00Z',
-    theme: 'Pink',
-    customBranding: true,
-    apiCallsToday: 0,
-    apiCallsTotal: 16800,
-    plan: 'Premium'
-  },
-  {
-    id: 3006,
-    user: {
-      id: 4006,
-      username: 'tiktok_growth',
-      email: 'tiktokgrowth@icloud.com',
-      name: 'Sarah Williams',
-      joinedAt: '2024-06-08T13:15:00Z',
-    },
-    domain: 'tiktokgrowth.panel.mysmm.com',
-    subdomain: 'tiktokgrowth',
-    panelName: 'TikTok Growth Hub',
-    apiKey: 'def123abc456',
-    totalOrders: 320,
-    totalRevenue: 1560.40,
-    status: 'pending',
-    createdAt: '2024-06-08T13:15:00Z',
-    lastActivity: '2025-06-28T11:00:00Z',
-    expiryDate: '2025-06-08T13:15:00Z',
-    theme: 'Red',
-    customBranding: false,
-    apiCallsToday: 25,
-    apiCallsTotal: 3200,
-    plan: 'Standard'
-  },
-  {
-    id: 3007,
-    user: {
-      id: 4007,
-      username: 'youtube_boost',
-      email: 'youtubeboost@hotmail.com',
-      name: 'Michael Brown',
-      joinedAt: '2023-12-20T08:30:00Z',
-    },
-    domain: 'yt-boost-services.org',
-    panelName: 'YouTube Boost Services',
-    apiKey: 'tuv901wxy234',
-    totalOrders: 2890,
-    totalRevenue: 18650.90,
-    status: 'expired',
-    createdAt: '2023-12-20T08:30:00Z',
-    lastActivity: '2024-12-25T10:15:00Z',
-    expiryDate: '2024-12-20T08:30:00Z',
-    theme: 'Orange',
-    customBranding: true,
-    apiCallsToday: 0,
-    apiCallsTotal: 28900,
-    plan: 'Enterprise'
-  },
-  {
-    id: 3008,
-    user: {
-      id: 4008,
-      username: 'social_express',
-      email: 'socialexpress@gmail.com',
-      name: 'Jennifer Taylor',
-      joinedAt: '2024-06-25T15:20:00Z',
-    },
-    domain: 'social-express.panel.mysmm.com',
-    subdomain: 'social-express',
-    panelName: 'Social Express',
-    apiKey: 'qrs567tuv890',
-    totalOrders: 125,
-    totalRevenue: 680.25,
-    status: 'active',
-    createdAt: '2024-06-25T15:20:00Z',
-    lastActivity: '2025-07-02T16:45:00Z',
-    expiryDate: '2025-06-25T15:20:00Z',
-    theme: 'Teal',
-    customBranding: false,
-    apiCallsToday: 15,
-    apiCallsTotal: 1250,
-    plan: 'Basic'
-  }
-];
-
-const dummyStats: ChildPanelStats = {
-  totalPanels: 8,
-  activePanels: 4,
-  inactivePanels: 1,
-  suspendedPanels: 1,
-  pendingPanels: 1,
-  expiredPanels: 1,
-  totalRevenue: 58339.45,
-  totalOrders: 9761,
-  totalApiCalls: 107830,
-  todayApiCalls: 508,
-};
-
 const ChildPanelsPage = () => {
   const { appName } = useAppNameWithFallback();
 
@@ -405,8 +193,19 @@ const ChildPanelsPage = () => {
     setPageTitle('Child Panels', appName);
   }, [appName]);
 
-  const [childPanels, setChildPanels] = useState<ChildPanel[]>(dummyChildPanels);
-  const [stats, setStats] = useState<ChildPanelStats>(dummyStats);
+  const [childPanels, setChildPanels] = useState<ChildPanel[]>([]);
+  const [stats, setStats] = useState<ChildPanelStats>({
+    totalPanels: 0,
+    activePanels: 0,
+    inactivePanels: 0,
+    suspendedPanels: 0,
+    pendingPanels: 0,
+    expiredPanels: 0,
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalApiCalls: 0,
+    todayApiCalls: 0,
+  });
 
   const [pagination, setPagination] = useState<PaginationInfo>({
     page: 1,
@@ -480,90 +279,40 @@ const ChildPanelsPage = () => {
     },
   });
 
-  const calculateStatusCounts = (panelsData: ChildPanel[]) => {
-    const counts = {
-      active: 0,
-      inactive: 0,
-      suspended: 0,
-      pending: 0,
-      expired: 0,
-    };
-
-    panelsData.forEach((panel) => {
-      if (panel.status && counts.hasOwnProperty(panel.status)) {
-        counts[panel.status as keyof typeof counts]++;
-      }
-    });
-
-    return counts;
-  };
-
-  const fetchAllPanelsForCounts = async () => {
-    try {
-      console.log('Calculating status counts from dummy data...');
-
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const statusCounts = calculateStatusCounts(dummyChildPanels);
-
-      console.log('Calculated status counts:', statusCounts);
-
-      setStats((prev) => ({
-        ...prev,
-        activePanels: statusCounts.active,
-        inactivePanels: statusCounts.inactive,
-        suspendedPanels: statusCounts.suspended,
-        pendingPanels: statusCounts.pending,
-        expiredPanels: statusCounts.expired,
-        totalPanels: dummyChildPanels.length,
-      }));
-    } catch (error) {
-      console.error('Error calculating panel counts:', error);
-    }
-  };
 
   const fetchChildPanels = async () => {
     try {
       setPanelsLoading(true);
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const queryParams = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(searchTerm && { search: searchTerm }),
+      });
 
-      let filteredPanels = [...dummyChildPanels];
-
-      if (statusFilter !== 'all') {
-        filteredPanels = filteredPanels.filter(
-          panel => panel.status === statusFilter
-        );
+      const response = await fetch(`/api/admin/child-panels?${queryParams}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.details || `HTTP error! status: ${response.status}`);
       }
 
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        filteredPanels = filteredPanels.filter(
-          panel =>
-            panel.user.username?.toLowerCase().includes(searchLower) ||
-            panel.user.email?.toLowerCase().includes(searchLower) ||
-            panel.domain?.toLowerCase().includes(searchLower) ||
-            panel.panelName?.toLowerCase().includes(searchLower)
-        );
+      const result = await response.json();
+
+      if (result.success) {
+        setChildPanels(result.data || []);
+        setPagination(prev => ({
+          ...prev,
+          ...result.pagination,
+        }));
+      } else {
+        throw new Error(result.error || result.details || 'Failed to fetch child panels');
       }
-
-      const startIndex = (pagination.page - 1) * pagination.limit;
-      const endIndex = startIndex + pagination.limit;
-      const paginatedPanels = filteredPanels.slice(startIndex, endIndex);
-
-      console.log('Child panels fetched successfully with filters applied');
-
-      setChildPanels(paginatedPanels);
-      setPagination(prev => ({
-        ...prev,
-        total: filteredPanels.length,
-        totalPages: Math.ceil(filteredPanels.length / pagination.limit),
-        hasNext: endIndex < filteredPanels.length,
-        hasPrev: pagination.page > 1,
-      }));
     } catch (error) {
       console.error('Error fetching child panels:', error);
-      showToast('Error fetching child panels. Please try again.', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      showToast(`Error fetching child panels: ${errorMessage}`, 'error');
       setChildPanels([]);
       setPagination({
         page: 1,
@@ -580,13 +329,19 @@ const ChildPanelsPage = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Loading stats from dummy data...');
+      const response = await fetch('/api/admin/child-panels/stats');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const result = await response.json();
 
-      console.log('Stats loaded successfully:', dummyStats);
-
-      setStats(dummyStats);
+      if (result.success && result.stats) {
+        setStats(result.stats);
+      } else {
+        throw new Error(result.error || 'Failed to fetch statistics');
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
       setStats({
@@ -621,7 +376,7 @@ const ChildPanelsPage = () => {
     setStatsLoading(true);
 
     const loadData = async () => {
-      await Promise.all([fetchStats(), fetchAllPanelsForCounts()]);
+      await fetchStats();
       setStatsLoading(false);
     };
 
@@ -730,7 +485,6 @@ const ChildPanelsPage = () => {
       await Promise.all([
         fetchChildPanels(),
         fetchStats(),
-        fetchAllPanelsForCounts(),
       ]);
       showToast('Child panels data refreshed successfully!', 'success');
     } catch (error) {
@@ -754,7 +508,6 @@ const ChildPanelsPage = () => {
       await Promise.all([
         fetchChildPanels(),
         fetchStats(),
-        fetchAllPanelsForCounts(),
       ]);
       setStatusDialog({ open: false, panelId: 0, currentStatus: '' });
       setNewStatus('');
@@ -809,7 +562,6 @@ const ChildPanelsPage = () => {
       await Promise.all([
         fetchChildPanels(),
         fetchStats(),
-        fetchAllPanelsForCounts(),
       ]);
       setSettingsDialog({ open: false, panel: null });
     } catch (error) {

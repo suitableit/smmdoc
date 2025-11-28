@@ -305,14 +305,7 @@ const PaymentCurrencyPage = () => {
     decimalSeparator: '.',
   });
 
-  const [currencies, setCurrencies] = useState<Currency[]>([
-    { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
-    { id: 2, code: 'EUR', name: 'Euro', symbol: '€', rate: 0.8500, enabled: true },
-    { id: 3, code: 'GBP', name: 'British Pound', symbol: '£', rate: 0.7300, enabled: true },
-    { id: 4, code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 150.0000, enabled: false },
-    { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 121.0000, enabled: true },
-    { id: 6, code: 'USDT', name: 'Tether USD', symbol: '₮', rate: 1.0000, enabled: true },
-  ]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
 
   const [newCurrency, setNewCurrency] = useState({
     code: '',
@@ -335,17 +328,21 @@ const PaymentCurrencyPage = () => {
             if (data.currencySettings) setCurrencySettings(data.currencySettings);
             if (data.currencies) setCurrencies(data.currencies);
           } else {
-
-            console.log('API returned error, using dummy data');
+            const errorMessage = data.error || 'Failed to load currency settings';
+            console.error('API returned error:', errorMessage);
+            setToast({ message: errorMessage, type: 'error' });
+            setTimeout(() => setToast(null), 4000);
           }
         } else {
-
-          console.log('API request failed, using dummy data');
+          const errorText = await response.text();
+          console.error('API request failed:', response.status, errorText);
+          setToast({ message: 'Failed to load currency settings. Please try again.', type: 'error' });
+          setTimeout(() => setToast(null), 4000);
         }
       } catch (error) {
         console.error('Error loading currency settings:', error);
-
-        console.log('Exception occurred, using dummy data');
+        setToast({ message: 'Error loading currency settings. Please refresh the page.', type: 'error' });
+        setTimeout(() => setToast(null), 4000);
       } finally {
         setIsPageLoading(false);
       }

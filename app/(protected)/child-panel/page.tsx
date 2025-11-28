@@ -86,6 +86,11 @@ const ChildPanel: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Static nameservers
+  const nameservers = {
+    ns1: 'ns1.smmdoc.com',
+    ns2: 'ns2.smmdoc.com',
+  };
 
   useEffect(() => {
     setPageTitle('Child Panel', appName);
@@ -121,6 +126,7 @@ const ChildPanel: React.FC = () => {
             setChildPanelPriceUSD(priceData.price);
           }
         }
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setCurrencies([
@@ -159,12 +165,12 @@ const ChildPanel: React.FC = () => {
     {
       question: 'What is child panel?',
       answer:
-        'A child panel is a panel with a limited selection of features that is linked to one of your regular panels such as SMMDOC.com',
+        `A child panel is a panel with a limited selection of features that is linked to one of your regular panels such as ${appName}`,
     },
     {
       question: 'How much cost for a child panel?',
       answer:
-        `It will cost you ${formatPrice(childPanelPriceUSD, 'USD')} per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from SMMDOC`,
+        `It will cost you ${formatPrice(childPanelPriceUSD, 'USD')} per month. Please note, you paying for panel, not for services, you have to pay for the services you will purchase from ${appName}`,
     },
     {
       question: 'How long it will take to activate the child panel?',
@@ -178,17 +184,17 @@ const ChildPanel: React.FC = () => {
     {
       question: 'I have domain, what i can do next?',
       answer:
-        'If you have domain, you can simply change your domain name server and point it to ns1.smmdoc.com ns2.smmdoc.com After you successfully changed the name server, you can submit a order for child panel',
+        `If you have domain, you can simply change your domain name server and point it to ${nameservers.ns1} ${nameservers.ns2} After you successfully changed the name server, you can submit a order for child panel`,
     },
     {
       question: 'How can i change name server for my domain?',
       answer:
-        'Its actually depend on your domain provider, if you go to your domain settings and choose custom DNS and enter the name server given by SMMDOC.',
+        `Its actually depend on your domain provider, if you go to your domain settings and choose custom DNS and enter the name server given by ${appName}.`,
     },
     {
-      question: 'How to i connect child panel with SMMDOC?',
+      question: `How to i connect child panel with ${appName}?`,
       answer:
-        'You can simply go to https://yourdomain.com/admin/settings/providers and you will find out option to connect your panel with SMMDOC. You can a key to connect your panel with SMMDOC. This key you will find out on settings of your SMMDOC account.',
+        `You can simply go to https://yourdomain.com/admin/settings/providers and you will find out option to connect your panel with ${appName}. You can a key to connect your panel with ${appName}. This key you will find out on settings of your ${appName} account.`,
     },
     {
       question:
@@ -218,11 +224,11 @@ const ChildPanel: React.FC = () => {
     },
     {
       question:
-        'If i connect our child panel with SMMDOC, is there any way customer will find out about SMMDOC?',
+        `If i connect our child panel with ${appName}, is there any way customer will find out about ${appName}?`,
       answer:
-        'No, your customer will never know about SMMDOC.com. They will place order on your website and your order will automatically place to SMMDOC.com under your user account.',
+        `No, your customer will never know about ${appName}. They will place order on your website and your order will automatically place to ${appName} under your user account.`,
     },
-  ], [childPanelPriceUSD, currencies]);
+  ], [childPanelPriceUSD, currencies, appName]);
 
   const showToast = (
     message: string,
@@ -290,7 +296,7 @@ const ChildPanel: React.FC = () => {
                     </h1>
                     <p className="text-gray-600 mb-4">
                       Create a child panel with your own domain and start your own
-                      business. You can connect your child panel with SMMDOC and
+                      business. You can connect your child panel with {appName} and
                       start selling services to your customers.
                     </p>
                     <button className="btn btn-primary inline-flex items-center">
@@ -416,7 +422,7 @@ const ChildPanel: React.FC = () => {
                 </h1>
                 <p className="text-gray-600 mb-4">
                   Create a child panel with your own domain and start your own
-                  business. You can connect your child panel with SMMDOC and
+                  business. You can connect your child panel with {appName} and
                   start selling services to your customers.
                 </p>
                 <a
@@ -472,10 +478,10 @@ const ChildPanel: React.FC = () => {
                       </div>
                       <ul className="ml-4 space-y-1">
                         <li className="flex items-center justify-between group">
-                          <span>• ns1.smmdoc.com</span>
+                          <span>• {nameservers.ns1}</span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard('ns1.smmdoc.com', 'Nameserver copied!')}
+                            onClick={() => copyToClipboard(nameservers.ns1, 'Nameserver copied!')}
                             className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
                             title="Copy nameserver"
                           >
@@ -483,10 +489,10 @@ const ChildPanel: React.FC = () => {
                           </button>
                         </li>
                         <li className="flex items-center justify-between group">
-                          <span>• ns2.smmdoc.com</span>
+                          <span>• {nameservers.ns2}</span>
                           <button
                             type="button"
-                            onClick={() => copyToClipboard('ns2.smmdoc.com', 'Nameserver copied!')}
+                            onClick={() => copyToClipboard(nameservers.ns2, 'Nameserver copied!')}
                             className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
                             title="Copy nameserver"
                           >
