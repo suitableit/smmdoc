@@ -165,7 +165,7 @@ interface ActivationFormData {
 }
 
 
-export function ActivateAffiliateContent() {
+export default function ActivateAffiliateContent() {
   const { appName } = useAppNameWithFallback();
 
   const user = useCurrentUser();
@@ -629,13 +629,4 @@ export function ActivateAffiliateContent() {
       </div>
     </div>
   );
-}
-
-import { useRouter } from 'next/navigation';
-export default function ActivateRouteGate() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/affiliate');
-  }, [router]);
-  return null;
 }

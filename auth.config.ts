@@ -193,15 +193,17 @@ export default {
               console.error('Error processing affiliate referral in jwt callback:', err)
             })
           }
-          token.sub = existingUser.id;
-          token.role = existingUser.role;
-          token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
-          token.currency = existingUser.currency;
-          token.name = existingUser.name;
-          token.username = existingUser.username;
-          token.email = existingUser.email;
-          token.balance = existingUser.balance;
-          token.image = existingUser.image;
+          if (existingUser) {
+            token.sub = existingUser.id;
+            token.role = existingUser.role;
+            token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled;
+            token.currency = existingUser.currency;
+            token.name = existingUser.name;
+            token.username = existingUser.username;
+            token.email = existingUser.email;
+            token.balance = existingUser.balance;
+            token.image = existingUser.image;
+          }
         }
       }
       

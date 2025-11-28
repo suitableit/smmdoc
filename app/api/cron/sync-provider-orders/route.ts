@@ -333,8 +333,9 @@ async function syncSingleOrder(order: any, provider: any) {
         await tx.newOrders.update({
           where: { id: order.id },
           data: {
-          lastSyncAt: new Date()
-        }
+            lastSyncAt: new Date()
+          }
+        });
       });
 
       return {

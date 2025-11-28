@@ -1,18 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  cacheLife: {
-    default: {
-      stale: 60,
-      revalidate: 300,
-      expire: 900
-    },
-    pages: {
-      stale: 300,
-      revalidate: 3600,
-      expire: 86400
-    }
-  },
-
   experimental: {
     optimizePackageImports: ['@/components', '@/hooks', '@/lib'],
   },

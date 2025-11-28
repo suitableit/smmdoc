@@ -70,8 +70,8 @@ export const CustomAdapter = (): Adapter => ({
         token_type: account.token_type || null,
         scope: account.scope || null,
         id_token: account.id_token || null,
-        session_state: account.session_state || null,
-        refresh_token_expires_in: account.refresh_token_expires_in || null,
+        session_state: account.session_state ? String(account.session_state) : null,
+        refresh_token_expires_in: typeof account.refresh_token_expires_in === 'number' ? account.refresh_token_expires_in : null,
       },
     })
     return acc as unknown as AdapterAccount
@@ -92,13 +92,19 @@ export const CustomAdapter = (): Adapter => ({
     return
   },
   createVerificationToken: async (token) => {
-    const vt = await db.verificationTokens.create({ data: { email: token.email, token: token.token, expires: token.expires } })
-    return vt as unknown as VerificationToken
+    const vt = await db.verificationTokens.create({ 
+      data: { 
+        email: (token as any).email || token.identifier || '', 
+        token: token.token, 
+        expires: token.expires 
+      } 
+    })
+    return { identifier: vt.email, token: vt.token, expires: vt.expires } as VerificationToken
   },
-  useVerificationToken: async ({ email, token }) => {
-    const vt = await db.verificationTokens.findUnique({ where: { email_token: { email, token } } })
+  useVerificationToken: async ({ identifier, token }) => {
+    const vt = await db.verificationTokens.findUnique({ where: { email_token: { email: identifier, token } } })
     if (!vt) return null
-    await db.verificationTokens.delete({ where: { email_token: { email, token } } })
-    return vt as unknown as VerificationToken
+    await db.verificationTokens.delete({ where: { email_token: { email: identifier, token } } })
+    return { identifier: vt.email, token: vt.token, expires: vt.expires } as VerificationToken
   },
 })
