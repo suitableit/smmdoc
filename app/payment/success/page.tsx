@@ -3,114 +3,141 @@
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import {
-  FaArrowRight,
   FaCheckCircle,
-  FaEnvelope,
   FaReceipt,
-  FaTelegram,
-  FaTimes,
   FaWallet,
-  FaWhatsapp,
 } from 'react-icons/fa';
 
-const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
-  <div className={`${size} ${className} relative`}>
-    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
-    </div>
-  </div>
-);
 
-const Toast = ({
-  message,
-  type = 'success',
-  onClose,
-}: {
-  message: string;
-  type?: 'success' | 'error' | 'info' | 'pending';
-  onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
 
 function PaymentSuccessContent() {
   const { appName } = useAppNameWithFallback();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'info' | 'pending';
-  } | null>(null);
+  const { data: session, status: sessionStatus } = useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [paymentData, setPaymentData] = useState<any>(null);
 
-  const invoice_id = searchParams?.get('invoice_id');
-  const amount = searchParams?.get('amount');
-  const transaction_id = searchParams?.get('transaction_id');
-  const phone = searchParams?.get('phone');
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [invoice_id, setInvoiceId] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const hasValidatedRef = useRef(false);
+  const hasVerifiedRef = useRef(false);
 
   useEffect(() => {
     setPageTitle('Payment Success', appName);
   }, [appName]);
 
+  // Get invoice_id from sessionStorage (stored when payment was created)
   useEffect(() => {
-    // Automatically verify payment when page loads (user was redirected here, so payment was successful)
-    if (invoice_id) {
-      verifyPayment();
-    } else {
-      setIsVerifying(false);
-    }
-  }, [invoice_id]);
-
-  const verifyPayment = async () => {
-    if (!invoice_id) return;
-
-    try {
-      setIsVerifying(true);
-      // Pass from_redirect=true to indicate payment was successful (user was redirected)
-      const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoice_id}&from_redirect=true${transaction_id ? `&transaction_id=${transaction_id}` : ''}`;
-      const response = await fetch(verifyUrl);
-      const data = await response.json();
-
-      if (data.status === 'COMPLETED' || response.ok) {
-        setToast({
-          message: 'Payment verified successfully! Funds have been added to your account.',
-          type: 'success',
-        });
-      } else {
-        setToast({
-          message: 'Payment successful! Funds are being processed.',
-          type: 'success',
-        });
+    if (typeof window !== 'undefined') {
+      // Try sessionStorage first (for new payments)
+      const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
+      if (storedInvoiceId) {
+        setInvoiceId(storedInvoiceId);
+        return;
       }
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      // Since user was redirected to success page, payment is successful
-      setToast({
-        message: 'Payment successful! Funds are being processed.',
-        type: 'success',
-      });
-    } finally {
-      setIsVerifying(false);
-      const toastTimer = setTimeout(() => setToast(null), 5000);
-      return () => clearTimeout(toastTimer);
+      // Fallback: Check localStorage for backward compatibility
+      try {
+        const localStorageSession = localStorage.getItem('uddoktapay_session');
+        if (localStorageSession) {
+          const sessionData = JSON.parse(localStorageSession);
+          if (sessionData.invoice_id) {
+            setInvoiceId(sessionData.invoice_id);
+            // Also store in sessionStorage for consistency
+            sessionStorage.setItem('payment_invoice_id', sessionData.invoice_id);
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
     }
-  };
+  }, []);
+
+  // Check authentication and validate payment access
+  useEffect(() => {
+    if (sessionStatus === 'loading' || !invoice_id || hasValidatedRef.current) return;
+
+    // Check if user is authenticated
+    if (sessionStatus === 'unauthenticated' || !session?.user) {
+      router.push('/transactions?error=unauthorized');
+      return;
+    }
+
+    // Validate payment access only once
+    if (hasValidatedRef.current) return;
+    hasValidatedRef.current = true;
+
+    const validateAndVerify = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`/api/payment/validate-access?invoice_id=${invoice_id}`);
+        const data = await response.json();
+
+        if (data.valid && data.payment) {
+          setIsAuthorized(true);
+          setPaymentData(data.payment);
+          // Clean up sessionStorage after successful validation
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('payment_invoice_id');
+          }
+          
+          // Automatically verify payment
+          if (!hasVerifiedRef.current) {
+            hasVerifiedRef.current = true;
+            try {
+              setIsVerifying(true);
+              const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoice_id}&from_redirect=true${data.payment.transaction_id ? `&transaction_id=${data.payment.transaction_id}` : ''}`;
+              const verifyResponse = await fetch(verifyUrl);
+              const verifyData = await verifyResponse.json();
+
+              if (verifyData.status === 'COMPLETED' || verifyResponse.ok) {
+                // Update payment data from verification response if available
+                if (verifyData.payment) {
+                  setPaymentData(verifyData.payment);
+                } else if (data.payment) {
+                  setPaymentData(data.payment);
+                }
+              }
+            } catch (verifyError) {
+              console.error('Payment verification error:', verifyError);
+            } finally {
+              setIsVerifying(false);
+            }
+          }
+        } else {
+          // Clean up sessionStorage on error
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('payment_invoice_id');
+          }
+          // Unauthorized or payment not found
+          router.push('/transactions?error=unauthorized');
+        }
+      } catch (error) {
+        console.error('Error validating payment access:', error);
+        // Clean up sessionStorage on error
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('payment_invoice_id');
+        }
+        router.push('/transactions?error=validation_failed');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateAndVerify();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionStatus, invoice_id, session?.user?.id]);
 
   const handleViewTransactions = () => {
-
     const params = new URLSearchParams();
     if (invoice_id) params.set('invoice_id', invoice_id);
-    if (amount) params.set('amount', amount);
-    if (transaction_id) params.set('transaction_id', transaction_id);
-    if (phone) params.set('phone', phone);
+    if (paymentData?.amount) params.set('amount', paymentData.amount.toString());
+    if (paymentData?.transaction_id) params.set('transaction_id', paymentData.transaction_id);
+    if (paymentData?.sender_number) params.set('phone', paymentData.sender_number);
     params.set('status', 'success');
 
     const url = `/transactions${
@@ -123,18 +150,13 @@ function PaymentSuccessContent() {
     router.push('/add-funds');
   };
 
+  // Redirect if unauthorized (but allow rendering during loading)
+  if (!isAuthorized && sessionStatus === 'authenticated' && invoice_id && !isLoading) {
+    return null;
+  }
+
   return (
     <div className="page-container min-h-screen flex items-center justify-center">
-      <div className="toast-container">
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </div>
-
       <div className="page-content max-w-2xl mx-auto w-full px-0 lg:px-4">
         <div className="card-mobile card card-padding">
           <div className="text-center">
@@ -145,7 +167,7 @@ function PaymentSuccessContent() {
             <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Funds have been successfully added to your account.
             </p>
-            {(invoice_id || amount || transaction_id || phone) && (
+            {(invoice_id || paymentData?.amount || paymentData?.transaction_id || paymentData?.sender_number) && (
               <div className="space-y-4 mb-6">
                 <div className="card-header">
                   <div className="card-icon">
@@ -155,31 +177,28 @@ function PaymentSuccessContent() {
                 </div>
 
                 <div className="space-y-3">
-                  {invoice_id && (
-                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                      <span className="form-label">Order ID:</span>
-                      <span className="font-mono text-sm font-medium">{invoice_id}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                    <span className="form-label">Transaction ID:</span>
+                    <span className="font-mono text-sm font-medium">{paymentData?.transaction_id || "-"}</span>
+                  </div>
 
-                  {amount && (
+                  {paymentData?.amount && (
                     <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                       <span className="form-label">Amount:</span>
-                      <span className="font-semibold text-lg text-green-600 dark:text-green-400">${amount}</span>
+                      <span className="font-semibold text-lg text-green-600 dark:text-green-400">
+                        ${Number(paymentData.original_amount || paymentData.amount).toFixed(2)}
+                        {paymentData.original_amount && paymentData.original_amount !== paymentData.amount && (
+                          <span className="text-sm text-gray-500 ml-1">(≈ ${Number(paymentData.amount).toFixed(2)} USD)</span>
+                        )}
+                      </span>
                     </div>
                   )}
 
-                  {transaction_id && (
-                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                      <span className="form-label">Transaction ID:</span>
-                      <span className="font-mono text-sm font-medium">{transaction_id}</span>
-                    </div>
-                  )}
 
-                  {phone && (
+                  {paymentData?.sender_number && (
                     <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                       <span className="form-label">Phone Number:</span>
-                      <span className="font-medium">{phone}</span>
+                      <span className="font-medium">{paymentData.sender_number}</span>
                     </div>
                   )}
 
@@ -230,22 +249,8 @@ function PaymentSuccessContent() {
 }
 
 export default function PaymentSuccessPage() {
-
   return (
-    <Suspense
-      fallback={
-        <div className="page-container">
-          <div className="page-content">
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-center flex flex-col items-center">
-                <GradientSpinner size="w-12 h-12" className="mb-3" />
-                <div className="text-base font-medium">Loading payment details...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={null}>
       <PaymentSuccessContent />
     </Suspense>
   );

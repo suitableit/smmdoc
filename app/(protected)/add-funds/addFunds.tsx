@@ -239,6 +239,12 @@ export function AddFundForm() {
               phone: values.phone.replace(/\D/g, ''),
               timestamp: Date.now(),
             };
+            // Store in sessionStorage for success/pending pages (cleared when tab closes)
+            sessionStorage.setItem(
+              'payment_invoice_id',
+              res.data.invoice_id
+            );
+            // Also keep in localStorage for backward compatibility
             localStorage.setItem(
               'uddoktapay_session',
               JSON.stringify(paymentSession)

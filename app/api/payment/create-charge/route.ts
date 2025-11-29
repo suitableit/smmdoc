@@ -159,9 +159,7 @@ export async function POST(req: NextRequest) {
           original_amount: amount,
           usd_amount: amountUSD,
         },
-        redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
-          paymentAmount
-        )}`,
+        redirect_url: `${appUrl}/payment/success`,
         cancel_url: `${appUrl}/transactions?status=cancelled`,
         webhook_url: `${appUrl}/api/payment/webhook`,
       };
@@ -196,9 +194,7 @@ export async function POST(req: NextRequest) {
             amount: paymentData.amount,
             phone: paymentData.phone,
             metadata: paymentData.metadata,
-            redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
-              paymentAmount
-            )}`,
+            redirect_url: `${appUrl}/payment/success`,
             return_type: 'GET',
             cancel_url: `${appUrl}/transactions?status=cancelled`,
             webhook_url: `${appUrl}/api/payment/webhook`,
