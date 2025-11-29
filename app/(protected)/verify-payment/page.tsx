@@ -24,7 +24,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
+import { z } from 'zod';
+
 const verifyFormSchema = z.object({
   transactionId: z.string().min(1, 'Transaction ID is required'),
   phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
@@ -39,7 +40,8 @@ export default function VerifyPaymentPage() {
   const invoiceId = searchParams?.get('invoice_id');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentLogo, setPaymentLogo] = useState('/nagad.svg');
-  const [paymentAmount, setPaymentAmount] = useState<string>('0.00');
+  const [paymentAmount, setPaymentAmount] = useState<string>('0.00');
+
   const form = useForm<VerifyFormValues>({
     resolver: zodResolver(verifyFormSchema),
     defaultValues: {
@@ -49,16 +51,19 @@ export default function VerifyPaymentPage() {
     },
   });
 
-  useEffect(() => {
+  useEffect(() => {
+
     const amount =
       searchParams?.get('amount') ||
       localStorage.getItem('payment_amount') ||
       '0.00';
-    setPaymentAmount(amount);
+    setPaymentAmount(amount);
+
     const method =
       searchParams?.get('method') ||
       localStorage.getItem('payment_method') ||
-      'nagad';
+      'nagad';
+
     switch (method.toLowerCase()) {
       case 'bkash':
         setPaymentLogo('/bkash.svg');
@@ -80,25 +85,36 @@ export default function VerifyPaymentPage() {
   const onSubmit = async (values: VerifyFormValues) => {
     setIsSubmitting(true);
 
-    try {
-      toast.loading('Verifying transaction...');
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+
+
+      toast.loading('Verifying transaction...');
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       let success = false;
 
-      if (values.responseType === 'Success') {
+      if (values.responseType === 'Success') {
+
         success = true;
         toast.dismiss();
-        toast.success('Transaction verified successfully!');
+        toast.success('Transaction verified successfully!');
+
         router.push(
-          `/transactions/success?invoice_id=${invoiceId || 'INV-DEMO'}`
+          `/payment/success?invoice_id=${invoiceId || 'INV-DEMO'}`
         );
-      } else if (values.responseType === 'Pending') {
+      } else if (values.responseType === 'Pending') {
+
         toast.dismiss();
-        toast.info('Transaction is pending verification');
+        toast.info('Transaction is pending verification');
+
+
         router.push('/transactions?status=pending');
-      } else {
+      } else {
+
         toast.dismiss();
-        toast.error('Transaction verification failed');
+        toast.error('Transaction verification failed');
+
         router.push('/transactions?status=failed');
       }
     } catch (error) {
