@@ -32,8 +32,10 @@ const Toast = ({
 
 interface PaymentGatewaySettings {
   gatewayName: string;
-  apiKey: string;
-  apiUrl: string;
+  liveApiKey: string;
+  liveApiUrl: string;
+  sandboxApiKey: string;
+  sandboxApiUrl: string;
   mode: 'Live' | 'Sandbox';
 }
 
@@ -57,8 +59,10 @@ const PaymentGatewayPage = () => {
 
   const [gatewaySettings, setGatewaySettings] = useState<PaymentGatewaySettings>({
     gatewayName: 'UddoktaPay',
-    apiKey: '',
-    apiUrl: '',
+    liveApiKey: '',
+    liveApiUrl: '',
+    sandboxApiKey: '',
+    sandboxApiUrl: '',
     mode: 'Live',
   });
 
@@ -94,8 +98,10 @@ const PaymentGatewayPage = () => {
           if (data.success && data.settings) {
             setGatewaySettings({
               gatewayName: data.settings.gatewayName || 'UddoktaPay',
-              apiKey: data.settings.apiKey || '',
-              apiUrl: data.settings.apiUrl || '',
+              liveApiKey: data.settings.liveApiKey || '',
+              liveApiUrl: data.settings.liveApiUrl || '',
+              sandboxApiKey: data.settings.sandboxApiKey || '',
+              sandboxApiUrl: data.settings.sandboxApiUrl || '',
               mode: data.settings.mode || 'Live',
             });
           }
@@ -231,47 +237,16 @@ const PaymentGatewayPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">API Key</label>
-                  <input
-                    type="text"
-                    value={gatewaySettings.apiKey}
-                    onChange={(e) =>
-                      setGatewaySettings(prev => ({
-                        ...prev,
-                        apiKey: e.target.value
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="Enter API Key"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">API URL</label>
-                  <input
-                    type="url"
-                    value={gatewaySettings.apiUrl}
-                    onChange={(e) =>
-                      setGatewaySettings(prev => ({
-                        ...prev,
-                        apiUrl: e.target.value
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder="https://pay.smmdoc.com/api"
-                  />
-                </div>
-
-                <div className="form-group">
                   <label className="form-label">Mode</label>
                   <select
                     value={gatewaySettings.mode}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newMode = e.target.value as 'Live' | 'Sandbox';
                       setGatewaySettings(prev => ({
                         ...prev,
-                        mode: e.target.value as 'Live' | 'Sandbox'
-                      }))
-                    }
+                        mode: newMode
+                      }));
+                    }}
                     className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                   >
                     {modeOptions.map((option) => (
@@ -280,6 +255,53 @@ const PaymentGatewayPage = () => {
                       </option>
                     ))}
                   </select>
+                  {gatewaySettings.mode === 'Sandbox' && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+                      <strong>Sandbox Mode:</strong> Use sandbox API credentials for testing. Payments will not be processed with real money. Live credentials are saved separately.
+                    </p>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">API Key</label>
+                  <input
+                    type="text"
+                    value={gatewaySettings.mode === 'Live' ? gatewaySettings.liveApiKey : gatewaySettings.sandboxApiKey}
+                    onChange={(e) =>
+                      setGatewaySettings(prev => ({
+                        ...prev,
+                        [prev.mode === 'Live' ? 'liveApiKey' : 'sandboxApiKey']: e.target.value
+                      }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder={gatewaySettings.mode === 'Sandbox' ? "Enter Sandbox API Key" : "Enter Live API Key"}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {gatewaySettings.mode === 'Sandbox' 
+                      ? "Use your sandbox/test API key from UddoktaPay"
+                      : "Use your live/production API key from UddoktaPay"}
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">API URL</label>
+                  <input
+                    type="url"
+                    value={gatewaySettings.mode === 'Live' ? gatewaySettings.liveApiUrl : gatewaySettings.sandboxApiUrl}
+                    onChange={(e) =>
+                      setGatewaySettings(prev => ({
+                        ...prev,
+                        [prev.mode === 'Live' ? 'liveApiUrl' : 'sandboxApiUrl']: e.target.value
+                      }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder={gatewaySettings.mode === 'Sandbox' ? "https://sandbox.uddoktapay.com/api/checkout-v2" : "https://pay.smmdoc.com/api"}
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {gatewaySettings.mode === 'Sandbox' 
+                      ? "Enter your sandbox API base URL (without /checkout-v2 or /verify-payment)"
+                      : "Enter your live API base URL (without /checkout-v2 or /verify-payment)"}
+                  </p>
                 </div>
 
                 <button

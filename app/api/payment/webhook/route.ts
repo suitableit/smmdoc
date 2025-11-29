@@ -7,7 +7,15 @@ export async function POST(req: NextRequest) {
     console.log("Webhook data received:", webhookData);
     
     const apiKey = req.headers.get('rt-uddoktapay-api-key');
-    const expectedApiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+    
+    // Get expected API key from database configuration
+    const { getPaymentGatewayApiKey } = await import('@/lib/payment-gateway-config');
+    const expectedApiKey = await getPaymentGatewayApiKey();
+    
+    if (!expectedApiKey) {
+      console.error("Payment gateway API key not configured");
+      return NextResponse.json({ error: "Payment gateway not configured" }, { status: 500 });
+    }
     
     if (apiKey !== expectedApiKey) {
       console.error("Invalid API key in webhook request");

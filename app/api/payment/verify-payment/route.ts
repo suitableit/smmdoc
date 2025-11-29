@@ -67,18 +67,19 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // Always call UddoktaPay API first to fetch transaction details (transaction_id, payment_method, etc.)
-      const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
-      const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://pay.smmdoc.com/api/verify-payment';
+    // Always call payment gateway API first to fetch transaction details (transaction_id, payment_method, etc.)
+      const { getPaymentGatewayApiKey, getPaymentGatewayVerifyUrl } = await import('@/lib/payment-gateway-config');
+      const apiKey = await getPaymentGatewayApiKey();
+      const baseUrl = await getPaymentGatewayVerifyUrl();
       
       if (!apiKey) {
         return NextResponse.json(
-          { error: "Payment gateway API key not configured", status: "FAILED" },
+          { error: "Payment gateway API key not configured. Please configure it in admin settings.", status: "FAILED" },
           { status: 500 }
         );
       }
       
-      console.log(`Making API request to UddoktaPay: ${baseUrl} with invoice_id: ${invoice_id}`);
+      console.log(`Making API request to payment gateway: ${baseUrl} with invoice_id: ${invoice_id}`);
       
     let verificationData: any = null;
     let isSuccessful = false;
@@ -130,14 +131,11 @@ export async function GET(req: NextRequest) {
                                         responseData.payment?.transaction_id ||
                                         null;
           
-          // Ensure we're NOT using invoice_id as transaction_id
           if (extractedTransactionId && extractedTransactionId === responseData.invoice_id) {
             console.log('WARNING: transaction_id matches invoice_id - this is likely wrong!');
             console.log('Skipping this value and continuing search...');
-            // Don't use this value, it's likely just the invoice_id
           }
           
-          // Merge response data into verificationData
           if (!verificationData) {
             verificationData = responseData;
           } else {

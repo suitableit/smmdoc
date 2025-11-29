@@ -130,7 +130,11 @@ export async function POST(req: NextRequest) {
         console.error('Failed to log payment creation activity:', error);
       }
 
-      const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+      // Get payment gateway configuration from database
+      const { getPaymentGatewayApiKey, getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
+      const apiKey = await getPaymentGatewayApiKey();
+      const checkoutUrl = await getPaymentGatewayCheckoutUrl();
+      
       // Get app URL from environment or request origin - prioritize production URL
       const requestOrigin = req.headers.get('origin') || 
                            req.headers.get('referer')?.split('/').slice(0, 3).join('/');
@@ -171,7 +175,7 @@ export async function POST(req: NextRequest) {
 
       if (!apiKey) {
         return NextResponse.json(
-          { error: 'Payment gateway API key not configured' },
+          { error: 'Payment gateway API key not configured. Please configure it in admin settings.' },
           { status: 500, headers: corsHeaders }
         );
       }
@@ -180,7 +184,7 @@ export async function POST(req: NextRequest) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        const response = await fetch('https://pay.smmdoc.com/api/checkout-v2', {
+        const response = await fetch(checkoutUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
