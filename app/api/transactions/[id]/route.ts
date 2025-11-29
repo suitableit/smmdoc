@@ -236,7 +236,7 @@ export async function GET(
       invoice_id: transaction.invoice_id || transaction.id,
       amount: transaction.amount,
       status: mapStatus(transaction.status || 'Processing'),
-      method: transaction.payment_gateway || 'uddoktapay',
+      method: transaction.payment_gateway || 'UddoktaPay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),

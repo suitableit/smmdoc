@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       invoice_id: transaction.invoice_id || transaction.id,
       amount: transaction.original_amount || transaction.amount,
       status: mapStatus(transaction.status || 'Processing'),
-      method: transaction.payment_gateway || 'uddoktapay',
+      method: transaction.payment_gateway || 'UddoktaPay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || null,
       createdAt: transaction.createdAt.toISOString(),

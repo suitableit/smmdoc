@@ -202,7 +202,7 @@ export function AddFundForm() {
         }
 
         const formValues = {
-          method: 'uddoktapay',
+          method: 'UddoktaPay',
           amount: amountValue.toString(),
           currency: activeCurrency,
           userId: user?.id,

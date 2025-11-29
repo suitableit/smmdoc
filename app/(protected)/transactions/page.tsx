@@ -148,7 +148,7 @@ export default function TransactionsPage() {
       invoice_id: 123456789,
       amount: 500,
       status: 'Success' as const,
-      method: 'uddoktapay',
+      method: 'UddoktaPay',
       payment_method: 'bKash',
       transaction_id: 'TRX-123456',
       createdAt: new Date().toISOString(),
@@ -161,7 +161,7 @@ export default function TransactionsPage() {
       invoice_id: 987654321,
       amount: 1000,
       status: 'Success' as const,
-      method: 'uddoktapay',
+      method: 'UddoktaPay',
       payment_method: 'Nagad',
       transaction_id: 'TRX-987654',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
@@ -174,7 +174,7 @@ export default function TransactionsPage() {
       invoice_id: 456789123,
       amount: 750,
       status: 'Processing' as const,
-      method: 'uddoktapay',
+      method: 'UddoktaPay',
       payment_method: 'Rocket',
       transaction_id: 'TRX-456789',
       createdAt: new Date(Date.now() - 172800000).toISOString(),
@@ -187,7 +187,7 @@ export default function TransactionsPage() {
       invoice_id: 111222333,
       amount: 300,
       status: 'Failed' as const,
-      method: 'uddoktapay',
+      method: 'UddoktaPay',
       payment_method: 'bKash',
       transaction_id: 'TRX-111222',
       createdAt: new Date(Date.now() - 259200000).toISOString(),
@@ -200,7 +200,7 @@ export default function TransactionsPage() {
       invoice_id: 444555666,
       amount: 1200,
       status: 'Cancelled' as const,
-      method: 'uddoktapay',
+      method: 'UddoktaPay',
       payment_method: 'Nagad',
       transaction_id: 'TRX-444555',
       createdAt: new Date(Date.now() - 345600000).toISOString(),
@@ -271,7 +271,7 @@ export default function TransactionsPage() {
                 status === 'success'
                   ? ('Success' as const)
                   : ('Processing' as const),
-              method: 'uddoktapay',
+              method: 'UddoktaPay',
               payment_method:
                 status === 'success' ? 'Payment Gateway' : 'Manual Payment',
               transaction_id: transactionId || null,
@@ -321,7 +321,7 @@ export default function TransactionsPage() {
               status === 'success'
                 ? ('Success' as const)
                 : ('Processing' as const),
-            method: 'uddoktapay',
+            method: 'UddoktaPay',
             payment_method:
               status === 'success' ? 'Payment Gateway' : 'Manual Payment',
             transaction_id: transactionId || null,
@@ -334,7 +334,7 @@ export default function TransactionsPage() {
         }
 
       setTransactions(fallbackTransactions);
-      showToast('Using demo data - check your connection', 'error');
+      showToast('Please check your connection and try again', 'error');
     } finally {
       setLoading(false);
     }
