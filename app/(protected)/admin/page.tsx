@@ -8,6 +8,7 @@ import moment from 'moment';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Announcements from '@/components/dashboard/announcements';
 import {
     FaAward,
     FaBullseye,
@@ -736,6 +737,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="page-content">
+      <Announcements />
       <div className="toast-container">
         {customToast && (
           <Toast

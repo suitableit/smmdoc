@@ -9,6 +9,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const now = new Date();
+
+    await db.announcements.updateMany({
+      where: {
+        status: { in: ['active', 'scheduled'] },
+        endDate: { not: null, lte: now },
+      },
+      data: {
+        status: 'expired',
+      },
+    });
+
     const announcements = await db.announcements.findMany({
       include: {
         user: {
@@ -21,7 +33,7 @@ export async function GET() {
         },
       },
       orderBy: [
-        { isSticky: 'desc' },
+        { order: 'asc' },
         { createdAt: 'desc' },
       ],
     });
@@ -58,19 +70,32 @@ export async function POST(request: Request) {
       buttonEnabled,
       buttonText,
       buttonLink,
+      visibility,
     } = body;
 
-    if (!title || !content || !type || !startDate) {
+    if (!title || !type || !startDate) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Determine status based on startDate
     const start = new Date(startDate);
+    const end = endDate && endDate.trim() ? new Date(endDate) : null;
     const now = new Date();
-    const status = start <= now ? 'active' : 'scheduled';
+    
+    let status: string;
+    if (end && end < now) {
+      status = 'expired';
+    } else {
+      status = start <= now ? 'active' : 'scheduled';
+    }
+
+    const minOrderAnnouncement = await db.announcements.findFirst({
+      orderBy: { order: 'asc' },
+      select: { order: true },
+    });
+    const newOrder = minOrderAnnouncement ? minOrderAnnouncement.order - 1 : 0;
 
     const announcement = await db.announcements.create({
       data: {
@@ -78,14 +103,16 @@ export async function POST(request: Request) {
         content,
         type,
         status,
-        targetedAudience: targetedAudience || 'all',
+        targetedAudience: targetedAudience || 'users',
         startDate: new Date(startDate),
-        endDate: endDate && endDate.trim() ? new Date(endDate) : null,
+        endDate: end,
         isSticky: isSticky || false,
         buttonEnabled: buttonEnabled || false,
         buttonText: buttonText && buttonText.trim() ? buttonText.trim() : null,
         buttonLink: buttonLink && buttonLink.trim() ? buttonLink.trim() : null,
+        visibility: visibility || 'dashboard',
         createdBy: session.user.id as number,
+        order: newOrder,
       },
       include: {
         user: {
