@@ -78,21 +78,17 @@ function PaymentPendingContent() {
         if (data.valid && data.payment) {
           setIsAuthorized(true);
           setPaymentData(data.payment);
-          // Clean up sessionStorage after successful validation
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('payment_invoice_id');
           }
         } else {
-          // Clean up sessionStorage on error
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('payment_invoice_id');
           }
-          // Unauthorized or payment not found
           router.push('/transactions?error=unauthorized');
         }
       } catch (error) {
         console.error('Error validating payment access:', error);
-        // Clean up sessionStorage on error
         if (typeof window !== 'undefined') {
           sessionStorage.removeItem('payment_invoice_id');
         }
@@ -103,28 +99,16 @@ function PaymentPendingContent() {
     };
 
     validatePayment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, invoice_id, session?.user?.id]);
 
   const handleViewTransactions = () => {
-    const params = new URLSearchParams();
-    if (invoice_id) params.set('invoice_id', invoice_id);
-    if (paymentData?.amount) params.set('amount', paymentData.amount.toString());
-    if (paymentData?.transaction_id) params.set('transaction_id', paymentData.transaction_id);
-    if (paymentData?.sender_number) params.set('phone', paymentData.sender_number);
-    params.set('status', 'pending');
-
-    const url = `/transactions${
-      params.toString() ? '?' + params.toString() : ''
-    }`;
-    router.push(url);
+    router.push('/transactions');
   };
 
   const handleContactSupport = () => {
     window.open('https://wa.me/+8801723139610', '_blank');
   };
 
-  // Redirect if unauthorized (but allow rendering during loading)
   if (!isAuthorized && sessionStatus === 'authenticated' && invoice_id && !isLoading) {
     return null;
   }
@@ -154,7 +138,11 @@ function PaymentPendingContent() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <span className="form-label">Transaction ID:</span>
-                    <span className="font-mono text-sm font-medium">{paymentData?.transaction_id || "-"}</span>
+                    <span className="font-mono text-sm font-medium">
+                      {paymentData?.transaction_id && paymentData.transaction_id !== invoice_id 
+                        ? paymentData.transaction_id 
+                        : "-"}
+                    </span>
                   </div>
 
                   {paymentData?.amount && (

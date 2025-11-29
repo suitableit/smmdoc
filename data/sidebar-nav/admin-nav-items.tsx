@@ -187,6 +187,13 @@ export const adminNavItems = [
     roles: ['admin'],
   },
   {
+    title: 'Payment Gateway',
+    href: '/admin/settings/payment-gateway',
+    icon: 'FaCreditCard',
+    label: 'Payment Gateway',
+    roles: ['admin'],
+  },
+  {
     title: 'Payment Currency',
     href: '/admin/settings/currency',
     icon: 'FaDollarSign',

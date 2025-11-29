@@ -33,11 +33,28 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Check URL query parameters first (UddoktaPay might redirect with these)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlInvoiceId = urlParams.get('invoice_id');
+      const urlTransactionId = urlParams.get('transaction_id');
+      
+      if (urlInvoiceId) {
+        setInvoiceId(urlInvoiceId);
+        // Store transaction_id if provided in URL
+        if (urlTransactionId) {
+          sessionStorage.setItem('payment_transaction_id', urlTransactionId);
+        }
+        return;
+      }
+      
+      // Fallback to sessionStorage
       const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
       if (storedInvoiceId) {
         setInvoiceId(storedInvoiceId);
         return;
       }
+      
+      // Fallback to localStorage
       try {
         const localStorageSession = localStorage.getItem('uddoktapay_session');
         if (localStorageSession) {
@@ -45,6 +62,9 @@ function PaymentSuccessContent() {
           if (sessionData.invoice_id) {
             setInvoiceId(sessionData.invoice_id);
             sessionStorage.setItem('payment_invoice_id', sessionData.invoice_id);
+            if (sessionData.transaction_id) {
+              sessionStorage.setItem('payment_transaction_id', sessionData.transaction_id);
+            }
           }
         }
       } catch (e) {
@@ -80,7 +100,19 @@ function PaymentSuccessContent() {
             hasVerifiedRef.current = true;
             try {
               setIsVerifying(true);
-              const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoice_id}&from_redirect=true${data.payment.transaction_id ? `&transaction_id=${data.payment.transaction_id}` : ''}`;
+              // Get transaction_id from URL params, sessionStorage, or payment data
+              let transactionIdParam = '';
+              if (typeof window !== 'undefined') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlTransactionId = urlParams.get('transaction_id') || sessionStorage.getItem('payment_transaction_id');
+                if (urlTransactionId) {
+                  transactionIdParam = `&transaction_id=${urlTransactionId}`;
+                } else if (data.payment.transaction_id) {
+                  transactionIdParam = `&transaction_id=${data.payment.transaction_id}`;
+                }
+              }
+              const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoice_id}&from_redirect=true${transactionIdParam}`;
+              console.log('Verifying payment with URL:', verifyUrl);
               const verifyResponse = await fetch(verifyUrl);
               const verifyData = await verifyResponse.json();
 
@@ -133,17 +165,7 @@ function PaymentSuccessContent() {
   }, [sessionStatus, invoice_id, session?.user?.id]);
 
   const handleViewTransactions = () => {
-    const params = new URLSearchParams();
-    if (invoice_id) params.set('invoice_id', invoice_id);
-    if (paymentData?.amount) params.set('amount', paymentData.amount.toString());
-    if (paymentData?.transaction_id) params.set('transaction_id', paymentData.transaction_id);
-    if (paymentData?.sender_number) params.set('phone', paymentData.sender_number);
-    params.set('status', 'success');
-
-    const url = `/transactions${
-      params.toString() ? '?' + params.toString() : ''
-    }`;
-    router.push(url);
+    router.push('/transactions');
   };
 
   const handleAddMoreFunds = () => {
@@ -178,7 +200,11 @@ function PaymentSuccessContent() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <span className="form-label">Transaction ID:</span>
-                    <span className="font-mono text-sm font-medium">{paymentData?.transaction_id || "-"}</span>
+                    <span className="font-mono text-sm font-medium">
+                      {paymentData?.transaction_id && paymentData.transaction_id !== invoice_id 
+                        ? paymentData.transaction_id 
+                        : "-"}
+                    </span>
                   </div>
 
                   {paymentData?.amount && (
