@@ -5,6 +5,8 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import axiosInstance from '@/lib/axiosInstance';
 import {
   FaBell,
   FaCheckCircle,
@@ -52,6 +54,7 @@ interface Service {
 
 export default function UpdateServiceTable() {
   const { appName } = useAppNameWithFallback();
+  const router = useRouter();
 
   const user = useCurrentUser();
   const [services, setServices] = useState<Service[]>([]);
@@ -64,12 +67,40 @@ export default function UpdateServiceTable() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [isAccessCheckLoading, setIsAccessCheckLoading] = useState(true);
+  const [isAccessAllowed, setIsAccessAllowed] = useState(false);
 
   const limit = 50;
 
   useEffect(() => {
     setPageTitle('Service Updates', appName);
   }, [appName]);
+
+  useEffect(() => {
+    const checkServiceUpdateLogsStatus = async () => {
+      try {
+        const response = await axiosInstance.get('/api/service-update-logs-status');
+        if (response.data.success && response.data.serviceUpdateLogsEnabled) {
+          setIsAccessAllowed(true);
+        } else {
+          router.push('/dashboard');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking service update logs status:', error);
+        router.push('/dashboard');
+        return;
+      } finally {
+        setIsAccessCheckLoading(false);
+      }
+    };
+
+    checkServiceUpdateLogsStatus();
+  }, [router]);
+
+  if (isAccessCheckLoading || !isAccessAllowed) {
+    return null;
+  }
 
   const showToast = (
     message: string,

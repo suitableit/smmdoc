@@ -69,6 +69,8 @@ export default function SideBarNav({
   const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   const [affiliateSystemEnabled, setAffiliateSystemEnabled] = useState(true);
   const [childPanelSellingEnabled, setChildPanelSellingEnabled] = useState(true);
+  const [massOrderEnabled, setMassOrderEnabled] = useState(true);
+  const [serviceUpdateLogsEnabled, setServiceUpdateLogsEnabled] = useState(true);
 
   useEffect(() => {
     const fetchTicketSettings = async () => {
@@ -140,6 +142,42 @@ export default function SideBarNav({
     };
 
     fetchChildPanelSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchMassOrderSettings = async () => {
+      try {
+        const response = await fetch('/api/mass-order-system-status');
+        if (response.ok) {
+          const data = await response.json();
+          setMassOrderEnabled(data.massOrderEnabled ?? false);
+        }
+      } catch (error) {
+        console.error('Error fetching mass order settings:', error);
+
+        setMassOrderEnabled(false);
+      }
+    };
+
+    fetchMassOrderSettings();
+  }, []);
+
+  useEffect(() => {
+    const fetchServiceUpdateLogsSettings = async () => {
+      try {
+        const response = await fetch('/api/service-update-logs-status');
+        if (response.ok) {
+          const data = await response.json();
+          setServiceUpdateLogsEnabled(data.serviceUpdateLogsEnabled ?? true);
+        }
+      } catch (error) {
+        console.error('Error fetching service update logs settings:', error);
+
+        setServiceUpdateLogsEnabled(true);
+      }
+    };
+
+    fetchServiceUpdateLogsSettings();
   }, []);
 
   const items = useMemo(() => {
@@ -246,14 +284,20 @@ export default function SideBarNav({
 
       return {
         core: items.filter((item) => ['Dashboard'].includes(item.title)),
-        orders: items.filter((item) =>
-          ['New Order', 'Mass Orders', 'My Orders'].includes(item.title)
-        ),
-        services: items.filter((item) =>
-          ['All Services', 'Favorite Services', 'Service Updates'].includes(
-            item.title
-          )
-        ),
+        orders: items.filter((item) => {
+          const orderItems = ['New Order', 'Mass Orders', 'My Orders'];
+          if (!massOrderEnabled && item.title === 'Mass Orders') {
+            return false;
+          }
+          return orderItems.includes(item.title);
+        }),
+        services: items.filter((item) => {
+          const serviceItems = ['All Services', 'Favorite Services', 'Service Updates'];
+          if (!serviceUpdateLogsEnabled && item.title === 'Service Updates') {
+            return false;
+          }
+          return serviceItems.includes(item.title);
+        }),
         funds: items.filter((item) =>
           ['Add Funds', 'Transfer Funds', 'Transactions'].includes(item.title)
         ),
@@ -294,7 +338,7 @@ export default function SideBarNav({
         ),
       } as UserSections;
     }
-  }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled, affiliateSystemEnabled, childPanelSellingEnabled]);
+  }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled, affiliateSystemEnabled, childPanelSellingEnabled, massOrderEnabled, serviceUpdateLogsEnabled]);
 
   const isActive = (itemPath: string) => {
 

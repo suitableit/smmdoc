@@ -339,11 +339,9 @@ export async function POST(request: Request) {
             });
 
             if (referral && referral.affiliate && referral.affiliate.status === 'active') {
-              // Get the service purchase earning count limit from settings
               const servicePurchaseEarningCount = moduleSettings?.servicePurchaseEarningCount ?? '1';
               const earningLimit = servicePurchaseEarningCount === 'unlimited' ? null : parseInt(servicePurchaseEarningCount, 10);
 
-              // Count existing commissions for this affiliate-referred user pair
               const existingCommissionsCount = await prisma.affiliateCommissions.count({
                 where: {
                   affiliateId: referral.affiliate.id,
@@ -357,7 +355,6 @@ export async function POST(request: Request) {
                 canCreateCommission: earningLimit === null || existingCommissionsCount < earningLimit
               });
 
-              // Check if we can create a commission based on the limit
               const canCreateCommission = earningLimit === null || existingCommissionsCount < earningLimit;
 
               if (canCreateCommission) {

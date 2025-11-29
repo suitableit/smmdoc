@@ -189,6 +189,7 @@ export default function MassOrder() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [massOrderEnabled, setMassOrderEnabled] = useState<boolean | null>(null);
+  const [isAccessCheckLoading, setIsAccessCheckLoading] = useState(true);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -201,36 +202,30 @@ export default function MassOrder() {
   useEffect(() => {
     const checkMassOrderSettings = async () => {
       try {
-        const response = await axiosInstance.get('/api/user/mass-orders?type=stats');
-        if (response.data.success) {
+        const response = await axiosInstance.get('/api/mass-order-system-status');
+        if (response.data.success && response.data.massOrderEnabled) {
           setMassOrderEnabled(true);
         } else {
           setMassOrderEnabled(false);
+          router.push('/dashboard');
+          return;
         }
       } catch (error) {
         console.error('Error checking mass order settings:', error);
-
-        if (error instanceof Error && 'response' in error) {
-          const axiosError = error as any;
-          if (axiosError.response?.status === 403) {
-            setMassOrderEnabled(false);
-            showToast('Mass Order functionality is currently disabled by admin', 'error');
-            setTimeout(() => {
-              router.push('/dashboard');
-            }, 3000);
-          } else {
-            setMassOrderEnabled(true);
-            console.warn('Unable to verify mass order settings, but allowing access:', error);
-          }
-        } else {
-          setMassOrderEnabled(true);
-          console.warn('Network error checking mass order settings, but allowing access:', error);
-        }
+        setMassOrderEnabled(false);
+        router.push('/dashboard');
+        return;
+      } finally {
+        setIsAccessCheckLoading(false);
       }
     };
 
     checkMassOrderSettings();
   }, [router]);
+
+  if (isAccessCheckLoading || !massOrderEnabled) {
+    return null;
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
