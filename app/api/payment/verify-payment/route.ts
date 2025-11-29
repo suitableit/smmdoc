@@ -60,19 +60,56 @@ export async function GET(req: NextRequest) {
       
       console.log(`Making API request to UddoktaPay: ${baseUrl} with invoice_id: ${invoice_id}`);
       
+      // Call UddoktaPay Verify Payment API
+      const verificationResponse = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'RT-UDDOKTAPAY-API-KEY': apiKey,
+        },
+        body: JSON.stringify({ invoice_id }),
+      });
+
+      let isSuccessful = false;
+      let paymentStatus = "Processing";
+      let verificationData: any = null;
+
+      if (verificationResponse.ok) {
+        verificationData = await verificationResponse.json();
+        console.log('UddoktaPay verification response:', verificationData);
+
+        if (verificationData.status === 'COMPLETED' || verificationData.status === 'SUCCESS') {
+          isSuccessful = true;
+          paymentStatus = "Success";
+        } else if (verificationData.status === 'PENDING') {
+          paymentStatus = "Processing";
+        } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED') {
+          paymentStatus = "Cancelled";
+        }
+      } else {
+        const errorText = await verificationResponse.text();
+        console.error('UddoktaPay verification API error:', errorText);
+        return NextResponse.json(
+          { 
+            error: "Payment verification failed", 
+            status: "FAILED",
+            message: "Failed to verify payment with UddoktaPay",
+            details: errorText 
+          },
+          { status: 500 }
+        );
+      }
       
-      const isSuccessful = true;
-      const paymentStatus = "Success";
-      
-      console.log(`Payment verification result: ${isSuccessful ? 'Success' : 'Failed'}`);
+      console.log(`Payment verification result: ${isSuccessful ? 'Success' : paymentStatus}`);
       
       const updatedPayment = await db.addFunds.update({
         where: { invoice_id },
         data: {
           status: paymentStatus,
-          transaction_id: payment.transaction_id || null,
-          payment_method: payment.payment_method || "UddoktaPay",
-          sender_number: payment.sender_number || "N/A",
+          transaction_id: verificationData?.transaction_id || payment.transaction_id || null,
+          payment_method: verificationData?.payment_method || payment.payment_method || "UddoktaPay",
+          sender_number: verificationData?.sender_number || payment.sender_number || "N/A",
         }
       });
 

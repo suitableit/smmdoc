@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           status: 'Processing',
           admin_status: 'pending',
           order_id,
-          method: body.method || 'uddoktapay',
+          payment_gateway: body.method || 'uddoktapay',
           sender_number: body.phone,
           userId: session.user.id,
           currency: currency,

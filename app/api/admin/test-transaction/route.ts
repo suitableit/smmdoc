@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         status: 'Processing',
         admin_status: 'pending',
         order_id: `TEST-ORDER-${Date.now()}`,
-        method: 'uddoktapay',
+        payment_gateway: 'uddoktapay',
         sender_number: '01712345678',
         transaction_id: `TXN-${Date.now()}`,
         userId: session.user.id,

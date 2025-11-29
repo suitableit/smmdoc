@@ -445,7 +445,7 @@ model AddFunds {
   name             String?
   status           String?                   @default("Processing")
   order_id         String?
-  method           String?
+  payment_gateway  String?
   payment_method   String?
   sender_number    String?
   transaction_id   String?
