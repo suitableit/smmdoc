@@ -66,9 +66,9 @@ export async function POST(req: NextRequest) {
         requestOrigin: requestOrigin
       });
 
-      const success_url = body.success_url || `${appUrl}/payment/success`;
+      const success_url = body.success_url || `${appUrl}/transactions?payment=success&invoice_id=${invoice_id}`;
       const cancel_url =
-        body.cancel_url || `${appUrl}/transactions?status=cancelled`;
+        body.cancel_url || `${appUrl}/transactions?payment=cancelled`;
 
       const { getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
       const checkoutUrl = await getPaymentGatewayCheckoutUrl();

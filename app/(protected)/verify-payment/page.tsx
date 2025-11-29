@@ -103,20 +103,20 @@ export default function VerifyPaymentPage() {
         if (invoiceId && typeof window !== 'undefined') {
           sessionStorage.setItem('payment_invoice_id', invoiceId);
         }
-        router.push('/payment/success');
+        router.push(`/transactions?payment=success&invoice_id=${invoiceId || ''}`);
       } else if (values.responseType === 'Pending') {
 
         toast.dismiss();
         toast.info('Transaction is pending verification');
 
 
-        router.push('/transactions?status=pending');
+        router.push(`/transactions?payment=pending&invoice_id=${invoiceId || ''}`);
       } else {
 
         toast.dismiss();
         toast.error('Transaction verification failed');
 
-        router.push('/transactions?status=failed');
+        router.push(`/transactions?payment=failed&invoice_id=${invoiceId || ''}`);
       }
     } catch (error) {
       console.error('Verification error:', error);

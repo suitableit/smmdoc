@@ -8,6 +8,8 @@ const defaultUserSettings = {
   nameFieldEnabled: true,
   emailConfirmationEnabled: true,
   resetLinkMax: 3,
+  minimumFundsToAddUSD: 10,
+  maximumFundsToAddUSD: 10000,
   transferFundsPercentage: 3,
   userFreeBalanceEnabled: false,
   freeAmount: 0,
@@ -39,6 +41,8 @@ export async function GET() {
         nameFieldEnabled: settings.nameFieldEnabled,
         emailConfirmationEnabled: settings.emailConfirmationEnabled,
         resetLinkMax: settings.resetLinkMax,
+        minimumFundsToAddUSD: settings.minimumFundsToAddUSD ?? 10,
+        maximumFundsToAddUSD: settings.maximumFundsToAddUSD ?? 10000,
         transferFundsPercentage: settings.transferFundsPercentage,
         userFreeBalanceEnabled: settings.userFreeBalanceEnabled,
         freeAmount: settings.freeAmount,
@@ -87,6 +91,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (userSettings.minimumFundsToAddUSD !== undefined && userSettings.minimumFundsToAddUSD < 0) {
+      return NextResponse.json(
+        { error: 'Minimum funds to add cannot be negative' },
+        { status: 400 }
+      );
+    }
+
+    if (userSettings.maximumFundsToAddUSD !== undefined && userSettings.maximumFundsToAddUSD < 0) {
+      return NextResponse.json(
+        { error: 'Maximum funds to add cannot be negative' },
+        { status: 400 }
+      );
+    }
+
+    if (userSettings.minimumFundsToAddUSD !== undefined && userSettings.maximumFundsToAddUSD !== undefined) {
+      if (userSettings.minimumFundsToAddUSD > userSettings.maximumFundsToAddUSD) {
+        return NextResponse.json(
+          { error: 'Minimum funds to add cannot be greater than maximum funds to add' },
+          { status: 400 }
+        );
+      }
+    }
+
     if (userSettings.freeAmount && userSettings.freeAmount < 0) {
       return NextResponse.json(
         { error: 'Free amount cannot be negative' },
@@ -101,20 +128,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Build update data object, excluding minimumFundsToAddUSD if not provided
+    const updateData: any = {
+      resetPasswordEnabled: userSettings.resetPasswordEnabled ?? true,
+      signUpPageEnabled: userSettings.signUpPageEnabled ?? true,
+      nameFieldEnabled: userSettings.nameFieldEnabled ?? true,
+      emailConfirmationEnabled: userSettings.emailConfirmationEnabled ?? true,
+      resetLinkMax: userSettings.resetLinkMax ?? 3,
+      transferFundsPercentage: userSettings.transferFundsPercentage ?? 3,
+      userFreeBalanceEnabled: userSettings.userFreeBalanceEnabled ?? false,
+      freeAmount: userSettings.freeAmount ?? 0,
+      paymentBonusEnabled: userSettings.paymentBonusEnabled ?? false,
+      bonusPercentage: userSettings.bonusPercentage ?? 0,
+    };
+    
+    // Only include minimumFundsToAddUSD if it's explicitly provided
+    if (userSettings.minimumFundsToAddUSD !== undefined) {
+      updateData.minimumFundsToAddUSD = userSettings.minimumFundsToAddUSD ?? 10;
+    }
+    
+    // Only include maximumFundsToAddUSD if it's explicitly provided
+    if (userSettings.maximumFundsToAddUSD !== undefined) {
+      updateData.maximumFundsToAddUSD = userSettings.maximumFundsToAddUSD ?? 10000;
+    }
+
     await db.userSettings.upsert({
       where: { id: 1 },
-      update: {
-        resetPasswordEnabled: userSettings.resetPasswordEnabled ?? true,
-        signUpPageEnabled: userSettings.signUpPageEnabled ?? true,
-        nameFieldEnabled: userSettings.nameFieldEnabled ?? true,
-        emailConfirmationEnabled: userSettings.emailConfirmationEnabled ?? true,
-        resetLinkMax: userSettings.resetLinkMax ?? 3,
-        transferFundsPercentage: userSettings.transferFundsPercentage ?? 3,
-        userFreeBalanceEnabled: userSettings.userFreeBalanceEnabled ?? false,
-        freeAmount: userSettings.freeAmount ?? 0,
-        paymentBonusEnabled: userSettings.paymentBonusEnabled ?? false,
-        bonusPercentage: userSettings.bonusPercentage ?? 0,
-      },
+      update: updateData,
       create: {
         id: 1,
         resetPasswordEnabled: userSettings.resetPasswordEnabled ?? true,
@@ -122,6 +162,8 @@ export async function POST(request: NextRequest) {
         nameFieldEnabled: userSettings.nameFieldEnabled ?? true,
         emailConfirmationEnabled: userSettings.emailConfirmationEnabled ?? true,
         resetLinkMax: userSettings.resetLinkMax ?? 3,
+        minimumFundsToAddUSD: userSettings.minimumFundsToAddUSD ?? 10,
+        maximumFundsToAddUSD: userSettings.maximumFundsToAddUSD ?? 10000,
         transferFundsPercentage: userSettings.transferFundsPercentage ?? 3,
         userFreeBalanceEnabled: userSettings.userFreeBalanceEnabled ?? false,
         freeAmount: userSettings.freeAmount ?? 0,
@@ -138,8 +180,31 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error saving user settings:', error);
+    
+    // Check if error is related to missing database column
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorString = errorMessage.toLowerCase();
+    
+    if (errorString.includes('minimumfundstoaddusd') || 
+        errorString.includes('unknown column') || 
+        errorString.includes('column') && errorString.includes('does not exist') ||
+        errorString.includes('no such column')) {
+      return NextResponse.json(
+        { 
+          error: 'Database migration required',
+          details: 'The "minimumFundsToAddUSD" column does not exist in the database. Please run: npx prisma migrate dev --name add_minimum_funds_to_add_usd or manually add the column using SQL: ALTER TABLE user_settings ADD COLUMN minimumFundsToAddUSD FLOAT DEFAULT 10;',
+          migrationRequired: true,
+          sqlCommand: 'ALTER TABLE user_settings ADD COLUMN minimumFundsToAddUSD FLOAT DEFAULT 10;'
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to save user settings' },
+      { 
+        error: 'Failed to save user settings',
+        details: errorMessage
+      },
       { status: 500 }
     );
   }
