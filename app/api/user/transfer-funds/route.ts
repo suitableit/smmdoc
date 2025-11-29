@@ -151,7 +151,6 @@ export async function POST(req: NextRequest) {
           sender_number: 'N/A',
           userId: sender.id,
           currency: currency,
-          transaction_type: 'withdrawal',
         },
       });
 
@@ -170,7 +169,6 @@ export async function POST(req: NextRequest) {
           sender_number: 'N/A',
           userId: receiver.id,
           currency: currency,
-          transaction_type: 'deposit',
         },
       });
 

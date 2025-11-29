@@ -176,7 +176,6 @@ export async function GET(request: NextRequest) {
         payment_method: paymentMethodDisplay,
         transaction_id: withdrawalId,
         createdAt: payout.requestedAt.toISOString(),
-        transaction_type: 'withdrawal' as const,
         processedAt: payout.processedAt?.toISOString(),
         notes: adminNotes,
         cancelReason: cancelReason,

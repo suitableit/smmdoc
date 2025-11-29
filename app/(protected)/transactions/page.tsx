@@ -43,7 +43,6 @@ type Transaction = {
   payment_method?: string;
   transaction_id?: string | null;
   createdAt: string;
-  transaction_type?: 'deposit' | 'withdrawal' | 'purchase' | 'refund';
   reference_id?: string;
   sender_number?: string;
   phone?: string;
@@ -154,7 +153,6 @@ export default function TransactionsPage() {
       payment_method: 'bKash',
       transaction_id: 'TRX-123456',
       createdAt: new Date().toISOString(),
-      transaction_type: 'deposit' as const,
       sender_number: '01712345678',
       phone: '01712345678',
     },
@@ -167,7 +165,6 @@ export default function TransactionsPage() {
       payment_method: 'Nagad',
       transaction_id: 'TRX-987654',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
-      transaction_type: 'deposit' as const,
       sender_number: '01823456789',
       phone: '01823456789',
     },
@@ -180,7 +177,6 @@ export default function TransactionsPage() {
       payment_method: 'Rocket',
       transaction_id: 'TRX-456789',
       createdAt: new Date(Date.now() - 172800000).toISOString(),
-      transaction_type: 'deposit' as const,
       sender_number: '01934567890',
       phone: '01934567890',
     },
@@ -193,7 +189,6 @@ export default function TransactionsPage() {
       payment_method: 'bKash',
       transaction_id: 'TRX-111222',
       createdAt: new Date(Date.now() - 259200000).toISOString(),
-      transaction_type: 'deposit' as const,
       sender_number: '01645678901',
       phone: '01645678901',
     },
@@ -206,7 +201,6 @@ export default function TransactionsPage() {
       payment_method: 'Nagad',
       transaction_id: 'TRX-444555',
       createdAt: new Date(Date.now() - 345600000).toISOString(),
-      transaction_type: 'deposit' as const,
       sender_number: '01756789012',
       phone: '01756789012',
     },
@@ -283,7 +277,6 @@ export default function TransactionsPage() {
                 status === 'success' ? 'Payment Gateway' : 'Manual Payment',
               transaction_id: transactionId || null,
               createdAt: new Date().toISOString(),
-              transaction_type: 'deposit' as const,
               sender_number: phone || 'N/A',
               phone: phone || 'N/A',
             };
@@ -333,7 +326,6 @@ export default function TransactionsPage() {
               status === 'success' ? 'Payment Gateway' : 'Manual Payment',
             transaction_id: transactionId || null,
             createdAt: new Date().toISOString(),
-            transaction_type: 'deposit' as const,
             sender_number: phone || 'N/A',
             phone: phone || 'N/A',
           };
