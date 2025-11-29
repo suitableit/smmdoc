@@ -31,43 +31,35 @@ function PaymentSuccessContent() {
     setPageTitle('Payment Success', appName);
   }, [appName]);
 
-  // Get invoice_id from sessionStorage (stored when payment was created)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Try sessionStorage first (for new payments)
       const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
       if (storedInvoiceId) {
         setInvoiceId(storedInvoiceId);
         return;
       }
-      // Fallback: Check localStorage for backward compatibility
       try {
         const localStorageSession = localStorage.getItem('uddoktapay_session');
         if (localStorageSession) {
           const sessionData = JSON.parse(localStorageSession);
           if (sessionData.invoice_id) {
             setInvoiceId(sessionData.invoice_id);
-            // Also store in sessionStorage for consistency
             sessionStorage.setItem('payment_invoice_id', sessionData.invoice_id);
           }
         }
       } catch (e) {
-        // Ignore parsing errors
       }
     }
   }, []);
 
-  // Check authentication and validate payment access
   useEffect(() => {
     if (sessionStatus === 'loading' || !invoice_id || hasValidatedRef.current) return;
 
-    // Check if user is authenticated
     if (sessionStatus === 'unauthenticated' || !session?.user) {
       router.push('/transactions?error=unauthorized');
       return;
     }
 
-    // Validate payment access only once
     if (hasValidatedRef.current) return;
     hasValidatedRef.current = true;
 
@@ -80,12 +72,10 @@ function PaymentSuccessContent() {
         if (data.valid && data.payment) {
           setIsAuthorized(true);
           setPaymentData(data.payment);
-          // Clean up sessionStorage after successful validation
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('payment_invoice_id');
           }
           
-          // Automatically verify payment
           if (!hasVerifiedRef.current) {
             hasVerifiedRef.current = true;
             try {
@@ -98,8 +88,22 @@ function PaymentSuccessContent() {
                 // Update payment data from verification response if available
                 if (verifyData.payment) {
                   setPaymentData(verifyData.payment);
-                } else if (data.payment) {
-                  setPaymentData(data.payment);
+                } else {
+                  // If verification response doesn't have payment data, fetch fresh data
+                  try {
+                    const refreshResponse = await fetch(`/api/payment/validate-access?invoice_id=${invoice_id}`);
+                    const refreshData = await refreshResponse.json();
+                    if (refreshData.valid && refreshData.payment) {
+                      setPaymentData(refreshData.payment);
+                    } else if (data.payment) {
+                      setPaymentData(data.payment);
+                    }
+                  } catch (refreshError) {
+                    console.error('Error refreshing payment data:', refreshError);
+                    if (data.payment) {
+                      setPaymentData(data.payment);
+                    }
+                  }
                 }
               }
             } catch (verifyError) {
@@ -109,16 +113,13 @@ function PaymentSuccessContent() {
             }
           }
         } else {
-          // Clean up sessionStorage on error
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('payment_invoice_id');
           }
-          // Unauthorized or payment not found
           router.push('/transactions?error=unauthorized');
         }
       } catch (error) {
         console.error('Error validating payment access:', error);
-        // Clean up sessionStorage on error
         if (typeof window !== 'undefined') {
           sessionStorage.removeItem('payment_invoice_id');
         }
@@ -129,7 +130,6 @@ function PaymentSuccessContent() {
     };
 
     validateAndVerify();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionStatus, invoice_id, session?.user?.id]);
 
   const handleViewTransactions = () => {
@@ -150,7 +150,6 @@ function PaymentSuccessContent() {
     router.push('/add-funds');
   };
 
-  // Redirect if unauthorized (but allow rendering during loading)
   if (!isAuthorized && sessionStatus === 'authenticated' && invoice_id && !isLoading) {
     return null;
   }
@@ -167,7 +166,7 @@ function PaymentSuccessContent() {
             <p className="text-center mb-6" style={{ color: 'var(--text-muted)' }}>
               Funds have been successfully added to your account.
             </p>
-            {(invoice_id || paymentData?.amount || paymentData?.transaction_id || paymentData?.sender_number) && (
+            {(invoice_id || paymentData?.amount || paymentData?.transaction_id) && (
               <div className="space-y-4 mb-6">
                 <div className="card-header">
                   <div className="card-icon">
@@ -186,21 +185,12 @@ function PaymentSuccessContent() {
                     <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                       <span className="form-label">Amount:</span>
                       <span className="font-semibold text-lg text-green-600 dark:text-green-400">
-                        ${Number(paymentData.original_amount || paymentData.amount).toFixed(2)}
-                        {paymentData.original_amount && paymentData.original_amount !== paymentData.amount && (
-                          <span className="text-sm text-gray-500 ml-1">(≈ ${Number(paymentData.amount).toFixed(2)} USD)</span>
-                        )}
+                        ${Number(paymentData.amount).toFixed(2)}
                       </span>
                     </div>
                   )}
 
 
-                  {paymentData?.sender_number && (
-                    <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-                      <span className="form-label">Phone Number:</span>
-                      <span className="font-medium">{paymentData.sender_number}</span>
-                    </div>
-                  )}
 
                   <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <span className="form-label">Status:</span>
