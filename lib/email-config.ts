@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { db as prisma } from './db';
 import nodemailer, { Transporter } from 'nodemailer';
-
-const prisma = new PrismaClient();
 
 export interface EmailConfig {
   host: string;
@@ -23,7 +21,8 @@ export async function getEmailConfig(): Promise<EmailConfig | null> {
     if (!emailSettings || !emailSettings.smtp_host || !emailSettings.smtp_username) {
       console.warn('Email settings not configured in database');
       return null;
-    }
+    }
+
     const supportEmail = emailSettings.email || emailSettings.smtp_username;
 
     return {
@@ -57,14 +56,17 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
       auth: config.auth,
       tls: {
         rejectUnauthorized: false,
-      },
+      },
+
       pool: true,
       maxConnections: 1,
       rateDelta: 20000,
-      rateLimit: 5,
+      rateLimit: 5,
+
       connectionTimeout: 60000,
       greetingTimeout: 30000,
-      socketTimeout: 60000,
+      socketTimeout: 60000,
+
       ...(process.env.DKIM_PRIVATE_KEY && {
         dkim: {
           domainName: config.from.split('@')[1] || config.host,
@@ -72,7 +74,8 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
           privateKey: process.env.DKIM_PRIVATE_KEY,
         }
       }),
-    });
+    });
+
     console.log('🔍 Attempting to verify transporter...');
     try {
       await transporter.verify();
@@ -98,14 +101,16 @@ export async function createEmailTransporter(): Promise<Transporter | null> {
 }
 
 export async function getFromEmailAddress(): Promise<string | null> {
-  try {
+  try {
+
     const emailSettings = await prisma.emailSettings.findFirst({
       orderBy: { updated_at: 'desc' }
     });
 
     if (emailSettings?.email) {
       return emailSettings.email;
-    }
+    }
+
     return emailSettings?.smtp_username || null;
   } catch (error) {
     console.error('Error fetching support email from Email Settings:', error);

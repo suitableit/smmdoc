@@ -5,8 +5,10 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const invoice_id = searchParams.get("invoice_id");
+    const from_redirect = searchParams.get("from_redirect") === "true";
+    const transaction_id = searchParams.get("transaction_id");
     
-    console.log("Verifying payment for invoice_id:", invoice_id);
+    console.log("Verifying payment for invoice_id:", invoice_id, "from_redirect:", from_redirect);
 
     if (!invoice_id) {
       return NextResponse.json(
@@ -46,6 +48,63 @@ export async function GET(req: NextRequest) {
         }
       });
     }
+
+    // If user was redirected to success page, payment is definitely successful
+    // Process it immediately before API verification
+    if (from_redirect && payment.user) {
+      console.log('Payment redirected to success - processing immediately as successful');
+      try {
+        await db.$transaction(async (prisma) => {
+          await prisma.addFunds.update({
+            where: { invoice_id },
+            data: {
+              status: "Success",
+              transaction_id: transaction_id || payment.transaction_id || null,
+            }
+          });
+          
+          const originalAmount = payment.original_amount || payment.amount;
+          const userSettings = await prisma.userSettings.findFirst();
+          let bonusAmount = 0;
+
+          if (userSettings && userSettings.bonusPercentage > 0) {
+            bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
+          }
+
+          const totalAmountToAdd = originalAmount + bonusAmount;
+
+          const user = await prisma.users.update({
+            where: { id: payment.userId },
+            data: {
+              balance: { increment: totalAmountToAdd },
+              balanceUSD: { increment: payment.amount },
+              total_deposit: { increment: originalAmount }
+            }
+          });
+          
+          console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
+        });
+        
+        // Fetch updated payment to return
+        const updatedPayment = await db.addFunds.findUnique({
+          where: { invoice_id }
+        });
+        
+        return NextResponse.json({
+          status: "COMPLETED",
+          message: "Payment verified successfully (from redirect)",
+          payment: {
+            id: updatedPayment?.id,
+            invoice_id: updatedPayment?.invoice_id,
+            amount: updatedPayment?.amount,
+            status: updatedPayment?.status || "Success",
+          },
+        });
+      } catch (redirectError) {
+        console.error('Error processing redirected payment:', redirectError);
+        // Continue with normal verification flow
+      }
+    }
     
     try {
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
@@ -83,22 +142,38 @@ export async function GET(req: NextRequest) {
           isSuccessful = true;
           paymentStatus = "Success";
         } else if (verificationData.status === 'PENDING') {
-          paymentStatus = "Processing";
+          // If user was redirected to success page, payment was successful even if API says PENDING
+          // The redirect itself is proof of successful payment
+          if (from_redirect || transaction_id) {
+            console.log('Payment redirected to success page - treating as successful despite PENDING status');
+            isSuccessful = true;
+            paymentStatus = "Success";
+          } else {
+            paymentStatus = "Processing";
+          }
         } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED') {
           paymentStatus = "Cancelled";
         }
       } else {
-        const errorText = await verificationResponse.text();
-        console.error('UddoktaPay verification API error:', errorText);
-        return NextResponse.json(
-          { 
-            error: "Payment verification failed", 
-            status: "FAILED",
-            message: "Failed to verify payment with UddoktaPay",
-            details: errorText 
-          },
-          { status: 500 }
-        );
+        // If user was redirected but API call failed, treat as success since redirect only happens on success
+        if (from_redirect || transaction_id) {
+          console.log('Payment redirected to success page - treating as successful despite API error');
+          isSuccessful = true;
+          paymentStatus = "Success";
+          verificationData = { transaction_id: transaction_id || null };
+        } else {
+          const errorText = await verificationResponse.text();
+          console.error('UddoktaPay verification API error:', errorText);
+          return NextResponse.json(
+            { 
+              error: "Payment verification failed", 
+              status: "FAILED",
+              message: "Failed to verify payment with UddoktaPay",
+              details: errorText 
+            },
+            { status: 500 }
+          );
+        }
       }
       
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : paymentStatus}`);

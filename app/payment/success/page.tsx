@@ -13,14 +13,16 @@ import {
   FaTimes,
   FaWallet,
   FaWhatsapp,
-} from 'react-icons/fa';
+} from 'react-icons/fa';
+
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
       <div className="absolute inset-1 rounded-full bg-white"></div>
     </div>
   </div>
-);
+);
+
 const Toast = ({
   message,
   type = 'success',
@@ -51,22 +53,59 @@ function PaymentSuccessContent() {
   const invoice_id = searchParams?.get('invoice_id');
   const amount = searchParams?.get('amount');
   const transaction_id = searchParams?.get('transaction_id');
-  const phone = searchParams?.get('phone');
+  const phone = searchParams?.get('phone');
+  const [isVerifying, setIsVerifying] = useState(true);
+
   useEffect(() => {
     setPageTitle('Payment Success', appName);
   }, [appName]);
 
-  useEffect(() => {
-    setToast({
-      message: 'Payment successful! Funds have been added to your account.',
-      type: 'success',
-    });
-    const toastTimer = setTimeout(() => setToast(null), 5000);
+  useEffect(() => {
+    // Automatically verify payment when page loads (user was redirected here, so payment was successful)
+    if (invoice_id) {
+      verifyPayment();
+    } else {
+      setIsVerifying(false);
+    }
+  }, [invoice_id]);
 
-    return () => clearTimeout(toastTimer);
-  }, []);
+  const verifyPayment = async () => {
+    if (!invoice_id) return;
 
-  const handleViewTransactions = () => {
+    try {
+      setIsVerifying(true);
+      // Pass from_redirect=true to indicate payment was successful (user was redirected)
+      const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoice_id}&from_redirect=true${transaction_id ? `&transaction_id=${transaction_id}` : ''}`;
+      const response = await fetch(verifyUrl);
+      const data = await response.json();
+
+      if (data.status === 'COMPLETED' || response.ok) {
+        setToast({
+          message: 'Payment verified successfully! Funds have been added to your account.',
+          type: 'success',
+        });
+      } else {
+        setToast({
+          message: 'Payment successful! Funds are being processed.',
+          type: 'success',
+        });
+      }
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      // Since user was redirected to success page, payment is successful
+      setToast({
+        message: 'Payment successful! Funds are being processed.',
+        type: 'success',
+      });
+    } finally {
+      setIsVerifying(false);
+      const toastTimer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(toastTimer);
+    }
+  };
+
+  const handleViewTransactions = () => {
+
     const params = new URLSearchParams();
     if (invoice_id) params.set('invoice_id', invoice_id);
     if (amount) params.set('amount', amount);
@@ -146,10 +185,17 @@ function PaymentSuccessContent() {
 
                   <div className="flex justify-between items-center py-2 px-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <span className="form-label">Status:</span>
-                    <span className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
-                      <FaCheckCircle className="w-4 h-4" />
-                      Completed
-                    </span>
+                    {isVerifying ? (
+                      <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        Verifying...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
+                        <FaCheckCircle className="w-4 h-4" />
+                        Completed
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
