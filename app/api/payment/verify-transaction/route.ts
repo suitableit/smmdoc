@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
       let isSuccessful = false;
       let verificationStatus = 'PENDING';
       let verificationData: any = null;
+      let finalTransactionId = transaction_id;
+      let finalPhone = phone;
 
       if (verificationResponse.ok) {
         verificationData = await verificationResponse.json();
@@ -78,10 +80,10 @@ export async function POST(req: NextRequest) {
 
         // Update payment record with data from UddoktaPay response
         if (verificationData.transaction_id) {
-          transaction_id = verificationData.transaction_id;
+          finalTransactionId = verificationData.transaction_id;
         }
         if (verificationData.sender_number) {
-          phone = verificationData.sender_number;
+          finalPhone = verificationData.sender_number;
         }
 
         if (
@@ -117,8 +119,8 @@ export async function POST(req: NextRequest) {
               data: {
                 status: 'Success',
                 admin_status: 'approved',
-                transaction_id: transaction_id || payment.transaction_id,
-                sender_number: phone || payment.sender_number,
+                transaction_id: finalTransactionId || payment.transaction_id,
+                sender_number: finalPhone || payment.sender_number,
                 payment_method: verificationData?.payment_method || payment.payment_method || 'UddoktaPay',
               },
             });
@@ -153,7 +155,7 @@ export async function POST(req: NextRequest) {
             const emailData = emailTemplates.paymentSuccess({
               userName: payment.user.name || 'Customer',
               userEmail: payment.user.email,
-              transactionId: transaction_id,
+              transactionId: finalTransactionId,
               amount: payment.amount.toString(),
               currency: payment.currency || 'USD',
               date: new Date().toLocaleDateString(),
@@ -191,7 +193,7 @@ export async function POST(req: NextRequest) {
               invoice_id: payment.invoice_id,
               amount: payment.amount,
               status: 'Success',
-              transaction_id: transaction_id,
+              transaction_id: finalTransactionId,
             },
           });
         } catch (transactionError) {
@@ -208,8 +210,8 @@ export async function POST(req: NextRequest) {
         await db.addFunds.update({
           where: { invoice_id },
           data: {
-            transaction_id: transaction_id,
-            sender_number: phone,
+            transaction_id: finalTransactionId,
+            sender_number: finalPhone,
             admin_status: 'pending',
           },
         });
@@ -223,7 +225,7 @@ export async function POST(req: NextRequest) {
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: payment.userId.toString(),
-          phone: phone,
+          phone: finalPhone,
         });
 
         await sendMail({
@@ -239,7 +241,7 @@ export async function POST(req: NextRequest) {
             invoice_id: payment.invoice_id,
             amount: payment.amount,
             status: 'Processing',
-            transaction_id: transaction_id,
+            transaction_id: finalTransactionId,
           },
         });
       } else {
@@ -248,8 +250,8 @@ export async function POST(req: NextRequest) {
           data: {
             status: 'Cancelled',
             admin_status: 'cancelled',
-            transaction_id: transaction_id,
-            sender_number: phone,
+            transaction_id: finalTransactionId,
+            sender_number: finalPhone,
           },
         });
 
@@ -260,7 +262,7 @@ export async function POST(req: NextRequest) {
             invoice_id: payment.invoice_id,
             amount: payment.amount,
             status: 'Cancelled',
-            transaction_id: transaction_id,
+            transaction_id: finalTransactionId,
           },
         });
       }
