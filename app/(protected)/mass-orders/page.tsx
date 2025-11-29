@@ -223,36 +223,15 @@ export default function MassOrder() {
     checkMassOrderSettings();
   }, [router]);
 
-  if (isAccessCheckLoading || !massOrderEnabled) {
-    return null;
-  }
-
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsFormLoading(false);
-    }, 1500);
+    if (!isAccessCheckLoading && massOrderEnabled) {
+      const timer = setTimeout(() => {
+        setIsFormLoading(false);
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const balance = userStats?.balance || 0;
-  const totalSpend = userStats?.totalSpent || 0;
-  const totalOrdersCount = userStats?.totalOrders || 0;
-
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToastMessage({ message, type });
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  const formatCurrency = (amount: number) => {
-    if (currentCurrencyData && currencySettings) {
-      return formatCurrencyAmount(amount, currentCurrencyData.code, availableCurrencies, currencySettings);
+      return () => clearTimeout(timer);
     }
-    return `$${amount.toFixed(2)}`;
-  };
+  }, [isAccessCheckLoading, massOrderEnabled]);
 
   const validateOrders = useCallback(async (input: string) => {
     if (!input.trim()) {
@@ -306,13 +285,36 @@ export default function MassOrder() {
     }
   }, [currentCurrencyData, availableCurrencies, userStats, currencySettings]);
 
-  const handleNewOrderClick = () => {
-    router.push('/new-order');
-  };
-
   const parseOrders = useCallback(async (text: string) => {
     await validateOrders(text);
   }, [validateOrders]);
+
+  if (isAccessCheckLoading || !massOrderEnabled) {
+    return null;
+  }
+
+  const balance = userStats?.balance || 0;
+  const totalSpend = userStats?.totalSpent || 0;
+  const totalOrdersCount = userStats?.totalOrders || 0;
+
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToastMessage({ message, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (currentCurrencyData && currencySettings) {
+      return formatCurrencyAmount(amount, currentCurrencyData.code, availableCurrencies, currencySettings);
+    }
+    return `$${amount.toFixed(2)}`;
+  };
+
+  const handleNewOrderClick = () => {
+    router.push('/new-order');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

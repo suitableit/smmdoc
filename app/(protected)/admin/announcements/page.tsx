@@ -8,7 +8,6 @@ import {
   FaEye,
   FaEyeSlash,
   FaSearch,
-  FaFilter,
   FaBullhorn,
   FaExclamationTriangle,
   FaInfoCircle,
@@ -18,10 +17,6 @@ import {
   FaUsers,
   FaTimes,
   FaSave,
-  FaChevronDown,
-  FaChevronUp,
-  FaSortAmountDown,
-  FaSortAmountUp,
 } from 'react-icons/fa';
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -95,22 +90,28 @@ const Toast = ({
 );
 
 interface Announcement {
-  id: string;
+  id: number;
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success' | 'critical';
   status: 'active' | 'scheduled' | 'expired' | 'draft';
   targetedAudience: 'all' | 'admins' | 'moderators';
-  startDate: string;
-  endDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
+  startDate: string | Date;
+  endDate: string | Date | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  createdBy: number;
   views: number;
   isSticky: boolean;
   buttonEnabled: boolean;
-  buttonText: string;
-  buttonLink: string;
+  buttonText: string | null;
+  buttonLink: string | null;
+  user?: {
+    id: number;
+    username: string | null;
+    name: string | null;
+    email: string | null;
+  };
 }
 
 interface AnnouncementFormData {
@@ -133,101 +134,8 @@ const AnnouncementsPage = () => {
     setPageTitle('Announcements', appName);
   }, [appName]);
 
-  const dummyAnnouncements: Announcement[] = [
-    {
-      id: 'ann_001',
-      title: 'System Maintenance Scheduled',
-      content: 'We will be performing scheduled maintenance on Sunday, January 28th from 2:00 AM to 6:00 AM EST. During this time, the platform may be temporarily unavailable. We apologize for any inconvenience.',
-      type: 'warning',
-      status: 'active',
-      targetedAudience: 'all',
-      startDate: '2024-01-26T10:00:00Z',
-      endDate: '2024-01-29T06:00:00Z',
-      createdAt: '2024-01-25T14:30:00Z',
-      updatedAt: '2024-01-25T14:30:00Z',
-      createdBy: 'Admin Team',
-      views: 1247,
-      isSticky: true,
-      buttonEnabled: true,
-      buttonText: 'View Maintenance Details',
-      buttonLink: '/maintenance-schedule',
-    },
-    {
-      id: 'ann_002',
-      title: 'New Feature Release: Advanced Analytics',
-      content: 'We\'re excited to announce the release of our new Advanced Analytics dashboard! Get deeper insights into your data with enhanced reporting, custom metrics, and real-time visualizations.',
-      type: 'success',
-      status: 'active',
-      targetedAudience: 'all',
-      startDate: '2024-01-20T09:00:00Z',
-      endDate: null,
-      createdAt: '2024-01-20T09:00:00Z',
-      updatedAt: '2024-01-22T11:15:00Z',
-      createdBy: 'Product Team',
-      views: 856,
-      isSticky: false,
-      buttonEnabled: true,
-      buttonText: 'Try New Features',
-      buttonLink: '/analytics',
-    },
-    {
-      id: 'ann_003',
-      title: 'Security Update Required',
-      content: 'All users are required to update their passwords by February 1st, 2024. This is part of our ongoing security enhancement initiative to protect your account.',
-      type: 'critical',
-      status: 'active',
-      targetedAudience: 'all',
-      startDate: '2024-01-15T08:00:00Z',
-      endDate: '2024-02-01T23:59:59Z',
-      createdAt: '2024-01-15T08:00:00Z',
-      updatedAt: '2024-01-15T08:00:00Z',
-      createdBy: 'Security Team',
-      views: 2103,
-      isSticky: true,
-      buttonEnabled: true,
-      buttonText: 'Update Password',
-      buttonLink: '/account/password',
-    },
-    {
-      id: 'ann_004',
-      title: 'Holiday Office Hours',
-      content: 'Our support team will have modified hours during the holiday season. From December 23rd to January 2nd, support will be available Monday-Friday, 9 AM to 5 PM EST.',
-      type: 'info',
-      status: 'expired',
-      targetedAudience: 'all',
-      startDate: '2023-12-20T10:00:00Z',
-      endDate: '2024-01-03T17:00:00Z',
-      createdAt: '2023-12-18T16:00:00Z',
-      updatedAt: '2023-12-18T16:00:00Z',
-      createdBy: 'HR Team',
-      views: 432,
-      isSticky: false,
-      buttonEnabled: false,
-      buttonText: '',
-      buttonLink: '',
-    },
-    {
-      id: 'ann_005',
-      title: 'Upcoming Webinar: Best Practices',
-      content: 'Join us for an exclusive webinar on February 15th at 2 PM EST where we\'ll discuss best practices for platform optimization and advanced usage tips.',
-      type: 'info',
-      status: 'scheduled',
-      targetedAudience: 'all',
-      startDate: '2024-02-10T10:00:00Z',
-      endDate: '2024-02-16T17:00:00Z',
-      createdAt: '2024-01-28T12:00:00Z',
-      updatedAt: '2024-01-28T12:00:00Z',
-      createdBy: 'Marketing Team',
-      views: 0,
-      isSticky: false,
-      buttonEnabled: true,
-      buttonText: 'Register Now',
-      buttonLink: '/webinar-registration',
-    },
-  ];
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
-  const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>(dummyAnnouncements);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [toast, setToast] = useState<{
@@ -244,7 +152,7 @@ const AnnouncementsPage = () => {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
@@ -268,10 +176,26 @@ const AnnouncementsPage = () => {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnnouncementsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    const fetchAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        const response = await fetch('/api/admin/announcements');
+        const data = await response.json();
+        
+        if (data.success) {
+          setAnnouncements(data.data);
+        } else {
+          showToast('Failed to load announcements', 'error');
+        }
+      } catch (error) {
+        console.error('Error fetching announcements:', error);
+        showToast('Error loading announcements', 'error');
+      } finally {
+        setAnnouncementsLoading(false);
+      }
+    };
+
+    fetchAnnouncements();
   }, []);
 
   useEffect(() => {
@@ -299,8 +223,8 @@ const AnnouncementsPage = () => {
           break;
         case 'date':
         default:
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
+          aValue = typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : a.createdAt.getTime();
+          bValue = typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : b.createdAt.getTime();
           break;
       }
 
@@ -340,32 +264,26 @@ const AnnouncementsPage = () => {
 
     try {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/admin/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-      const newAnnouncement: Announcement = {
-        id: `ann_${Date.now()}`,
-        title: formData.title,
-        content: formData.content,
-        type: formData.type,
-        status: new Date(formData.startDate) <= new Date() ? 'active' : 'scheduled',
-        targetedAudience: formData.targetedAudience,
-        startDate: formData.startDate,
-        endDate: formData.endDate || null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        createdBy: 'Current User',
-        views: 0,
-        isSticky: formData.isSticky,
-        buttonEnabled: formData.buttonEnabled,
-        buttonText: formData.buttonText,
-        buttonLink: formData.buttonLink,
-      };
+      const data = await response.json();
 
-      setAnnouncements(prev => [newAnnouncement, ...prev]);
-      setShowCreateModal(false);
-      resetForm();
-      showToast('Announcement created successfully!', 'success');
+      if (data.success) {
+        setAnnouncements(prev => [data.data, ...prev]);
+        setShowCreateModal(false);
+        resetForm();
+        showToast('Announcement created successfully!', 'success');
+      } else {
+        const errorMsg = data.error || 'Error creating announcement';
+        console.error('Create announcement error:', data);
+        showToast(errorMsg, 'error');
+      }
     } catch (error) {
+      console.error('Create announcement exception:', error);
       showToast('Error creating announcement', 'error');
     } finally {
       setIsLoading(false);
@@ -380,30 +298,24 @@ const AnnouncementsPage = () => {
 
     try {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`/api/admin/announcements/${editingAnnouncement.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-      setAnnouncements(prev => prev.map(ann => 
-        ann.id === editingAnnouncement.id 
-          ? {
-              ...ann,
-              title: formData.title,
-              content: formData.content,
-              type: formData.type,
-              targetedAudience: formData.targetedAudience,
-              startDate: formData.startDate,
-              endDate: formData.endDate || null,
-              updatedAt: new Date().toISOString(),
-              isSticky: formData.isSticky,
-              buttonEnabled: formData.buttonEnabled,
-              buttonText: formData.buttonText,
-              buttonLink: formData.buttonLink,
-            }
-          : ann
-      ));
+      const data = await response.json();
 
-      setEditingAnnouncement(null);
-      resetForm();
-      showToast('Announcement updated successfully!', 'success');
+      if (data.success) {
+        setAnnouncements(prev => prev.map(ann => 
+          ann.id === editingAnnouncement.id ? data.data : ann
+        ));
+        setEditingAnnouncement(null);
+        resetForm();
+        showToast('Announcement updated successfully!', 'success');
+      } else {
+        showToast(data.error || 'Error updating announcement', 'error');
+      }
     } catch (error) {
       showToast('Error updating announcement', 'error');
     } finally {
@@ -411,14 +323,22 @@ const AnnouncementsPage = () => {
     }
   };
 
-  const handleDeleteAnnouncement = async (id: string) => {
+  const handleDeleteAnnouncement = async (id: number) => {
     try {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await fetch(`/api/admin/announcements/${id}`, {
+        method: 'DELETE',
+      });
 
-      setAnnouncements(prev => prev.filter(ann => ann.id !== id));
-      setShowDeleteConfirm(null);
-      showToast('Announcement deleted successfully!', 'success');
+      const data = await response.json();
+
+      if (data.success) {
+        setAnnouncements(prev => prev.filter(ann => ann.id !== id));
+        setShowDeleteConfirm(null);
+        showToast('Announcement deleted successfully!', 'success');
+      } else {
+        showToast(data.error || 'Error deleting announcement', 'error');
+      }
     } catch (error) {
       showToast('Error deleting announcement', 'error');
     } finally {
@@ -426,17 +346,26 @@ const AnnouncementsPage = () => {
     }
   };
 
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
+  const handleToggleStatus = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'draft' : 'active';
 
     try {
-      setAnnouncements(prev => prev.map(ann => 
-        ann.id === id 
-          ? { ...ann, status: newStatus as any, updatedAt: new Date().toISOString() }
-          : ann
-      ));
+      const response = await fetch(`/api/admin/announcements/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
-      showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success');
+      const data = await response.json();
+
+      if (data.success) {
+        setAnnouncements(prev => prev.map(ann => 
+          ann.id === id ? data.data : ann
+        ));
+        showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success');
+      } else {
+        showToast(data.error || 'Error updating announcement status', 'error');
+      }
     } catch (error) {
       showToast('Error updating announcement status', 'error');
     }
@@ -444,17 +373,26 @@ const AnnouncementsPage = () => {
 
   const startEditing = (announcement: Announcement) => {
     setEditingAnnouncement(announcement);
+    const startDate = typeof announcement.startDate === 'string' 
+      ? announcement.startDate.split('T')[0]
+      : new Date(announcement.startDate).toISOString().split('T')[0];
+    const endDate = announcement.endDate 
+      ? (typeof announcement.endDate === 'string' 
+          ? announcement.endDate.split('T')[0]
+          : new Date(announcement.endDate).toISOString().split('T')[0])
+      : '';
+    
     setFormData({
       title: announcement.title,
       content: announcement.content,
       type: announcement.type,
       targetedAudience: announcement.targetedAudience,
-      startDate: announcement.startDate.split('T')[0],
-      endDate: announcement.endDate ? announcement.endDate.split('T')[0] : '',
+      startDate,
+      endDate,
       isSticky: announcement.isSticky,
       buttonEnabled: announcement.buttonEnabled,
-      buttonText: announcement.buttonText,
-      buttonLink: announcement.buttonLink,
+      buttonText: announcement.buttonText || '',
+      buttonLink: announcement.buttonLink || '',
     });
   };
 
@@ -632,7 +570,7 @@ const AnnouncementsPage = () => {
                           </span>
                         </div>
 
-                        {announcement.buttonEnabled && announcement.buttonText && (
+                        {announcement.buttonEnabled && announcement.buttonText && announcement.buttonLink && (
                           <div className="mb-3">
                             <a
                               href={announcement.buttonLink}
@@ -650,7 +588,7 @@ const AnnouncementsPage = () => {
                             <FaCalendarAlt className="h-3 w-3" />
                             Created {new Date(announcement.createdAt).toLocaleDateString()}
                           </span>
-                          <span>by {announcement.createdBy}</span>
+                          <span>by {announcement.user?.name || announcement.user?.username || `User ${announcement.createdBy}` || 'Unknown'}</span>
                           {announcement.endDate && (
                             <span className="flex items-center gap-1">
                               <FaClock className="h-3 w-3" />
@@ -822,7 +760,7 @@ const AnnouncementsPage = () => {
                       type="checkbox"
                       checked={formData.buttonEnabled}
                       onChange={(e) => setFormData(prev => ({ ...prev, buttonEnabled: e.target.checked }))}
-                      className="form-checkbox"
+                      className="w-4 h-4 text-[var(--primary)] bg-gray-100 border-gray-300 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <span className="form-label">Enable Action Button</span>
                   </label>
@@ -860,7 +798,7 @@ const AnnouncementsPage = () => {
                       type="checkbox"
                       checked={formData.isSticky}
                       onChange={(e) => setFormData(prev => ({ ...prev, isSticky: e.target.checked }))}
-                      className="form-checkbox"
+                      className="w-4 h-4 text-[var(--primary)] bg-gray-100 border-gray-300 rounded focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <span className="form-label">Pin this announcement</span>
                   </label>
@@ -887,11 +825,7 @@ const AnnouncementsPage = () => {
                   className="btn btn-primary flex items-center gap-2 px-4 py-2"
                   disabled={isLoading}
                 >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <FaSave className="h-4 w-4" />
-                  )}
+                  <FaSave className="h-4 w-4" />
                   {isLoading ? 'Saving...' : (editingAnnouncement ? 'Update' : 'Create')}
                 </button>
               </div>

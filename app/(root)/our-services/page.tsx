@@ -12,13 +12,15 @@ export const metadata: Metadata = {
   description: 'Explore our comprehensive social media marketing services.',
 };
 
-export default async function OurServicesPage() {
+export default async function OurServicesPage() {
+
   const moduleSettings = await db.moduleSettings.findFirst();
-  const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
+  const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
+
   if (!servicesListPublic) {
     const session = await auth();
     if (!session?.user) {
-      redirect('/sign-in?callbackUrl=/our-services');
+      redirect('/sign-in?callbackUrl=/our-services&reason=services-restricted');
     }
   }
 

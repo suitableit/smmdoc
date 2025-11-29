@@ -1,5 +1,6 @@
 'use client';
 
+import Announcements from '@/components/dashboard/announcements';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
@@ -10,6 +11,7 @@ import moment from 'moment';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import {
     FaChartLine,
     FaCheckCircle,
@@ -50,6 +52,7 @@ const DashboardPage = () => {
   const user = useCurrentUser();
   const { currency, rate: currencyRate, currentCurrencyData } = useCurrency();
   const router = useRouter();
+  const { data: session } = useSession();
   const { data: userStatsResponse, error, isLoading } = useGetUserStatsQuery(undefined);
   const userStats = userStatsResponse?.data;
 
@@ -208,6 +211,10 @@ const DashboardPage = () => {
           />
         )}
       </div>
+
+      {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && (
+        <Announcements />
+      )}
 
       <div className="page-content">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">

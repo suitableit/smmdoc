@@ -40,6 +40,8 @@ model Users {
   twoFactorConfirmation   TwoFactorConfirmations?
   supportTickets          SupportTickets[]
   repliedSupportTickets   SupportTickets[]        @relation("RepliedByUser")
+  announcements           Announcements[]
+  dismissedAnnouncements  DismissedAnnouncements[]
 
   @@map("users")
 }
