@@ -4,6 +4,7 @@ import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
     FaCheckCircle,
     FaClock,
@@ -93,6 +94,8 @@ function StatusBadge({ status }: { status: Transaction['status'] }) {
 
 export default function TransactionsPage() {
   const { appName } = useAppNameWithFallback();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const { currency, rate } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -120,10 +123,88 @@ export default function TransactionsPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [hasShownPaymentToast, setHasShownPaymentToast] = useState(false);
+
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     setPageTitle('Transactions', appName);
   }, [appName]);
+
+  // Handle payment redirect toasts
+  useEffect(() => {
+    if (typeof window === 'undefined' || hasShownPaymentToast) return;
+
+    const paymentStatus = searchParams.get('payment');
+    const invoiceId = searchParams.get('invoice_id');
+    const transactionId = searchParams.get('transaction_id');
+
+    if (paymentStatus) {
+      setHasShownPaymentToast(true);
+
+      if (paymentStatus === 'success') {
+        showToast(
+          invoiceId
+            ? `Payment completed successfully! Invoice ID: ${invoiceId}`
+            : 'Payment completed successfully!',
+          'success'
+        );
+        
+        // Verify payment if invoice_id is provided
+        if (invoiceId) {
+          setTimeout(async () => {
+            try {
+              let transactionIdParam = '';
+              if (transactionId) {
+                transactionIdParam = `&transaction_id=${transactionId}`;
+              } else if (typeof window !== 'undefined') {
+                const storedTransactionId = sessionStorage.getItem('payment_transaction_id');
+                if (storedTransactionId) {
+                  transactionIdParam = `&transaction_id=${storedTransactionId}`;
+                }
+              }
+              const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoiceId}&from_redirect=true${transactionIdParam}`;
+              await fetch(verifyUrl);
+            } catch (error) {
+              console.error('Payment verification error:', error);
+            }
+          }, 1000);
+        }
+      } else if (paymentStatus === 'pending') {
+        showToast(
+          invoiceId
+            ? `Payment is pending verification. Invoice ID: ${invoiceId}`
+            : 'Payment is pending verification.',
+          'pending'
+        );
+      } else if (paymentStatus === 'cancelled') {
+        showToast('Payment was cancelled.', 'info');
+      } else if (paymentStatus === 'failed') {
+        showToast(
+          invoiceId
+            ? `Payment failed. Invoice ID: ${invoiceId}`
+            : 'Payment failed.',
+          'error'
+        );
+      }
+
+      // Clean up URL parameters after showing toast
+      setTimeout(() => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('payment');
+        url.searchParams.delete('invoice_id');
+        url.searchParams.delete('transaction_id');
+        router.replace(url.pathname + url.search);
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, hasShownPaymentToast]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -205,14 +286,6 @@ export default function TransactionsPage() {
       phone: '01756789012',
     },
   ];
-
-  const showToast = (
-    message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
 
   const fetchTransactions = async (isRefresh = false) => {
     try {

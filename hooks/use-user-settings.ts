@@ -8,6 +8,8 @@ interface UserSettings {
   nameFieldEnabled: boolean;
   emailConfirmationEnabled: boolean;
   resetLinkMax: number;
+  minimumFundsToAddUSD: number;
+  maximumFundsToAddUSD: number;
   transferFundsPercentage: number;
   userFreeBalanceEnabled: boolean;
   freeAmount: number;
@@ -47,13 +49,16 @@ export function useUserSettings(): UseUserSettingsReturn {
       }
     } catch (err) {
       console.error('Error fetching user settings:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Unknown error');
+
       setSettings({
         resetPasswordEnabled: true,
         signUpPageEnabled: true,
         nameFieldEnabled: true,
         emailConfirmationEnabled: true,
         resetLinkMax: 3,
+        minimumFundsToAddUSD: 10,
+        maximumFundsToAddUSD: 10000,
         transferFundsPercentage: 3,
         userFreeBalanceEnabled: false,
         freeAmount: 0,

@@ -15,7 +15,6 @@ export const publicRoutes = [
   '/contact/form-styles',
   '/new-password',
   '/database-error',
-  '/api/exchange-rate',
   '/api/currencies/enabled',
   '/api/user/services',
   '/api/user/services/favorite-status',

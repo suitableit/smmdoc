@@ -272,6 +272,8 @@ interface UserSettings {
   nameFieldEnabled: boolean;
   emailConfirmationEnabled: boolean;
   resetLinkMax: number;
+  minimumFundsToAddUSD: number;
+  maximumFundsToAddUSD: number;
   transferFundsPercentage: number;
   userFreeBalanceEnabled: boolean;
   freeAmount: number;
@@ -361,6 +363,8 @@ const GeneralSettingsPage = () => {
     nameFieldEnabled: true,
     emailConfirmationEnabled: true,
     resetLinkMax: 3,
+    minimumFundsToAddUSD: 10,
+    maximumFundsToAddUSD: 10000,
     transferFundsPercentage: 3,
     userFreeBalanceEnabled: false,
     freeAmount: 0,
@@ -564,14 +568,24 @@ const GeneralSettingsPage = () => {
         body: JSON.stringify({ userSettings }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         showToast('User settings saved successfully!', 'success');
       } else {
-        showToast('Failed to save user settings', 'error');
+        const errorMessage = data.details || data.error || 'Failed to save user settings';
+        console.error('Error saving user settings:', errorMessage);
+        showToast(errorMessage, 'error');
+        
+        // If migration is required, show additional info
+        if (data.migrationRequired) {
+          console.warn('Database migration required. Please add the minimumFundsToAddUSD column.');
+        }
       }
     } catch (error) {
       console.error('Error saving user settings:', error);
-      showToast('Error saving user settings', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Error saving user settings';
+      showToast(errorMessage, 'error');
     } finally {
       setLoadingStates(prev => ({ ...prev, user: false }));
     }
@@ -1296,6 +1310,40 @@ const GeneralSettingsPage = () => {
                       setUserSettings(prev => ({
                         ...prev,
                         resetLinkMax: parseInt(e.target.value) || 3
+                      }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Minimum funds to add (in USD)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={userSettings.minimumFundsToAddUSD}
+                    onChange={(e) =>
+                      setUserSettings(prev => ({
+                        ...prev,
+                        minimumFundsToAddUSD: parseFloat(e.target.value) || 10
+                      }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Maximum funds to add (in USD)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={userSettings.maximumFundsToAddUSD}
+                    onChange={(e) =>
+                      setUserSettings(prev => ({
+                        ...prev,
+                        maximumFundsToAddUSD: parseFloat(e.target.value) || 10000
                       }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

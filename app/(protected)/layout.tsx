@@ -108,16 +108,6 @@ export default function ProtectedLayout({
     return () => clearInterval(checkInterval);
   }, [session?.user?.id, isValidating]);
 
-  if (isValidating || status === 'loading') {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="loading-spinner mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (status === 'unauthenticated' || !session?.user) {
     if (typeof window !== 'undefined') {

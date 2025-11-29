@@ -52,19 +52,22 @@ export function CurrencyProvider({
   const [isClient, setIsClient] = useState(false);
   const [availableCurrencies, setAvailableCurrencies] = useState<Currency[]>([]);
   const [currentCurrencyData, setCurrentCurrencyData] = useState<Currency | null>(null);
-  const [currencySettings, setCurrencySettings] = useState<CurrencySettings | null>(null);
+  const [currencySettings, setCurrencySettings] = useState<CurrencySettings | null>(null);
+
   const loadCurrencyData = async () => {
     try {
       setIsLoading(true);
       const { currencies, settings } = await fetchCurrencyData();
       setAvailableCurrencies(currencies);
-      setCurrencySettings(settings);
+      setCurrencySettings(settings);
+
       console.log('Currency data loaded successfully:', {
         currenciesCount: currencies.length,
         defaultCurrency: settings.defaultCurrency
       });
     } catch (error) {
-      console.error('Error loading currency data:', error);
+      console.error('Error loading currency data:', error);
+
       const fallbackCurrencies: Currency[] = [
         { id: 1, code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.0000, enabled: true },
         { id: 5, code: 'BDT', name: 'Bangladeshi Taka', symbol: '৳', rate: 110.0000, enabled: true },
@@ -87,32 +90,39 @@ export function CurrencyProvider({
     } finally {
       setIsLoading(false);
     }
-  };
+  };
+
   const refreshCurrencyData = useCallback(async () => {
     clearCurrencyCache();
-    await loadCurrencyData();
+    await loadCurrencyData();
+
   }, []);
 
   useEffect(() => {
     loadCurrencyData();
-  }, []);
+  }, []);
+
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true);
+
     if (typeof window !== 'undefined') {
       const savedCurrency = localStorage.getItem('currency') as string | null;
       if (savedCurrency && !serverCurrency) {
         setCurrencyState(savedCurrency);
       }
     }
-  }, [serverCurrency]);
+  }, [serverCurrency]);
+
   useEffect(() => {
     if (availableCurrencies.length > 0) {
       const currencyData = availableCurrencies.find(c => c.code === currency);
-      setCurrentCurrencyData(currencyData || null);
+      setCurrentCurrencyData(currencyData || null);
+
       const usdData = availableCurrencies.find(c => c.code === 'USD');
       const bdtData = availableCurrencies.find(c => c.code === 'BDT');
 
-      if (usdData && bdtData) {
+      if (usdData && bdtData) {
+
         const usdToBdtRate = Number(bdtData.rate) / Number(usdData.rate);
         setRate(usdToBdtRate);
       } else if (currencyData) {
@@ -121,55 +131,22 @@ export function CurrencyProvider({
     }
   }, [currency, availableCurrencies]);
 
-  useEffect(() => {
-    const fetchRate = async () => {
-      try {
-        setIsLoading(true);
-        if (availableCurrencies.length > 0) {
-          const bdtData = availableCurrencies.find(c => c.code === 'BDT');
-          if (bdtData) {
-            setRate(Number(bdtData.rate));
-            setIsLoading(false);
-            return;
-          }
-        }
-        const response = await fetch('/api/exchange-rate', {
-          method: 'GET',
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setRate(data.rate || 120);
-      } catch (error) {
-        console.error('Failed to fetch exchange rate:', error);
-        setRate(120);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRate();
-  }, [availableCurrencies]);
 
   const setCurrency = useCallback(async (newCurrency: string) => {
-    try {
+    try {
+
       const isAvailable = availableCurrencies.some(c => c.code === newCurrency);
       if (!isAvailable) {
         console.error('Currency not available:', newCurrency);
         console.log('Available currencies:', availableCurrencies.map(c => c.code));
         return;
-      }
+      }
+
       setCurrencyState(newCurrency);
       if (typeof window !== 'undefined') {
         localStorage.setItem('currency', newCurrency);
-      }
+      }
+
       try {
         const response = await fetch('/api/currency', {
           method: 'POST',
@@ -186,7 +163,8 @@ export function CurrencyProvider({
         console.warn('Server currency update failed, but local preference saved:', serverError);
       }
     } catch (error) {
-      console.error('Failed to update currency:', error);
+      console.error('Failed to update currency:', error);
+
       const savedCurrency = typeof window !== 'undefined' ? localStorage.getItem('currency') : null;
       if (savedCurrency && savedCurrency !== newCurrency) {
         setCurrencyState(savedCurrency);
@@ -197,8 +175,10 @@ export function CurrencyProvider({
   const formatCurrency = useCallback((amount: number): string => {
     if (!currentCurrencyData || !currencySettings) {
       return `$${amount.toFixed(2)}`;
-    }
-    const convertedAmount = convertCurrency(amount, 'BDT', currentCurrencyData.code, availableCurrencies);
+    }
+
+    const convertedAmount = convertCurrency(amount, 'BDT', currentCurrencyData.code, availableCurrencies);
+
     return formatCurrencyAmount(convertedAmount, currentCurrencyData.code, availableCurrencies, currencySettings);
   }, [currentCurrencyData, currencySettings, availableCurrencies]);
 
@@ -207,14 +187,16 @@ export function CurrencyProvider({
       return amount;
     }
     return convertCurrency(amount, fromCurrency, toCurrency, availableCurrencies);
-  }, [availableCurrencies]);
+  }, [availableCurrencies]);
+
   const renderCountRef = useRef(0);
   useEffect(() => {
     renderCountRef.current += 1;
     if (process.env.NODE_ENV === 'development' && renderCountRef.current % 20 === 0) {
       console.warn('[CurrencyProvider] high render count:', renderCountRef.current);
     }
-  });
+  });
+
   const fallbackValue = useMemo(() => ({
     currency: serverCurrency || 'USD',
     setCurrency,
@@ -239,7 +221,8 @@ export function CurrencyProvider({
     currentCurrencyData,
     currencySettings,
     refreshCurrencyData
-  }), [currency, setCurrency, rate, isLoading, formatCurrency, convertAmount, availableCurrencies, currentCurrencyData, currencySettings, refreshCurrencyData]);
+  }), [currency, setCurrency, rate, isLoading, formatCurrency, convertAmount, availableCurrencies, currentCurrencyData, currencySettings, refreshCurrencyData]);
+
   const value = isClient ? contextValue : fallbackValue;
 
   return (

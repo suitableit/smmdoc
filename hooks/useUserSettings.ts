@@ -7,6 +7,8 @@ interface UserSettings {
   nameFieldEnabled: boolean;
   emailConfirmationEnabled: boolean;
   resetLinkMax: number;
+  minimumFundsToAddUSD: number;
+  maximumFundsToAddUSD: number;
   transferFundsPercentage: number;
   userFreeBalanceEnabled: boolean;
   freeAmount: number;
@@ -20,6 +22,8 @@ const defaultSettings: UserSettings = {
   nameFieldEnabled: true,
   emailConfirmationEnabled: true,
   resetLinkMax: 3,
+  minimumFundsToAddUSD: 10,
+  maximumFundsToAddUSD: 10000,
   transferFundsPercentage: 3,
   userFreeBalanceEnabled: false,
   freeAmount: 0,

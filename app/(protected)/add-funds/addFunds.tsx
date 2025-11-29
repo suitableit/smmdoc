@@ -2,6 +2,7 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useCurrentUser } from '@/hooks/use-current-user';
+import { useUserSettings } from '@/hooks/useUserSettings';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -58,6 +59,7 @@ export function AddFundForm() {
   const { appName } = useAppNameWithFallback();
   const [isPending, startTransition] = useTransition();
   const { currency: globalCurrency, rate: globalRate } = useCurrency();
+  const { settings: userSettings } = useUserSettings();
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -88,40 +90,91 @@ export function AddFundForm() {
     globalCurrency === 'USD' ? 'USD' : 'BDT'
   );
 
+  const rate = globalRate;
+
   const form = useForm<AddFundSchema>({
     mode: 'all',
     resolver: zodResolver(addFundSchema),
     defaultValues: addFundDefaultValues,
   });
 
+  // Initialize form with minimum amount when userSettings loads and currency is USD
+  useEffect(() => {
+    if (userSettings?.minimumFundsToAddUSD && activeCurrency === 'USD') {
+      const minAmountUSD = userSettings.minimumFundsToAddUSD;
+      const currentRate = rate || 120;
+      const minAmountBDT = minAmountUSD * currentRate;
+      
+      // Only set if current values are empty or zero
+      const currentUSD = form.watch('amountUSD');
+      if (!currentUSD || parseFloat(currentUSD) === 0) {
+        form.setValue('amountUSD', minAmountUSD.toFixed(2), { shouldValidate: true });
+        form.setValue('amountBDT', minAmountBDT.toFixed(2), { shouldValidate: true });
+        form.setValue('amountBDTConverted', minAmountBDT.toFixed(2), { shouldValidate: true });
+        form.setValue('amount', minAmountBDT.toFixed(2), { shouldValidate: true });
+        setTotalAmount({
+          amount: minAmountBDT,
+          currency: 'BDT',
+        });
+      }
+    }
+  }, [userSettings, activeCurrency, rate, form]);
+
   useEffect(() => {
     const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
     setActiveCurrency(newCurrency);
 
-    form.setValue('amountUSD', '0', { shouldValidate: true });
-    form.setValue('amountBDT', '0', { shouldValidate: true });
-    form.setValue('amountBDTConverted', '0', { shouldValidate: true });
-    setTotalAmount({
-      amount: 0,
-      currency: newCurrency,
-    });
-  }, [globalCurrency, form, user]);
-
-  const rate = globalRate;
+    // Initialize with minimum if USD and userSettings available
+    if (newCurrency === 'USD' && userSettings?.minimumFundsToAddUSD) {
+      const minAmountUSD = userSettings.minimumFundsToAddUSD;
+      const currentRate = rate || 120;
+      const minAmountBDT = minAmountUSD * currentRate;
+      form.setValue('amountUSD', minAmountUSD.toFixed(2), { shouldValidate: true });
+      form.setValue('amountBDT', minAmountBDT.toFixed(2), { shouldValidate: true });
+      form.setValue('amountBDTConverted', minAmountBDT.toFixed(2), { shouldValidate: true });
+      form.setValue('amount', minAmountBDT.toFixed(2), { shouldValidate: true });
+      setTotalAmount({
+        amount: minAmountBDT,
+        currency: 'BDT',
+      });
+    } else {
+      form.setValue('amountUSD', '0', { shouldValidate: true });
+      form.setValue('amountBDT', '0', { shouldValidate: true });
+      form.setValue('amountBDTConverted', '0', { shouldValidate: true });
+      setTotalAmount({
+        amount: 0,
+        currency: newCurrency,
+      });
+    }
+  }, [globalCurrency, form, user, userSettings, rate]);
 
   const toggleCurrency = () => {
     const newCurrency = activeCurrency === 'USD' ? 'BDT' : 'USD';
     setActiveCurrency(newCurrency);
 
-    form.setValue('amountUSD', '0', { shouldValidate: true });
-    form.setValue('amountBDT', '0', { shouldValidate: true });
-    form.setValue('amountBDTConverted', '0', { shouldValidate: true });
-    form.setValue('amount', '0', { shouldValidate: true });
-
-    setTotalAmount({
-      amount: 0,
-      currency: 'BDT',
-    });
+    if (newCurrency === 'USD' && userSettings?.minimumFundsToAddUSD) {
+      // Set to minimum USD amount when switching to USD
+      const minAmountUSD = userSettings.minimumFundsToAddUSD;
+      const currentRate = rate || 120;
+      const minAmountBDT = minAmountUSD * currentRate;
+      form.setValue('amountUSD', minAmountUSD.toFixed(2), { shouldValidate: true });
+      form.setValue('amountBDT', minAmountBDT.toFixed(2), { shouldValidate: true });
+      form.setValue('amountBDTConverted', minAmountBDT.toFixed(2), { shouldValidate: true });
+      form.setValue('amount', minAmountBDT.toFixed(2), { shouldValidate: true });
+      setTotalAmount({
+        amount: minAmountBDT,
+        currency: 'BDT',
+      });
+    } else {
+      form.setValue('amountUSD', '0', { shouldValidate: true });
+      form.setValue('amountBDT', '0', { shouldValidate: true });
+      form.setValue('amountBDTConverted', '0', { shouldValidate: true });
+      form.setValue('amount', '0', { shouldValidate: true });
+      setTotalAmount({
+        amount: 0,
+        currency: 'BDT',
+      });
+    }
   };
 
   const [totalAmount, setTotalAmount] = useState<{
@@ -179,10 +232,32 @@ export function AddFundForm() {
           return;
         }
 
-        const minAmount = 10;
+        const minAmountUSD = userSettings?.minimumFundsToAddUSD || 10;
+        const maxAmountUSD = userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 ? userSettings.maximumFundsToAddUSD : null;
+        const minAmountBDT = minAmountUSD * currentRate;
+        const maxAmountBDT = maxAmountUSD && maxAmountUSD > 0 ? maxAmountUSD * currentRate : null;
         const finalAmount = Math.round(amountInBDT);
-        if (finalAmount < minAmount) {
-          showToast(`Minimum amount must be ${minAmount} BDT`, 'error');
+        
+        // Validate USD amount directly if USD currency is selected
+        if (activeCurrency === 'USD') {
+          const enteredUSD = parseFloat(values.amountUSD || '0');
+          if (enteredUSD < minAmountUSD) {
+            showToast(`Minimum amount must be ${minAmountUSD} USD`, 'error');
+            return;
+          }
+          if (maxAmountUSD && enteredUSD > maxAmountUSD) {
+            showToast(`Maximum amount must be ${maxAmountUSD} USD`, 'error');
+            return;
+          }
+        }
+        
+        if (finalAmount < minAmountBDT) {
+          showToast(`Minimum amount must be ${minAmountUSD} USD (≈ ${Math.round(minAmountBDT)} BDT)`, 'error');
+          return;
+        }
+        
+        if (maxAmountBDT && finalAmount > maxAmountBDT) {
+          showToast(`Maximum amount must be ${maxAmountUSD} USD (≈ ${Math.round(maxAmountBDT)} BDT)`, 'error');
           return;
         }
 
@@ -385,6 +460,9 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
+                      min={userSettings?.minimumFundsToAddUSD || 0}
+                      max={userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 ? userSettings.maximumFundsToAddUSD : undefined}
+                      step="0.01"
                       className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountUSD') || ''}
@@ -402,6 +480,9 @@ export function AddFundForm() {
                     <input
                       type="number"
                       placeholder="0.00"
+                      min={userSettings?.minimumFundsToAddUSD ? (userSettings.minimumFundsToAddUSD * (rate || 120)) : 0}
+                      max={userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 ? (userSettings.maximumFundsToAddUSD * (rate || 120)) : undefined}
+                      step="0.01"
                       className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       disabled={isPending}
                       value={form.watch('amountBDT') || ''}
@@ -464,6 +545,7 @@ export function AddFundForm() {
             </div>
           </div>
           <div className="form-group">
+            <label className="form-label">Phone Number</label>
             <input
               type="tel"
               autoComplete="tel"
