@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         requestOrigin: requestOrigin
       });
 
-      const success_url = body.success_url || `${appUrl}/transactions/success`;
+      const success_url = body.success_url || `${appUrl}/payment/success`;
       const cancel_url =
         body.cancel_url || `${appUrl}/transactions?status=cancelled`;
 
