@@ -51,19 +51,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     console.log('Request body:', body);
-    console.log('Request body keys:', Object.keys(body));
-    console.log('Amount value:', body.amount, 'Type:', typeof body.amount);
-    console.log('Phone value:', body.phone, 'Type:', typeof body.phone);
 
     if (!body.amount || !body.phone) {
-      console.error('Validation failed - Missing required fields:', {
-        hasAmount: !!body.amount,
-        hasPhone: !!body.phone,
-        amount: body.amount,
-        phone: body.phone
-      });
       return NextResponse.json(
-        { error: 'Amount and phone number are required', details: { hasAmount: !!body.amount, hasPhone: !!body.phone } },
+        { error: 'Amount and phone number are required' },
         { status: 400, headers: corsHeaders }
       );
     }
@@ -140,6 +131,7 @@ export async function POST(req: NextRequest) {
       }
 
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+      // Get app URL from environment or request origin - prioritize production URL
       const requestOrigin = req.headers.get('origin') || 
                            req.headers.get('referer')?.split('/').slice(0, 3).join('/');
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
@@ -190,30 +182,6 @@ export async function POST(req: NextRequest) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        const requestBody = {
-          full_name: paymentData.full_name,
-          email: paymentData.email,
-          amount: paymentData.amount,
-          phone: paymentData.phone,
-          metadata: paymentData.metadata,
-          redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
-            paymentAmount
-          )}`,
-          return_type: 'GET',
-          cancel_url: `${appUrl}/transactions?status=cancelled`,
-          webhook_url: `${appUrl}/api/payment/webhook`,
-        };
-
-        console.log('Sending request to payment gateway:', {
-          url: 'https://pay.smmdoc.com/api/checkout-v2',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'RT-UDDOKTAPAY-API-KEY': apiKey ? `${apiKey.substring(0, 10)}...` : 'MISSING',
-          },
-          body: requestBody,
-        });
-
         const response = await fetch('https://pay.smmdoc.com/api/checkout-v2', {
           method: 'POST',
           headers: {
@@ -222,13 +190,24 @@ export async function POST(req: NextRequest) {
             'RT-UDDOKTAPAY-API-KEY': apiKey,
           },
           signal: controller.signal,
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify({
+            full_name: paymentData.full_name,
+            email: paymentData.email,
+            amount: paymentData.amount,
+            phone: paymentData.phone,
+            metadata: paymentData.metadata,
+            redirect_url: `${appUrl}/payment/success?invoice_id=${invoice_id}&amount=${Math.round(
+              paymentAmount
+            )}`,
+            return_type: 'GET',
+            cancel_url: `${appUrl}/transactions?status=cancelled`,
+            webhook_url: `${appUrl}/api/payment/webhook`,
+          }),
         });
 
         clearTimeout(timeoutId);
 
         const responseText = await response.text();
-        console.log('Payment gateway response status:', response.status);
         console.log('Raw response:', responseText);
 
         let data;
@@ -237,26 +216,14 @@ export async function POST(req: NextRequest) {
         } catch (e) {
           console.error('Failed to parse response as JSON:', e);
           return NextResponse.json(
-            { error: 'Invalid response from payment gateway', details: responseText },
+            { error: 'Invalid response from payment gateway' },
             { status: 500, headers: corsHeaders }
           );
         }
 
         console.log('Parsed response data:', data);
 
-        if (!response.ok) {
-          console.error('Payment gateway HTTP error:', response.status, data);
-          return NextResponse.json(
-            { 
-              error: data.message || data.error || 'Payment gateway error', 
-              details: data,
-              gatewayStatus: response.status
-            },
-            { status: response.status >= 400 && response.status < 500 ? 400 : 500, headers: corsHeaders }
-          );
-        }
-
-        if (data.status || data.payment_url) {
+        if (data.status) {
           return NextResponse.json(
             {
               payment_url: data.payment_url,
@@ -266,9 +233,8 @@ export async function POST(req: NextRequest) {
             { status: 200, headers: corsHeaders }
           );
         } else {
-          console.error('Payment gateway returned error:', data);
           return NextResponse.json(
-            { error: data.message || data.error || 'Payment initialization failed', details: data },
+            { error: data.message || 'Payment initialization failed' },
             { status: 400, headers: corsHeaders }
           );
         }
@@ -292,11 +258,6 @@ export async function POST(req: NextRequest) {
       }
     } catch (dbError) {
       console.error('Database error:', dbError);
-      console.error('Database error details:', {
-        message: (dbError as any)?.message,
-        code: (dbError as any)?.code,
-        meta: (dbError as any)?.meta,
-      });
       return NextResponse.json(
         { error: 'Database operation failed', details: String(dbError) },
         { status: 500, headers: corsHeaders }
@@ -304,10 +265,6 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error('Error creating payment:', error);
-    console.error('Error details:', {
-      message: (error as any)?.message,
-      stack: (error as any)?.stack,
-    });
     return NextResponse.json(
       { error: 'Failed to create payment', details: String(error) },
       { status: 500, headers: corsHeaders }

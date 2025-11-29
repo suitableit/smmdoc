@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
+      // Get app URL from environment or request origin - prioritize production URL
       const requestOrigin = req.headers.get('origin') || 
                            req.headers.get('referer')?.split('/').slice(0, 3).join('/');
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
