@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const defaultPaymentGatewaySettings = {
   gatewayName: 'UddoktaPay',
-  apiKey: '',
-  apiUrl: '',
+  liveApiKey: '',
+  liveApiUrl: '',
+  sandboxApiKey: '',
+  sandboxApiUrl: '',
   mode: 'Live',
 };
 
@@ -28,8 +30,10 @@ export async function GET() {
       success: true,
       settings: {
         gatewayName: settings.gatewayName || defaultPaymentGatewaySettings.gatewayName,
-        apiKey: settings.apiKey || '',
-        apiUrl: settings.apiUrl || '',
+        liveApiKey: settings.liveApiKey || '',
+        liveApiUrl: settings.liveApiUrl || '',
+        sandboxApiKey: settings.sandboxApiKey || '',
+        sandboxApiUrl: settings.sandboxApiUrl || '',
         mode: settings.mode || defaultPaymentGatewaySettings.mode,
       }
     });
@@ -76,13 +80,25 @@ export async function POST(request: NextRequest) {
 
     const existingSettings = await db.paymentGatewaySettings.findFirst();
 
-    const updateData = {
+    const updateData: any = {
       gatewayName: settings.gatewayName.trim(),
-      apiKey: settings.apiKey?.trim() || '',
-      apiUrl: settings.apiUrl?.trim() || '',
       mode: settings.mode,
       updatedAt: new Date()
     };
+
+    // Always update both live and sandbox credentials to keep them separate
+    if (settings.liveApiKey !== undefined) {
+      updateData.liveApiKey = settings.liveApiKey?.trim() || '';
+    }
+    if (settings.liveApiUrl !== undefined) {
+      updateData.liveApiUrl = settings.liveApiUrl?.trim() || '';
+    }
+    if (settings.sandboxApiKey !== undefined) {
+      updateData.sandboxApiKey = settings.sandboxApiKey?.trim() || '';
+    }
+    if (settings.sandboxApiUrl !== undefined) {
+      updateData.sandboxApiUrl = settings.sandboxApiUrl?.trim() || '';
+    }
 
     if (existingSettings) {
       await db.paymentGatewaySettings.update({
@@ -91,9 +107,16 @@ export async function POST(request: NextRequest) {
       });
     } else {
       await db.paymentGatewaySettings.create({
-        data: updateData
+        data: {
+          ...defaultPaymentGatewaySettings,
+          ...updateData
+        }
       });
     }
+
+    // Clear the payment gateway configuration cache
+    const { clearPaymentGatewayCache } = await import('@/lib/payment-gateway-config');
+    clearPaymentGatewayCache();
 
     return NextResponse.json({
       success: true,

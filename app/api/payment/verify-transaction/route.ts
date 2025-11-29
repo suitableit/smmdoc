@@ -46,17 +46,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
+    // Get payment gateway configuration from database
+    const { getPaymentGatewayApiKey, getPaymentGatewayVerifyUrl } = await import('@/lib/payment-gateway-config');
+    const apiKey = await getPaymentGatewayApiKey();
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Payment gateway API key not configured' },
+        { error: 'Payment gateway API key not configured. Please configure it in admin settings.' },
         { status: 500 }
       );
     }
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://pay.smmdoc.com/api/verify-payment';
+      const baseUrl = await getPaymentGatewayVerifyUrl();
       
       const verificationResponse = await fetch(baseUrl, {
         method: 'POST',

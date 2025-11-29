@@ -71,9 +71,11 @@ export async function POST(req: NextRequest) {
       const cancel_url =
         body.cancel_url || `${appUrl}/transactions?status=cancelled`;
 
-      const uddoktaPayLiveUrl = 'https://pay.smmdoc.com/api/checkout-v2';
+      // Get payment gateway checkout URL from database configuration
+      const { getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
+      const checkoutUrl = await getPaymentGatewayCheckoutUrl();
 
-      const payment_url = `${uddoktaPayLiveUrl}?invoice_id=${invoice_id}&amount=${
+      const payment_url = `${checkoutUrl}?invoice_id=${invoice_id}&amount=${
         body.amount
       }&full_name=${encodeURIComponent(
         session.user.name || 'User'

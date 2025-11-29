@@ -877,13 +877,15 @@ model GeneralSettings {
 }
 
 model PaymentGatewaySettings {
-  id           Int      @id @default(autoincrement())
-  gatewayName  String   @default("UddoktaPay")
-  apiKey       String   @default("")
-  apiUrl       String   @default("")
-  mode         String   @default("Live")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  gatewayName     String   @default("UddoktaPay")
+  liveApiKey      String   @default("")
+  liveApiUrl      String   @default("")
+  sandboxApiKey   String   @default("")
+  sandboxApiUrl   String   @default("")
+  mode            String   @default("Live")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("payment_gateway_settings")
 }

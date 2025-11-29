@@ -99,7 +99,6 @@ export async function POST(request: NextRequest) {
 
     const existingSettings = await db.generalSettings.findFirst();
     
-    // Build update data object, only including fields that exist
     const updateData: any = {
       siteTitle: generalSettings.siteTitle.trim(),
       tagline: generalSettings.tagline?.trim() || defaultGeneralSettings.tagline,
@@ -110,7 +109,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     };
 
-    // Only include new fields if they're provided (graceful handling if columns don't exist yet)
     if (generalSettings.supportEmail !== undefined) {
       updateData.supportEmail = generalSettings.supportEmail?.trim() || '';
     }
@@ -133,7 +131,6 @@ export async function POST(request: NextRequest) {
         thumbnail: '',
       };
       
-      // Only include new fields in create if provided
       if (generalSettings.supportEmail !== undefined) {
         createData.supportEmail = generalSettings.supportEmail?.trim() || '';
       }
