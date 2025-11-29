@@ -174,7 +174,6 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Convert USD to BDT for bdt_amount
       const bdtRate = availableCurrencies.find((c: any) => c.code === 'BDT')?.rate || 120;
       const amountBDT = amountToAdd * Number(bdtRate);
 

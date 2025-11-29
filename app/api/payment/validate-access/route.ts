@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch payment record
     const payment = await db.addFunds.findUnique({
       where: { invoice_id },
       include: {
@@ -44,7 +43,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Check if payment belongs to the authenticated user
     const userId = parseInt(session.user.id);
     if (payment.userId !== userId) {
       return NextResponse.json(
@@ -53,7 +51,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Return payment data if valid
     return NextResponse.json({
       valid: true,
       payment: {

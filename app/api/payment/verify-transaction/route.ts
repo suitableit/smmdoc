@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Get payment gateway configuration from database
     const { getPaymentGatewayApiKey, getPaymentGatewayVerifyUrl } = await import('@/lib/payment-gateway-config');
     const apiKey = await getPaymentGatewayApiKey();
 
@@ -80,7 +79,6 @@ export async function POST(req: NextRequest) {
         verificationData = await verificationResponse.json();
         console.log('UddoktaPay verification response:', verificationData);
 
-        // Update payment record with data from UddoktaPay response
         if (verificationData.transaction_id) {
           finalTransactionId = verificationData.transaction_id;
         }

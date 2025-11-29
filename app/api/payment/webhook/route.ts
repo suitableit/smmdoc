@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     
     const apiKey = req.headers.get('rt-uddoktapay-api-key');
     
-    // Get expected API key from database configuration
     const { getPaymentGatewayApiKey } = await import('@/lib/payment-gateway-config');
     const expectedApiKey = await getPaymentGatewayApiKey();
     

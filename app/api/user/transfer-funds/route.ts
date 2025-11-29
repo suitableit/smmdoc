@@ -132,7 +132,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Convert to BDT for bdt_amount
       const totalDeductionBDT = convertCurrency(totalDeductionUSD, 'USD', 'BDT', currencies);
       const transferAmountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
 

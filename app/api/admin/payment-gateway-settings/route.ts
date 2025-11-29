@@ -86,7 +86,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     };
 
-    // Always update both live and sandbox credentials to keep them separate
     if (settings.liveApiKey !== undefined) {
       updateData.liveApiKey = settings.liveApiKey?.trim() || '';
     }
@@ -114,7 +113,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Clear the payment gateway configuration cache
     const { clearPaymentGatewayCache } = await import('@/lib/payment-gateway-config');
     clearPaymentGatewayCache();
 

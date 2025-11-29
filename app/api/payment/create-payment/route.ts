@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
     const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const amountUSD = parseFloat(body.amount);
 
-    // Convert USD to BDT for bdt_amount
     const { currencies } = await fetchCurrencyData();
     const amountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
 
@@ -54,7 +53,6 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
-      // Get app URL from environment or request origin - prioritize production URL
       const requestOrigin = req.headers.get('origin') || 
                            req.headers.get('referer')?.split('/').slice(0, 3).join('/');
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
@@ -72,7 +70,6 @@ export async function POST(req: NextRequest) {
       const cancel_url =
         body.cancel_url || `${appUrl}/transactions?status=cancelled`;
 
-      // Get payment gateway checkout URL from database configuration
       const { getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
       const checkoutUrl = await getPaymentGatewayCheckoutUrl();
 

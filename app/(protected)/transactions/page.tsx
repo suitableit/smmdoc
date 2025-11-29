@@ -216,7 +216,6 @@ export default function TransactionsPage() {
 
   const fetchTransactions = async (isRefresh = false) => {
     try {
-      // Use tableLoading for refresh/filter changes, loading for initial load
       if (isInitialLoad) {
         setLoading(true);
       } else {
@@ -346,8 +345,18 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     fetchTransactions(isInitialLoad ? false : true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, page, limit]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
+    if (storedInvoiceId && isInitialLoad) {
+      setTimeout(() => {
+        fetchTransactions(false);
+      }, 500);
+    }
+  }, [isInitialLoad]);
 
   const handleViewDetails = (invoiceId: string) => {
     showToast(`Viewing details for ${invoiceId}`, 'info');

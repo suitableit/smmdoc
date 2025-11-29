@@ -119,7 +119,6 @@ export async function POST(
         }
       });
 
-      // Convert USD to BDT for bdt_amount
       const { currencies } = await fetchCurrencyData();
       const refundAmountBDT = convertCurrency(finalRefundAmount, 'USD', 'BDT', currencies);
 

@@ -18,9 +18,7 @@ export default function ProtectedLayout({
   const { data: session, status } = useSession();
   const [isValidating, setIsValidating] = useState(true);
 
-  // Immediate session validation on mount/hot reload
   useEffect(() => {
-    // Wait for NextAuth to finish loading
     if (status === 'loading') {
       return;
     }
@@ -29,9 +27,7 @@ export default function ProtectedLayout({
       setIsValidating(true);
       
       try {
-        // If unauthenticated, clear storage and redirect immediately
         if (status === 'unauthenticated') {
-          // Clear any stale storage
           const { clearAllSessionData } = await import('@/lib/logout-helper');
           clearAllSessionData();
           setIsValidating(false);
@@ -39,9 +35,7 @@ export default function ProtectedLayout({
           return;
         }
         
-        // If authenticated, validate with server
         if (status === 'authenticated' && session?.user?.id) {
-          // Validate session with server immediately
           const response = await fetch('/api/auth/session-check', {
             method: 'GET',
             credentials: 'include',
@@ -51,7 +45,6 @@ export default function ProtectedLayout({
           
           if (!data.valid || !data.session) {
             console.log('Session invalid on mount, clearing and redirecting...');
-            // Clear all session-related storage
             const { clearAllSessionData } = await import('@/lib/logout-helper');
             clearAllSessionData();
             setIsValidating(false);
@@ -59,7 +52,6 @@ export default function ProtectedLayout({
             return;
           }
         } else if (status === 'authenticated' && !session?.user?.id) {
-          // Session exists but invalid user data
           console.log('Session missing user data, clearing and redirecting...');
           const { clearAllSessionData } = await import('@/lib/logout-helper');
           clearAllSessionData();
@@ -69,7 +61,6 @@ export default function ProtectedLayout({
         }
       } catch (error) {
         console.error('Error validating session on mount:', error);
-        // On error, clear and redirect to be safe
         const { clearAllSessionData } = await import('@/lib/logout-helper');
         clearAllSessionData();
         setIsValidating(false);
@@ -88,7 +79,6 @@ export default function ProtectedLayout({
     const cleanup = setupSessionInvalidationListener(
       session.user.id,
       async () => {
-        // Clear storage on session invalidation
         if (typeof window !== 'undefined') {
           localStorage.clear();
           sessionStorage.clear();
@@ -107,7 +97,6 @@ export default function ProtectedLayout({
       const isValid = await checkSessionValidity();
       if (!isValid) {
         console.log('Session is no longer valid, logging out...');
-        // Clear storage
         if (typeof window !== 'undefined') {
           localStorage.clear();
           sessionStorage.clear();
@@ -119,7 +108,6 @@ export default function ProtectedLayout({
     return () => clearInterval(checkInterval);
   }, [session?.user?.id, isValidating]);
 
-  // Show loading while validating
   if (isValidating || status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -131,7 +119,6 @@ export default function ProtectedLayout({
     );
   }
 
-  // Redirect if not authenticated
   if (status === 'unauthenticated' || !session?.user) {
     if (typeof window !== 'undefined') {
       window.location.href = '/sign-in';

@@ -29,43 +29,35 @@ function PaymentPendingContent() {
     setPageTitle('Payment Under Review', appName);
   }, [appName]);
 
-  // Get invoice_id from sessionStorage (stored when payment was created)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Try sessionStorage first (for new payments)
       const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
       if (storedInvoiceId) {
         setInvoiceId(storedInvoiceId);
         return;
       }
-      // Fallback: Check localStorage for backward compatibility
       try {
         const localStorageSession = localStorage.getItem('uddoktapay_session');
         if (localStorageSession) {
           const sessionData = JSON.parse(localStorageSession);
           if (sessionData.invoice_id) {
             setInvoiceId(sessionData.invoice_id);
-            // Also store in sessionStorage for consistency
             sessionStorage.setItem('payment_invoice_id', sessionData.invoice_id);
           }
         }
       } catch (e) {
-        // Ignore parsing errors
       }
     }
   }, []);
 
-  // Check authentication and validate payment access
   useEffect(() => {
     if (sessionStatus === 'loading' || !invoice_id || hasValidatedRef.current) return;
 
-    // Check if user is authenticated
     if (sessionStatus === 'unauthenticated' || !session?.user) {
       router.push('/transactions?error=unauthorized');
       return;
     }
 
-    // Validate payment access only once
     if (hasValidatedRef.current) return;
     hasValidatedRef.current = true;
 

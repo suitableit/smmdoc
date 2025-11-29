@@ -28,20 +28,18 @@ export async function GET(req: NextRequest) {
 
     console.log("Payment record found:", payment);
     
-    // CRITICAL FIX: Check if transaction_id is incorrectly set to invoice_id and fix it
     if (payment && payment.transaction_id && payment.transaction_id === invoice_id) {
       console.log('CRITICAL: Found corrupted data - transaction_id equals invoice_id! Fixing...');
       await db.addFunds.update({
         where: { invoice_id },
-        data: { transaction_id: null } // Clear the invalid transaction_id
+        data: { transaction_id: null }
       });
-      // Reload payment record after fix
       const fixedPayment = await db.addFunds.findUnique({
         where: { invoice_id },
         include: { user: true },
       });
       if (fixedPayment) {
-        payment.transaction_id = null; // Update local variable
+        payment.transaction_id = null;
       }
     }
 
@@ -67,7 +65,6 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // Always call payment gateway API first to fetch transaction details (transaction_id, payment_method, etc.)
       const { getPaymentGatewayApiKey, getPaymentGatewayVerifyUrl } = await import('@/lib/payment-gateway-config');
       const apiKey = await getPaymentGatewayApiKey();
       const baseUrl = await getPaymentGatewayVerifyUrl();
@@ -86,17 +83,15 @@ export async function GET(req: NextRequest) {
     let paymentStatus = "Processing";
     
     try {
-      // Call UddoktaPay Verify Payment API to get transaction details
-      // If from_redirect, try multiple times with delay as transaction_id might not be immediately available
       let verificationResponse;
-      let attempts = from_redirect ? 3 : 1; // Retry 3 times if from redirect
-      let delay = 1000; // Start with 1 second delay
+      let attempts = from_redirect ? 3 : 1;
+      let delay = 1000;
       
       for (let attempt = 1; attempt <= attempts; attempt++) {
         if (attempt > 1) {
           console.log(`Retry attempt ${attempt} for transaction_id (waiting ${delay}ms)...`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          delay *= 2; // Exponential backoff: 1s, 2s, 4s
+          delay *= 2;
         }
         
         verificationResponse = await fetch(baseUrl, {
@@ -119,8 +114,6 @@ export async function GET(req: NextRequest) {
           console.log('All response values:', Object.entries(responseData).map(([k, v]) => `${k}: ${v}`).join(', '));
           console.log('========================================================');
 
-          // Extract transaction_id from various possible field names
-          // IMPORTANT: Do NOT use invoice_id as transaction_id - they are different!
           const extractedTransactionId = responseData.transaction_id || 
                                         responseData.transactionId || 
                                         responseData.trx_id || 
@@ -142,13 +135,12 @@ export async function GET(req: NextRequest) {
             verificationData = { ...verificationData, ...responseData };
           }
           
-          // Only set transaction_id if it's different from invoice_id
           if (extractedTransactionId && extractedTransactionId !== responseData.invoice_id) {
             verificationData.transaction_id = extractedTransactionId;
             console.log(`Transaction ID extracted from API response (attempt ${attempt}):`, extractedTransactionId);
             console.log(`Invoice ID from response:`, responseData.invoice_id);
             console.log(`Transaction ID is different from Invoice ID: ${extractedTransactionId !== responseData.invoice_id}`);
-            break; // Found valid transaction_id, no need to retry
+            break;
           } else if (extractedTransactionId && extractedTransactionId === responseData.invoice_id) {
             console.log(`WARNING: Extracted transaction_id (${extractedTransactionId}) matches invoice_id. Not using it as transaction_id.`);
             if (attempt < attempts) {
@@ -166,7 +158,6 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // Extract payment_method if available
       if (verificationData && !verificationData.payment_method) {
         verificationData.payment_method = verificationData.paymentMethod || 
                                          verificationData.payment_method_name ||
@@ -174,7 +165,6 @@ export async function GET(req: NextRequest) {
                                          null;
       }
 
-      // Extract sender_number if available
       if (verificationData && !verificationData.sender_number) {
         verificationData.sender_number = verificationData.senderNumber || 
                                         verificationData.phone ||
@@ -182,14 +172,11 @@ export async function GET(req: NextRequest) {
                                         null;
       }
 
-      // Process verification response
       if (verificationResponse && verificationResponse.ok && verificationData) {
         if (verificationData.status === 'COMPLETED' || verificationData.status === 'SUCCESS') {
           isSuccessful = true;
           paymentStatus = "Success";
         } else if (verificationData.status === 'PENDING') {
-          // If user was redirected to success page, payment was successful even if API says PENDING
-          // The redirect itself is proof of successful payment
           if (from_redirect || transaction_id) {
             console.log('Payment redirected to success page - treating as successful despite PENDING status');
             isSuccessful = true;
@@ -201,8 +188,6 @@ export async function GET(req: NextRequest) {
           paymentStatus = "Cancelled";
         }
       } else if (verificationResponse && !verificationResponse.ok) {
-        // Handle non-OK response
-        // If user was redirected but API call failed, treat as success since redirect only happens on success
         if (from_redirect || transaction_id) {
           console.log('Payment redirected to success page - treating as successful despite API error');
           isSuccessful = true;
@@ -227,7 +212,6 @@ export async function GET(req: NextRequest) {
       }
     } catch (apiError) {
       console.error('Error calling UddoktaPay API:', apiError);
-      // If user was redirected, treat as success even if API call failed
       if (from_redirect || transaction_id) {
         console.log('Payment redirected to success page - treating as successful despite API error');
         isSuccessful = true;
@@ -250,8 +234,6 @@ export async function GET(req: NextRequest) {
       }
     }
     
-    // If user was redirected to success page, payment is definitely successful
-    // Process it with the fetched transaction details from API
     if (from_redirect && payment.user) {
       console.log('Payment redirected to success - processing as successful with fetched transaction details');
       console.log('Verification data available:', {
@@ -261,11 +243,8 @@ export async function GET(req: NextRequest) {
         transaction_id_from_db: payment.transaction_id,
       });
       
-      // Use transaction_id from API response, fallback to URL param, then existing payment
-      // IMPORTANT: Never use invoice_id as transaction_id - they are different!
       let finalTransactionId = verificationData?.transaction_id || transaction_id || payment.transaction_id || null;
       
-      // Double-check: Ensure we're not accidentally using invoice_id as transaction_id
       if (finalTransactionId && finalTransactionId === invoice_id) {
         console.log('WARNING: finalTransactionId matches invoice_id - this is wrong! Setting to null instead.');
         finalTransactionId = transaction_id || payment.transaction_id || null;
@@ -313,19 +292,15 @@ export async function GET(req: NextRequest) {
           console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
         });
         
-        // Fetch updated payment to return (webhook might have updated transaction_id)
-        // Wait a moment for webhook to potentially update transaction_id in database
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const updatedPayment = await db.addFunds.findUnique({
           where: { invoice_id }
         });
         
-        // Double-check: Ensure transaction_id is NOT invoice_id
         let finalTransactionIdToReturn = updatedPayment?.transaction_id || null;
         if (finalTransactionIdToReturn && finalTransactionIdToReturn === invoice_id) {
           console.log('ERROR: Database has invoice_id stored as transaction_id! Clearing it.');
-          // Fix the database immediately - clear the invalid transaction_id
           await db.addFunds.update({
             where: { invoice_id },
             data: { transaction_id: null }
@@ -333,7 +308,6 @@ export async function GET(req: NextRequest) {
           finalTransactionIdToReturn = null;
         }
         
-        // If transaction_id is still null, check if API response has it
         if (!finalTransactionIdToReturn && verificationData?.transaction_id && verificationData.transaction_id !== invoice_id) {
           console.log('Found transaction_id in API response, updating database...');
           finalTransactionIdToReturn = verificationData.transaction_id;
@@ -360,27 +334,21 @@ export async function GET(req: NextRequest) {
         });
       } catch (redirectError) {
         console.error('Error processing redirected payment:', redirectError);
-        // Continue with normal verification flow
       }
     }
     
-    // Normal verification flow (not from redirect)
     try {
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : paymentStatus}`);
       
-      // Prepare transaction_id - ensure it's NOT the same as invoice_id
-      // Also check the database first - webhook might have already updated it
       let existingPayment = await db.addFunds.findUnique({ where: { invoice_id } });
       let transactionIdToSave = verificationData?.transaction_id || existingPayment?.transaction_id || payment.transaction_id || null;
       
-      // CRITICAL: Never save invoice_id as transaction_id
       if (transactionIdToSave && transactionIdToSave === invoice_id) {
         console.log('ERROR: transaction_id matches invoice_id - NOT saving! Setting to null or existing valid transaction_id.');
-        // Check if existing payment has a valid transaction_id (not invoice_id)
         if (existingPayment?.transaction_id && existingPayment.transaction_id !== invoice_id) {
           transactionIdToSave = existingPayment.transaction_id;
         } else {
-          transactionIdToSave = null; // Don't save invoice_id as transaction_id
+          transactionIdToSave = null;
         }
       }
       
@@ -390,19 +358,18 @@ export async function GET(req: NextRequest) {
         where: { invoice_id },
         data: {
           status: paymentStatus,
-          transaction_id: transactionIdToSave, // This will be null if not found, never invoice_id
+          transaction_id: transactionIdToSave,
           payment_method: verificationData?.payment_method || payment.payment_method || null,
           sender_number: verificationData?.sender_number || payment.sender_number || null,
         }
       });
       
-      // Final validation: Check if we accidentally saved invoice_id
       const finalCheck = await db.addFunds.findUnique({ where: { invoice_id } });
       if (finalCheck?.transaction_id && finalCheck.transaction_id === invoice_id) {
         console.error('CRITICAL ERROR: invoice_id was saved as transaction_id! Fixing...');
         await db.addFunds.update({
           where: { invoice_id },
-          data: { transaction_id: null } // Clear the invalid value
+          data: { transaction_id: null }
         });
       }
 
