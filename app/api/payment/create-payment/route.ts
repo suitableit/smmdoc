@@ -53,7 +53,19 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      // Get app URL from environment or request origin - prioritize production URL
+      const requestOrigin = req.headers.get('origin') || 
+                           req.headers.get('referer')?.split('/').slice(0, 3).join('/');
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     process.env.NEXTAUTH_URL || 
+                     requestOrigin ||
+                     'http://localhost:3000';
+      
+      console.log('App URL determined:', appUrl, {
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+        requestOrigin: requestOrigin
+      });
 
       const success_url = body.success_url || `${appUrl}/transactions/success`;
       const cancel_url =

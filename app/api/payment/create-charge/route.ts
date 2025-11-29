@@ -13,6 +13,7 @@ export async function OPTIONS(req: NextRequest) {
   const requestOrigin =
     req.headers.get('origin') ||
     process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
     'http://localhost:3000';
 
   return NextResponse.json(
@@ -130,7 +131,19 @@ export async function POST(req: NextRequest) {
       }
 
       const apiKey = process.env.NEXT_PUBLIC_UDDOKTAPAY_API_KEY;
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      // Get app URL from environment or request origin - prioritize production URL
+      const requestOrigin = req.headers.get('origin') || 
+                           req.headers.get('referer')?.split('/').slice(0, 3).join('/');
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     process.env.NEXTAUTH_URL || 
+                     requestOrigin ||
+                     'http://localhost:3000';
+      
+      console.log('App URL determined:', appUrl, {
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+        NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+        requestOrigin: requestOrigin
+      });
 
       const paymentAmount = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
       
