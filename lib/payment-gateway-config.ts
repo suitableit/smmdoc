@@ -16,15 +16,11 @@ const defaultConfig: PaymentGatewayConfig = {
 
 let cachedConfig: PaymentGatewayConfig | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_DURATION = 5 * 60 * 1000;
 
-/**
- * Get payment gateway settings from database with caching
- */
 export async function getPaymentGatewayConfig(): Promise<PaymentGatewayConfig> {
   const now = Date.now();
   
-  // Return cached config if still valid
   if (cachedConfig && (now - cacheTimestamp) < CACHE_DURATION) {
     return cachedConfig;
   }
@@ -35,7 +31,6 @@ export async function getPaymentGatewayConfig(): Promise<PaymentGatewayConfig> {
     if (settings) {
       const mode = (settings.mode as 'Live' | 'Sandbox') || defaultConfig.mode;
       
-      // Use the appropriate credentials based on the active mode
       cachedConfig = {
         gatewayName: settings.gatewayName || defaultConfig.gatewayName,
         apiKey: mode === 'Live' 
@@ -47,7 +42,6 @@ export async function getPaymentGatewayConfig(): Promise<PaymentGatewayConfig> {
         mode: mode,
       };
     } else {
-      // Return default if no settings found
       cachedConfig = defaultConfig;
     }
     
@@ -55,7 +49,6 @@ export async function getPaymentGatewayConfig(): Promise<PaymentGatewayConfig> {
     return cachedConfig;
   } catch (error) {
     console.error('Error fetching payment gateway settings:', error);
-    // Return cached config or default on error
     return cachedConfig || defaultConfig;
   }
 }
@@ -85,18 +78,15 @@ export async function getPaymentGatewayCheckoutUrl(): Promise<string> {
   const baseUrl = config.apiUrl.trim();
   
   if (!baseUrl) {
-    return 'https://pay.smmdoc.com/api/checkout-v2'; // Fallback default
+    return 'https://pay.smmdoc.com/api/checkout-v2';
   }
   
-  // Remove trailing slash if present
   const cleanUrl = baseUrl.replace(/\/$/, '');
   
-  // If baseUrl already contains /checkout-v2, return as is
   if (cleanUrl.includes('/checkout-v2')) {
     return cleanUrl;
   }
   
-  // Otherwise, append /checkout-v2
   return `${cleanUrl}/checkout-v2`;
 }
 
@@ -109,18 +99,15 @@ export async function getPaymentGatewayVerifyUrl(): Promise<string> {
   const baseUrl = config.apiUrl.trim();
   
   if (!baseUrl) {
-    return 'https://pay.smmdoc.com/api/verify-payment'; // Fallback default
+    return 'https://pay.smmdoc.com/api/verify-payment';
   }
   
-  // Remove trailing slash if present
   const cleanUrl = baseUrl.replace(/\/$/, '');
   
-  // If baseUrl already contains /verify-payment, return as is
   if (cleanUrl.includes('/verify-payment')) {
     return cleanUrl;
   }
   
-  // Otherwise, append /verify-payment
   return `${cleanUrl}/verify-payment`;
 }
 

@@ -33,28 +33,24 @@ function PaymentSuccessContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Check URL query parameters first (UddoktaPay might redirect with these)
       const urlParams = new URLSearchParams(window.location.search);
       const urlInvoiceId = urlParams.get('invoice_id');
       const urlTransactionId = urlParams.get('transaction_id');
       
       if (urlInvoiceId) {
         setInvoiceId(urlInvoiceId);
-        // Store transaction_id if provided in URL
         if (urlTransactionId) {
           sessionStorage.setItem('payment_transaction_id', urlTransactionId);
         }
         return;
       }
       
-      // Fallback to sessionStorage
       const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
       if (storedInvoiceId) {
         setInvoiceId(storedInvoiceId);
         return;
       }
       
-      // Fallback to localStorage
       try {
         const localStorageSession = localStorage.getItem('uddoktapay_session');
         if (localStorageSession) {
@@ -100,7 +96,6 @@ function PaymentSuccessContent() {
             hasVerifiedRef.current = true;
             try {
               setIsVerifying(true);
-              // Get transaction_id from URL params, sessionStorage, or payment data
               let transactionIdParam = '';
               if (typeof window !== 'undefined') {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -117,11 +112,9 @@ function PaymentSuccessContent() {
               const verifyData = await verifyResponse.json();
 
               if (verifyData.status === 'COMPLETED' || verifyResponse.ok) {
-                // Update payment data from verification response if available
                 if (verifyData.payment) {
                   setPaymentData(verifyData.payment);
                 } else {
-                  // If verification response doesn't have payment data, fetch fresh data
                   try {
                     const refreshResponse = await fetch(`/api/payment/validate-access?invoice_id=${invoice_id}`);
                     const refreshData = await refreshResponse.json();

@@ -100,7 +100,6 @@ export default function VerifyPaymentPage() {
         toast.dismiss();
         toast.success('Transaction verified successfully!');
 
-        // Store invoice_id in sessionStorage before redirecting
         if (invoiceId && typeof window !== 'undefined') {
           sessionStorage.setItem('payment_invoice_id', invoiceId);
         }

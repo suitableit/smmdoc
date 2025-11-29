@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
     }
 
     const amountUSD = convertToUSD(amount, currency, currencies);
-    // Convert to BDT for bdt_amount - always store BDT amount
     const amountBDT = currency === 'BDT' 
       ? amount 
       : convertCurrency(amountUSD, 'USD', 'BDT', currencies);
@@ -131,12 +130,10 @@ export async function POST(req: NextRequest) {
         console.error('Failed to log payment creation activity:', error);
       }
 
-      // Get payment gateway configuration from database
       const { getPaymentGatewayApiKey, getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
       const apiKey = await getPaymentGatewayApiKey();
       const checkoutUrl = await getPaymentGatewayCheckoutUrl();
       
-      // Get app URL from environment or request origin - prioritize production URL
       const requestOrigin = req.headers.get('origin') || 
                            req.headers.get('referer')?.split('/').slice(0, 3).join('/');
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 

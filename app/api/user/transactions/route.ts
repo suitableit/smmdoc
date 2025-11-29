@@ -63,6 +63,117 @@ export async function GET(request: NextRequest) {
       db.addFunds.count({ where })
     ]);
 
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    
+    const transactionsToRefresh = transactions.filter(tx => {
+      const isRecent = tx.createdAt >= tenMinutesAgo;
+      const needsRefresh = !tx.transaction_id || 
+                          !tx.payment_method || 
+                          tx.status === 'Processing' ||
+                          tx.transaction_id === tx.invoice_id;
+      return isRecent && needsRefresh && tx.payment_gateway === 'UddoktaPay';
+    });
+
+    if (transactionsToRefresh.length > 0) {
+      console.log(`Auto-refreshing ${transactionsToRefresh.length} recent transactions from payment gateway...`);
+      
+      const refreshPromises = transactionsToRefresh.map(async (transaction) => {
+        try {
+          const { getPaymentGatewayApiKey, getPaymentGatewayVerifyUrl } = await import('@/lib/payment-gateway-config');
+          const apiKey = await getPaymentGatewayApiKey();
+          const verifyUrl = await getPaymentGatewayVerifyUrl();
+          
+          if (!apiKey || !verifyUrl) {
+            return null;
+          }
+
+          const verificationResponse = await fetch(verifyUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'RT-UDDOKTAPAY-API-KEY': apiKey,
+            },
+            body: JSON.stringify({ invoice_id: transaction.invoice_id }),
+          });
+
+          if (!verificationResponse.ok) {
+            return null;
+          }
+
+          const verificationData = await verificationResponse.json();
+          
+          const extractedTransactionId = verificationData.transaction_id || 
+                                       verificationData.transactionId || 
+                                       verificationData.trx_id || 
+                                       verificationData.trxId ||
+                                       verificationData.transactionID ||
+                                       verificationData.data?.transaction_id ||
+                                       verificationData.data?.transactionId ||
+                                       verificationData.payment?.transaction_id ||
+                                       null;
+
+          const extractedPaymentMethod = verificationData.payment_method || 
+                                       verificationData.paymentMethod || 
+                                       verificationData.payment_method_name ||
+                                       verificationData.method ||
+                                       null;
+
+          const extractedSenderNumber = verificationData.sender_number || 
+                                      verificationData.senderNumber || 
+                                      verificationData.phone ||
+                                      verificationData.sender_phone ||
+                                      null;
+
+          const validTransactionId = extractedTransactionId && 
+                                   extractedTransactionId !== transaction.invoice_id
+                                   ? extractedTransactionId 
+                                   : null;
+
+          if (validTransactionId || extractedPaymentMethod || extractedSenderNumber) {
+            const updateData: any = {};
+            
+            if (validTransactionId && validTransactionId !== transaction.transaction_id) {
+              updateData.transaction_id = validTransactionId;
+            }
+            
+            if (extractedPaymentMethod && extractedPaymentMethod !== transaction.payment_method) {
+              updateData.payment_method = extractedPaymentMethod;
+            }
+            
+            if (extractedSenderNumber && extractedSenderNumber !== transaction.sender_number) {
+              updateData.sender_number = extractedSenderNumber;
+            }
+
+            if (Object.keys(updateData).length > 0) {
+              await db.addFunds.update({
+                where: { invoice_id: transaction.invoice_id },
+                data: updateData,
+              });
+
+              if (updateData.transaction_id) {
+                transaction.transaction_id = updateData.transaction_id;
+              }
+              if (updateData.payment_method) {
+                transaction.payment_method = updateData.payment_method;
+              }
+              if (updateData.sender_number) {
+                transaction.sender_number = updateData.sender_number;
+              }
+
+              console.log(`Updated transaction ${transaction.invoice_id} with gateway data:`, updateData);
+            }
+          }
+        } catch (error) {
+          console.error(`Error refreshing transaction ${transaction.invoice_id} from gateway:`, error);
+        }
+      });
+
+      await Promise.all(refreshPromises).catch(err => {
+        console.error('Error in batch transaction refresh:', err);
+      });
+    }
+
     const totalPages = Math.ceil(total / limit);
 
     const transformedTransactions = transactions.map((transaction) => ({
