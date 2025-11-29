@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 
@@ -28,6 +28,8 @@ export default function SignInForm() {
   let urlError = '';
   const errorParam = searchParams?.get('error');
   const messageParam = searchParams?.get('message');
+  const reasonParam = searchParams?.get('reason');
+  const [showServicesWarning, setShowServicesWarning] = useState<boolean>(false);
 
   if (errorParam === 'OAuthAccountNotLinked') {
     urlError = 'Email already in use with different provider!';
@@ -36,6 +38,12 @@ export default function SignInForm() {
   } else if (messageParam === 'password-reset-disabled') {
     urlError = 'Password reset is currently disabled by administrator. Please contact support.';
   }
+
+  useEffect(() => {
+    if (reasonParam === 'services-restricted') {
+      setShowServicesWarning(true);
+    }
+  }, [reasonParam]);
   const [showTwoFactor, setShowTwoFactor] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
@@ -120,6 +128,14 @@ export default function SignInForm() {
           Enter your details below to sign in.
         </p>
       </div>
+
+      {showServicesWarning && (
+        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p className="text-amber-800 dark:text-amber-200 text-sm font-medium">
+            The services list is restricted. Please sign in to view the services list.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         {showTwoFactor ? (

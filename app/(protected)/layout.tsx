@@ -2,6 +2,7 @@
 
 import Header from '@/components/dashboard/header/page';
 import SideBar from '@/components/dashboard/sideBar';
+import Announcements from '@/components/dashboard/announcements';
 import { checkSessionValidity, setupSessionInvalidationListener } from '@/lib/session-invalidation';
 import { signOut, useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';

@@ -20,7 +20,7 @@ export default auth(async (req) => {
   const isApiAuthRoute = apiAuthPrefixes.some((prefix) =>
     nextUrl.pathname.startsWith(prefix)
   );
-  const isPublicRoute = publicRoutes.some((route) =>
+  let isPublicRoute = publicRoutes.some((route) =>
     nextUrl.pathname === route || nextUrl.pathname.startsWith(route + '/')
   );
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
@@ -49,6 +49,28 @@ export default auth(async (req) => {
         headers: requestHeaders,
       },
     });
+  }
+
+  const ourServicesPage = '/our-services';
+  const isOurServicesPage = nextUrl.pathname === ourServicesPage || nextUrl.pathname.startsWith(ourServicesPage + '/');
+
+  if (isOurServicesPage) {
+    try {
+      const moduleSettings = await getModuleSettings(true);
+      const servicesListPublic = moduleSettings?.servicesListPublic ?? true;
+      if (!servicesListPublic) {
+        isPublicRoute = false;
+        if (!isLoggedIn) {
+          return NextResponse.redirect(new URL(`/sign-in?callbackUrl=${encodeURIComponent(nextUrl.pathname)}&reason=services-restricted`, nextUrl));
+        }
+      }
+    } catch (error) {
+      console.error('Error checking services list public status in proxy:', error);
+      isPublicRoute = false;
+      if (!isLoggedIn) {
+        return NextResponse.redirect(new URL(`/sign-in?callbackUrl=${encodeURIComponent(nextUrl.pathname)}&reason=services-restricted`, nextUrl));
+      }
+    }
   }
 
   const ticketPages = [
