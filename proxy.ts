@@ -205,6 +205,50 @@ export default auth(async (req) => {
     }
   }
 
+  const massOrderPages = [
+    '/mass-orders',
+  ];
+
+  const isMassOrderPage = massOrderPages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+
+  if (isMassOrderPage && isLoggedIn) {
+    try {
+      const moduleSettings = await getModuleSettings(true);
+      if (!moduleSettings.massOrderEnabled) {
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking mass order system status in proxy:', error);
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
+  const serviceUpdatePages = [
+    '/services/updates',
+  ];
+
+  const isServiceUpdatePage = serviceUpdatePages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+
+  if (isServiceUpdatePage && isLoggedIn) {
+    try {
+      const moduleSettings = await getModuleSettings(true);
+      if (!moduleSettings.serviceUpdateLogsEnabled) {
+        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      }
+    } catch (error) {
+      console.error('Error checking service update logs status in proxy:', error);
+      const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, nextUrl));
+    }
+  }
+
   if (nextUrl.pathname.startsWith('/admin')) {
 
     if (isImpersonating) {

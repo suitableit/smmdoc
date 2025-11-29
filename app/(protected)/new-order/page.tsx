@@ -414,6 +414,7 @@ function NewOrder() {
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
+  const [massOrderEnabled, setMassOrderEnabled] = useState<boolean | null>(null);
 
   const {
     data: category,
@@ -520,6 +521,23 @@ function NewOrder() {
     }, 1500);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const checkMassOrderStatus = async () => {
+      try {
+        const response = await axiosInstance.get('/api/mass-order-system-status');
+        if (response.data.success) {
+          setMassOrderEnabled(response.data.massOrderEnabled ?? false);
+        } else {
+          setMassOrderEnabled(false);
+        }
+      } catch (error) {
+        console.error('Error checking mass order status:', error);
+        setMassOrderEnabled(false);
+      }
+    };
+    checkMassOrderStatus();
   }, []);
 
   useEffect(() => {
@@ -1088,21 +1106,23 @@ function NewOrder() {
       <div className="page-content">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div className="w-full space-y-4 lg:space-y-6">
-            <div className="card" style={{ padding: '8px' }}>
-              <div className="flex space-x-2">
-                <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg">
-                  <FaShoppingCart className="mr-2 w-4 h-4" />
-                  New Order
-                </button>
-                <button
-                  onClick={() => router.push('/mass-orders')}
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
-                >
-                  <FaLayerGroup className="mr-2 w-4 h-4" />
-                  Mass Orders
-                </button>
+            {massOrderEnabled && (
+              <div className="card" style={{ padding: '8px' }}>
+                <div className="flex space-x-2">
+                  <button className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg">
+                    <FaShoppingCart className="mr-2 w-4 h-4" />
+                    New Order
+                  </button>
+                  <button
+                    onClick={() => router.push('/mass-orders')}
+                    className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
+                  >
+                    <FaLayerGroup className="mr-2 w-4 h-4" />
+                    Mass Orders
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {platformFromUrl && platformFromUrl !== 'Everything' && (
               <div className="flex items-center space-x-3 rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-700">

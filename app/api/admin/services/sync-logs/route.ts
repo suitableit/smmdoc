@@ -77,10 +77,6 @@ export async function GET(req: NextRequest) {
       take: 1000,
     });
 
-    let filteredServices = allServices.filter(
-      (service) => service.updateText && service.updateText.trim().length > 0
-    );
-
     const apiProviders = await db.apiProviders.findMany({
       select: {
         id: true,
@@ -90,12 +86,49 @@ export async function GET(req: NextRequest) {
 
     const providerMap = new Map(apiProviders.map(p => [p.id, p.name]));
 
+    let filteredServices = allServices.filter((service) => {
+      if (!service.updateText || service.updateText.trim().length === 0) {
+        return false;
+      }
+
+      try {
+        const updateData = JSON.parse(service.updateText || '{}');
+        
+        if (updateData.updatedBy) {
+          return false;
+        }
+
+        if (updateData.provider || updateData.providerId || service.providerId) {
+          return true;
+        }
+
+        return false;
+      } catch {
+        return service.providerId !== null && service.providerId !== undefined;
+      }
+    });
+
     if (search && searchBy === 'api_provider') {
       const searchTrimmed = search.trim().toLowerCase();
       filteredServices = filteredServices.filter((service) => {
-        if (!service.providerId) return false;
-        const providerName = providerMap.get(service.providerId);
-        return providerName && providerName.toLowerCase().includes(searchTrimmed);
+        try {
+          const updateData = JSON.parse(service.updateText || '{}');
+          const providerIdFromUpdate = updateData.providerId;
+          const serviceProviderId = service.providerId || providerIdFromUpdate;
+          
+          if (serviceProviderId && providerMap.has(serviceProviderId)) {
+            const providerName = providerMap.get(serviceProviderId);
+            return providerName && providerName.toLowerCase().includes(searchTrimmed);
+          } else if (updateData.provider) {
+            return updateData.provider.toLowerCase().includes(searchTrimmed);
+          }
+        } catch {
+          if (service.providerId && providerMap.has(service.providerId)) {
+            const providerName = providerMap.get(service.providerId);
+            return providerName && providerName.toLowerCase().includes(searchTrimmed);
+          }
+        }
+        return false;
       });
     }
 
@@ -201,57 +234,63 @@ export async function GET(req: NextRequest) {
       }
     };
 
-    const logs = paginatedServices.map((service, index) => {
-      let apiProvider = 'Self';
-      
-      try {
-        const updateData = JSON.parse(service.updateText || '{}');
+    const logs = paginatedServices
+      .map((service, index) => {
+        let apiProvider = 'Self';
         
-        if (updateData.updatedBy) {
-          apiProvider = 'Self';
-        } else if (updateData.provider || updateData.providerId) {
-          const providerIdFromUpdate = updateData.providerId;
-          const serviceProviderId = service.providerId || providerIdFromUpdate;
+        try {
+          const updateData = JSON.parse(service.updateText || '{}');
           
-          if (serviceProviderId && providerMap.has(serviceProviderId)) {
-            apiProvider = providerMap.get(serviceProviderId)!;
-          } else if (updateData.provider) {
-            apiProvider = updateData.provider;
+          if (updateData.updatedBy) {
+            apiProvider = 'Self';
+          } else if (updateData.provider || updateData.providerId) {
+            const providerIdFromUpdate = updateData.providerId;
+            const serviceProviderId = service.providerId || providerIdFromUpdate;
+            
+            if (serviceProviderId && providerMap.has(serviceProviderId)) {
+              apiProvider = providerMap.get(serviceProviderId)!;
+            } else if (updateData.provider) {
+              apiProvider = updateData.provider;
+            }
+          } else if (service.providerId && providerMap.has(service.providerId)) {
+            apiProvider = providerMap.get(service.providerId)!;
           }
-        } else if (service.providerId && providerMap.has(service.providerId)) {
-          apiProvider = providerMap.get(service.providerId)!;
+        } catch {
+          if (service.providerId && providerMap.has(service.providerId)) {
+            apiProvider = providerMap.get(service.providerId)!;
+          }
         }
-      } catch {
-        if (service.providerId && providerMap.has(service.providerId)) {
-          apiProvider = providerMap.get(service.providerId)!;
+
+        if (apiProvider === 'Self') {
+          return null;
         }
-      }
 
-      let changeType: 'added' | 'updated' | 'deleted' | 'error' = 'updated';
-      try {
-        const updateData = JSON.parse(service.updateText || '{}');
-        const action = (updateData.action || '').toLowerCase();
-        if (action === 'created' || action === 'create' || action === 'added' || action === 'import') {
-          changeType = 'added';
-        } else if (action === 'delete' || action === 'deleted' || action === 'remove') {
-          changeType = 'deleted';
-        } else if (action.includes('error') || action.includes('fail')) {
-          changeType = 'error';
+        let changeType: 'added' | 'updated' | 'deleted' | 'error' = 'updated';
+        try {
+          const updateData = JSON.parse(service.updateText || '{}');
+          const action = (updateData.action || '').toLowerCase();
+          if (action === 'created' || action === 'create' || action === 'added' || action === 'import') {
+            changeType = 'added';
+          } else if (action === 'delete' || action === 'deleted' || action === 'remove') {
+            changeType = 'deleted';
+          } else if (action.includes('error') || action.includes('fail')) {
+            changeType = 'error';
+          }
+        } catch {
         }
-      } catch {
-      }
 
-      const changesText = formatChanges(service.updateText || '');
+        const changesText = formatChanges(service.updateText || '');
 
-      return {
-        id: service.id,
-        apiProvider,
-        serviceName: service.name,
-        changes: changesText,
-        changeType,
-        when: service.updatedAt.toISOString(),
-      };
-    });
+        return {
+          id: service.id,
+          apiProvider,
+          serviceName: service.name,
+          changes: changesText,
+          changeType,
+          when: service.updatedAt.toISOString(),
+        };
+      })
+      .filter((log): log is NonNullable<typeof log> => log !== null);
     
     return NextResponse.json({
       success: true,

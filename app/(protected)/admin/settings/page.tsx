@@ -158,7 +158,7 @@ const Toast = ({
 const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => (
   <button
     onClick={() => onCheckedChange(!checked)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
       checked ? 'bg-indigo-600' : 'bg-gray-200'
     }`}
   >
@@ -1694,7 +1694,7 @@ const GeneralSettingsPage = () => {
                     <div className="flex-1">
                       <label className="form-label mb-1">Services List</label>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Make services list public or private for logged-in users
+                        Make services list public for logged-in users
                       </p>
                     </div>
                     <div className="flex-shrink-0 md:ml-4">
