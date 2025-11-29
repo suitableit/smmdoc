@@ -17,8 +17,7 @@ const signInSchema = z.object({
     }, 'Please enter a valid email address or username'),
   password: z
     .string()
-    .min(1, 'Password is required')
-    .min(5, 'Password must be at least 5 characters'),
+    .min(1, 'Password is required'),
   code: z.optional(z.string()),
 });
 

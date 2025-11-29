@@ -462,7 +462,6 @@ export async function POST(request: Request) {
     });
     console.log('Service created successfully:', newService.id);
 
-    // Serialize BigInt values to strings for JSON serialization
     const serializedService = serializeService(newService);
 
     return NextResponse.json(

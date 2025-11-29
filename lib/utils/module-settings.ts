@@ -4,6 +4,7 @@ interface ModuleSettings {
   affiliateSystemEnabled: boolean;
   commissionRate: number;
   minimumPayout: number;
+  servicePurchaseEarningCount: string;
   childPanelSellingEnabled: boolean;
   childPanelPrice: number;
   serviceUpdateLogsEnabled: boolean;
@@ -15,6 +16,7 @@ const DEFAULT_MODULE_SETTINGS: ModuleSettings = {
   affiliateSystemEnabled: false,
   commissionRate: 5,
   minimumPayout: 10,
+  servicePurchaseEarningCount: '1',
   childPanelSellingEnabled: false,
   childPanelPrice: 10,
   serviceUpdateLogsEnabled: true,
@@ -40,6 +42,7 @@ export async function getModuleSettings(bypassCache = false): Promise<ModuleSett
         affiliateSystemEnabled: settings.affiliateSystemEnabled ?? DEFAULT_MODULE_SETTINGS.affiliateSystemEnabled,
         commissionRate: settings.commissionRate ?? DEFAULT_MODULE_SETTINGS.commissionRate,
         minimumPayout: settings.minimumPayout ?? DEFAULT_MODULE_SETTINGS.minimumPayout,
+        servicePurchaseEarningCount: settings.servicePurchaseEarningCount ?? '1',
         childPanelSellingEnabled: settings.childPanelSellingEnabled ?? DEFAULT_MODULE_SETTINGS.childPanelSellingEnabled,
         childPanelPrice: settings.childPanelPrice ?? DEFAULT_MODULE_SETTINGS.childPanelPrice,
         serviceUpdateLogsEnabled: settings.serviceUpdateLogsEnabled ?? DEFAULT_MODULE_SETTINGS.serviceUpdateLogsEnabled,

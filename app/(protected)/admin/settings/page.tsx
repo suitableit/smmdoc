@@ -294,6 +294,7 @@ interface ModuleSettings {
   affiliateSystemEnabled: boolean;
   commissionRate: number;
   minimumPayout: number;
+  servicePurchaseEarningCount: string;
 
   childPanelSellingEnabled: boolean;
   childPanelPrice: number;
@@ -390,6 +391,7 @@ const GeneralSettingsPage = () => {
     affiliateSystemEnabled: false,
     commissionRate: 5,
     minimumPayout: 10,
+    servicePurchaseEarningCount: '1',
 
     childPanelSellingEnabled: false,
     childPanelPrice: 10,
@@ -1578,6 +1580,27 @@ const GeneralSettingsPage = () => {
                       }
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Services purchase earning count</label>
+                    <select
+                      value={moduleSettings.servicePurchaseEarningCount}
+                      onChange={(e) =>
+                        setModuleSettings(prev => ({
+                          ...prev,
+                          servicePurchaseEarningCount: e.target.value
+                        }))
+                      }
+                      className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                    >
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                      <option value="unlimited">Unlimited</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-4">
