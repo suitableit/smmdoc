@@ -1413,11 +1413,7 @@ const AnnouncementsPage = () => {
                   className="btn bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
                 >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <FaTrash className="h-4 w-4" />
-                  )}
+                  <FaTrash className="h-4 w-4" />
                   {isLoading ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
