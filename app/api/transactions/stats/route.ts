@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
         percentages,
         recentTransactions: recentTransactions.map(t => ({
           id: t.id,
-          amount: t.amount,
+          amount: t.usd_amount,
           status: t.admin_status,
           createdAt: t.createdAt.toISOString(),
           user: t.user

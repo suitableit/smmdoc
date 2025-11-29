@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       message: 'Test payment created successfully',
       data: {
         invoice_id: testPayment.invoice_id,
-        amount: testPayment.amount,
+        amount: testPayment.usd_amount,
         userId: testPayment.userId,
         status: testPayment.status
       }

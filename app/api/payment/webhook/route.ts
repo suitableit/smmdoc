@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
           invoice_id,
           status: paymentStatus,
           transaction_id: result.updatedPayment.transaction_id,
-          amount: result.updatedPayment.amount
+          amount: result.updatedPayment.usd_amount
         }
       });
     } catch (dbError) {
