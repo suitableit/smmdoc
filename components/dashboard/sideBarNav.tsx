@@ -263,6 +263,7 @@ export default function SideBarNav({
           [
             'General Settings',
             'Providers',
+            'Payment Gateway',
             'Payment Currency',
             'Notification Settings',
             'Email Settings',

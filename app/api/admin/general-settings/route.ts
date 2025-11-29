@@ -9,6 +9,8 @@ const defaultGeneralSettings = {
   siteLogo: '',
   siteDarkLogo: '',
   adminEmail: 'admin@example.com',
+  supportEmail: '',
+  whatsappSupport: '',
 };
 
 export async function GET() {
@@ -42,6 +44,8 @@ export async function GET() {
         siteLogo: settings.siteLogo || '',
         siteDarkLogo: settings.siteDarkLogo || '',
         adminEmail: settings.adminEmail || defaultGeneralSettings.adminEmail,
+        supportEmail: settings.supportEmail || '',
+        whatsappSupport: settings.whatsappSupport || '',
       }
     });
 
@@ -95,34 +99,50 @@ export async function POST(request: NextRequest) {
 
     const existingSettings = await db.generalSettings.findFirst();
     
+    // Build update data object, only including fields that exist
+    const updateData: any = {
+      siteTitle: generalSettings.siteTitle.trim(),
+      tagline: generalSettings.tagline?.trim() || defaultGeneralSettings.tagline,
+      siteIcon: generalSettings.siteIcon || '',
+      siteLogo: generalSettings.siteLogo || '',
+      siteDarkLogo: generalSettings.siteDarkLogo || '',
+      adminEmail: generalSettings.adminEmail.trim(),
+      updatedAt: new Date()
+    };
+
+    // Only include new fields if they're provided (graceful handling if columns don't exist yet)
+    if (generalSettings.supportEmail !== undefined) {
+      updateData.supportEmail = generalSettings.supportEmail?.trim() || '';
+    }
+    if (generalSettings.whatsappSupport !== undefined) {
+      updateData.whatsappSupport = generalSettings.whatsappSupport?.trim() || '';
+    }
+    
     if (existingSettings) {
       await db.generalSettings.update({
         where: { id: existingSettings.id },
-        data: {
-          siteTitle: generalSettings.siteTitle.trim(),
-          tagline: generalSettings.tagline?.trim() || defaultGeneralSettings.tagline,
-          siteIcon: generalSettings.siteIcon || '',
-          siteLogo: generalSettings.siteLogo || '',
-          siteDarkLogo: generalSettings.siteDarkLogo || '',
-          adminEmail: generalSettings.adminEmail.trim(),
-          updatedAt: new Date()
-        }
+        data: updateData
       });
     } else {
+      const createData: any = {
+        ...updateData,
+        googleTitle: '',
+        metaKeywords: '',
+        metaSiteTitle: '',
+        siteDescription: '',
+        thumbnail: '',
+      };
+      
+      // Only include new fields in create if provided
+      if (generalSettings.supportEmail !== undefined) {
+        createData.supportEmail = generalSettings.supportEmail?.trim() || '';
+      }
+      if (generalSettings.whatsappSupport !== undefined) {
+        createData.whatsappSupport = generalSettings.whatsappSupport?.trim() || '';
+      }
+      
       await db.generalSettings.create({
-        data: {
-          siteTitle: generalSettings.siteTitle.trim(),
-          tagline: generalSettings.tagline?.trim() || defaultGeneralSettings.tagline,
-          siteIcon: generalSettings.siteIcon || '',
-          siteLogo: generalSettings.siteLogo || '',
-          siteDarkLogo: generalSettings.siteDarkLogo || '',
-          adminEmail: generalSettings.adminEmail.trim(),
-          googleTitle: '',
-          metaKeywords: '',
-          metaSiteTitle: '',
-          siteDescription: '',
-          thumbnail: '',
-        }
+        data: createData
       });
     }
 
@@ -131,10 +151,15 @@ export async function POST(request: NextRequest) {
       message: 'General settings saved successfully'
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving general settings:', error);
+    const errorMessage = error?.message || 'Failed to save general settings';
+    console.error('Detailed error:', JSON.stringify(error, null, 2));
     return NextResponse.json(
-      { error: 'Failed to save general settings' },
+      { 
+        error: 'Failed to save general settings',
+        details: errorMessage 
+      },
       { status: 500 }
     );
   }

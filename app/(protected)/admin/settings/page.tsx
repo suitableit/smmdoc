@@ -254,6 +254,8 @@ interface GeneralSettings {
   siteLogo: string;
   siteDarkLogo: string;
   adminEmail: string;
+  supportEmail: string;
+  whatsappSupport: string;
 }
 
 interface MetaSettings {
@@ -341,6 +343,8 @@ const GeneralSettingsPage = () => {
     siteLogo: '',
     siteDarkLogo: '',
     adminEmail: '',
+    supportEmail: '',
+    whatsappSupport: '',
   });
 
   const [metaSettings, setMetaSettings] = useState<MetaSettings>({
@@ -510,7 +514,10 @@ const GeneralSettingsPage = () => {
 
         updateGlobalAppName(generalSettings.siteTitle);
       } else {
-        showToast('Failed to save general settings', 'error');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.details || errorData.error || 'Failed to save general settings';
+        console.error('Save error:', errorMessage);
+        showToast(errorMessage, 'error');
       }
     } catch (error) {
       console.error('Error saving general settings:', error);
@@ -1040,6 +1047,32 @@ const GeneralSettingsPage = () => {
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder="admin@example.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Support Email Address</label>
+                  <input
+                    type="email"
+                    value={generalSettings.supportEmail}
+                    onChange={(e) =>
+                      setGeneralSettings(prev => ({ ...prev, supportEmail: e.target.value }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="support@example.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">WhatsApp Support Link</label>
+                  <input
+                    type="url"
+                    value={generalSettings.whatsappSupport}
+                    onChange={(e) =>
+                      setGeneralSettings(prev => ({ ...prev, whatsappSupport: e.target.value }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="https://wa.me/1234567890"
                   />
                 </div>
 

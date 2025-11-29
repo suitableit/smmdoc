@@ -1,12 +1,15 @@
 model GeneralSettings {
-  id         Int      @id @default(autoincrement())
-  siteTitle  String   @default("SMM Panel")
-  tagline    String   @default("Best SMM Services Provider")
-  siteIcon   String   @default("")
-  siteLogo   String   @default("")
-  adminEmail String   @default("admin@example.com")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  siteTitle      String   @default("SMM Panel")
+  tagline        String   @default("Best SMM Services Provider")
+  siteIcon       String   @default("")
+  siteLogo       String   @default("")
+  siteDarkLogo   String?  @default("")
+  adminEmail     String   @default("admin@example.com")
+  supportEmail   String?  @default("")
+  whatsappSupport String? @default("")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@map("general_settings")
 }
