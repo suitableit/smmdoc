@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           status: 'Processing',
           admin_status: 'pending',
           order_id,
-          payment_gateway: body.method || 'uddoktapay',
+          payment_gateway: body.method || 'UddoktaPay',
           sender_number: body.phone,
           userId: session.user.id,
           currency: currency,
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
           username,
           amountUSD,
           'USD',
-          'uddoktapay'
+          'UddoktaPay'
         );
       } catch (error) {
         console.error('Failed to log payment creation activity:', error);

@@ -17,7 +17,7 @@ const addFundSchema = z.object({
 type AddFundSchema = z.infer<typeof addFundSchema>;
 
 const addFundDefaultValues: AddFundSchema = {
-  method: 'uddoktapay',
+  method: 'UddoktaPay',
   amountUSD: '',
   amountBDT: '',
   amountBDTConverted: '',

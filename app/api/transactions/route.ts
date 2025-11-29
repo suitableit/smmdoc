@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
       original_amount: transaction.original_amount,
       status: transaction.status || 'Processing',
       admin_status: transaction.admin_status || 'pending',
-      method: transaction.payment_gateway || 'uddoktapay',
+      method: transaction.payment_gateway || 'UddoktaPay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),

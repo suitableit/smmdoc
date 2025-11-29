@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         userId: testUser.id,
         status: 'Processing',
         admin_status: 'pending',
-        payment_gateway: 'uddoktapay',
+        payment_gateway: 'UddoktaPay',
         sender_number: phone,
         email: testUser.email || '',
         spent_amount: 0,
