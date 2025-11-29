@@ -5,8 +5,6 @@ export async function GET() {
   try {
     console.log('=== Homepage Stats API Called ===');
     
-    // Optimize: Use a single Promise.all to execute all queries in parallel
-    // This reduces connection time and improves performance
     const [completedOrders, activeServices, activeUsers, totalUsers, totalOrders] = await Promise.all([
       db.newOrders.count({
         where: { status: 'completed' },

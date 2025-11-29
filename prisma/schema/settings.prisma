@@ -89,19 +89,20 @@ model ContactCategories {
 }
 
 model ModuleSettings {
-  id                       Int      @id @default(autoincrement())
-  affiliateSystemEnabled   Boolean  @default(false)
-  commissionRate           Float    @default(5)
-  minimumPayout            Float    @default(10)
-  childPanelSellingEnabled Boolean  @default(false)
-  childPanelPrice          Float    @default(10)
-  childPanelNameserver1    String?  @default("ns1.smmdoc.com")
-  childPanelNameserver2    String?  @default("ns2.smmdoc.com")
-  serviceUpdateLogsEnabled Boolean  @default(true)
-  massOrderEnabled         Boolean  @default(false)
-  servicesListPublic       Boolean  @default(true)
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  id                           Int      @id @default(autoincrement())
+  affiliateSystemEnabled       Boolean  @default(false)
+  commissionRate               Float    @default(5)
+  minimumPayout                Float    @default(10)
+  servicePurchaseEarningCount  String   @default("1")
+  childPanelSellingEnabled      Boolean  @default(false)
+  childPanelPrice              Float    @default(10)
+  childPanelNameserver1        String?  @default("ns1.smmdoc.com")
+  childPanelNameserver2        String?  @default("ns2.smmdoc.com")
+  serviceUpdateLogsEnabled      Boolean  @default(true)
+  massOrderEnabled             Boolean  @default(false)
+  servicesListPublic           Boolean  @default(true)
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
 
   @@map("module_settings")
 }

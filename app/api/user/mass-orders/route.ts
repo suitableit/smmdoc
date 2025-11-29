@@ -339,31 +339,38 @@ export async function POST(request: Request) {
             });
 
             if (referral && referral.affiliate && referral.affiliate.status === 'active') {
-              const existingCommission = await prisma.affiliateCommissions.findFirst({
+              // Get the service purchase earning count limit from settings
+              const servicePurchaseEarningCount = moduleSettings?.servicePurchaseEarningCount ?? '1';
+              const earningLimit = servicePurchaseEarningCount === 'unlimited' ? null : parseInt(servicePurchaseEarningCount, 10);
+
+              // Count existing commissions for this affiliate-referred user pair
+              const existingCommissionsCount = await prisma.affiliateCommissions.count({
                 where: {
                   affiliateId: referral.affiliate.id,
                   referredUserId: userId,
-                },
-                orderBy: {
-                  createdAt: 'asc'
                 }
               });
 
-              console.log(`[AFFILIATE_COMMISSION] Existing commission check:`, {
-                hasExistingCommission: !!existingCommission,
-                existingCommissionId: existingCommission?.id,
-                existingOrderId: existingCommission?.orderId
+              console.log(`[AFFILIATE_COMMISSION] Commission count check:`, {
+                existingCommissionsCount,
+                earningLimit: earningLimit ?? 'unlimited',
+                canCreateCommission: earningLimit === null || existingCommissionsCount < earningLimit
               });
 
-              if (!existingCommission) {
+              // Check if we can create a commission based on the limit
+              const canCreateCommission = earningLimit === null || existingCommissionsCount < earningLimit;
+
+              if (canCreateCommission) {
                 const orderAmount = orderData.usdPrice || orderData.price || 0;
                 const commissionRate = moduleSettings?.commissionRate ?? 5;
                 const commissionAmount = (orderAmount * commissionRate) / 100;
 
-                console.log(`[AFFILIATE_COMMISSION] First order commission calculation:`, {
+                console.log(`[AFFILIATE_COMMISSION] Commission calculation:`, {
                   orderAmount,
                   commissionRate,
-                  commissionAmount
+                  commissionAmount,
+                  commissionNumber: existingCommissionsCount + 1,
+                  limit: earningLimit ?? 'unlimited'
                 });
 
                 if (commissionAmount > 0) {
@@ -380,19 +387,21 @@ export async function POST(request: Request) {
                     }
                   });
 
-                  console.log(`[AFFILIATE_COMMISSION] ✅ First order commission created successfully:`, {
+                  console.log(`[AFFILIATE_COMMISSION] ✅ Commission created successfully:`, {
                     commissionId: createdCommission.id,
                     affiliateId: referral.affiliate.id,
                     orderId: order.id,
                     amount: orderAmount,
                     commissionAmount: commissionAmount,
-                    status: 'pending'
+                    status: 'pending',
+                    commissionNumber: existingCommissionsCount + 1,
+                    limit: earningLimit ?? 'unlimited'
                   });
                 } else {
                   console.log(`[AFFILIATE_COMMISSION] ⚠️ Commission amount is 0, skipping creation`);
                 }
               } else {
-                console.log(`[AFFILIATE_COMMISSION] ⚠️ Commission already exists for referred user ${userId} (first order was order ${existingCommission.orderId}). Skipping commission for order ${order.id}.`);
+                console.log(`[AFFILIATE_COMMISSION] ⚠️ Commission limit reached for referred user ${userId} (${existingCommissionsCount}/${earningLimit}). Skipping commission for order ${order.id}.`);
               }
             } else {
               console.log(`[AFFILIATE_COMMISSION] ⚠️ No active referral found for user ${userId}`);
