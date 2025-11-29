@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         console.log(`Payment ${invoice_id} status updated to ${paymentStatus}`);
         
         if (paymentStatus === "Success" && payment.user) {
-          const originalAmount = payment.original_amount || payment.amount;
+          const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
 
           const user = await prisma.users.update({
             where: { id: payment.userId },
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
                 increment: originalAmount
               },
               balanceUSD: {
-                increment: payment.amount
+                increment: payment.usd_amount
               },
               total_deposit: {
                 increment: originalAmount

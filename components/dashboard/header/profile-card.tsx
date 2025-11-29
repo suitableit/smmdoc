@@ -349,13 +349,21 @@ const ProfileCard = ({
 
       if (enableAuth) {
         const { signOut } = await import('next-auth/react');
-        await signOut({ callbackUrl: '/', redirect: true });
+        const { performCompleteLogout } = await import('@/lib/logout-helper');
+        
+        // Perform complete logout with all cleanup
+        await performCompleteLogout(signOut, '/');
       } else {
+        const { clearAllSessionData } = await import('@/lib/logout-helper');
+        clearAllSessionData();
         window.location.href = '/';
       }
     } catch (error) {
       console.error('Logout failed:', error);
       setIsLoggingOut(false);
+      // Force redirect on error
+      const { clearAllSessionData } = await import('@/lib/logout-helper');
+      clearAllSessionData();
       window.location.href = '/';
     }
   };

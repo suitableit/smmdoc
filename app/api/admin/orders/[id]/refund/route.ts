@@ -1,5 +1,6 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { convertCurrency, fetchCurrencyData } from '@/lib/currency-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
@@ -118,13 +119,16 @@ export async function POST(
         }
       });
 
+      // Convert USD to BDT for bdt_amount
+      const { currencies } = await fetchCurrencyData();
+      const refundAmountBDT = convertCurrency(finalRefundAmount, 'USD', 'BDT', currencies);
+
       await tx.addFunds.create({
         data: {
           userId: existingOrder.user.id,
           invoice_id: `refund_${id}_${Date.now()}`,
-          amount: finalRefundAmount,
-          spent_amount: 0,
-          fee: 0,
+          usd_amount: finalRefundAmount,
+          bdt_amount: refundAmountBDT,
           email: existingOrder.user.email || '',
           name: existingOrder.user.name || 'User',
           status: 'Success',
@@ -132,8 +136,6 @@ export async function POST(
           payment_gateway: 'Admin Refund',
           payment_method: 'Refund',
           transaction_type: 'refund',
-          reference_id: id,
-          date: new Date(),
           paid_at: new Date(),
           createdAt: new Date()
         }

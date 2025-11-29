@@ -132,18 +132,19 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      // Convert to BDT for bdt_amount
+      const totalDeductionBDT = convertCurrency(totalDeductionUSD, 'USD', 'BDT', currencies);
+      const transferAmountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
+
       const senderTransaction = await prisma.addFunds.create({
         data: {
           invoice_id: `${invoiceId}-SENDER`,
-          amount: totalDeductionUSD,
-          original_amount: totalDeduction,
-          spent_amount: 0,
-          fee: fee,
+          usd_amount: totalDeductionUSD,
+          bdt_amount: totalDeductionBDT,
           email: sender.email || '',
           name: sender.name || '',
           status: 'Success',
           admin_status: 'Success',
-          order_id: transactionId,
           payment_gateway: 'transfer',
           payment_method: 'Manual',
           transaction_id: transactionId,
@@ -157,15 +158,12 @@ export async function POST(req: NextRequest) {
       const receiverTransaction = await prisma.addFunds.create({
         data: {
           invoice_id: `${invoiceId}-RECEIVER`,
-          amount: amountUSD,
-          original_amount: transferAmount,
-          spent_amount: 0,
-          fee: 0,
+          usd_amount: amountUSD,
+          bdt_amount: transferAmountBDT,
           email: receiver.email || '',
           name: receiver.name || '',
           status: 'Success',
           admin_status: 'Success',
-          order_id: transactionId,
           payment_gateway: 'transfer',
           payment_method: 'Manual',
           transaction_id: transactionId,

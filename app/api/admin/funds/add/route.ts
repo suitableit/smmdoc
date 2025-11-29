@@ -40,16 +40,14 @@ export async function POST(req: NextRequest) {
       const addFund = await prisma.addFunds.create({
         data: {
           invoice_id: invoiceId,
-          amount: parseFloat(amountUSD),
-          spent_amount: 0,
+          usd_amount: parseFloat(amountUSD),
+          bdt_amount: parseFloat(amountBDT),
           email: user.email || '',
           name: user.name || '',
           status: status || 'COMPLETED',
           payment_gateway: 'admin',
           payment_method: 'admin',
           transaction_id: `ADMIN-${Date.now()}`,
-          order_id: `ADMIN-${Date.now()}`,
-          date: new Date(),
           userId: userId,
           currency: 'USD',
         },

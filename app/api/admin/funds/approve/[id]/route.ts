@@ -68,8 +68,8 @@ export async function POST(
         const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.amount },
-            total_deposit: { increment: transaction.amount }
+            balance: { increment: transaction.usd_amount },
+            total_deposit: { increment: transaction.usd_amount }
           }
         });
         
@@ -81,7 +81,7 @@ export async function POST(
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
           transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
-          amount: transaction.amount.toString(),
+          amount: transaction.usd_amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -99,8 +99,8 @@ export async function POST(
         userName: transaction.user.name || 'Unknown User',
         userEmail: transaction.user.email || '',
         transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
-        amount: transaction.amount.toString(),
-        currency: 'BDT',
+          amount: transaction.usd_amount.toString(),
+          currency: 'USD',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()
       });
@@ -116,7 +116,7 @@ export async function POST(
         message: 'Transaction approved successfully',
         data: {
           transactionId: transaction.id,
-          amount: transaction.amount,
+          amount: transaction.usd_amount,
           userId: transaction.userId,
           status: 'Success'
         }

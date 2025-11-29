@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       
       db.addFunds.aggregate({
         where: { ...dateFilter, admin_status: 'Success' },
-        _sum: { amount: true }
+        _sum: { usd_amount: true }
       }),
       
       (() => {
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         take: 5,
         select: {
           id: true,
-          amount: true,
+          usd_amount: true,
           admin_status: true,
           createdAt: true,
           user: {
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    const totalVolume = totalVolumeResult._sum.amount || 0;
+    const totalVolume = totalVolumeResult._sum.usd_amount || 0;
 
     const statusBreakdown = {
       pending: pendingTransactions,

@@ -174,18 +174,20 @@ export async function POST(request: NextRequest) {
         }
       });
 
+      // Convert USD to BDT for bdt_amount
+      const bdtRate = availableCurrencies.find((c: any) => c.code === 'BDT')?.rate || 120;
+      const amountBDT = amountToAdd * Number(bdtRate);
+
       const transactionRecord = await prisma.addFunds.create({
         data: {
           userId: user.id,
           invoice_id: `MANUAL-${Date.now()}`,
-          amount: amountToAdd,
-          spent_amount: 0,
-          fee: 0,
+          usd_amount: amountToAdd,
+          bdt_amount: amountBDT,
           email: user.email || '',
           name: user.name || '',
           status: 'Success',
           admin_status: 'Success',
-          order_id: `MANUAL-${action.toUpperCase()}-${Date.now()}`,
           payment_gateway: 'manual_adjustment',
           payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
           sender_number: '',

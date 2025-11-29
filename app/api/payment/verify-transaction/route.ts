@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         message: 'Payment already verified and completed',
         payment: {
           invoice_id: payment.invoice_id,
-          amount: payment.amount,
+          amount: payment.usd_amount,
           status: payment.status,
           transaction_id: payment.transaction_id,
         },
@@ -127,7 +127,7 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            const originalAmount = payment.original_amount || payment.amount;
+            const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.amount },
+                balanceUSD: { increment: payment.usd_amount },
                 total_deposit: { increment: originalAmount },
               },
             });
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
               userName: payment.user.name || 'Customer',
               userEmail: payment.user.email,
               transactionId: finalTransactionId,
-              amount: payment.amount.toString(),
+              amount: payment.usd_amount.toString(),
               currency: payment.currency || 'USD',
               date: new Date().toLocaleDateString(),
               userId: payment.userId.toString(),
@@ -176,8 +176,8 @@ export async function POST(req: NextRequest) {
             userName: payment.user.name || 'Unknown User',
             userEmail: payment.user.email || '',
             transactionId: transaction_id,
-            amount: payment.amount.toString(),
-            currency: 'BDT',
+            amount: payment.usd_amount.toString(),
+            currency: 'USD',
             date: new Date().toLocaleDateString(),
             userId: payment.userId.toString(),
           });
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
             message: 'Payment verified and completed successfully',
             payment: {
               invoice_id: payment.invoice_id,
-              amount: payment.amount,
+              amount: payment.usd_amount,
               status: 'Success',
               transaction_id: finalTransactionId,
             },
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest) {
           userName: payment.user?.name || 'Unknown User',
           userEmail: payment.user?.email || '',
           transactionId: transaction_id,
-          amount: payment.amount.toString(),
+          amount: payment.usd_amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: payment.userId.toString(),
@@ -241,7 +241,7 @@ export async function POST(req: NextRequest) {
           message: 'Payment is being processed. Please wait for verification.',
           payment: {
             invoice_id: payment.invoice_id,
-            amount: payment.amount,
+            amount: payment.usd_amount,
             status: 'Processing',
             transaction_id: finalTransactionId,
           },
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
           message: 'Payment verification failed or was cancelled',
           payment: {
             invoice_id: payment.invoice_id,
-            amount: payment.amount,
+            amount: payment.usd_amount,
             status: 'Cancelled',
             transaction_id: finalTransactionId,
           },

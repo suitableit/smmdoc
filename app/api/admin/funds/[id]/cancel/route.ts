@@ -61,7 +61,7 @@ export async function POST(
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
           transactionId: transaction.transaction_id || '0',
-          amount: transaction.amount.toString(),
+          amount: transaction.usd_amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -80,7 +80,7 @@ export async function POST(
         data: {
           id: transaction.id,
           status: 'Cancelled',
-          amount: transaction.amount,
+          amount: transaction.usd_amount,
           userId: transaction.userId
         }
       });

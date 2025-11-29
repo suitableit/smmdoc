@@ -76,8 +76,8 @@ export async function POST(
         const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.amount },
-            total_deposit: { increment: transaction.amount }
+            balance: { increment: transaction.usd_amount },
+            total_deposit: { increment: transaction.usd_amount }
           }
         });
 
@@ -89,7 +89,7 @@ export async function POST(
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
           transactionId: modifiedTransactionId?.trim() || transaction.transaction_id || 'N/A',
-          amount: transaction.amount.toString(),
+          amount: transaction.usd_amount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -108,7 +108,7 @@ export async function POST(
         data: {
           id: transaction.id,
           status: 'approved',
-          amount: transaction.amount,
+          amount: transaction.usd_amount,
           userId: transaction.userId,
           transactionId: modifiedTransactionId?.trim() || transaction.transaction_id
         }

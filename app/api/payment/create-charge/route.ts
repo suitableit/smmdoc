@@ -60,7 +60,6 @@ export async function POST(req: NextRequest) {
     }
 
     const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const order_id = `ORD-${Date.now()}`;
 
     const { currencies } = await fetchCurrencyData();
 
@@ -85,26 +84,28 @@ export async function POST(req: NextRequest) {
     }
 
     const amountUSD = convertToUSD(amount, currency, currencies);
+    // Convert to BDT for bdt_amount - always store BDT amount
+    const amountBDT = currency === 'BDT' 
+      ? amount 
+      : convertCurrency(amountUSD, 'USD', 'BDT', currencies);
 
     console.log('Currency conversion:', {
       original: amount,
       currency: currency,
       amountUSD: amountUSD,
+      amountBDT: amountBDT,
     });
 
     try {
       const payment = await db.addFunds.create({
         data: {
           invoice_id,
-          amount: amountUSD,
-          original_amount: amount,
-          spent_amount: 0,
-          fee: 0,
+          usd_amount: amountUSD,
+          bdt_amount: amountBDT,
           email: session.user.email || '',
           name: session.user.name || '',
           status: 'Processing',
           admin_status: 'pending',
-          order_id,
           payment_gateway: body.method || 'UddoktaPay',
           sender_number: body.phone,
           userId: session.user.id,
@@ -158,9 +159,9 @@ export async function POST(req: NextRequest) {
         phone: body.phone,
         metadata: {
           user_id: session.user.id,
-          order_id: order_id,
+          invoice_id: invoice_id,
           original_currency: currency,
-          original_amount: amount,
+          bdt_amount: amountBDT,
           usd_amount: amountUSD,
         },
         redirect_url: `${appUrl}/payment/success`,
@@ -227,7 +228,6 @@ export async function POST(req: NextRequest) {
           return NextResponse.json(
             {
               payment_url: data.payment_url,
-              order_id: order_id,
               invoice_id: invoice_id,
             },
             { status: 200, headers: corsHeaders }
