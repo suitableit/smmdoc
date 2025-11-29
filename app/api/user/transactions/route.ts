@@ -68,17 +68,16 @@ export async function GET(request: NextRequest) {
     const transformedTransactions = transactions.map((transaction) => ({
       id: transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.original_amount || transaction.amount,
+      amount: transaction.usd_amount || 0,
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.payment_gateway || 'UddoktaPay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || null,
       createdAt: transaction.createdAt.toISOString(),
       transaction_type: transaction.transaction_type || 'deposit',
-      reference_id: transaction.order_id,
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
-      currency: transaction.currency || 'BDT',
+      currency: 'USD',
     }));
 
     return NextResponse.json({

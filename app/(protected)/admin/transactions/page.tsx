@@ -124,7 +124,7 @@ interface Transaction {
   };
   transactionId: number | string;
   amount: number;
-  original_amount?: number;
+  bdt_amount?: number;
   currency: string;
   phone: string;
   sender_number?: string;
@@ -1200,7 +1200,7 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             <PriceDisplay
-                              amount={transaction.original_amount || transaction.amount}
+                              amount={transaction.bdt_amount || transaction.amount}
                               originalCurrency={transaction.currency === 'USD' || transaction.currency === 'USDT' ? 'USD' : 'BDT'}
                               className="font-semibold text-sm"
                             />
@@ -1453,7 +1453,7 @@ const AdminAllTransactionsPage = () => {
                             </label>
                             <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
                               <PriceDisplay
-                                amount={viewDetailsDialog.transaction.original_amount || viewDetailsDialog.transaction.amount}
+                                amount={viewDetailsDialog.transaction.bdt_amount || viewDetailsDialog.transaction.amount}
                                 originalCurrency={viewDetailsDialog.transaction.currency === 'USD' || viewDetailsDialog.transaction.currency === 'USDT' ? 'USD' : 'BDT'}
                               />
                             </div>
@@ -1656,7 +1656,7 @@ const AdminAllTransactionsPage = () => {
                               </span>
                               <span className="font-semibold text-lg text-green-600">
                                 {formatTransactionCurrency(
-                                  approveConfirmDialog.transaction.original_amount || approveConfirmDialog.transaction.amount,
+                                  approveConfirmDialog.transaction.bdt_amount || approveConfirmDialog.transaction.amount,
                                   approveConfirmDialog.transaction.currency
                                 )}
                               </span>
@@ -1776,7 +1776,7 @@ const AdminAllTransactionsPage = () => {
                               </span>
                               <span className="font-semibold text-lg">
                                 {formatTransactionCurrency(
-                                  cancelConfirmDialog.transaction.original_amount || cancelConfirmDialog.transaction.amount,
+                                  cancelConfirmDialog.transaction.bdt_amount || cancelConfirmDialog.transaction.amount,
                                   cancelConfirmDialog.transaction.currency
                                 )}
                               </span>

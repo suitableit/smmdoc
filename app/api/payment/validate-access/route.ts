@@ -59,9 +59,8 @@ export async function GET(req: NextRequest) {
       payment: {
         id: payment.id,
         invoice_id: payment.invoice_id,
-        order_id: payment.order_id,
-        amount: payment.amount,
-        original_amount: payment.original_amount,
+        amount: payment.usd_amount,
+        bdt_amount: payment.bdt_amount,
         status: payment.status,
         transaction_id: payment.transaction_id,
         payment_method: payment.payment_method,

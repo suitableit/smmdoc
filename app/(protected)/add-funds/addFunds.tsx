@@ -227,9 +227,6 @@ export function AddFundForm() {
         }
 
         if (res.data && res.data.payment_url) {
-          if (res.data.order_id) {
-            localStorage.setItem('order_id', res.data.order_id);
-          }
 
           if (res.data.invoice_id) {
             const paymentSession = {

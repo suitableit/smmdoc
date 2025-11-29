@@ -98,6 +98,7 @@ export default function TransactionsPage() {
   const { currency, rate } = useCurrency();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,6 +120,7 @@ export default function TransactionsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     setPageTitle('Transactions', appName);
@@ -218,9 +220,14 @@ export default function TransactionsPage() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      // Use tableLoading for refresh/filter changes, loading for initial load
+      if (isInitialLoad) {
+        setLoading(true);
+      } else {
+        setTableLoading(true);
+      }
 
       const params = new URLSearchParams({
         page: page.toString(),
@@ -336,12 +343,18 @@ export default function TransactionsPage() {
       setTransactions(fallbackTransactions);
       showToast('Please check your connection and try again', 'error');
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      } else {
+        setTableLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchTransactions();
+    fetchTransactions(isInitialLoad ? false : true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, page, limit]);
 
   const handleViewDetails = (invoiceId: string) => {
@@ -373,7 +386,7 @@ export default function TransactionsPage() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchTransactions();
+      await fetchTransactions(true);
     } finally {
       setRefreshing(false);
     }
@@ -411,7 +424,7 @@ export default function TransactionsPage() {
 
       <div className="page-content">
         <div className="card card-padding">
-          {loading ? (
+          {loading && isInitialLoad ? (
             <>
               <div className="mb-6">
                 <div className="relative">
@@ -514,10 +527,10 @@ export default function TransactionsPage() {
                     </div>
                     <button
                       onClick={handleRefresh}
-                      disabled={refreshing || loading}
+                      disabled={refreshing || tableLoading}
                       className="btn btn-primary flex items-center gap-2 px-3 py-2.5 h-12"
                     >
-                      <FaSync className={refreshing ? 'animate-spin' : ''} />
+                      <FaSync className={refreshing || tableLoading ? 'animate-spin' : ''} />
                       Refresh
                     </button>
                   </div>
@@ -598,7 +611,7 @@ export default function TransactionsPage() {
                   </button>
                 </div>
               </div>
-              {searchLoading ? (
+              {searchLoading || tableLoading ? (
                 <div className="card">
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
@@ -658,14 +671,14 @@ export default function TransactionsPage() {
                       <div className="flex gap-2">
                         <button
                           onClick={handlePrevious}
-                          disabled={page === 1 || loading}
+                          disabled={page === 1 || tableLoading}
                           className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
                           Previous
                         </button>
                         <button
                           onClick={handleNext}
-                          disabled={page >= pagination.totalPages || loading}
+                          disabled={page >= pagination.totalPages || tableLoading}
                           className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                         >
                           Next

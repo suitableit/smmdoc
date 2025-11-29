@@ -66,22 +66,22 @@ export async function PATCH(
         };
 
         if (transaction.admin_status !== 'Success' && transaction.admin_status !== 'approved') {
-          balanceChange = transaction.amount;
+          balanceChange = transaction.usd_amount;
           await prisma.users.update({
             where: { id: transaction.userId },
             data: {
-              balance: { increment: transaction.amount },
-              total_deposit: { increment: transaction.amount }
+              balance: { increment: transaction.usd_amount },
+              total_deposit: { increment: transaction.usd_amount }
             }
           });
-          notificationMessage = `Your deposit of à§³${transaction.amount} has been approved and added to your account.`;
+          notificationMessage = `Your deposit of $${transaction.usd_amount} has been approved and added to your account.`;
         }
       } else if (status === 'cancelled' || status === 'Cancelled') {
         updateData = {
           status: 'Cancelled',
           admin_status: 'Cancelled'
         };
-        notificationMessage = `Your deposit of à§³${transaction.amount} has been cancelled.`;
+        notificationMessage = `Your deposit of $${transaction.usd_amount} has been cancelled.`;
       } else if (status === 'Pending' || status === 'pending') {
         updateData = {
           status: 'Processing',
@@ -89,16 +89,16 @@ export async function PATCH(
         };
 
         if (transaction.admin_status === 'Success') {
-          if (currentUser.balance >= transaction.amount) {
-            balanceChange = -transaction.amount;
+          if (currentUser.balance >= transaction.usd_amount) {
+            balanceChange = -transaction.usd_amount;
             await prisma.users.update({
               where: { id: transaction.userId },
               data: {
-                balance: { decrement: transaction.amount },
-                total_deposit: { decrement: transaction.amount }
+                balance: { decrement: transaction.usd_amount },
+                total_deposit: { decrement: transaction.usd_amount }
               }
             });
-            notificationMessage = `Your transaction of à§³${transaction.amount} has been moved to pending status. Amount has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${transaction.usd_amount} has been moved to pending status. Amount has been deducted from your account.`;
           } else {
             const deductAmount = currentUser.balance;
             balanceChange = -deductAmount;
@@ -109,17 +109,17 @@ export async function PATCH(
                 total_deposit: { decrement: deductAmount }
               }
             });
-            notificationMessage = `Your transaction of à§³${transaction.amount} has been moved to pending status. Available balance of à§³${deductAmount} has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${transaction.usd_amount} has been moved to pending status. Available balance of $${deductAmount} has been deducted from your account.`;
           }
         } else {
-          notificationMessage = `Your deposit of à§³${transaction.amount} is now pending review.`;
+          notificationMessage = `Your deposit of $${transaction.usd_amount} is now pending review.`;
         }
       } else if (status === 'Suspicious') {
         updateData = {
           status: 'Processing',
           admin_status: 'Suspicious'
         };
-        notificationMessage = `Your transaction of à§³${transaction.amount} is under review for suspicious activity.`;
+        notificationMessage = `Your transaction of $${transaction.usd_amount} is under review for suspicious activity.`;
       } else {
         updateData = {
           admin_status: status
@@ -141,7 +141,7 @@ export async function PATCH(
           userName: result.currentUser.name || 'Customer',
           userEmail: result.currentUser.email,
           transactionId: (transaction.transaction_id || transaction.id.toString()),
-          amount: (transaction.currency === 'USD' ? transaction.amount : transaction.amount * 120).toString(),
+          amount: transaction.usd_amount.toString(),
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -160,7 +160,7 @@ export async function PATCH(
         userName: result.currentUser.name || 'Unknown User',
         userEmail: result.currentUser.email || '',
         transactionId: (transaction.transaction_id || transaction.id.toString()),
-        amount: transaction.amount.toString(),
+        amount: transaction.usd_amount.toString(),
         currency: 'BDT',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()
@@ -234,17 +234,16 @@ export async function GET(
     const transformedTransaction = {
       id: transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.amount,
+      amount: transaction.usd_amount || 0,
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.payment_gateway || 'UddoktaPay',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
       transaction_type: 'deposit',
-      reference_id: transaction.order_id,
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
-      currency: transaction.currency || 'BDT',
+      currency: 'USD',
       admin_status: transaction.admin_status,
     };
 

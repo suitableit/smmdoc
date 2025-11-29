@@ -111,15 +111,14 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             invoice_id: true,
-            amount: true,
-            original_amount: true,
+            usd_amount: true,
+            bdt_amount: true,
             status: true,
             payment_gateway: true,
             payment_method: true,
             transaction_id: true,
             createdAt: true,
             updatedAt: true,
-            order_id: true,
             sender_number: true,
             currency: true,
             admin_status: true,
@@ -178,11 +177,12 @@ export async function GET(request: NextRequest) {
       id: transaction.id,
       transactionId: transaction.transaction_id || transaction.id,
       invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.amount,
-      original_amount: transaction.original_amount,
+      amount: transaction.usd_amount || 0,
+      bdt_amount: transaction.bdt_amount,
       status: transaction.status || 'Processing',
       admin_status: transaction.admin_status || 'pending',
       method: transaction.payment_gateway || 'UddoktaPay',
+      currency: 'USD',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
@@ -220,8 +220,8 @@ export async function GET(request: NextRequest) {
         }),
         totalVolume: await db.addFunds.aggregate({
           where: { ...where, admin_status: 'Success' },
-          _sum: { amount: true }
-        }).then(result => result._sum.amount || 0),
+          _sum: { usd_amount: true }
+        }).then(result => result._sum.usd_amount || 0),
         todayTransactions: await db.addFunds.count({
           where: {
             ...where,
@@ -309,8 +309,8 @@ export async function PATCH(request: NextRequest) {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.amount },
-            total_deposit: { increment: transaction.amount }
+            balance: { increment: transaction.usd_amount },
+            total_deposit: { increment: transaction.usd_amount }
           }
         });
       }
@@ -322,8 +322,8 @@ export async function PATCH(request: NextRequest) {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { decrement: transaction.amount },
-            total_deposit: { decrement: transaction.amount }
+            balance: { decrement: transaction.usd_amount },
+            total_deposit: { decrement: transaction.usd_amount }
           }
         });
       }

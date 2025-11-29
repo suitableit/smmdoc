@@ -382,9 +382,17 @@ export default function SideBarNav({
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
 
-            const handleClick = () => {
+            const handleClick = async () => {
               if (item.isLogout) {
-                signOut({ callbackUrl: '/' });
+                try {
+                  const { performCompleteLogout } = await import('@/lib/logout-helper');
+                  await performCompleteLogout(signOut, '/');
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                  const { clearAllSessionData } = await import('@/lib/logout-helper');
+                  clearAllSessionData();
+                  window.location.href = '/';
+                }
               } else {
                 setOpen();
               }
@@ -463,9 +471,17 @@ export default function SideBarNav({
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
 
-            const handleClick = () => {
+            const handleClick = async () => {
               if (item.isLogout) {
-                signOut({ callbackUrl: '/' });
+                try {
+                  const { performCompleteLogout } = await import('@/lib/logout-helper');
+                  await performCompleteLogout(signOut, '/');
+                } catch (error) {
+                  console.error('Logout failed:', error);
+                  const { clearAllSessionData } = await import('@/lib/logout-helper');
+                  clearAllSessionData();
+                  window.location.href = '/';
+                }
               } else {
                 setOpen();
               }

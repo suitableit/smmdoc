@@ -1,5 +1,6 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { convertCurrency, fetchCurrencyData } from '@/lib/currency-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -50,18 +51,22 @@ export async function POST(req: NextRequest) {
       });
     }
     
+    // Convert USD to BDT for bdt_amount (assuming amount is in USD)
+    const { currencies } = await fetchCurrencyData();
+    const amountUSD = parseFloat(amount.toString());
+    const amountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
+
     const testPayment = await db.addFunds.create({
       data: {
         invoice_id,
-        order_id: `TEST-${Date.now()}`,
-        amount: parseFloat(amount.toString()),
+        usd_amount: amountUSD,
+        bdt_amount: amountBDT,
         userId: testUser.id,
         status: 'Processing',
         admin_status: 'pending',
         payment_gateway: 'UddoktaPay',
         sender_number: phone,
         email: testUser.email || '',
-        spent_amount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
       }

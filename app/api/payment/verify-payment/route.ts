@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
         payment: {
           id: payment.id,
           invoice_id: payment.invoice_id,
-          amount: payment.amount,
+          amount: payment.usd_amount,
           status: payment.status,
           transaction_id: payment.transaction_id,
         }
@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
             }
           });
           
-          const originalAmount = payment.original_amount || payment.amount;
+          const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
           const userSettings = await prisma.userSettings.findFirst();
           let bonusAmount = 0;
 
@@ -305,7 +305,7 @@ export async function GET(req: NextRequest) {
             where: { id: payment.userId },
             data: {
               balance: { increment: totalAmountToAdd },
-              balanceUSD: { increment: payment.amount },
+              balanceUSD: { increment: payment.usd_amount },
               total_deposit: { increment: originalAmount }
             }
           });
@@ -418,7 +418,7 @@ export async function GET(req: NextRequest) {
               }
             });
             
-            const originalAmount = payment.original_amount || payment.amount;
+            const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -433,7 +433,7 @@ export async function GET(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.amount },
+                balanceUSD: { increment: payment.usd_amount },
                 total_deposit: { increment: originalAmount }
               }
             });

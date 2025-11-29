@@ -1,5 +1,6 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { convertCurrency, fetchCurrencyData } from '@/lib/currency-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -20,16 +21,18 @@ export async function POST(req: NextRequest) {
     }
 
     const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const order_id = `ORD-${Date.now()}`;
+    const amountUSD = parseFloat(body.amount);
+
+    // Convert USD to BDT for bdt_amount
+    const { currencies } = await fetchCurrencyData();
+    const amountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
 
     console.log('Creating payment record with:', {
       invoice_id,
-      amount: parseFloat(body.amount),
-      spent_amount: 0,
+      amount: amountUSD,
       email: session.user.email,
       name: session.user.name,
       status: 'Processing',
-      order_id,
       method: body.method,
       userId: session.user.id,
     });
@@ -38,13 +41,11 @@ export async function POST(req: NextRequest) {
       const payment = await db.addFunds.create({
         data: {
           invoice_id,
-          amount: parseFloat(body.amount),
-          spent_amount: 0,
-          fee: 0,
+          usd_amount: amountUSD,
+          bdt_amount: amountBDT,
           email: session.user.email || '',
           name: session.user.name || '',
           status: 'Processing',
-          order_id,
           payment_gateway: body.method,
           userId: session.user.id,
           currency: 'USD',
@@ -82,13 +83,12 @@ export async function POST(req: NextRequest) {
       )}&email=${encodeURIComponent(
         session.user.email || 'user@example.com'
       )}&metadata=${encodeURIComponent(
-        JSON.stringify({ order_id })
+        JSON.stringify({ invoice_id })
       )}&redirect_url=${encodeURIComponent(success_url)}`;
 
       console.log('Payment URLs:', { success_url, cancel_url, payment_url });
 
       return NextResponse.json({
-        order_id: payment.order_id,
         invoice_id: payment.invoice_id,
         payment_url,
         success_url,
