@@ -65,28 +65,28 @@ const Announcements: React.FC = () => {
     switch (type) {
       case 'warning':
         return {
-          border: 'border-yellow-400 dark:border-yellow-500',
+          border: 'border border-yellow-300 dark:border-yellow-700',
           bg: 'bg-yellow-50 dark:bg-yellow-900/20',
           text: 'text-yellow-800 dark:text-yellow-200',
           icon: 'text-yellow-600 dark:text-yellow-400',
         };
       case 'critical':
         return {
-          border: 'border-red-400 dark:border-red-500',
+          border: 'border border-red-200 dark:border-red-800',
           bg: 'bg-red-50 dark:bg-red-900/20',
           text: 'text-red-800 dark:text-red-200',
           icon: 'text-red-600 dark:text-red-400',
         };
       case 'success':
         return {
-          border: 'border-green-400 dark:border-green-500',
+          border: 'border border-green-200 dark:border-green-800',
           bg: 'bg-green-50 dark:bg-green-900/20',
           text: 'text-green-800 dark:text-green-200',
           icon: 'text-green-600 dark:text-green-400',
         };
       default: // info
         return {
-          border: 'border-blue-400 dark:border-blue-500',
+          border: 'border border-blue-200 dark:border-blue-800',
           bg: 'bg-blue-50 dark:bg-blue-900/20',
           text: 'text-blue-800 dark:text-blue-200',
           icon: 'text-blue-600 dark:text-blue-400',
@@ -123,7 +123,7 @@ const Announcements: React.FC = () => {
         return (
           <div
             key={announcement.id}
-            className={`border-2 ${styles.border} ${styles.bg} rounded-lg p-4 shadow-sm relative`}
+            className={`${styles.border} ${styles.bg} ${styles.text} rounded-lg p-4 shadow-sm relative`}
           >
             <div className="flex items-start gap-3">
               <div className={`${styles.icon} flex-shrink-0 mt-0.5`}>
@@ -159,10 +159,10 @@ const Announcements: React.FC = () => {
               {!announcement.isSticky && (
                 <button
                   onClick={() => handleDismiss(announcement.id, announcement.isSticky)}
-                  className={`${styles.icon} hover:opacity-70 transition-opacity flex-shrink-0 p-1`}
+                  className={`${styles.icon} hover:opacity-70 transition-opacity flex-shrink-0 p-1 self-start`}
                   aria-label="Dismiss announcement"
                 >
-                  <FaTimes className="h-5 w-5" />
+                  <FaTimes className="h-4 w-4" />
                 </button>
               )}
             </div>
