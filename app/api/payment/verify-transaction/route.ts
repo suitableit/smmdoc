@@ -56,24 +56,33 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const verificationResponse = await fetch(
-        `https://pay.smmdoc.com/api/verify-payment/${invoice_id}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'RT-UDDOKTAPAY-API-KEY': apiKey,
-          },
-          body: JSON.stringify({ transaction_id, phone }),
-        }
-      );
+      const baseUrl = process.env.NEXT_PUBLIC_UDDOKTAPAY_BASE_URL || 'https://pay.smmdoc.com/api/verify-payment';
+      
+      const verificationResponse = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'RT-UDDOKTAPAY-API-KEY': apiKey,
+        },
+        body: JSON.stringify({ invoice_id }),
+      });
 
       let isSuccessful = false;
       let verificationStatus = 'PENDING';
+      let verificationData: any = null;
 
       if (verificationResponse.ok) {
-        const verificationData = await verificationResponse.json();
+        verificationData = await verificationResponse.json();
         console.log('UddoktaPay verification response:', verificationData);
+
+        // Update payment record with data from UddoktaPay response
+        if (verificationData.transaction_id) {
+          transaction_id = verificationData.transaction_id;
+        }
+        if (verificationData.sender_number) {
+          phone = verificationData.sender_number;
+        }
 
         if (
           verificationData.status === 'COMPLETED' ||
@@ -85,17 +94,16 @@ export async function POST(req: NextRequest) {
           verificationStatus = 'PENDING';
         } else if (
           verificationData.status === 'CANCELLED' ||
-          verificationData.status === 'FAILED'
+          verificationData.status === 'FAILED' ||
+          verificationData.status === 'ERROR'
         ) {
           verificationStatus = 'CANCELLED';
         } else {
           verificationStatus = 'PENDING';
         }
       } else {
-        console.error(
-          'UddoktaPay verification API error:',
-          await verificationResponse.text()
-        );
+        const errorText = await verificationResponse.text();
+        console.error('UddoktaPay verification API error:', errorText);
         verificationStatus = 'PENDING';
       }
 
@@ -109,8 +117,9 @@ export async function POST(req: NextRequest) {
               data: {
                 status: 'Success',
                 admin_status: 'approved',
-                transaction_id: transaction_id,
-                sender_number: phone,
+                transaction_id: transaction_id || payment.transaction_id,
+                sender_number: phone || payment.sender_number,
+                payment_method: verificationData?.payment_method || payment.payment_method || 'UddoktaPay',
               },
             });
 

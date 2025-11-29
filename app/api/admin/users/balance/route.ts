@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
           status: 'Success',
           admin_status: 'Success',
           order_id: `MANUAL-${action.toUpperCase()}-${Date.now()}`,
-          method: 'manual_adjustment',
+          payment_gateway: 'manual_adjustment',
           payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
           sender_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
           name: session.user.name || '',
           status: 'Processing',
           order_id,
-          method: body.method,
+          payment_gateway: body.method,
           userId: session.user.id,
           currency: 'USD',
         },

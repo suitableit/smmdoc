@@ -25,9 +25,11 @@ export async function GET(request: NextRequest) {
     
     switch (period) {
       case 'today':
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
         dateFilter = {
           createdAt: {
-            gte: new Date(now.setHours(0, 0, 0, 0))
+            gte: todayStart
           }
         };
         break;
@@ -84,13 +86,17 @@ export async function GET(request: NextRequest) {
         _sum: { amount: true }
       }),
       
-      db.addFunds.count({
-        where: {
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
+      (() => {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        return db.addFunds.count({
+          where: {
+            createdAt: {
+              gte: todayStart
+            }
           }
-        }
-      }),
+        });
+      })(),
       
       db.addFunds.findMany({
         where: dateFilter,

@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
           email: user.email || '',
           name: user.name || '',
           status: status || 'COMPLETED',
-          method: 'admin',
+          payment_gateway: 'admin',
           payment_method: 'admin',
           transaction_id: `ADMIN-${Date.now()}`,
           order_id: `ADMIN-${Date.now()}`,

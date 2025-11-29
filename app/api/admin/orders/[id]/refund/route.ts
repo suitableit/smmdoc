@@ -129,7 +129,7 @@ export async function POST(
           name: existingOrder.user.name || 'User',
           status: 'Success',
           admin_status: 'Approved',
-          method: 'Admin Refund',
+          payment_gateway: 'Admin Refund',
           payment_method: 'Refund',
           transaction_type: 'refund',
           reference_id: id,

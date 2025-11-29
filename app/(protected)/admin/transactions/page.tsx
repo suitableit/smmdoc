@@ -129,6 +129,7 @@ interface Transaction {
   phone: string;
   sender_number?: string;
   method: string;
+  payment_method?: string;
   type: 'deposit' | 'withdrawal';
   status: 'pending' | 'completed' | 'cancelled' | 'Processing' | 'Success' | 'Cancelled';
   admin_status: 'Pending' | 'pending' | 'Success' | 'Cancelled' | 'Suspicious';
@@ -559,7 +560,18 @@ const AdminAllTransactionsPage = () => {
   };
 
   const displayMethod = (transaction: Transaction) => {
-    return transaction.method || 'null';
+    const gateway = transaction.method || '';
+    const methodName = transaction.payment_method || '';
+    
+    if (!gateway && !methodName) {
+      return null;
+    }
+    
+    if (gateway && methodName) {
+      return `${gateway} - ${methodName}`;
+    }
+    
+    return gateway || methodName;
   };
 
   const handleRefresh = () => {
@@ -1203,7 +1215,7 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             {displayMethod(transaction) ? (
-                              <div className="text-xs font-medium text-gray-700 capitalize">
+                              <div className="text-xs font-medium text-gray-700">
                                 {displayMethod(transaction)}
                               </div>
                             ) : (
@@ -1463,7 +1475,7 @@ const AdminAllTransactionsPage = () => {
                               Method
                             </label>
                             {displayMethod(viewDetailsDialog.transaction) ? (
-                              <div className="text-xs font-medium p-2 text-gray-700 capitalize">
+                              <div className="text-xs font-medium p-2 text-gray-700">
                                 {displayMethod(viewDetailsDialog.transaction)}
                               </div>
                             ) : (
@@ -1653,7 +1665,7 @@ const AdminAllTransactionsPage = () => {
                               <span className="font-medium text-gray-600">
                                 Method:
                               </span>
-                              <span className="capitalize">
+                              <span>
                                 {displayMethod(
                                   approveConfirmDialog.transaction
                                 ) || '-'}
@@ -1773,7 +1785,7 @@ const AdminAllTransactionsPage = () => {
                               <span className="font-medium text-gray-600">
                                 Method:
                               </span>
-                              <span className="capitalize">
+                              <span>
                                 {displayMethod(
                                   cancelConfirmDialog.transaction
                                 ) || '-'}

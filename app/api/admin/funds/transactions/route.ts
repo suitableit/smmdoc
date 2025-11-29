@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         original_amount: true,
         status: true,
         admin_status: true,
-        method: true,
+        payment_gateway: true,
         payment_method: true,
         transaction_id: true,
         sender_number: true,
