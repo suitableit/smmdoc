@@ -222,7 +222,8 @@ export function AddFundForm() {
 
         if (res.data?.error) {
           console.error('Payment API error:', res.data);
-          showToast('Payment processing failed. Please try again.', 'error');
+          const errorMessage = res.data?.details?.message || res.data?.error || 'Payment processing failed. Please try again.';
+          showToast(errorMessage, 'error');
           return;
         }
 
@@ -260,8 +261,13 @@ export function AddFundForm() {
           message: error?.message,
           response: error?.response?.data,
           status: error?.response?.status,
+          error: error,
         });
-        showToast('Payment processing failed. Please try again.', 'error');
+        const errorMessage = error?.response?.data?.error || 
+                            error?.response?.data?.details?.message || 
+                            error?.message || 
+                            'Payment processing failed. Please try again.';
+        showToast(errorMessage, 'error');
       }
     });
   };
