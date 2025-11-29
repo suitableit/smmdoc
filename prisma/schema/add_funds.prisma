@@ -14,7 +14,6 @@ model AddFunds {
   updatedAt        DateTime                  @default(now()) @updatedAt
   userId           Int
   admin_status     String?                   @default("Pending")
-  transaction_type AddFund_transaction_type? @default(deposit)
   currency         String?                   @default("USD") @db.VarChar(3)
   bdt_amount       Float?
   user             Users                      @relation(fields: [userId], references: [id])

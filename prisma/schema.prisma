@@ -453,7 +453,6 @@ model AddFunds {
   updatedAt        DateTime                  @default(now()) @updatedAt
   userId           Int
   admin_status     String?                   @default("Pending")
-  transaction_type addfund_transaction_type? @default(deposit)
   currency         String?                   @default("USD") @db.VarChar(3)
   bdt_amount       Float?
   user             Users                     @relation(fields: [userId], references: [id])
@@ -1057,9 +1056,3 @@ enum user_role {
   moderator
 }
 
-enum addfund_transaction_type {
-  deposit
-  withdrawal
-  purchase
-  refund
-}

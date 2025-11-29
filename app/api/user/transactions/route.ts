@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || null,
       createdAt: transaction.createdAt.toISOString(),
-      transaction_type: transaction.transaction_type || 'deposit',
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
       currency: 'USD',

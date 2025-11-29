@@ -240,7 +240,6 @@ export async function GET(
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
-      transaction_type: 'deposit',
       sender_number: transaction.sender_number,
       phone: transaction.sender_number,
       currency: 'USD',

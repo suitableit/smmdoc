@@ -13,7 +13,6 @@ type Transaction = {
   payment_method?: string;
   transaction_id?: string | null;
   createdAt: string;
-  transaction_type?: 'deposit' | 'withdrawal' | 'purchase' | 'refund';
   reference_id?: string;
   sender_number?: string;
   phone?: string;
