@@ -14,7 +14,11 @@ interface Announcement {
   buttonLink: string | null;
 }
 
-const Announcements: React.FC = () => {
+interface AnnouncementsProps {
+  visibility?: 'dashboard' | 'all_pages';
+}
+
+const Announcements: React.FC<AnnouncementsProps> = ({ visibility }) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +26,10 @@ const Announcements: React.FC = () => {
     const fetchAnnouncements = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/user/announcements');
+        const url = visibility 
+          ? `/api/user/announcements?visibility=${visibility}`
+          : '/api/user/announcements';
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.success) {
@@ -36,10 +43,9 @@ const Announcements: React.FC = () => {
     };
 
     fetchAnnouncements();
-  }, []);
+  }, [visibility]);
 
   const handleDismiss = async (id: number, isSticky: boolean) => {
-    // Cannot dismiss sticky announcements
     if (isSticky) {
       return;
     }
@@ -84,7 +90,7 @@ const Announcements: React.FC = () => {
           text: 'text-green-800 dark:text-green-200',
           icon: 'text-green-600 dark:text-green-400',
         };
-      default: // info
+      default:
         return {
           border: 'border border-blue-200 dark:border-blue-800',
           bg: 'bg-blue-50 dark:bg-blue-900/20',

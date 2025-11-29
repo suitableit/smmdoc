@@ -14,6 +14,7 @@ export default function ProtectedLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
   const isDashboard = pathname === '/dashboard';
+  const isAdminPage = pathname?.startsWith('/admin');
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -80,6 +81,18 @@ export default function ProtectedLayout({
                 : 'px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]'
             }
           >
+            {/* Show announcements for users (non-admin, non-moderator) on non-dashboard pages */}
+            {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR' && !isDashboard && (
+              <Announcements visibility="all_pages" />
+            )}
+            {/* Show announcements for admin users on admin pages (except admin dashboard) */}
+            {(session?.user?.role === 'admin' || session?.user?.role === 'ADMIN') && isAdminPage && pathname !== '/admin' && (
+              <Announcements visibility="all_pages" />
+            )}
+            {/* Show announcements for moderators on admin pages (except admin dashboard) */}
+            {(session?.user?.role === 'moderator' || session?.user?.role === 'MODERATOR') && isAdminPage && pathname !== '/admin' && (
+              <Announcements visibility="all_pages" />
+            )}
             {children}
           </div>
         </main>

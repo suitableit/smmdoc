@@ -743,6 +743,7 @@ model Users {
   twoFactorConfirmation                         TwoFactorConfirmations?
   announcements                                 Announcements[]
   dismissedAnnouncements                        DismissedAnnouncements[]
+  viewedAnnouncements                           ViewedAnnouncements[]
 
   @@map("users")
 }
@@ -977,21 +978,24 @@ model Announcements {
   id                Int       @id @default(autoincrement())
   title             String
   content           String    @db.Text
-  type              String    // 'info' | 'warning' | 'success' | 'critical'
-  status            String    @default("draft") // 'active' | 'scheduled' | 'expired' | 'draft'
-  targetedAudience  String    @default("all") // 'all' | 'admins' | 'moderators'
+  type              String    @default("info")
+  status            String    @default("draft")
+  targetedAudience  String    @default("all")
   startDate         DateTime
   endDate           DateTime?
   isSticky          Boolean   @default(false)
   buttonEnabled     Boolean   @default(false)
   buttonText        String?
   buttonLink        String?
+  visibility        String    @default("dashboard")
   views             Int       @default(0)
+  order             Int       @default(0)
   createdBy         Int
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   user              Users      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   dismissedAnnouncements DismissedAnnouncements[]
+  viewedAnnouncements    ViewedAnnouncements[]
 
   @@index([status])
   @@index([isSticky])
@@ -999,6 +1003,7 @@ model Announcements {
   @@index([startDate])
   @@index([endDate])
   @@index([createdBy])
+  @@index([order])
   @@map("announcements")
 }
 
@@ -1014,6 +1019,20 @@ model DismissedAnnouncements {
   @@index([userId])
   @@index([announcementId])
   @@map("dismissed_announcements")
+}
+
+model ViewedAnnouncements {
+  id             Int           @id @default(autoincrement())
+  announcementId Int
+  userId         Int
+  viewedAt       DateTime      @default(now())
+  announcement   Announcements @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           Users          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
+  @@index([announcementId])
+  @@map("viewed_announcements")
 }
 
 enum CategoryPosition {

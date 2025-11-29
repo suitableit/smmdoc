@@ -2,31 +2,42 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const visibility = searchParams.get('visibility');
+
     const userId = session.user.id as number;
     const userRole = session.user.role?.toLowerCase() || 'user';
 
     const now = new Date();
 
-    // Get dismissed announcement IDs for this user
     const dismissed = await db.dismissedAnnouncements.findMany({
       where: { userId },
       select: { announcementId: true },
     });
     const dismissedIds = dismissed.map(d => d.announcementId);
 
-    // Build audience filter
-    const audienceFilter = userRole === 'admin' || userRole === 'moderator'
-      ? ['all', 'admins', 'moderators']
-      : ['all'];
+    let audienceFilter: string[];
+    if (userRole === 'admin') {
+      audienceFilter = ['admins', 'moderators'];
+    } else if (userRole === 'moderator') {
+      audienceFilter = ['moderators'];
+    } else {
+      audienceFilter = ['users', 'all'];
+    }
 
-    // Get active announcements that match user's audience and are not dismissed
+    const visibilityFilter = visibility === 'dashboard' 
+      ? { visibility: 'dashboard' }
+      : visibility === 'all_pages'
+      ? { visibility: 'all_pages' }
+      : { OR: [{ visibility: 'dashboard' }, { visibility: 'all_pages' }] };
+
     const announcements = await db.announcements.findMany({
       where: {
         status: 'active',
@@ -39,6 +50,7 @@ export async function GET() {
         NOT: {
           id: { in: dismissedIds },
         },
+        ...visibilityFilter,
       },
       include: {
         user: {
@@ -50,19 +62,37 @@ export async function GET() {
         },
       },
       orderBy: [
-        { isSticky: 'desc' },
+        { order: 'asc' },
         { createdAt: 'desc' },
       ],
     });
 
-    // Increment views for each announcement
     await Promise.all(
-      announcements.map(ann =>
-        db.announcements.update({
-          where: { id: ann.id },
-          data: { views: { increment: 1 } },
-        })
-      )
+      announcements.map(async (ann) => {
+        const existingView = await db.viewedAnnouncements.findUnique({
+          where: {
+            announcementId_userId: {
+              announcementId: ann.id,
+              userId: userId,
+            },
+          },
+        });
+
+        if (!existingView) {
+          await db.$transaction([
+            db.viewedAnnouncements.create({
+              data: {
+                announcementId: ann.id,
+                userId: userId,
+              },
+            }),
+            db.announcements.update({
+              where: { id: ann.id },
+              data: { views: { increment: 1 } },
+            }),
+          ]);
+        }
+      })
     );
 
     return NextResponse.json({

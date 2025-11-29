@@ -31,9 +31,9 @@ export async function PUT(
       buttonText,
       buttonLink,
       status,
+      visibility,
     } = body;
 
-    // Check if announcement exists
     const existing = await db.announcements.findUnique({
       where: { id },
     });
@@ -42,27 +42,56 @@ export async function PUT(
       return NextResponse.json({ error: 'Announcement not found' }, { status: 404 });
     }
 
-    // Determine status if not provided
+    const now = new Date();
     let finalStatus = status;
+    
     if (!finalStatus && startDate) {
       const start = new Date(startDate);
-      const now = new Date();
-      finalStatus = start <= now ? 'active' : 'scheduled';
+      const end = endDate ? new Date(endDate) : null;
+      
+      if (end && end < now) {
+        finalStatus = 'expired';
+      } else {
+        finalStatus = start <= now ? 'active' : 'scheduled';
+      }
+    } else if (finalStatus && endDate) {
+      const end = new Date(endDate);
+      if (end < now && finalStatus !== 'expired') {
+        finalStatus = 'expired';
+      }
+    } else if (!finalStatus && endDate) {
+      const end = new Date(endDate);
+      if (end < now) {
+        finalStatus = 'expired';
+      }
+    }
+
+    let updatedStartDate = startDate ? new Date(startDate) : undefined;
+    let updatedEndDate = endDate !== undefined ? (endDate ? new Date(endDate) : null) : undefined;
+    
+    if (status === 'active') {
+      if (existing.status === 'scheduled') {
+        updatedStartDate = new Date();
+      } else if (existing.status === 'expired') {
+        updatedStartDate = new Date();
+        updatedEndDate = null;
+      }
     }
 
     const announcement = await db.announcements.update({
       where: { id },
       data: {
         ...(title && { title }),
-        ...(content && { content }),
+        ...(content !== undefined && { content: content && content.trim() ? content.trim() : null }),
         ...(type && { type }),
         ...(targetedAudience && { targetedAudience }),
-        ...(startDate && { startDate: new Date(startDate) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+        ...(updatedStartDate !== undefined && { startDate: updatedStartDate }),
+        ...(updatedEndDate !== undefined ? { endDate: updatedEndDate } : (endDate !== undefined && { endDate: endDate ? new Date(endDate) : null })),
         ...(isSticky !== undefined && { isSticky }),
         ...(buttonEnabled !== undefined && { buttonEnabled }),
-        ...(buttonText !== undefined && { buttonText }),
-        ...(buttonLink !== undefined && { buttonLink }),
+        ...(buttonText !== undefined && { buttonText: buttonText && buttonText.trim() ? buttonText.trim() : null }),
+        ...(buttonLink !== undefined && { buttonLink: buttonLink && buttonLink.trim() ? buttonLink.trim() : null }),
+        ...(visibility !== undefined && { visibility }),
         ...(finalStatus && { status: finalStatus }),
       },
       include: {

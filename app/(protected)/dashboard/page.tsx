@@ -212,7 +212,8 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && (
+      {/* Show announcements for users only (not admin or moderator) */}
+      {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR' && (
         <Announcements />
       )}
 

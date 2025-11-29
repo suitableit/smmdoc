@@ -17,56 +17,154 @@ import {
   FaUsers,
   FaTimes,
   FaSave,
+  FaGripVertical,
+  FaEllipsisH,
+  FaSync,
 } from 'react-icons/fa';
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import { getUserDetails } from '@/lib/actions/getUser';
+
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+interface PaginationProps {
+  pagination: PaginationInfo;
+  onPageChange: (newPage: number) => void;
+  isLoading: boolean;
+}
+
+const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
+  <div className={`${size} ${className} relative`}>
+    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
+      <div className="absolute inset-1 rounded-full bg-white"></div>
+    </div>
+  </div>
+);
+
+const useClickOutside = (
+  ref: React.RefObject<HTMLElement | null>,
+  handler: () => void
+) => {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || !event.target || !(event.target instanceof Node)) {
+        return;
+      }
+      if (ref.current.contains(event.target)) {
+        return;
+      }
+      handler();
+    };
+
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+};
 
 const AnnouncementsSkeleton = () => {
-  const cards = Array.from({ length: 5 });
+  const rows = Array.from({ length: 5 });
 
   return (
-    <div className="space-y-4">
-      {cards.map((_, idx) => (
-        <div key={idx} className="card card-padding">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 gradient-shimmer rounded-lg" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-6 w-64 gradient-shimmer rounded" />
-                    <div className="h-5 w-16 gradient-shimmer rounded-full" />
-                  </div>
-                  <div className="h-4 w-full gradient-shimmer rounded mb-1" />
-                  <div className="h-4 w-3/4 gradient-shimmer rounded mb-3" />
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <div className="h-6 w-20 gradient-shimmer rounded-full" />
-                    <div className="h-6 w-24 gradient-shimmer rounded-full" />
-                    <div className="h-6 w-20 gradient-shimmer rounded-full" />
-                  </div>
-                  <div className="h-10 w-32 gradient-shimmer rounded mb-3" />
-                  <div className="flex items-center gap-4">
-                    <div className="h-4 w-32 gradient-shimmer rounded" />
-                    <div className="h-4 w-24 gradient-shimmer rounded" />
-                    <div className="h-4 w-32 gradient-shimmer rounded" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:flex items-center gap-2 ml-4">
-              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
-              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
-              <div className="h-8 w-8 gradient-shimmer rounded-lg" />
-            </div>
-          </div>
-          <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-            <div className="h-10 w-full gradient-shimmer rounded-lg" />
-            <div className="h-10 w-full gradient-shimmer rounded-lg" />
-            <div className="h-10 w-full gradient-shimmer rounded-lg" />
-          </div>
-        </div>
-      ))}
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm min-w-[1200px]">
+        <thead className="sticky top-0 bg-white border-b z-10">
+          <tr>
+            <th className="text-left py-3 pl-3 pr-1" style={{ color: 'var(--text-primary)' }}>
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              ID
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Type
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Title
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Action Button
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Audience
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Views
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Start
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              End
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Visibility
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Status
+            </th>
+            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((_, idx) => (
+            <tr key={idx} className="border-t">
+              <td className="py-3 pl-3 pr-1">
+                <div className="h-4 w-4 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-6 w-12 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-6 w-20 gradient-shimmer rounded-full" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-48 gradient-shimmer rounded mb-1" />
+                <div className="h-3 w-32 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-20 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-24 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-12 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                <div className="h-3 w-16 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-20 gradient-shimmer rounded mb-1" />
+                <div className="h-3 w-16 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-4 w-16 gradient-shimmer rounded" />
+              </td>
+              <td className="p-3">
+                <div className="h-6 w-20 gradient-shimmer rounded-full" />
+              </td>
+              <td className="p-3">
+                <div className="h-8 w-8 gradient-shimmer rounded-lg" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -95,7 +193,7 @@ interface Announcement {
   content: string;
   type: 'info' | 'warning' | 'success' | 'critical';
   status: 'active' | 'scheduled' | 'expired' | 'draft';
-  targetedAudience: 'all' | 'admins' | 'moderators';
+  targetedAudience: 'users' | 'admins' | 'moderators' | 'all';
   startDate: string | Date;
   endDate: string | Date | null;
   createdAt: string | Date;
@@ -106,6 +204,8 @@ interface Announcement {
   buttonEnabled: boolean;
   buttonText: string | null;
   buttonLink: string | null;
+  visibility?: string;
+  order: number;
   user?: {
     id: number;
     username: string | null;
@@ -118,26 +218,68 @@ interface AnnouncementFormData {
   title: string;
   content: string;
   type: 'info' | 'warning' | 'success' | 'critical';
-  targetedAudience: 'all' | 'admins' | 'moderators';
+  targetedAudience: 'users' | 'admins' | 'moderators' | 'all';
   startDate: string;
   endDate: string;
   isSticky: boolean;
   buttonEnabled: boolean;
   buttonText: string;
   buttonLink: string;
+  visibility: 'dashboard' | 'all_pages';
 }
 
 const AnnouncementsPage = () => {
   const { appName } = useAppNameWithFallback();
+  const [userTimezone, setUserTimezone] = useState<string>('Asia/Dhaka');
+
+  const getLocalDateTimeString = (timezone: string, date?: Date) => {
+    const dateToFormat = date || new Date();
+    const dateStr = dateToFormat.toLocaleString('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    
+    const [datePart, timePart] = dateStr.split(', ');
+    return `${datePart}T${timePart}`;
+  };
 
   useEffect(() => {
     setPageTitle('Announcements', appName);
   }, [appName]);
 
+  useEffect(() => {
+    const loadUserTimezone = async () => {
+      try {
+        const userData = await getUserDetails();
+        if (userData && (userData as any).timezone) {
+          setUserTimezone((userData as any).timezone);
+        }
+      } catch (error) {
+        console.error('Error loading user timezone:', error);
+      }
+    };
+    loadUserTimezone();
+  }, []);
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>([]);
+  const [paginatedAnnouncements, setPaginatedAnnouncements] = useState<Announcement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -145,7 +287,6 @@ const AnnouncementsPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [audienceFilter, setAudienceFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'views' | 'title'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -153,19 +294,33 @@ const AnnouncementsPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  
+  const [draggedAnnouncement, setDraggedAnnouncement] = useState<number | null>(null);
+  const [dropTargetAnnouncement, setDropTargetAnnouncement] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null);
 
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
     content: '',
     type: 'info',
-    targetedAudience: 'all',
-    startDate: new Date().toISOString().split('T')[0],
+    targetedAudience: 'users',
+    startDate: getLocalDateTimeString('Asia/Dhaka'),
     endDate: '',
     isSticky: false,
     buttonEnabled: false,
     buttonText: '',
     buttonLink: '',
+    visibility: 'dashboard',
   });
+
+  useEffect(() => {
+    if (userTimezone) {
+      setFormData(prev => ({
+        ...prev,
+        startDate: getLocalDateTimeString(userTimezone),
+      }));
+    }
+  }, [userTimezone]);
 
   const showToast = (
     message: string,
@@ -175,26 +330,26 @@ const AnnouncementsPage = () => {
     setTimeout(() => setToast(null), 4000);
   };
 
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        setAnnouncementsLoading(true);
-        const response = await fetch('/api/admin/announcements');
-        const data = await response.json();
-        
-        if (data.success) {
-          setAnnouncements(data.data);
-        } else {
-          showToast('Failed to load announcements', 'error');
-        }
-      } catch (error) {
-        console.error('Error fetching announcements:', error);
-        showToast('Error loading announcements', 'error');
-      } finally {
-        setAnnouncementsLoading(false);
+  const fetchAnnouncements = async () => {
+    try {
+      setAnnouncementsLoading(true);
+      const response = await fetch('/api/admin/announcements');
+      const data = await response.json();
+      
+      if (data.success) {
+        setAnnouncements(data.data);
+      } else {
+        showToast('Failed to load announcements', 'error');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      showToast('Error loading announcements', 'error');
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchAnnouncements();
   }, []);
 
@@ -203,15 +358,23 @@ const AnnouncementsPage = () => {
       const matchesSearch = announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            announcement.content.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || announcement.status === statusFilter;
-      const matchesType = typeFilter === 'all' || announcement.type === typeFilter;
-      const matchesAudience = audienceFilter === 'all' || announcement.targetedAudience === audienceFilter;
+      const matchesAudience = audienceFilter === 'all' 
+        ? true 
+        : audienceFilter === 'users' 
+          ? (announcement.targetedAudience === 'users' || announcement.targetedAudience === 'all')
+          : announcement.targetedAudience === audienceFilter;
 
-      return matchesSearch && matchesStatus && matchesType && matchesAudience;
+      return matchesSearch && matchesStatus && matchesAudience;
     });
 
     filtered.sort((a, b) => {
+      const aOrder = a.order ?? 0;
+      const bOrder = b.order ?? 0;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+      
       let aValue, bValue;
-
       switch (sortBy) {
         case 'title':
           aValue = a.title.toLowerCase();
@@ -235,29 +398,47 @@ const AnnouncementsPage = () => {
       }
     });
 
-    const stickyFiltered = filtered.filter(ann => ann.isSticky);
-    const nonStickyFiltered = filtered.filter(ann => !ann.isSticky);
-
-    setFilteredAnnouncements([...stickyFiltered, ...nonStickyFiltered]);
-  }, [announcements, searchTerm, statusFilter, typeFilter, audienceFilter, sortBy, sortOrder]);
+    const sortedFiltered = filtered;
+    setFilteredAnnouncements(sortedFiltered);
+    
+    const total = sortedFiltered.length;
+    const totalPages = Math.ceil(total / pagination.limit);
+    const currentPage = pagination.page > totalPages && totalPages > 0 ? 1 : pagination.page;
+    const hasNext = currentPage < totalPages;
+    const hasPrev = currentPage > 1;
+    
+    setPagination(prev => ({
+      ...prev,
+      page: currentPage,
+      total,
+      totalPages,
+      hasNext,
+      hasPrev,
+    }));
+    
+    const startIndex = (currentPage - 1) * pagination.limit;
+    const endIndex = startIndex + pagination.limit;
+    setPaginatedAnnouncements(sortedFiltered.slice(startIndex, endIndex));
+  }, [announcements, searchTerm, statusFilter, audienceFilter, sortBy, sortOrder, pagination.limit, pagination.page]);
 
   const resetForm = () => {
     setFormData({
       title: '',
       content: '',
       type: 'info',
-      targetedAudience: 'all',
-      startDate: new Date().toISOString().split('T')[0],
+      targetedAudience: 'users',
+      startDate: getLocalDateTimeString(userTimezone),
       endDate: '',
       isSticky: false,
       buttonEnabled: false,
       buttonText: '',
       buttonLink: '',
+      visibility: 'dashboard',
     });
   };
 
   const handleCreateAnnouncement = async () => {
-    if (!formData.title.trim() || !formData.content.trim()) {
+    if (!formData.title.trim()) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
@@ -291,7 +472,7 @@ const AnnouncementsPage = () => {
   };
 
   const handleEditAnnouncement = async () => {
-    if (!editingAnnouncement || !formData.title.trim() || !formData.content.trim()) {
+    if (!editingAnnouncement || !formData.title.trim()) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
@@ -347,7 +528,7 @@ const AnnouncementsPage = () => {
   };
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'draft' : 'active';
+    const newStatus = currentStatus === 'active' ? 'expired' : 'active';
 
     try {
       const response = await fetch(`/api/admin/announcements/${id}`, {
@@ -362,7 +543,7 @@ const AnnouncementsPage = () => {
         setAnnouncements(prev => prev.map(ann => 
           ann.id === id ? data.data : ann
         ));
-        showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'deactivated'}`, 'success');
+        showToast(`Announcement ${newStatus === 'active' ? 'activated' : 'expired'}`, 'success');
       } else {
         showToast(data.error || 'Error updating announcement status', 'error');
       }
@@ -371,16 +552,136 @@ const AnnouncementsPage = () => {
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, announcementId: number) => {
+    setDraggedAnnouncement(announcementId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', announcementId.toString());
+
+    const target = e.currentTarget as HTMLElement;
+    target.classList.add('dragging');
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetAnnouncementId: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    if (!draggedAnnouncement || draggedAnnouncement === targetAnnouncementId) {
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const position = e.clientY < midpoint ? 'before' : 'after';
+
+    setDropTargetAnnouncement(targetAnnouncementId);
+    setDropPosition(position);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDropTargetAnnouncement(null);
+      setDropPosition(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetAnnouncementId: number) => {
+    e.preventDefault();
+
+    if (!draggedAnnouncement || draggedAnnouncement === targetAnnouncementId || !dropPosition) {
+      setDraggedAnnouncement(null);
+      setDropTargetAnnouncement(null);
+      setDropPosition(null);
+      return;
+    }
+
+    const currentOrder = [...announcements];
+    const draggedIndex = currentOrder.findIndex(ann => ann.id === draggedAnnouncement);
+    const targetIndex = currentOrder.findIndex(ann => ann.id === targetAnnouncementId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedAnnouncement(null);
+      setDropTargetAnnouncement(null);
+      setDropPosition(null);
+      return;
+    }
+
+    const [draggedItem] = currentOrder.splice(draggedIndex, 1);
+
+    let finalIndex = targetIndex;
+    if (draggedIndex < targetIndex) {
+      finalIndex = targetIndex - 1;
+    }
+
+    if (dropPosition === 'after') {
+      finalIndex += 1;
+    }
+
+    currentOrder.splice(finalIndex, 0, draggedItem);
+
+    const reorderedWithNewOrder = currentOrder.map((ann, index) => ({
+      ...ann,
+      order: index,
+    }));
+
+    setAnnouncements(reorderedWithNewOrder);
+
+    const announcementIds = currentOrder.map(ann => ann.id);
+    
+    try {
+      const response = await fetch('/api/admin/announcements/reorder', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: announcementIds }),
+      });
+
+      const data = await response.json();
+      if (!data.success) {
+        showToast('Failed to save order', 'error');
+        const fetchResponse = await fetch('/api/admin/announcements');
+        const fetchData = await fetchResponse.json();
+        if (fetchData.success) {
+          setAnnouncements(fetchData.data);
+        }
+      }
+    } catch (error) {
+      showToast('Error saving order', 'error');
+      const fetchResponse = await fetch('/api/admin/announcements');
+      const fetchData = await fetchResponse.json();
+      if (fetchData.success) {
+        setAnnouncements(fetchData.data);
+      }
+    }
+
+    setDraggedAnnouncement(null);
+    setDropTargetAnnouncement(null);
+    setDropPosition(null);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('dragging');
+    setDraggedAnnouncement(null);
+    setDropTargetAnnouncement(null);
+    setDropPosition(null);
+  };
+
   const startEditing = (announcement: Announcement) => {
     setEditingAnnouncement(announcement);
-    const startDate = typeof announcement.startDate === 'string' 
-      ? announcement.startDate.split('T')[0]
-      : new Date(announcement.startDate).toISOString().split('T')[0];
-    const endDate = announcement.endDate 
+    const startDateObj = typeof announcement.startDate === 'string' 
+      ? new Date(announcement.startDate)
+      : announcement.startDate;
+    const endDateObj = announcement.endDate 
       ? (typeof announcement.endDate === 'string' 
-          ? announcement.endDate.split('T')[0]
-          : new Date(announcement.endDate).toISOString().split('T')[0])
-      : '';
+          ? new Date(announcement.endDate)
+          : announcement.endDate)
+      : null;
+    
+    const startDate = getLocalDateTimeString(userTimezone, startDateObj);
+    const endDate = endDateObj ? getLocalDateTimeString(userTimezone, endDateObj) : '';
     
     setFormData({
       title: announcement.title,
@@ -393,6 +694,7 @@ const AnnouncementsPage = () => {
       buttonEnabled: announcement.buttonEnabled,
       buttonText: announcement.buttonText || '',
       buttonLink: announcement.buttonLink || '',
+      visibility: (announcement as any).visibility || 'dashboard',
     });
   };
 
@@ -423,6 +725,89 @@ const AnnouncementsPage = () => {
     }
   };
 
+  const getTypeBadgeStyle = (type: string) => {
+    switch (type) {
+      case 'warning':
+        return 'text-yellow-700 bg-yellow-50 border-yellow-300';
+      case 'success':
+        return 'text-green-700 bg-green-50 border-green-300';
+      case 'critical':
+        return 'text-red-700 bg-red-50 border-red-300';
+      default:
+        return 'text-blue-700 bg-blue-50 border-blue-300';
+    }
+  };
+
+  const AnnouncementActions = ({ announcement }: { announcement: Announcement }) => {
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+
+    useClickOutside(dropdownRef, () => setIsOpen(false));
+
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <button
+          className="btn btn-secondary p-2"
+          title="More Actions"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <FaEllipsisH className="h-3 w-3" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  handleToggleStatus(announcement.id, announcement.status);
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              >
+                {announcement.status === 'active' ? (
+                  <>
+                    <FaEyeSlash className="h-3 w-3" />
+                    Deactivate
+                  </>
+                ) : (
+                  <>
+                    <FaEye className="h-3 w-3" />
+                    Activate
+                  </>
+                )}
+              </button>
+              {announcement.status !== 'expired' && (
+                <>
+                  <button
+                    onClick={() => {
+                      startEditing(announcement);
+                      setIsOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaEdit className="h-3 w-3" />
+                    Edit
+                  </button>
+                  <hr className="my-1" />
+                </>
+              )}
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(announcement.id);
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+              >
+                <FaTrash className="h-3 w-3" />
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="page-container">
       <div className="toast-container">
@@ -437,227 +822,373 @@ const AnnouncementsPage = () => {
 
       <div className="page-content">
         <div className="mb-6">
-          <div className="flex items-center justify-start">
-            <button
-              onClick={() => {
-                resetForm();
-                setShowCreateModal(true);
-              }}
-              className="btn btn-primary flex items-center gap-2 px-4 py-2.5"
-            >
-              <FaPlus className="h-4 w-4" />
-              Create Announcement
-            </button>
-          </div>
-        </div>
-        <div className="card card-padding mb-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            <div className="min-w-0">
-              <div className="relative">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchAnnouncements}
+                disabled={announcementsLoading}
+                className="btn btn-primary flex items-center gap-2 px-3 py-2.5"
+              >
+                <FaSync
+                  className={announcementsLoading ? 'animate-spin' : ''}
+                />
+                Refresh
+              </button>
+              <div className="min-w-0">
+                <select
+                  value={audienceFilter}
+                  onChange={(e) => setAudienceFilter(e.target.value)}
+                  className="form-field w-full pl-4 pr-10 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                >
+                  <option value="all">All</option>
+                  <option value="users">Users</option>
+                  <option value="admins">Admins</option>
+                  <option value="moderators">Moderators</option>
+                </select>
+              </div>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setShowCreateModal(true);
+                }}
+                className="btn btn-primary flex items-center gap-2 px-4 py-2.5"
+              >
+                <FaPlus className="h-4 w-4" />
+                Create Announcement
+              </button>
+            </div>
+            <div className="flex flex-row items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-80">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
+                  placeholder="Search announcements..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search announcements..."
-                  className="form-field w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-2.5 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                 />
               </div>
             </div>
-            <div className="min-w-0">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="expired">Expired</option>
-                <option value="draft">Draft</option>
-              </select>
-            </div>
-            <div className="min-w-0">
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-              >
-                <option value="all">All Types</option>
-                <option value="info">Info</option>
-                <option value="warning">Warning</option>
-                <option value="success">Success</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-            <div className="min-w-0">
-              <select
-                value={audienceFilter}
-                onChange={(e) => setAudienceFilter(e.target.value)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-              >
-                <option value="all">All Audiences</option>
-                <option value="admins">Admins</option>
-                <option value="moderators">Moderators</option>
-              </select>
-            </div>
           </div>
         </div>
-        <div className="space-y-4">
-          {announcementsLoading ? (
-            <div className="min-h-[600px]">
-              <AnnouncementsSkeleton />
-            </div>
-          ) : filteredAnnouncements.length === 0 ? (
-            <div className="card card-padding text-center py-12">
-              <FaBullhorn className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No announcements found</h3>
-              <p className="text-gray-600 mb-4">
-                {announcements.length === 0 
-                  ? "You haven't created any announcements yet."
-                  : "No announcements match your current filters."
-                }
-              </p>
-              {announcements.length === 0 && (
+        <div className="card">
+          <div className="card-header" style={{ padding: '24px 24px 0 24px' }}>
+            <div className="mb-4">
+              <div className="block space-y-2">
                 <button
-                  onClick={() => {
-                    resetForm();
-                    setShowCreateModal(true);
-                  }}
-                  className="btn btn-primary"
+                  onClick={() => setStatusFilter('all')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'all'
+                      ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
-                  Create Your First Announcement
+                  All
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'all'
+                        ? 'bg-white/20'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {announcements.length}
+                  </span>
                 </button>
-              )}
+                <button
+                  onClick={() => setStatusFilter('active')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'active'
+                      ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Active
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'active'
+                        ? 'bg-white/20'
+                        : 'bg-green-100 text-green-700'
+                    }`}
+                  >
+                    {announcements.filter(a => a.status === 'active').length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('scheduled')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'scheduled'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Scheduled
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'scheduled'
+                        ? 'bg-white/20'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {announcements.filter(a => a.status === 'scheduled').length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('expired')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'expired'
+                      ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Expired
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'expired'
+                        ? 'bg-white/20'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {announcements.filter(a => a.status === 'expired').length}
+                  </span>
+                </button>
+              </div>
             </div>
-          ) : (
-            filteredAnnouncements.map((announcement) => (
-              <div key={announcement.id} className={`card card-padding ${announcement.isSticky ? 'ring-2 ring-blue-200' : ''}`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg ${getTypeColor(announcement.type)}`}>
-                        {getTypeIcon(announcement.type)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {announcement.title}
-                          </h3>
-                          {announcement.isSticky && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                              Pinned
-                            </span>
-                          )}
-                        </div>
+          </div>
 
-                        <p className="text-gray-700 mb-3 line-clamp-2">
-                          {announcement.content}
-                        </p>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(announcement.status)}`}>
-                            {announcement.status.charAt(0).toUpperCase() + announcement.status.slice(1)}
+          <div style={{ padding: '0 24px 24px 24px' }}>
+            {announcementsLoading ? (
+              <AnnouncementsSkeleton />
+            ) : filteredAnnouncements.length === 0 ? (
+              <div className="text-center py-12">
+                <FaBullhorn
+                  className="h-16 w-16 mx-auto mb-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <h3
+                  className="text-lg font-semibold mb-2"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  No announcements found
+                </h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {announcements.length === 0 
+                    ? "You haven't created any announcements yet."
+                    : "No announcements match your current filters."
+                  }
+                </p>
+                {announcements.length === 0 && (
+                  <button
+                    onClick={() => {
+                      resetForm();
+                      setShowCreateModal(true);
+                    }}
+                    className="btn btn-primary mt-4"
+                  >
+                    Create Your First Announcement
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[1200px]">
+                <thead className="sticky top-0 bg-white border-b z-10">
+                  <tr>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Order
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      ID
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Type
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Title
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Action Button
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Audience
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Views
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Start
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      End
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Visibility
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Status
+                    </th>
+                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedAnnouncements.map((announcement, index) => (
+                    <React.Fragment key={announcement.id}>
+                      {draggedAnnouncement && draggedAnnouncement !== announcement.id && (
+                        <tr
+                          className={`transition-all duration-200 ${
+                            dropTargetAnnouncement === announcement.id && dropPosition === 'before'
+                              ? 'h-2 bg-blue-100 border-2 border-dashed border-blue-400'
+                              : 'h-0'
+                          }`}
+                          onDragOver={(e) => handleDragOver(e, announcement.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, announcement.id)}
+                        >
+                          <td colSpan={12}></td>
+                        </tr>
+                      )}
+                      <tr
+                        className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
+                          draggedAnnouncement === announcement.id ? 'opacity-50' : ''
+                        } ${announcement.isSticky ? 'bg-blue-50/50' : ''}`}
+                        onDragOver={(e) => handleDragOver(e, announcement.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, announcement.id)}
+                      >
+                        <td className="py-3 pl-3 pr-1">
+                          <div
+                            className="cursor-move"
+                            title="Drag to reorder announcement"
+                            draggable={true}
+                            onDragStart={(e) => handleDragStart(e, announcement.id)}
+                            onDragEnd={handleDragEnd}
+                            style={{
+                              userSelect: 'none',
+                              WebkitUserSelect: 'none',
+                            }}
+                          >
+                            <FaGripVertical className="h-4 w-4 text-gray-400" />
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            {announcement.id}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium border capitalize ${getTypeBadgeStyle(announcement.type)}`}>
+                            {announcement.type}
                           </span>
-                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs flex items-center gap-1">
-                            <FaUsers className="h-3 w-3" />
-                            {announcement.targetedAudience === 'all' ? 'All Users' : 
-                             announcement.targetedAudience.charAt(0).toUpperCase() + announcement.targetedAudience.slice(1)}
-                          </span>
-                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs flex items-center gap-1">
-                            <FaEye className="h-3 w-3" />
-                            {announcement.views} views
-                          </span>
-                        </div>
-
-                        {announcement.buttonEnabled && announcement.buttonText && announcement.buttonLink && (
-                          <div className="mb-3">
+                        </td>
+                        <td className="p-3">
+                          <div className="max-w-xs">
+                            <div className="font-medium text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                              {announcement.title}
+                              {announcement.isSticky && (
+                                <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                  Pinned
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                              {announcement.content}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          {announcement.buttonEnabled && announcement.buttonText && announcement.buttonLink ? (
                             <a
                               href={announcement.buttonLink}
-                              className="btn btn-primary text-sm px-4 py-2 inline-flex items-center gap-2"
                               target="_blank"
                               rel="noopener noreferrer"
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                             >
                               {announcement.buttonText}
                             </a>
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <FaCalendarAlt className="h-3 w-3" />
-                            Created {new Date(announcement.createdAt).toLocaleDateString()}
-                          </span>
-                          <span>by {announcement.user?.name || announcement.user?.username || `User ${announcement.createdBy}` || 'Unknown'}</span>
-                          {announcement.endDate && (
-                            <span className="flex items-center gap-1">
-                              <FaClock className="h-3 w-3" />
-                              Expires {new Date(announcement.endDate).toLocaleDateString()}
-                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="hidden md:flex items-center gap-2 ml-4">
-                    <button
-                      onClick={() => handleToggleStatus(announcement.id, announcement.status)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        announcement.status === 'active' 
-                          ? 'text-green-600 hover:bg-green-50' 
-                          : 'text-gray-400 hover:bg-gray-50'
-                      }`}
-                      title={announcement.status === 'active' ? 'Deactivate' : 'Activate'}
-                    >
-                      {announcement.status === 'active' ? <FaEye className="h-4 w-4" /> : <FaEyeSlash className="h-4 w-4" />}
-                    </button>
-                    <button
-                      onClick={() => startEditing(announcement)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <FaEdit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(announcement.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <FaTrash className="h-4 w-4" />
-                    </button>
-                  </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-1">
+                            <FaUsers className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                              {(announcement.targetedAudience === 'all' || announcement.targetedAudience === 'users') 
+                                ? 'Users' 
+                                : announcement.targetedAudience.charAt(0).toUpperCase() + announcement.targetedAudience.slice(1)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {announcement.views}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                            {new Date(announcement.startDate).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1" style={{ color: 'var(--text-muted)' }}>
+                            {new Date(announcement.startDate).toLocaleTimeString()}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          {announcement.endDate ? (
+                            <>
+                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                                {new Date(announcement.endDate).toLocaleDateString()}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1" style={{ color: 'var(--text-muted)' }}>
+                                {new Date(announcement.endDate).toLocaleTimeString()}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className="text-xs capitalize" style={{ color: 'var(--text-primary)' }}>
+                            {(announcement as any).visibility === 'all_pages' ? 'All Pages' : 'Dashboard'}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(announcement.status)}`}>
+                            {announcement.status.charAt(0).toUpperCase() + announcement.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <AnnouncementActions announcement={announcement} />
+                        </td>
+                      </tr>
+                      {draggedAnnouncement && draggedAnnouncement !== announcement.id && (
+                        <tr
+                          className={`transition-all duration-200 ${
+                            dropTargetAnnouncement === announcement.id && dropPosition === 'after'
+                              ? 'h-2 bg-blue-100 border-2 border-dashed border-blue-400'
+                              : 'h-0'
+                          }`}
+                          onDragOver={(e) => handleDragOver(e, announcement.id)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, announcement.id)}
+                        >
+                          <td colSpan={12}></td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
                 </div>
-                <div className="flex md:hidden items-center gap-2 mt-4 pt-4 border-t border-gray-200">
-                  <button
-                    onClick={() => handleToggleStatus(announcement.id, announcement.status)}
-                    className={`p-2 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm ${
-                      announcement.status === 'active' 
-                        ? 'text-green-600 bg-green-50 hover:bg-green-100' 
-                        : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
-                    }`}
-                  >
-                    {announcement.status === 'active' ? <FaEye className="h-4 w-4" /> : <FaEyeSlash className="h-4 w-4" />}
-                    <span>{announcement.status === 'active' ? 'Deactivate' : 'Activate'}</span>
-                  </button>
-                  <button
-                    onClick={() => startEditing(announcement)}
-                    className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm"
-                  >
-                    <FaEdit className="h-4 w-4" />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(announcement.id)}
-                    className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors w-full justify-center flex items-center gap-2 text-sm"
-                  >
-                    <FaTrash className="h-4 w-4" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+                <Pagination
+                  pagination={pagination}
+                  onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))}
+                  isLoading={announcementsLoading}
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
       {(showCreateModal || editingAnnouncement) && (
@@ -693,7 +1224,7 @@ const AnnouncementsPage = () => {
                 </div>
 
                 <div>
-                  <label className="form-label mb-2">Content *</label>
+                  <label className="form-label mb-2">Content (Optional)</label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -725,33 +1256,57 @@ const AnnouncementsPage = () => {
                       onChange={(e) => setFormData(prev => ({ ...prev, targetedAudience: e.target.value as any }))}
                       className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                     >
-                      <option value="all">All Users</option>
+                      <option value="users">Users</option>
                       <option value="admins">Admins</option>
                       <option value="moderators">Moderators</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="form-label mb-2">Start Date</label>
-                    <input
-                      type="date"
-                      value={formData.startDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    />
-                  </div>
-
+                {editingAnnouncement && editingAnnouncement.status === 'active' ? (
                   <div>
                     <label className="form-label mb-2">End Date (Optional)</label>
                     <input
-                      type="date"
+                      type="datetime-local"
                       value={formData.endDate}
                       onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     />
                   </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label mb-2">Start Date</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label mb-2">End Date (Optional)</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="form-label mb-2">Visibility</label>
+                  <select
+                    value={formData.visibility}
+                    onChange={(e) => setFormData(prev => ({ ...prev, visibility: e.target.value as 'dashboard' | 'all_pages' }))}
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                  >
+                    <option value="dashboard">Dashboard</option>
+                    <option value="all_pages">All Pages</option>
+                  </select>
                 </div>
 
                 <div>
@@ -825,7 +1380,6 @@ const AnnouncementsPage = () => {
                   className="btn btn-primary flex items-center gap-2 px-4 py-2"
                   disabled={isLoading}
                 >
-                  <FaSave className="h-4 w-4" />
                   {isLoading ? 'Saving...' : (editingAnnouncement ? 'Update' : 'Create')}
                 </button>
               </div>
@@ -874,5 +1428,54 @@ const AnnouncementsPage = () => {
     </div>
   );
 };
+
+const Pagination: React.FC<PaginationProps> = ({
+  pagination,
+  onPageChange,
+  isLoading,
+}) => (
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-0 border-t">
+    <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      {isLoading ? (
+        <div className="flex items-center gap-2">
+          <span>Loading pagination...</span>
+        </div>
+      ) : (
+        `Showing ${(
+          (pagination.page - 1) * pagination.limit +
+          1
+        ).toLocaleString()} to ${Math.min(
+          pagination.page * pagination.limit,
+          pagination.total
+        ).toLocaleString()} of ${pagination.total.toLocaleString()} announcements`
+      )}
+    </div>
+    <div className="flex items-center gap-2 mt-4 md:mt-0">
+      <button
+        onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
+        disabled={!pagination.hasPrev || isLoading}
+        className="btn btn-secondary disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        {isLoading ? (
+          <GradientSpinner size="w-4 h-4" />
+        ) : (
+          `Page ${pagination.page} of ${pagination.totalPages}`
+        )}
+      </span>
+      <button
+        onClick={() =>
+          onPageChange(Math.min(pagination.totalPages, pagination.page + 1))
+        }
+        disabled={!pagination.hasNext || isLoading}
+        className="btn btn-secondary disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+);
 
 export default AnnouncementsPage;

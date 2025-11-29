@@ -21,7 +21,6 @@ export async function POST(request: Request) {
 
     const userId = session.user.id as number;
 
-    // Check if announcement exists and is not sticky
     const announcement = await db.announcements.findUnique({
       where: { id: parseInt(announcementId) },
     });
@@ -33,7 +32,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Cannot dismiss sticky announcements
     if (announcement.isSticky) {
       return NextResponse.json(
         { error: 'Cannot dismiss pinned announcements' },
@@ -41,7 +39,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create dismissed record (or ignore if already exists)
     await db.dismissedAnnouncements.upsert({
       where: {
         announcementId_userId: {
