@@ -325,7 +325,7 @@ export async function GET(req: NextRequest) {
           payment: {
             id: updatedPayment?.id,
             invoice_id: updatedPayment?.invoice_id,
-            amount: updatedPayment?.amount,
+            amount: updatedPayment?.usd_amount,
             status: updatedPayment?.status || "Success",
             transaction_id: finalTransactionIdToReturn,
             payment_method: updatedPayment?.payment_method,
@@ -425,7 +425,7 @@ export async function GET(req: NextRequest) {
           payment: {
             id: updatedPayment.id,
             invoice_id: updatedPayment.invoice_id,
-            amount: updatedPayment.amount,
+            amount: updatedPayment.usd_amount,
             status: updatedPayment.status,
               transaction_id: updatedPayment.transaction_id,
               payment_method: updatedPayment.payment_method,
@@ -439,7 +439,7 @@ export async function GET(req: NextRequest) {
           payment: {
             id: updatedPayment.id,
             invoice_id: updatedPayment.invoice_id,
-            amount: updatedPayment.amount,
+            amount: updatedPayment.usd_amount,
             status: updatedPayment.status,
               transaction_id: updatedPayment.transaction_id,
           }

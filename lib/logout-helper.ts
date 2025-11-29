@@ -50,7 +50,7 @@ export function clearAllSessionData(): void {
  * Complete logout function that clears all session data and signs out
  */
 export async function performCompleteLogout(
-  signOut: (options?: { callbackUrl?: string; redirect?: boolean }) => Promise<void>,
+  signOut: any,
   callbackUrl: string = '/sign-in'
 ): Promise<void> {
   try {

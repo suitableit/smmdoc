@@ -182,7 +182,6 @@ export async function GET(request: NextRequest) {
       status: transaction.status || 'Processing',
       admin_status: transaction.admin_status || 'pending',
       method: transaction.payment_gateway || 'UddoktaPay',
-      currency: 'USD',
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
@@ -356,7 +355,7 @@ export async function PATCH(request: NextRequest) {
       data: {
         id: updatedTransaction.id,
         transactionId: updatedTransaction.transaction_id,
-        amount: updatedTransaction.amount,
+        amount: updatedTransaction.usd_amount,
         status: updatedTransaction.status,
         admin_status: updatedTransaction.admin_status,
         currency: updatedTransaction.currency,
