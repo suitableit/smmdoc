@@ -19,16 +19,15 @@ export async function POST(req: NextRequest) {
 
     const testTransaction = await db.addFunds.create({
       data: {
-        invoice_id: `TEST-${Date.now()}`,
-        usd_amount: 100.00,
-        bdt_amount: amountBDT,
+        invoiceId: `TEST-${Date.now()}`,
+        usdAmount: 100.00,
+        bdtAmount: amountBDT,
         email: 'test@example.com',
         name: 'Test User',
         status: 'Processing',
-        admin_status: 'pending',
-        payment_gateway: 'UddoktaPay',
-        phone_number: '01712345678',
-        transaction_id: `TXN-${Date.now()}`,
+        paymentGateway: 'Test Gateway',
+        phoneNumber: '01712345678',
+        transactionId: `TXN-${Date.now()}`,
         userId: session.user.id,
         currency: 'USD',
       },

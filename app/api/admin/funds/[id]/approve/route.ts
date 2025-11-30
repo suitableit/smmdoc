@@ -22,7 +22,7 @@ export async function POST(
     const transactionId = parseInt(id);
 
     const body = await req.json();
-    const { modifiedTransactionId, transactionType } = body;
+    const { modifiedTransactionId } = body;
 
     if (!transactionId || isNaN(transactionId)) {
       return NextResponse.json(
@@ -31,15 +31,15 @@ export async function POST(
       );
     }
 
-    if (transactionType === 'deposit' && !modifiedTransactionId?.trim()) {
+    if (!modifiedTransactionId?.trim()) {
       return NextResponse.json(
-        { error: 'Transaction ID is required for deposit approval' },
+        { error: 'Transaction ID is required for approval' },
         { status: 400 }
       );
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: transactionId },
+      where: { Id: transactionId },
       include: { user: true }
     });
 
@@ -50,7 +50,7 @@ export async function POST(
       );
     }
 
-    if (transaction.admin_status !== 'Pending' && transaction.admin_status !== 'pending') {
+    if (transaction.status !== 'Processing' && transaction.status !== 'Pending') {
       return NextResponse.json(
         { error: 'Transaction is not in pending status' },
         { status: 400 }
@@ -61,23 +61,22 @@ export async function POST(
       await db.$transaction(async (prisma) => {
         const updateData: any = {
           status: "Success",
-          admin_status: "Success",
         };
 
         if (modifiedTransactionId?.trim()) {
-          updateData.transaction_id = modifiedTransactionId.trim();
+          updateData.transactionId = modifiedTransactionId.trim();
         }
 
         await prisma.addFunds.update({
-          where: { id: transactionId },
+          where: { Id: transactionId },
           data: updateData
         });
 
         const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.usd_amount },
-            total_deposit: { increment: transaction.usd_amount }
+            balance: { increment: transaction.usdAmount },
+            total_deposit: { increment: transaction.usdAmount }
           }
         });
 
@@ -88,9 +87,9 @@ export async function POST(
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: modifiedTransactionId?.trim() || transaction.transaction_id || 'N/A',
-          amount: transaction.usd_amount.toString(),
-          currency: 'BDT',
+          transactionId: modifiedTransactionId?.trim() || transaction.transactionId || 'N/A',
+          amount: transaction.usdAmount.toString(),
+          currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
         });
@@ -106,11 +105,11 @@ export async function POST(
         success: true,
         message: 'Transaction approved successfully',
         data: {
-          id: transaction.id,
+          id: transaction.Id,
           status: 'approved',
-          amount: transaction.usd_amount,
+          amount: transaction.usdAmount,
           userId: transaction.userId,
-          transactionId: modifiedTransactionId?.trim() || transaction.transaction_id
+          transactionId: modifiedTransactionId?.trim() || transaction.transactionId
         }
       });
       

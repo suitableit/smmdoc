@@ -29,7 +29,7 @@ export async function POST(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: transactionId },
+      where: { Id: transactionId },
       include: { user: true }
     });
     
@@ -47,7 +47,7 @@ export async function POST(
       );
     }
     
-    if (transaction.admin_status !== 'pending') {
+    if (transaction.status !== 'Processing' && transaction.status !== 'Pending') {
       return NextResponse.json(
         { error: 'Transaction is not pending approval' },
         { status: 400 }
@@ -57,10 +57,9 @@ export async function POST(
     try {
       await db.$transaction(async (prisma) => {
         await prisma.addFunds.update({
-          where: { id: transactionId },
+          where: { Id: transactionId },
           data: {
             status: "Success",
-            admin_status: "Success",
             updatedAt: new Date(),
           }
         });
@@ -68,8 +67,8 @@ export async function POST(
         const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.usd_amount },
-            total_deposit: { increment: transaction.usd_amount }
+            balance: { increment: transaction.usdAmount },
+            total_deposit: { increment: transaction.usdAmount }
           }
         });
         
@@ -80,9 +79,9 @@ export async function POST(
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
-          amount: transaction.usd_amount.toString(),
-          currency: 'BDT',
+          transactionId: (transaction.transactionId || transaction.invoiceId || '0').toString(),
+          amount: transaction.usdAmount.toString(),
+          currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
         });
@@ -98,9 +97,9 @@ export async function POST(
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: transaction.user.name || 'Unknown User',
         userEmail: transaction.user.email || '',
-        transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
-          amount: transaction.usd_amount.toString(),
-          currency: 'USD',
+        transactionId: (transaction.transactionId || transaction.invoiceId || '0').toString(),
+          amount: transaction.usdAmount.toString(),
+          currency: transaction.currency || 'USD',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()
       });
@@ -115,8 +114,8 @@ export async function POST(
         success: true,
         message: 'Transaction approved successfully',
         data: {
-          transactionId: transaction.id,
-          amount: transaction.usd_amount,
+          transactionId: transaction.Id,
+          amount: transaction.usdAmount,
           userId: transaction.userId,
           status: 'Success'
         }

@@ -180,17 +180,16 @@ export async function POST(request: NextRequest) {
       const transactionRecord = await prisma.addFunds.create({
         data: {
           userId: user.id,
-          invoice_id: `MANUAL-${Date.now()}`,
-          usd_amount: amountToAdd,
-          bdt_amount: amountBDT,
+          invoiceId: `MANUAL-${Date.now()}`,
+          usdAmount: amountToAdd,
+          bdtAmount: amountBDT,
           email: user.email || '',
           name: user.name || '',
           status: 'Success',
-          admin_status: 'Success',
-          payment_gateway: 'manual_adjustment',
-          payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
-          phone_number: '',
-          transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
+          paymentGateway: 'manual_adjustment',
+          paymentMethod: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
+          phoneNumber: '',
+          transactionId: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
           currency: 'USD'
         }
       });
@@ -208,7 +207,7 @@ export async function POST(request: NextRequest) {
         const emailData = emailTemplates.paymentSuccess({
           userName: user.name || 'Customer',
           userEmail: user.email,
-          transactionId: result.transactionRecord.id.toString(),
+          transactionId: result.transactionRecord.Id.toString(),
           amount: amount.toString(),
           currency: transactionCurrency,
           date: new Date().toLocaleDateString(),
@@ -229,7 +228,7 @@ export async function POST(request: NextRequest) {
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: user.name || 'Unknown User',
         userEmail: user.email || '',
-        transactionId: result.transactionRecord.id.toString(),
+        transactionId: result.transactionRecord.Id.toString(),
         amount: amount.toString(),
         currency: transactionCurrency,
         date: new Date().toLocaleDateString(),
@@ -288,7 +287,7 @@ export async function POST(request: NextRequest) {
         amountAdded: amountToAdd,
         adminCurrency: transactionCurrency,
         action: action,
-        transactionId: result.transactionRecord.id
+        transactionId: result.transactionRecord.Id
       }
     });
 

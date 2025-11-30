@@ -82,7 +82,6 @@ export async function POST(req: NextRequest) {
               where: { invoiceId: invoice_id },
               data: {
                 status: "Success",
-                adminStatus: "approved",
                 transactionId: transaction_id,
                 phoneNumber: phone,
               }
@@ -134,7 +133,7 @@ export async function POST(req: NextRequest) {
             userName: payment.user.name || 'Unknown User',
             userEmail: payment.user.email || '',
             transactionId: transaction_id,
-            amount: payment.usd_amount.toString(),
+            amount: payment.usdAmount.toString(),
             currency: 'USD',
             date: new Date().toLocaleDateString(),
             userId: payment.userId.toString()
@@ -149,7 +148,7 @@ export async function POST(req: NextRequest) {
           if (phone && payment.user) {
             const smsMessage = smsTemplates.paymentSuccess(
               payment.user.name || 'Customer',
-              payment.usd_amount,
+              payment.usdAmount,
               transaction_id
             );
 
@@ -172,7 +171,7 @@ export async function POST(req: NextRequest) {
             status: "COMPLETED",
             message: "Payment successful! Funds have been added to your account.",
             payment: {
-              invoice_id: payment.invoice_id,
+              invoice_id: payment.invoiceId,
               amount: payment.usdAmount,
               status: "Success",
               transaction_id: transaction_id
@@ -193,7 +192,6 @@ export async function POST(req: NextRequest) {
           data: {
             transactionId: transaction_id,
             phoneNumber: phone,
-            adminStatus: "pending",
             status: "Processing"
           }
         });
@@ -203,7 +201,7 @@ export async function POST(req: NextRequest) {
           userName: payment.user?.name || 'Unknown User',
           userEmail: payment.user?.email || '',
           transactionId: transaction_id,
-          amount: payment.usd_amount.toString(),
+          amount: payment.usdAmount.toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: payment.userId.toString(),
@@ -220,7 +218,7 @@ export async function POST(req: NextRequest) {
           status: "PENDING",
           message: "Payment is being processed and requires manual verification. You will be notified once approved.",
           payment: {
-            invoice_id: payment.invoice_id,
+            invoice_id: payment.invoiceId,
             amount: payment.usdAmount,
             status: "Processing",
             transaction_id: transaction_id
@@ -233,7 +231,6 @@ export async function POST(req: NextRequest) {
           where: { invoiceId: invoice_id },
           data: {
             status: "Cancelled",
-            adminStatus: "cancelled",
             transactionId: transaction_id,
             phoneNumber: phone,
           }
@@ -243,7 +240,7 @@ export async function POST(req: NextRequest) {
           status: "CANCELLED",
           message: "Payment verification failed or was cancelled",
           payment: {
-            invoice_id: payment.invoice_id,
+            invoice_id: payment.invoiceId,
             amount: payment.usdAmount,
             status: "Cancelled",
             transaction_id: transaction_id

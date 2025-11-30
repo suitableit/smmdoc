@@ -33,10 +33,10 @@ export async function GET(request: NextRequest) {
     if (search && adminView && session.user.role === 'admin') {
       if (searchType === 'id') {
         where.OR = [
-          { transaction_id: { contains: search } },
-          { invoice_id: { contains: search } },
-          { id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
-        ].filter(condition => condition.id !== undefined || condition.transaction_id || condition.invoice_id);
+          { transactionId: { contains: search } },
+          { invoiceId: { contains: search } },
+          { Id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
+        ].filter(condition => condition.Id !== undefined || condition.transactionId || condition.invoiceId);
       } else if (searchType === 'username') {
         where.OR = [
           { user: { name: { contains: search } } },
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
         ];
       } else {
         where.OR = [
-          { transaction_id: { contains: search } },
-          { invoice_id: { contains: search } },
+          { transactionId: { contains: search } },
+          { invoiceId: { contains: search } },
           { phoneNumber: { contains: search } },
           { user: { name: { contains: search } } },
           { user: { email: { contains: search } } },
@@ -56,21 +56,21 @@ export async function GET(request: NextRequest) {
 
     if (search && (!adminView || session.user.role !== 'admin')) {
       where.OR = [
-        { transaction_id: { contains: search } },
-        { invoice_id: { contains: search } },
-        { phone_number: { contains: search } },
+        { transactionId: { contains: search } },
+        { invoiceId: { contains: search } },
+        { phoneNumber: { contains: search } },
       ];
     }
 
     if (status && status !== 'all') {
       if (status === 'Success' || status === 'completed') {
-        where.admin_status = 'Success';
+        where.status = 'Success';
       } else if (status === 'pending' || status === 'Pending') {
-        where.admin_status = 'Pending';
+        where.status = 'Processing';
       } else if (status === 'cancelled' || status === 'Cancelled') {
-        where.admin_status = 'Cancelled';
+        where.status = 'Cancelled';
       } else if (status === 'Suspicious') {
-        where.admin_status = 'Suspicious';
+        where.status = 'Suspicious';
       } else if (status === 'failed') {
         where.status = { in: ['Failed', 'Cancelled'] };
       }
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     if (type && type !== 'all') {
       if (type === 'withdrawal') {
-        where.id = -1;
+        where.Id = -1;
       }
     }
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
           take: limit > 10000 ? undefined : limit,
           skip: adminView ? skip : offset,
           select: {
-            id: true,
+            Id: true,
             invoiceId: true,
             usdAmount: true,
             bdtAmount: true,
@@ -121,7 +121,6 @@ export async function GET(request: NextRequest) {
             updatedAt: true,
             phoneNumber: true,
             currency: true,
-            adminStatus: true,
             userId: true,
             user: {
               select: {
@@ -174,18 +173,18 @@ export async function GET(request: NextRequest) {
     }
 
     const transformedTransactions = transactions.map((transaction: any) => ({
-      id: transaction.id,
-      transactionId: transaction.transactionId || transaction.id,
-      invoice_id: transaction.invoiceId || transaction.id,
+      id: transaction.Id,
+      transactionId: transaction.transactionId || transaction.Id,
+      invoice_id: transaction.invoiceId || transaction.Id,
       amount: transaction.usdAmount || 0,
       bdt_amount: transaction.bdtAmount,
       status: transaction.status || 'Processing',
-      admin_status: transaction.adminStatus || 'pending',
+      admin_status: transaction.status || 'Processing',
       method: transaction.paymentGateway || 'UddoktaPay',
       payment_method: transaction.paymentMethod || 'UddoktaPay',
-      transaction_id: transaction.transactionId || transaction.id,
-      createdAt: transaction.createdAt.toISOString(),
-      updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt.toISOString(),
+      transaction_id: transaction.transactionId || transaction.Id,
+      createdAt: transaction.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt?.toISOString() || new Date().toISOString(),
       type: 'deposit',
       phone: transaction.phoneNumber || '',
       currency: transaction.currency || 'BDT',
@@ -197,7 +196,7 @@ export async function GET(request: NextRequest) {
         username: transaction.user.username || '',
       } : null,
       notes: '',
-      processedAt: transaction.admin_status === 'Success' ? transaction.updatedAt?.toISOString() : null,
+      processedAt: transaction.status === 'Success' ? transaction.updatedAt?.toISOString() : null,
     }));
 
     if (adminView && session.user.role === 'admin') {
@@ -206,21 +205,21 @@ export async function GET(request: NextRequest) {
       const stats = {
         totalTransactions: totalCount,
         pendingTransactions: await db.addFunds.count({
-          where: { ...where, admin_status: 'Pending' }
+          where: { ...where, status: 'Processing' }
         }),
         completedTransactions: await db.addFunds.count({
-          where: { ...where, admin_status: 'Success' }
+          where: { ...where, status: 'Success' }
         }),
         cancelledTransactions: await db.addFunds.count({
-          where: { ...where, admin_status: 'Cancelled' }
+          where: { ...where, status: 'Cancelled' }
         }),
         suspiciousTransactions: await db.addFunds.count({
-          where: { ...where, admin_status: 'Suspicious' }
+          where: { ...where, status: 'Suspicious' }
         }),
         totalVolume: await db.addFunds.aggregate({
-          where: { ...where, admin_status: 'Success' },
+          where: { ...where, status: 'Success' },
           _sum: { usdAmount: true }
-        }).then(result => result._sum.usd_amount || 0),
+        }).then(result => result._sum.usdAmount || 0),
         todayTransactions: await db.addFunds.count({
           where: {
             ...where,
@@ -288,7 +287,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: Number(transactionId) },
+      where: { Id: Number(transactionId) },
       include: { user: true }
     });
 
@@ -302,40 +301,36 @@ export async function PATCH(request: NextRequest) {
 
     if (status === 'approved' || status === 'Success') {
       updateData.status = 'Success';
-      updateData.admin_status = 'Success';
 
-      if (transaction.admin_status !== 'Success') {
+      if (transaction.status !== 'Success') {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.usd_amount },
-            total_deposit: { increment: transaction.usd_amount }
+            balance: { increment: transaction.usdAmount },
+            total_deposit: { increment: transaction.usdAmount }
           }
         });
       }
     } else if (status === 'cancelled' || status === 'Cancelled') {
       updateData.status = 'Cancelled';
-      updateData.admin_status = 'Cancelled';
 
-      if (transaction.admin_status === 'Success') {
+      if (transaction.status === 'Success') {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { decrement: transaction.usd_amount },
-            total_deposit: { decrement: transaction.usd_amount }
+            balance: { decrement: transaction.usdAmount },
+            total_deposit: { decrement: transaction.usdAmount }
           }
         });
       }
     } else if (status === 'Suspicious') {
-      updateData.admin_status = 'Suspicious';
-      updateData.status = 'Processing';
+      updateData.status = 'Suspicious';
     } else if (status === 'Pending' || status === 'pending') {
-      updateData.admin_status = 'Pending';
       updateData.status = 'Processing';
     }
 
     const updatedTransaction = await db.addFunds.update({
-      where: { id: Number(transactionId) },
+      where: { Id: Number(transactionId) },
       data: updateData,
       include: {
         user: {
@@ -353,11 +348,11 @@ export async function PATCH(request: NextRequest) {
       success: true,
       message: `Transaction ${status} successfully`,
       data: {
-        id: updatedTransaction.id,
-        transactionId: updatedTransaction.transaction_id,
-        amount: updatedTransaction.usd_amount,
+        id: updatedTransaction.Id,
+        transactionId: updatedTransaction.transactionId,
+        amount: updatedTransaction.usdAmount,
         status: updatedTransaction.status,
-        admin_status: updatedTransaction.admin_status,
+        admin_status: updatedTransaction.status,
         currency: updatedTransaction.currency,
         user: updatedTransaction.user,
         updatedAt: updatedTransaction.updatedAt.toISOString()

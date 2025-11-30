@@ -125,17 +125,15 @@ export async function POST(
       await tx.addFunds.create({
         data: {
           userId: existingOrder.user.id,
-          invoice_id: `refund_${id}_${Date.now()}`,
-          usd_amount: finalRefundAmount,
-          bdt_amount: refundAmountBDT,
+          invoiceId: `refund_${id}_${Date.now()}`,
+          usdAmount: finalRefundAmount,
+          bdtAmount: refundAmountBDT,
           email: existingOrder.user.email || '',
           name: existingOrder.user.name || 'User',
           status: 'Success',
-          admin_status: 'Approved',
-          payment_gateway: 'Admin Refund',
-          payment_method: 'Refund',
-          transaction_date: new Date(),
-          createdAt: new Date()
+          paymentGateway: 'Admin Refund',
+          paymentMethod: 'Refund',
+          transactionDate: new Date(),
         }
       });
 

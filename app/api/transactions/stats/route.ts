@@ -66,24 +66,24 @@ export async function GET(request: NextRequest) {
       db.addFunds.count({ where: dateFilter }),
       
       db.addFunds.count({ 
-        where: { ...dateFilter, admin_status: 'Pending' } 
+        where: { ...dateFilter, status: 'Processing' } 
       }),
       
       db.addFunds.count({ 
-        where: { ...dateFilter, admin_status: 'Success' } 
+        where: { ...dateFilter, status: 'Success' } 
       }),
       
       db.addFunds.count({ 
-        where: { ...dateFilter, admin_status: 'Cancelled' } 
+        where: { ...dateFilter, status: 'Cancelled' } 
       }),
       
       db.addFunds.count({ 
-        where: { ...dateFilter, admin_status: 'Suspicious' } 
+        where: { ...dateFilter, status: 'Suspicious' } 
       }),
       
       db.addFunds.aggregate({
-        where: { ...dateFilter, admin_status: 'Success' },
-        _sum: { usd_amount: true }
+        where: { ...dateFilter, status: 'Success' },
+        _sum: { usdAmount: true }
       }),
       
       (() => {
@@ -103,9 +103,9 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: 5,
         select: {
-          id: true,
-          usd_amount: true,
-          admin_status: true,
+          Id: true,
+          usdAmount: true,
+          status: true,
           createdAt: true,
           user: {
             select: {
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    const totalVolume = totalVolumeResult._sum.usd_amount || 0;
+    const totalVolume = totalVolumeResult._sum.usdAmount || 0;
 
     const statusBreakdown = {
       pending: pendingTransactions,
@@ -150,9 +150,9 @@ export async function GET(request: NextRequest) {
         statusBreakdown,
         percentages,
         recentTransactions: recentTransactions.map(t => ({
-          id: t.id,
-          amount: t.usd_amount,
-          status: t.admin_status,
+          id: t.Id,
+          amount: t.usdAmount,
+          status: t.status,
           createdAt: t.createdAt.toISOString(),
           user: t.user
         })),

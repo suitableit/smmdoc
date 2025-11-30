@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     if (search) {
       whereCondition = {
         OR: [
-          { transaction_id: { contains: search } },
+          { transactionId: { contains: search } },
           { user: { name: { contains: search } } },
           { user: { email: { contains: search } } },
         ],
@@ -35,16 +35,15 @@ export async function GET(req: NextRequest) {
     const transactions = await db.addFunds.findMany({
       where: whereCondition,
       select: {
-        id: true,
-        invoice_id: true,
-        usd_amount: true,
-        bdt_amount: true,
+        Id: true,
+        invoiceId: true,
+        usdAmount: true,
+        bdtAmount: true,
         status: true,
-        admin_status: true,
-        payment_gateway: true,
-        payment_method: true,
-        transaction_id: true,
-        phone_number: true,
+        paymentGateway: true,
+        paymentMethod: true,
+        transactionId: true,
+        phoneNumber: true,
         currency: true,
         createdAt: true,
         updatedAt: true,
@@ -68,8 +67,34 @@ export async function GET(req: NextRequest) {
     const totalCount = await db.addFunds.count({ where: whereCondition });
     const totalPages = Math.ceil(totalCount / limit);
     
+    const transformedTransactions = transactions.map((t: any) => ({
+      id: t.Id,
+      invoiceId: t.invoiceId,
+      invoice_id: t.invoiceId,
+      usdAmount: t.usdAmount,
+      usd_amount: t.usdAmount,
+      bdtAmount: t.bdtAmount,
+      bdt_amount: t.bdtAmount,
+      status: t.status,
+      admin_status: t.status,
+      paymentGateway: t.paymentGateway,
+      payment_gateway: t.paymentGateway,
+      paymentMethod: t.paymentMethod,
+      payment_method: t.paymentMethod,
+      transactionId: t.transactionId,
+      transaction_id: t.transactionId,
+      phoneNumber: t.phoneNumber,
+      phone_number: t.phoneNumber,
+      phone: t.phoneNumber,
+      currency: t.currency,
+      createdAt: t.createdAt,
+      updatedAt: t.updatedAt,
+      userId: t.userId,
+      user: t.user,
+    }));
+    
     return NextResponse.json({
-      transactions,
+      transactions: transformedTransactions,
       totalPages,
       currentPage: page,
       totalCount,
