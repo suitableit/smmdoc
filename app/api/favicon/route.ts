@@ -5,62 +5,68 @@ import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
-    const generalSettings = await getGeneralSettings();
+    const { db } = await import('@/lib/db');
+    const settings = await db.generalSettings.findFirst({
+      select: {
+        siteIcon: true,
+      },
+    });
     
-    if (generalSettings.siteIcon) {
-      const iconPath = path.join(process.cwd(), 'public', generalSettings.siteIcon);
+    const siteIcon = settings?.siteIcon || '';
+    
+    if (siteIcon && siteIcon.trim() !== '') {
+      const iconPathRelative = siteIcon.startsWith('/') 
+        ? siteIcon.substring(1) 
+        : siteIcon;
       
-      if (fs.existsSync(iconPath)) {
-        const fileBuffer = fs.readFileSync(iconPath);
-        const fileExtension = path.extname(generalSettings.siteIcon).toLowerCase();
-        
-        let contentType = 'image/x-icon';
-        switch (fileExtension) {
-          case '.png':
-            contentType = 'image/png';
-            break;
-          case '.jpg':
-          case '.jpeg':
-            contentType = 'image/jpeg';
-            break;
-          case '.gif':
-            contentType = 'image/gif';
-            break;
-          case '.svg':
-            contentType = 'image/svg+xml';
-            break;
-          case '.ico':
-            contentType = 'image/x-icon';
-            break;
-          default:
-            contentType = 'image/png';
+      const iconPath = path.join(process.cwd(), 'public', iconPathRelative);
+      
+      try {
+        if (fs.existsSync(iconPath)) {
+          const fileBuffer = fs.readFileSync(iconPath);
+          const fileExtension = path.extname(siteIcon).toLowerCase();
+          
+          let contentType = 'image/x-icon';
+          switch (fileExtension) {
+            case '.png':
+              contentType = 'image/png';
+              break;
+            case '.jpg':
+            case '.jpeg':
+              contentType = 'image/jpeg';
+              break;
+            case '.gif':
+              contentType = 'image/gif';
+              break;
+            case '.svg':
+              contentType = 'image/svg+xml';
+              break;
+            case '.ico':
+              contentType = 'image/x-icon';
+              break;
+            default:
+              contentType = 'image/png';
+          }
+          
+          return new NextResponse(fileBuffer, {
+            headers: {
+              'Content-Type': contentType,
+              'Cache-Control': 'public, max-age=300, s-maxage=300, must-revalidate',
+            },
+          });
+        } else {
+          console.warn(`[Favicon] File not found at: ${iconPath}. SiteIcon value: ${siteIcon}`);
+          const dirPath = path.dirname(iconPath);
+          if (fs.existsSync(dirPath)) {
+            try {
+              const files = fs.readdirSync(dirPath);
+              console.log(`[Favicon] Files in directory ${dirPath}:`, files);
+            } catch (e) {
+            }
+          }
         }
-        
-        return new NextResponse(fileBuffer, {
-          headers: {
-            'Content-Type': contentType,
-            'Cache-Control': 'public, max-age=3600',
-          },
-        });
-      }
-    }
-    
-    const defaultFaviconPaths = [
-      path.join(process.cwd(), 'app', 'favicon.ico'),
-      path.join(process.cwd(), 'public', 'favicon.ico'),
-      path.join(process.cwd(), 'public', 'favicon.png')
-    ];
-    
-    for (const defaultPath of defaultFaviconPaths) {
-      if (fs.existsSync(defaultPath)) {
-        const fileBuffer = fs.readFileSync(defaultPath);
-        const isIco = defaultPath.endsWith('.ico');
-        return new NextResponse(fileBuffer, {
-          headers: {
-            'Content-Type': isIco ? 'image/x-icon' : 'image/png',
-            'Cache-Control': 'public, max-age=3600',
-          },
-        });
+      } catch (fileError) {
+        console.error(`Error reading favicon file at ${iconPath}:`, fileError);
       }
     }
     

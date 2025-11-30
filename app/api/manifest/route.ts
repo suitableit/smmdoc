@@ -9,14 +9,16 @@ export async function GET(request: NextRequest) {
       getAppName()
     ]);
 
-    const iconPath = generalSettings.siteIcon || '/favicon.png';
+    const iconPath = generalSettings.siteIcon && generalSettings.siteIcon.trim() !== '' 
+      ? generalSettings.siteIcon 
+      : '';
     const siteUrl = generalSettings.siteUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://smmdoc.suitableit.com';
 
     const manifest = {
       id: '/',
       name: appName,
       short_name: appName,
-      description: generalSettings.siteDescription || 'Your Social Media Growth Partner',
+      description: generalSettings.siteDescription || '',
       start_url: '/',
       scope: '/',
       display: 'standalone',
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
       theme_color: '#000000',
       orientation: 'portrait-primary',
       categories: ['business', 'productivity', 'social'],
-      icons: [
+      icons: iconPath ? [
         {
           src: iconPath,
           sizes: '192x192',
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest) {
           type: 'image/png',
           purpose: 'any maskable'
         }
-      ]
+      ] : []
     };
 
     return NextResponse.json(manifest, {

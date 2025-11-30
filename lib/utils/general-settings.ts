@@ -7,6 +7,7 @@ export interface GeneralSettings {
   siteLogo: string;
   siteDarkLogo: string;
   adminEmail: string;
+  supportEmail: string;
   siteUrl: string;
   metaKeywords: string;
   metaSiteTitle: string;
@@ -20,17 +21,18 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000;
 
 const MINIMAL_FALLBACK: GeneralSettings = {
-  siteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
+  siteTitle: '',
   tagline: 'Best SMM Services Provider',
   siteDescription: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Professional Social Media Marketing Panel',
   siteIcon: '/favicon.png',
   siteLogo: '/logo.png',
   siteDarkLogo: '',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
+  supportEmail: '',
   siteUrl: process.env.NEXT_PUBLIC_APP_URL || '',
   metaKeywords: 'SMM, Social Media Marketing, Panel',
-  metaSiteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
-  googleTitle: 'SMM Panel - Social Media Marketing Services',
+  metaSiteTitle: '',
+  googleTitle: '',
   thumbnail: '/general/og-image.jpg',
   footerText: '© 2025 SMM Panel. All rights reserved.'
 };
@@ -79,18 +81,30 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
       }
 
       if (generalData) {
+        const taglineValue = generalData.tagline?.trim() || '';
+        const tagline = taglineValue === '' ? MINIMAL_FALLBACK.tagline : taglineValue;
+        
+        const googleTitle = metaData?.googleTitle?.trim() || '';
+        
+        const siteDescriptionValue = metaData?.siteDescription?.trim() || '';
+        const siteDescription = siteDescriptionValue === '' ? MINIMAL_FALLBACK.siteDescription : siteDescriptionValue;
+        
+        const metaKeywordsValue = metaData?.keywords?.trim() || '';
+        const metaKeywords = metaKeywordsValue === '' ? MINIMAL_FALLBACK.metaKeywords : metaKeywordsValue;
+        
         cachedSettings = {
-          siteTitle: generalData.siteTitle || MINIMAL_FALLBACK.siteTitle,
-          tagline: generalData.tagline || MINIMAL_FALLBACK.tagline,
-          siteDescription: metaData?.siteDescription || MINIMAL_FALLBACK.siteDescription,
-          siteIcon: generalData.siteIcon || MINIMAL_FALLBACK.siteIcon,
+          siteTitle: generalData.siteTitle || '',
+          tagline: tagline,
+          siteDescription: siteDescription,
+          siteIcon: generalData.siteIcon || '',
           siteLogo: generalData.siteLogo || MINIMAL_FALLBACK.siteLogo,
           siteDarkLogo: generalData.siteDarkLogo || MINIMAL_FALLBACK.siteDarkLogo,
           adminEmail: generalData.adminEmail || MINIMAL_FALLBACK.adminEmail,
+          supportEmail: generalData.supportEmail || '',
           siteUrl: MINIMAL_FALLBACK.siteUrl,
-          metaKeywords: metaData?.keywords || MINIMAL_FALLBACK.metaKeywords,
-          metaSiteTitle: metaData?.siteTitle || generalData.siteTitle || MINIMAL_FALLBACK.metaSiteTitle,
-          googleTitle: metaData?.googleTitle || MINIMAL_FALLBACK.googleTitle,
+          metaKeywords: metaKeywords,
+          metaSiteTitle: metaData?.siteTitle || generalData.siteTitle || '',
+          googleTitle: googleTitle,
           thumbnail: metaData?.thumbnail || MINIMAL_FALLBACK.thumbnail,
           footerText: MINIMAL_FALLBACK.footerText
         };
@@ -103,18 +117,30 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
 
       const settings = await db.generalSettings.findFirst();
       if (settings) {
+        const taglineValue = settings.tagline?.trim() || '';
+        const tagline = taglineValue === '' ? MINIMAL_FALLBACK.tagline : taglineValue;
+        
+        const googleTitle = settings.googleTitle?.trim() || '';
+        
+        const siteDescriptionValue = settings.siteDescription?.trim() || '';
+        const siteDescription = siteDescriptionValue === '' ? MINIMAL_FALLBACK.siteDescription : siteDescriptionValue;
+        
+        const metaKeywordsValue = settings.metaKeywords?.trim() || '';
+        const metaKeywords = metaKeywordsValue === '' ? MINIMAL_FALLBACK.metaKeywords : metaKeywordsValue;
+        
         cachedSettings = {
-          siteTitle: settings.siteTitle || MINIMAL_FALLBACK.siteTitle,
-          tagline: settings.tagline || MINIMAL_FALLBACK.tagline,
-          siteDescription: settings.siteDescription || MINIMAL_FALLBACK.siteDescription,
-          siteIcon: settings.siteIcon || MINIMAL_FALLBACK.siteIcon,
+          siteTitle: settings.siteTitle || '',
+          tagline: tagline,
+          siteDescription: siteDescription,
+          siteIcon: settings.siteIcon || '',
           siteLogo: settings.siteLogo || MINIMAL_FALLBACK.siteLogo,
           siteDarkLogo: settings.siteDarkLogo || MINIMAL_FALLBACK.siteDarkLogo,
           adminEmail: settings.adminEmail || MINIMAL_FALLBACK.adminEmail,
+          supportEmail: settings.supportEmail || '',
           siteUrl: MINIMAL_FALLBACK.siteUrl,
-          metaKeywords: settings.metaKeywords || MINIMAL_FALLBACK.metaKeywords,
-          metaSiteTitle: settings.metaSiteTitle || settings.siteTitle || MINIMAL_FALLBACK.metaSiteTitle,
-          googleTitle: settings.googleTitle || MINIMAL_FALLBACK.googleTitle,
+          metaKeywords: metaKeywords,
+          metaSiteTitle: settings.metaSiteTitle || settings.siteTitle || '',
+          googleTitle: googleTitle,
           thumbnail: settings.thumbnail || MINIMAL_FALLBACK.thumbnail,
           footerText: MINIMAL_FALLBACK.footerText
         };
@@ -179,6 +205,33 @@ export async function getSiteLogo(): Promise<string> {
 export async function getSiteIcon(): Promise<string> {
   const settings = await getGeneralSettings();
   return settings.siteIcon;
+}
+
+export async function getSupportEmail(): Promise<string> {
+  const settings = await getGeneralSettings();
+  return settings.supportEmail || '';
+}
+
+export async function getWhatsAppNumber(): Promise<string> {
+  try {
+    const { db } = await import('@/lib/db');
+    const settings = await db.generalSettings.findFirst({
+      select: { whatsappSupport: true }
+    });
+    return settings?.whatsappSupport || '';
+  } catch (error) {
+    console.error('Error fetching WhatsApp number:', error);
+    return '';
+  }
+}
+
+export function formatWhatsAppLink(phoneNumber: string): string {
+  if (!phoneNumber || phoneNumber.trim() === '') {
+    return '#';
+  }
+  const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+  const numbersOnly = cleaned.replace(/^\+/, '');
+  return `https://wa.me/${numbersOnly}`;
 }
 
 export function getGeneralSettingsSync(): GeneralSettings {

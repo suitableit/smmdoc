@@ -4,6 +4,8 @@ export interface EmailLayoutData {
   headerColor?: 'primary-color';
   footerMessage?: string;
   userEmail?: string;
+  supportEmail?: string;
+  whatsappNumber?: string;
 }
 
 export const emailHeader = (data: EmailLayoutData) => {
@@ -36,6 +38,21 @@ export const emailFooter = (data: EmailLayoutData) => {
   const defaultMessage = "This is an automated message. Please do not reply to this email.";
   const footerMessage = data.footerMessage || defaultMessage;
   const emailText = data.userEmail ? `This email was sent to ${data.userEmail}.` : "";
+  const supportEmail = data.supportEmail || '';
+  const whatsappNumber = data.whatsappNumber || '';
+  const emailSupportLink = supportEmail ? `<a href="mailto:${supportEmail}" style="color: #6b7280; text-decoration: none; margin: 0 10px;">Email Support</a>` : '';
+  
+  const formatWhatsAppLink = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return '';
+    }
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    const numbersOnly = cleaned.replace(/^\+/, '');
+    return `https://wa.me/${numbersOnly}`;
+  };
+  
+  const whatsappLink = whatsappNumber ? formatWhatsAppLink(whatsappNumber) : '';
+  const whatsappLinkHtml = whatsappLink ? `<a href="${whatsappLink}" style="color: #22c55e; text-decoration: none; margin: 0 10px;">WhatsApp</a>` : '';
   
   return `
         </div>
@@ -46,9 +63,9 @@ export const emailFooter = (data: EmailLayoutData) => {
             ${footerMessage} ${emailText}
           </p>
           <div style="margin-top: 20px;">
-            <a href="https://wa.me/+8801723139610" style="color: #22c55e; text-decoration: none; margin: 0 10px;">WhatsApp</a>
+            ${whatsappLinkHtml}
             <a href="https://t.me/Smmdoc" style="color: #3b82f6; text-decoration: none; margin: 0 10px;">Telegram</a>
-            <a href="mailto:support@example.com" style="color: #6b7280; text-decoration: none; margin: 0 10px;">Email Support</a>
+            ${emailSupportLink}
           </div>
         </div>
       </div>

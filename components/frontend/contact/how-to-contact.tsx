@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     FaArrowRight,
     FaCheckCircle,
@@ -346,7 +346,10 @@ const ContactForm: React.FC = () => {
             <FaExclamationTriangle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm">
               Sorry, there was an error sending your message. Please try again
-              or contact us directly at support@smmdoc.com.
+              {supportEmail && (
+                <> or contact us directly at <a href={`mailto:${supportEmail}`} className="underline">{supportEmail}</a>.</>
+              )}
+              {!supportEmail && ' or contact us directly.'}
             </p>
           </div>
         )}
@@ -356,6 +359,25 @@ const ContactForm: React.FC = () => {
 };
 
 const HowToContact: React.FC = () => {
+  const [supportEmail, setSupportEmail] = useState<string>('');
+
+  useEffect(() => {
+    const fetchSupportEmail = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.supportEmail) {
+            setSupportEmail(data.generalSettings.supportEmail);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching support email:', error);
+      }
+    };
+    fetchSupportEmail();
+  }, []);
+
   return (
     <section className="pt-[60px] pb-[120px] bg-white dark:bg-[#0d0712] transition-colors duration-200">
       <div className="max-w-[1200px] mx-auto px-4">
@@ -383,12 +405,16 @@ const HowToContact: React.FC = () => {
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed transition-colors duration-200">
                   For detailed inquiries, feedback, or support, email us at{' '}
-                  <Link
-                    href="mailto:support@smmdoc.com"
-                    className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline"
-                  >
-                    support@smmdoc.com
-                  </Link>
+                  {supportEmail ? (
+                    <Link
+                      href={`mailto:${supportEmail}`}
+                      className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline"
+                    >
+                      {supportEmail}
+                    </Link>
+                  ) : (
+                    <span className="text-gray-400">Not configured</span>
+                  )}
                   . Our team is committed to providing timely and helpful
                   responses.
                 </p>

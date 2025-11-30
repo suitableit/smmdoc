@@ -57,6 +57,7 @@ function ContactSupportPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [supportEmail, setSupportEmail] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -94,6 +95,17 @@ function ContactSupportPage() {
   useEffect(() => {
     const loadContactFormData = async () => {
       try {
+        try {
+          const settingsResponse = await fetch('/api/admin/general-settings');
+          if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json();
+            if (settingsData.success && settingsData.generalSettings?.supportEmail) {
+              setSupportEmail(settingsData.generalSettings.supportEmail);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching support email:', error);
+        }
 
         setCategories([
           { id: 1, name: 'General Inquiry' },
@@ -386,7 +398,13 @@ function ContactSupportPage() {
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-900 text-sm">Email</h4>
-                        <p className="text-gray-600 text-sm">support@smmdoc.com</p>
+                        {supportEmail ? (
+                          <a href={`mailto:${supportEmail}`} className="text-gray-600 text-sm hover:text-[var(--primary)] transition-colors">
+                            {supportEmail}
+                          </a>
+                        ) : (
+                          <p className="text-gray-600 text-sm">Not configured</p>
+                        )}
                       </div>
                     </div>
 
@@ -668,7 +686,13 @@ function ContactSupportPage() {
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 text-sm">Email</h4>
-                    <p className="text-gray-600 text-sm">support@smmdoc.com</p>
+                    {supportEmail ? (
+                      <a href={`mailto:${supportEmail}`} className="text-gray-600 text-sm hover:text-[var(--primary)] transition-colors">
+                        {supportEmail}
+                      </a>
+                    ) : (
+                      <p className="text-gray-600 text-sm">Not configured</p>
+                    )}
                   </div>
                 </div>
 

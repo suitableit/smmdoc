@@ -18,6 +18,9 @@ export async function POST(req: NextRequest) {
     const { type, amount, transaction_id } = body;
     
     const testEmail = session.user.email || process.env.ADMIN_EMAIL || 'admin@example.com';
+    const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+    const supportEmail = await getSupportEmail();
+    const whatsappNumber = await getWhatsAppNumber();
     
     let emailData;
     
@@ -30,7 +33,9 @@ export async function POST(req: NextRequest) {
           amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: 'test-user-id'
+          userId: 'test-user-id',
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         break;
         
@@ -42,7 +47,9 @@ export async function POST(req: NextRequest) {
           amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: 'test-user-id'
+          userId: 'test-user-id',
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         break;
         
@@ -55,7 +62,9 @@ export async function POST(req: NextRequest) {
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: 'test-user-id',
-          phone: '+8801712345678'
+          phone: '+8801712345678',
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         break;
         
@@ -67,7 +76,9 @@ export async function POST(req: NextRequest) {
           amount: (parseFloat(amount) || 100).toString(),
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: 'test-user-id'
+          userId: 'test-user-id',
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         break;
         

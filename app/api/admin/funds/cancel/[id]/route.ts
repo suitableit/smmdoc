@@ -71,12 +71,18 @@ export async function POST(
       });
 
       if (transaction.user.email) {
+        const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+        const supportEmail = await getSupportEmail();
+        const whatsappNumber = await getWhatsAppNumber();
+        
         const emailData = emailTemplates.paymentCancelled({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
           transactionId: (transaction.transactionId || transaction.invoiceId || '0').toString(),
           amount: transaction.usdAmount.toString(),
           currency: transaction.currency || 'BDT',
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
         });

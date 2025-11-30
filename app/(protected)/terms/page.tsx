@@ -18,10 +18,28 @@ import {
 export default function TermsPage() {
   const { appName } = useAppNameWithFallback();
   const [isLoading, setIsLoading] = useState(true);
+  const [supportEmail, setSupportEmail] = useState<string>('');
 
   useEffect(() => {
     setPageTitle('Terms & Conditions', appName);
   }, [appName]);
+
+  useEffect(() => {
+    const fetchSupportEmail = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.supportEmail) {
+            setSupportEmail(data.generalSettings.supportEmail);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching support email:', error);
+      }
+    };
+    fetchSupportEmail();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -290,7 +308,13 @@ export default function TermsPage() {
                 <h4 className="font-semibold text-gray-900 mb-2">
                   Email Support
                 </h4>
-                <p className="text-sm text-gray-600">support@smmdoc.com</p>
+                {supportEmail ? (
+                  <a href={`mailto:${supportEmail}`} className="text-sm text-gray-600 hover:text-[var(--primary)] transition-colors">
+                    {supportEmail}
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-600">Not configured</p>
+                )}
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">

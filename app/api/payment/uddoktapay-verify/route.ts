@@ -111,6 +111,10 @@ export async function POST(req: NextRequest) {
           });
 
           if (payment.user.email) {
+            const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+            const supportEmail = await getSupportEmail();
+            const whatsappNumber = await getWhatsAppNumber();
+            
             const emailData = emailTemplates.paymentSuccess({
               userName: payment.user.name || 'Customer',
               userEmail: payment.user.email,
@@ -118,7 +122,9 @@ export async function POST(req: NextRequest) {
               amount: payment.usdAmount.toString(),
               currency: payment.currency || 'USD',
               date: new Date().toLocaleDateString(),
-              userId: payment.userId.toString()
+              userId: payment.userId.toString(),
+              supportEmail: supportEmail,
+              whatsappNumber: whatsappNumber,
             });
             
             await sendMail({
@@ -129,6 +135,10 @@ export async function POST(req: NextRequest) {
           }
 
           const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+          const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+          const supportEmail = await getSupportEmail();
+          const whatsappNumber = await getWhatsAppNumber();
+          
           const adminEmailData = transactionEmailTemplates.adminAutoApproved({
             userName: payment.user.name || 'Unknown User',
             userEmail: payment.user.email || '',
@@ -136,7 +146,9 @@ export async function POST(req: NextRequest) {
             amount: payment.usdAmount.toString(),
             currency: 'USD',
             date: new Date().toLocaleDateString(),
-            userId: payment.userId.toString()
+            userId: payment.userId.toString(),
+            supportEmail: supportEmail,
+            whatsappNumber: whatsappNumber,
           });
           
           await sendMail({
@@ -197,6 +209,10 @@ export async function POST(req: NextRequest) {
         });
 
         const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+        const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+        const supportEmail = await getSupportEmail();
+        const whatsappNumber = await getWhatsAppNumber();
+        
         const adminEmailData = emailTemplates.adminPendingReview({
           userName: payment.user?.name || 'Unknown User',
           userEmail: payment.user?.email || '',
@@ -205,7 +221,9 @@ export async function POST(req: NextRequest) {
           currency: 'BDT',
           date: new Date().toLocaleDateString(),
           userId: payment.userId.toString(),
-          phone: phone
+          phone: phone,
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         
         await sendMail({

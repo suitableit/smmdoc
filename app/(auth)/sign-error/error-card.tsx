@@ -1,6 +1,37 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function ErrorCard() {
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+
+  useEffect(() => {
+    const fetchWhatsAppNumber = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.whatsappNumber) {
+            setWhatsappNumber(data.generalSettings.whatsappNumber);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching WhatsApp number:', error);
+      }
+    };
+    fetchWhatsAppNumber();
+  }, []);
+
+  const formatWhatsAppLink = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return '#';
+    }
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    const numbersOnly = cleaned.replace(/^\+/, '');
+    return `https://wa.me/${numbersOnly}`;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800/50 dark:backdrop-blur-sm w-full p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-200">
       <div className="mb-6">
@@ -23,13 +54,17 @@ export default function ErrorCard() {
       <div className="text-center mt-4">
         <p className="text-gray-600 dark:text-gray-300 transition-colors duration-200">
           Need help?{' '}
-          <Link
-            href="https://wa.me/+8801723139610"
-            target="_blank"
-            className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
-          >
-            Contact support
-          </Link>
+          {whatsappNumber && whatsappNumber.trim() !== '' ? (
+            <Link
+              href={formatWhatsAppLink(whatsappNumber)}
+              target="_blank"
+              className="text-[var(--primary)] dark:text-[var(--secondary)] hover:underline transition-colors duration-200"
+            >
+              Contact support
+            </Link>
+          ) : (
+            <span className="text-gray-400">Not defined</span>
+          )}
         </p>
       </div>
     </div>

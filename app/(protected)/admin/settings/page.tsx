@@ -349,6 +349,10 @@ const GeneralSettingsPage = () => {
     whatsappSupport: '',
   });
 
+  const [filledFields, setFilledFields] = useState<Set<keyof GeneralSettings>>(new Set());
+  
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   const [metaSettings, setMetaSettings] = useState<MetaSettings>({
     googleTitle: '',
     siteTitle: '',
@@ -435,7 +439,17 @@ const GeneralSettingsPage = () => {
 
         if (generalResponse.ok) {
           const data = await generalResponse.json();
-          if (data.generalSettings) setGeneralSettings(data.generalSettings);
+          if (data.generalSettings) {
+            setGeneralSettings(data.generalSettings);
+            const filled = new Set<keyof GeneralSettings>();
+            Object.keys(data.generalSettings).forEach((key) => {
+              const value = data.generalSettings[key as keyof GeneralSettings];
+              if (value && value.toString().trim() !== '') {
+                filled.add(key as keyof GeneralSettings);
+              }
+            });
+            setFilledFields(filled);
+          }
         }
 
         if (metaResponse.ok) {
@@ -443,6 +457,7 @@ const GeneralSettingsPage = () => {
           if (data.metaSettings) {
             const processedMetaSettings = {
               ...data.metaSettings,
+              siteTitle: data.metaSettings.googleTitle,
               keywords: data.metaSettings.keywords 
                 ? (typeof data.metaSettings.keywords === 'string' 
                     ? data.metaSettings.keywords.split(',').map((k: string) => k.trim()).filter((k: string) => k)
@@ -505,18 +520,58 @@ const GeneralSettingsPage = () => {
   };
 
   const saveGeneralSettings = async () => {
+    setValidationErrors({});
+    
+    const errors: Record<string, string> = {};
+    const fieldLabels: Record<keyof GeneralSettings, string> = {
+      siteTitle: 'Site Title',
+      tagline: 'Tagline',
+      siteIcon: 'Site Icon',
+      siteLogo: 'Site Logo',
+      siteDarkLogo: 'Site Dark Logo',
+      adminEmail: 'Administration Email Address',
+      supportEmail: 'Support Email Address',
+      whatsappSupport: 'WhatsApp Number',
+    };
+
+    filledFields.forEach((field) => {
+      const value = generalSettings[field];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        errors[field] = `${fieldLabels[field]} cannot be empty once it has been filled.`;
+      }
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
     setLoadingStates(prev => ({ ...prev, general: true }));
     try {
+      const settingsToSave = {
+        ...generalSettings,
+        siteTitle: generalSettings.siteTitle?.trim() || '',
+      };
       const response = await fetch('/api/admin/general-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ generalSettings }),
+        body: JSON.stringify({ generalSettings: settingsToSave }),
       });
 
       if (response.ok) {
         showToast('General settings saved successfully!', 'success');
 
-        updateGlobalAppName(generalSettings.siteTitle);
+        const newFilled = new Set<keyof GeneralSettings>();
+        Object.keys(settingsToSave).forEach((key) => {
+          const value = settingsToSave[key as keyof GeneralSettings];
+          if (value && value.toString().trim() !== '') {
+            newFilled.add(key as keyof GeneralSettings);
+          }
+        });
+        setFilledFields(newFilled);
+
+        updateGlobalAppName(settingsToSave.siteTitle || '');
       } else {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.details || errorData.error || 'Failed to save general settings';
@@ -534,9 +589,9 @@ const GeneralSettingsPage = () => {
   const saveMetaSettings = async () => {
     setLoadingStates(prev => ({ ...prev, meta: true }));
     try {
-
       const metaSettingsForAPI = {
         ...metaSettings,
+        siteTitle: metaSettings.googleTitle,
         keywords: metaSettings.keywords.join(', ')
       };
 
@@ -699,6 +754,15 @@ const GeneralSettingsPage = () => {
   const handleDeleteImage = async (field: 'siteIcon' | 'siteLogo' | 'siteDarkLogo') => {
     const imageType = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
 
+    if (filledFields.has(field)) {
+      showToast(`${imageType} cannot be removed once it has been set.`, 'error');
+      setValidationErrors(prev => ({
+        ...prev,
+        [field]: `${imageType} cannot be empty once it has been filled.`
+      }));
+      return;
+    }
+
     const confirmed = window.confirm(`Are you sure you want to delete the ${imageType}? This action cannot be undone.`);
 
     if (!confirmed) {
@@ -708,6 +772,25 @@ const GeneralSettingsPage = () => {
     try {
       setLoadingStates(prev => ({ ...prev, general: true }));
       showToast('Removing image...', 'pending');
+
+      const currentImagePath = generalSettings[field];
+
+      if (currentImagePath && currentImagePath.trim() !== '') {
+        try {
+          const deleteResponse = await fetch('/api/admin/delete-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imagePath: currentImagePath }),
+          });
+
+          if (!deleteResponse.ok) {
+            const errorData = await deleteResponse.json();
+            console.warn('Failed to delete file from server:', errorData);
+          }
+        } catch (deleteError) {
+          console.error('Error deleting file from server:', deleteError);
+        }
+      }
 
       setGeneralSettings(prev => ({ ...prev, [field]: '' }));
 
@@ -780,6 +863,12 @@ const GeneralSettingsPage = () => {
             if (saveResponse.ok) {
               const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
               showToast(`${fieldName} uploaded and saved successfully!`, 'success');
+              setFilledFields(prev => new Set(prev).add(field));
+              setValidationErrors(prev => {
+                const updated = { ...prev };
+                delete updated[field];
+                return updated;
+              });
             } else {
               const fieldName = field === 'siteIcon' ? 'Site Icon' : field === 'siteLogo' ? 'Site Logo' : 'Site Dark Logo';
               showToast(`${fieldName} uploaded but failed to save to database`, 'error');
@@ -900,12 +989,32 @@ const GeneralSettingsPage = () => {
                   <input
                     type="text"
                     value={generalSettings.siteTitle}
-                    onChange={(e) =>
-                      setGeneralSettings(prev => ({ ...prev, siteTitle: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (filledFields.has('siteTitle') && newValue.trim() === '') {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          siteTitle: 'Site Title cannot be empty once it has been filled.'
+                        }));
+                        return;
+                      }
+                      setValidationErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.siteTitle;
+                        return updated;
+                      });
+                      setGeneralSettings(prev => ({ ...prev, siteTitle: newValue }));
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      validationErrors.siteTitle 
+                        ? 'border-red-500 dark:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Enter site title"
                   />
+                  {validationErrors.siteTitle && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteTitle}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -913,12 +1022,32 @@ const GeneralSettingsPage = () => {
                   <input
                     type="text"
                     value={generalSettings.tagline}
-                    onChange={(e) =>
-                      setGeneralSettings(prev => ({ ...prev, tagline: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (filledFields.has('tagline') && newValue.trim() === '') {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          tagline: 'Tagline cannot be empty once it has been filled.'
+                        }));
+                        return;
+                      }
+                      setValidationErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.tagline;
+                        return updated;
+                      });
+                      setGeneralSettings(prev => ({ ...prev, tagline: newValue }));
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      validationErrors.tagline 
+                        ? 'border-red-500 dark:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Enter site tagline"
                   />
+                  {validationErrors.tagline && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.tagline}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -961,6 +1090,9 @@ const GeneralSettingsPage = () => {
                       />
                     </label>
                   </div>
+                  {validationErrors.siteIcon && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteIcon}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -1048,6 +1180,12 @@ const GeneralSettingsPage = () => {
                       </div>
                     </div>
                   </div>
+                  {validationErrors.siteLogo && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteLogo}</p>
+                  )}
+                  {validationErrors.siteDarkLogo && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteDarkLogo}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -1055,12 +1193,32 @@ const GeneralSettingsPage = () => {
                   <input
                     type="email"
                     value={generalSettings.adminEmail}
-                    onChange={(e) =>
-                      setGeneralSettings(prev => ({ ...prev, adminEmail: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (filledFields.has('adminEmail') && newValue.trim() === '') {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          adminEmail: 'Administration Email Address cannot be empty once it has been filled.'
+                        }));
+                        return;
+                      }
+                      setValidationErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.adminEmail;
+                        return updated;
+                      });
+                      setGeneralSettings(prev => ({ ...prev, adminEmail: newValue }));
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      validationErrors.adminEmail 
+                        ? 'border-red-500 dark:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="admin@example.com"
                   />
+                  {validationErrors.adminEmail && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.adminEmail}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -1068,25 +1226,65 @@ const GeneralSettingsPage = () => {
                   <input
                     type="email"
                     value={generalSettings.supportEmail}
-                    onChange={(e) =>
-                      setGeneralSettings(prev => ({ ...prev, supportEmail: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (filledFields.has('supportEmail') && newValue.trim() === '') {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          supportEmail: 'Support Email Address cannot be empty once it has been filled.'
+                        }));
+                        return;
+                      }
+                      setValidationErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.supportEmail;
+                        return updated;
+                      });
+                      setGeneralSettings(prev => ({ ...prev, supportEmail: newValue }));
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      validationErrors.supportEmail 
+                        ? 'border-red-500 dark:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="support@example.com"
                   />
+                  {validationErrors.supportEmail && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.supportEmail}</p>
+                  )}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">WhatsApp Support Link</label>
+                  <label className="form-label">WhatsApp Number (with country code)</label>
                   <input
-                    type="url"
+                    type="tel"
                     value={generalSettings.whatsappSupport}
-                    onChange={(e) =>
-                      setGeneralSettings(prev => ({ ...prev, whatsappSupport: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="https://wa.me/1234567890"
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (filledFields.has('whatsappSupport') && newValue.trim() === '') {
+                        setValidationErrors(prev => ({
+                          ...prev,
+                          whatsappSupport: 'WhatsApp Number cannot be empty once it has been filled.'
+                        }));
+                        return;
+                      }
+                      setValidationErrors(prev => {
+                        const updated = { ...prev };
+                        delete updated.whatsappSupport;
+                        return updated;
+                      });
+                      setGeneralSettings(prev => ({ ...prev, whatsappSupport: newValue }));
+                    }}
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      validationErrors.whatsappSupport 
+                        ? 'border-red-500 dark:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}
+                    placeholder="+8801234567890"
                   />
+                  {validationErrors.whatsappSupport && (
+                    <p className="text-red-500 text-sm mt-1">{validationErrors.whatsappSupport}</p>
+                  )}
                 </div>
 
                 <button
@@ -1108,28 +1306,19 @@ const GeneralSettingsPage = () => {
 
               <div className="space-y-4">
                 <div className="form-group">
-                  <label className="form-label">Title you want the site to appear on Google</label>
+                  <label className="form-label">SEO Site Title</label>
                   <input
                     type="text"
                     value={metaSettings.googleTitle}
                     onChange={(e) =>
-                      setMetaSettings(prev => ({ ...prev, googleTitle: e.target.value }))
+                      setMetaSettings(prev => ({ 
+                        ...prev, 
+                        googleTitle: e.target.value,
+                        siteTitle: e.target.value
+                      }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     placeholder="Enter Google search title"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Site Title</label>
-                  <input
-                    type="text"
-                    value={metaSettings.siteTitle}
-                    onChange={(e) =>
-                      setMetaSettings(prev => ({ ...prev, siteTitle: e.target.value }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    placeholder="Enter meta site title"
                   />
                 </div>
 
@@ -1172,9 +1361,34 @@ const GeneralSettingsPage = () => {
                           className="w-20 h-10 rounded object-cover border"
                         />
                         <button
-                          onClick={() => {
-                            setMetaSettings(prev => ({ ...prev, thumbnail: '' }));
-                            showToast('Thumbnail removed successfully!', 'success');
+                          onClick={async () => {
+                            const confirmed = window.confirm('Are you sure you want to delete the thumbnail? This action cannot be undone.');
+                            if (!confirmed) return;
+
+                            try {
+                              if (metaSettings.thumbnail && metaSettings.thumbnail.trim() !== '') {
+                                try {
+                                  const deleteResponse = await fetch('/api/admin/delete-image', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ imagePath: metaSettings.thumbnail }),
+                                  });
+
+                                  if (!deleteResponse.ok) {
+                                    const errorData = await deleteResponse.json();
+                                    console.warn('Failed to delete thumbnail file from server:', errorData);
+                                  }
+                                } catch (deleteError) {
+                                  console.error('Error deleting thumbnail file from server:', deleteError);
+                                }
+                              }
+
+                              setMetaSettings(prev => ({ ...prev, thumbnail: '' }));
+                              showToast('Thumbnail removed successfully!', 'success');
+                            } catch (error) {
+                              console.error('Error removing thumbnail:', error);
+                              showToast('Error removing thumbnail', 'error');
+                            }
                           }}
                           className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                           title="Remove Thumbnail"

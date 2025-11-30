@@ -20,6 +20,40 @@ const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
 export default function DatabaseErrorPage() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [databaseInfo, setDatabaseInfo] = useState<any>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+
+  useEffect(() => {
+    const fetchWhatsAppNumber = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.whatsappNumber) {
+            setWhatsappNumber(data.generalSettings.whatsappNumber);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching WhatsApp number:', error);
+      }
+    };
+    fetchWhatsAppNumber();
+  }, []);
+
+  const formatWhatsAppLink = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return '#';
+    }
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    const numbersOnly = cleaned.replace(/^\+/, '');
+    return `https://wa.me/${numbersOnly}`;
+  };
+
+  const formatWhatsAppDisplay = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return 'Not defined';
+    }
+    return phoneNumber;
+  };
 
   const handleRetryConnection = async () => {
     setIsRetrying(true);
@@ -135,13 +169,13 @@ export default function DatabaseErrorPage() {
             </button>
 
             <a
-              href="https://wa.me/+8801723139610"
+              href={formatWhatsAppLink(whatsappNumber)}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary inline-flex items-center justify-center px-6 py-3 text-lg font-semibold rounded-lg transform hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto min-w-[180px] relative overflow-hidden text-white"
             >
               <FaWhatsapp className="w-4 h-4 mr-3" />
-              <span>Contact Support</span>
+              <span>{whatsappNumber && whatsappNumber.trim() !== '' ? 'Contact Support' : 'Not defined'}</span>
             </a>
           </div>
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">

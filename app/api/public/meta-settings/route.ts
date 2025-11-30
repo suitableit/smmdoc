@@ -25,13 +25,21 @@ export async function GET() {
       thumbnail: '',
     };
 
+    const googleTitle = settings?.googleTitle?.trim() || '';
+    
+    const siteDescriptionValue = settings?.siteDescription?.trim() || '';
+    const siteDescription = siteDescriptionValue === '' ? defaultMetaSettings.siteDescription : siteDescriptionValue;
+    
+    const keywordsValue = settings?.metaKeywords?.trim() || '';
+    const keywords = keywordsValue === '' ? defaultMetaSettings.keywords : keywordsValue;
+    
     return NextResponse.json({
       success: true,
       metaSettings: {
-        googleTitle: settings?.googleTitle || defaultMetaSettings.googleTitle,
-        siteTitle: settings?.metaSiteTitle || defaultMetaSettings.siteTitle,
-        siteDescription: settings?.siteDescription || defaultMetaSettings.siteDescription,
-        keywords: settings?.metaKeywords || defaultMetaSettings.keywords,
+        googleTitle: googleTitle,
+        siteTitle: googleTitle,
+        siteDescription: siteDescription,
+        keywords: keywords,
         thumbnail: settings?.thumbnail || defaultMetaSettings.thumbnail,
       },
     });

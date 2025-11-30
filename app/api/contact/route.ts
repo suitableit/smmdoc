@@ -15,14 +15,23 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    let adminEmail = 'support@smmdoc.com';
+    let adminEmail = '';
     try {
       const generalSettings = await db.generalSettings.findFirst();
-      if (generalSettings?.adminEmail) {
+      if (generalSettings?.supportEmail && generalSettings.supportEmail.trim() !== '') {
+        adminEmail = generalSettings.supportEmail;
+      } else if (generalSettings?.adminEmail) {
         adminEmail = generalSettings.adminEmail;
       }
     } catch (error) {
-      console.error('Error fetching admin email from settings:', error);
+      console.error('Error fetching support/admin email from settings:', error);
+    }
+    
+    if (!adminEmail) {
+      return NextResponse.json(
+        { error: 'Support email not configured' },
+        { status: 500 }
+      );
     }
     
     const body = await request.json();
@@ -76,6 +85,10 @@ export async function POST(request: NextRequest) {
     try {
       const { sendMail } = await import('@/lib/nodemailer');
       const { contactEmailTemplates } = await import('@/lib/email-templates');
+      const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+      
+      const supportEmail = await getSupportEmail();
+      const whatsappNumber = await getWhatsAppNumber();
       
       const emailTemplate = contactEmailTemplates.newContactMessageAdmin({
         userName: name,
@@ -84,7 +97,9 @@ export async function POST(request: NextRequest) {
         message: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage: ${message}`,
         category: 'General Inquiry',
         messageId: contactMessageId,
-        attachments: undefined
+        attachments: undefined,
+        supportEmail: supportEmail,
+        whatsappNumber: whatsappNumber
       });
       
       await sendMail({

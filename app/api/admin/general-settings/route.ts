@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
+import { clearGeneralSettingsCache } from '@/lib/utils/general-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 const defaultGeneralSettings = {
@@ -25,7 +26,14 @@ export async function GET() {
     if (!settings) {
       settings = await db.generalSettings.create({
         data: {
-          ...defaultGeneralSettings,
+          siteTitle: '',
+          tagline: defaultGeneralSettings.tagline,
+          siteIcon: '',
+          siteLogo: '',
+          siteDarkLogo: '',
+          adminEmail: defaultGeneralSettings.adminEmail,
+          supportEmail: '',
+          whatsappSupport: '',
           googleTitle: '',
           metaKeywords: '',
           metaSiteTitle: '',
@@ -35,11 +43,14 @@ export async function GET() {
       });
     }
 
+    const taglineValue = settings.tagline?.trim() || '';
+    const tagline = taglineValue === '' ? defaultGeneralSettings.tagline : taglineValue;
+    
     return NextResponse.json({
       success: true,
       generalSettings: {
-        siteTitle: settings.siteTitle || defaultGeneralSettings.siteTitle,
-        tagline: settings.tagline || defaultGeneralSettings.tagline,
+        siteTitle: settings.siteTitle || '',
+        tagline: tagline,
         siteIcon: settings.siteIcon || '',
         siteLogo: settings.siteLogo || '',
         siteDarkLogo: settings.siteDarkLogo || '',
@@ -75,12 +86,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!generalSettings.siteTitle?.trim()) {
-      return NextResponse.json(
-        { error: 'Site title is required' },
-        { status: 400 }
-      );
-    }
+    const siteTitle = generalSettings.siteTitle?.trim() || defaultGeneralSettings.siteTitle;
 
     if (!generalSettings.adminEmail?.trim()) {
       return NextResponse.json(
@@ -99,9 +105,12 @@ export async function POST(request: NextRequest) {
 
     const existingSettings = await db.generalSettings.findFirst();
     
+    const taglineValue = generalSettings.tagline?.trim() || '';
+    const tagline = taglineValue === '' ? defaultGeneralSettings.tagline : taglineValue;
+    
     const updateData: any = {
-      siteTitle: generalSettings.siteTitle.trim(),
-      tagline: generalSettings.tagline?.trim() || defaultGeneralSettings.tagline,
+      siteTitle: siteTitle,
+      tagline: tagline,
       siteIcon: generalSettings.siteIcon || '',
       siteLogo: generalSettings.siteLogo || '',
       siteDarkLogo: generalSettings.siteDarkLogo || '',
@@ -142,6 +151,8 @@ export async function POST(request: NextRequest) {
         data: createData
       });
     }
+
+    clearGeneralSettingsCache();
 
     return NextResponse.json({
       success: true,

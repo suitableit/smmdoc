@@ -1,6 +1,8 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FaEnvelope,
   FaFacebookF,
@@ -10,6 +12,66 @@ import {
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [supportEmail, setSupportEmail] = useState<string>('');
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+  const [siteLogo, setSiteLogo] = useState<string>('/logo.png');
+  const [siteDarkLogo, setSiteDarkLogo] = useState<string>('');
+  const [siteIcon, setSiteIcon] = useState<string>('/favicon.png');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings) {
+            if (data.generalSettings.supportEmail) {
+              setSupportEmail(data.generalSettings.supportEmail);
+            }
+            if (data.generalSettings.whatsappNumber) {
+              setWhatsappNumber(data.generalSettings.whatsappNumber);
+            }
+            if (data.generalSettings.siteLogo && data.generalSettings.siteLogo.trim() !== '') {
+              setSiteLogo(data.generalSettings.siteLogo);
+            }
+            if (data.generalSettings.siteDarkLogo && data.generalSettings.siteDarkLogo.trim() !== '') {
+              setSiteDarkLogo(data.generalSettings.siteDarkLogo);
+            }
+            if (data.generalSettings.siteIcon && data.generalSettings.siteIcon.trim() !== '') {
+              setSiteIcon(data.generalSettings.siteIcon);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const formatWhatsAppLink = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return '#';
+    }
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    const numbersOnly = cleaned.replace(/^\+/, '');
+    return `https://wa.me/${numbersOnly}`;
+  };
+
+  const formatWhatsAppDisplay = (phoneNumber: string): string => {
+    if (!phoneNumber || phoneNumber.trim() === '') {
+      return 'Not defined';
+    }
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+880') && cleaned.length >= 7) {
+      const countryCode = cleaned.substring(0, 4);
+      const rest = cleaned.substring(4);
+      if (rest.length >= 7) {
+        return `${countryCode} ${rest.substring(0, 4)}-${rest.substring(4)}`;
+      }
+    }
+    return phoneNumber;
+  };
 
   const socialLinks = [
     {
@@ -62,13 +124,15 @@ const Footer = () => {
     <footer className="bg-slate-900 relative pt-16 pb-8">
       <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <div className="w-20 h-20 bg-slate-900 border-2 border-[var(--primary)] dark:border-[var(--secondary)] rounded-full flex items-center justify-center transition-colors duration-200">
-          <Image
-            src="/favicon.png"
-            alt="SMMDOC favicon"
-            width={50}
-            height={50}
-            className="w-12 h-12"
-          />
+          {siteIcon && siteIcon.trim() !== '' ? (
+            <Image
+              src={siteIcon}
+              alt="Site Icon"
+              width={50}
+              height={50}
+              className="w-12 h-12 object-contain"
+            />
+          ) : null}
         </div>
       </div>
 
@@ -77,13 +141,31 @@ const Footer = () => {
           <div className="lg:col-span-4 pr-8">
             <div className="footer_txt">
               <Link href="/">
-                <Image
-                  src="/logo.png"
-                  alt="SMMDOC White Logo"
-                  width={200}
-                  height={60}
-                  className="footer_logo mb-4 max-w-[200px] h-auto hover:opacity-80 transition-opacity cursor-pointer"
-                />
+                {siteDarkLogo && siteDarkLogo.trim() !== '' ? (
+                  <Image
+                    src={siteDarkLogo}
+                    alt="Site Dark Logo"
+                    width={200}
+                    height={60}
+                    className="footer_logo mb-4 max-w-[200px] h-auto hover:opacity-80 transition-opacity cursor-pointer"
+                  />
+                ) : siteLogo && siteLogo.trim() !== '' ? (
+                  <Image
+                    src={siteLogo}
+                    alt="Site Logo"
+                    width={200}
+                    height={60}
+                    className="footer_logo mb-4 max-w-[200px] h-auto hover:opacity-80 transition-opacity cursor-pointer"
+                  />
+                ) : (
+                  <Image
+                    src="/logo.png"
+                    alt="SMMDOC White Logo"
+                    width={200}
+                    height={60}
+                    className="footer_logo mb-4 max-w-[200px] h-auto hover:opacity-80 transition-opacity cursor-pointer"
+                  />
+                )}
               </Link>
               <p className="text-white text-sm leading-relaxed mb-4">
                 Boost your online presence today with our Cheap SMM Panel – the
@@ -152,24 +234,30 @@ const Footer = () => {
                     <FaWhatsapp className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
                   <Link
-                    href="https://wa.me/8801723139610"
+                    href={formatWhatsAppLink(whatsappNumber)}
                     className="footer_menu_item text-white font-semibold text-sm hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    +880 1723-139610
+                    {formatWhatsAppDisplay(whatsappNumber)}
                   </Link>
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="icon w-8 h-8 bg-white rounded-full flex items-center justify-center group hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] transition-colors duration-200">
                     <FaEnvelope className="w-4 h-4 text-slate-900 group-hover:text-white transition-colors duration-200" />
                   </div>
-                  <Link
-                    href="mailto:support@smmdoc.com"
-                    className="footer_menu_item text-white font-semibold text-sm hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
-                  >
-                    support@smmdoc.com
-                  </Link>
+                  {supportEmail ? (
+                    <Link
+                      href={`mailto:${supportEmail}`}
+                      className="footer_menu_item text-white font-semibold text-sm hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-300"
+                    >
+                      {supportEmail}
+                    </Link>
+                  ) : (
+                    <span className="footer_menu_item text-white/50 font-semibold text-sm">
+                      Not configured
+                    </span>
+                  )}
                 </li>
               </ul>
             </div>

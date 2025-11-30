@@ -53,6 +53,8 @@ const Header: React.FC<HeaderProps> = ({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mobileImageError, setMobileImageError] = useState(false);
   const { settings: userSettings, loading: settingsLoading } = useUserSettings();
+  const [siteLogo, setSiteLogo] = useState<string>('/logo.png');
+  const [siteDarkLogo, setSiteDarkLogo] = useState<string>('');
 
   let session = propSession;
   let status = propStatus;
@@ -437,6 +439,27 @@ const Header: React.FC<HeaderProps> = ({
 
   useEffect(() => {
     setMounted(true);
+    
+    const fetchSiteLogo = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings) {
+            if (data.generalSettings.siteLogo && data.generalSettings.siteLogo.trim() !== '') {
+              setSiteLogo(data.generalSettings.siteLogo);
+            }
+            if (data.generalSettings.siteDarkLogo && data.generalSettings.siteDarkLogo.trim() !== '') {
+              setSiteDarkLogo(data.generalSettings.siteDarkLogo);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching site logo:', error);
+      }
+    };
+    
+    fetchSiteLogo();
   }, []);
 
   useEffect(() => {
@@ -456,7 +479,35 @@ const Header: React.FC<HeaderProps> = ({
         <div className="container mx-auto px-4 max-w-[1200px]">
           <div className="flex items-center justify-between py-3">
             <Link href="/" className="flex items-center">
-              <Image src="/logo.png" alt="SMMDOC" width={400} height={50} className="h-14 lg:h-16 w-auto max-w-[400px]" priority />
+              {siteDarkLogo && siteDarkLogo.trim() !== '' ? (
+                <>
+                  <Image 
+                    src={siteLogo} 
+                    alt="SMMDOC" 
+                    width={400} 
+                    height={50} 
+                    className="h-14 lg:h-16 w-auto max-w-[400px] dark:hidden" 
+                    priority 
+                  />
+                  <Image 
+                    src={siteDarkLogo} 
+                    alt="SMMDOC" 
+                    width={400} 
+                    height={50} 
+                    className="h-14 lg:h-16 w-auto max-w-[400px] hidden dark:block" 
+                    priority 
+                  />
+                </>
+              ) : (
+                <Image 
+                  src={siteLogo} 
+                  alt="SMMDOC" 
+                  width={400} 
+                  height={50} 
+                  className="h-14 lg:h-16 w-auto max-w-[400px]" 
+                  priority 
+                />
+              )}
             </Link>
 
             <div className="hidden lg:flex items-center space-x-1">
@@ -512,7 +563,32 @@ const Header: React.FC<HeaderProps> = ({
         <div className={`relative w-[80%] h-full bg-white dark:bg-[var(--header-bg)] shadow-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
               <Link href="/" className="flex items-center">
-                <Image src="/logo.png" alt="SMMDOC" width={200} height={25} className="h-12 w-auto" />
+                {siteDarkLogo && siteDarkLogo.trim() !== '' ? (
+                  <>
+                    <Image 
+                      src={siteLogo} 
+                      alt="SMMDOC" 
+                      width={200} 
+                      height={25} 
+                      className="h-12 w-auto dark:hidden" 
+                    />
+                    <Image 
+                      src={siteDarkLogo} 
+                      alt="SMMDOC" 
+                      width={200} 
+                      height={25} 
+                      className="h-12 w-auto hidden dark:block" 
+                    />
+                  </>
+                ) : (
+                  <Image 
+                    src={siteLogo} 
+                    alt="SMMDOC" 
+                    width={200} 
+                    height={25} 
+                    className="h-12 w-auto" 
+                  />
+                )}
               </Link>
               <button
                 className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"

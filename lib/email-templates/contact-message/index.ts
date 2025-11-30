@@ -6,6 +6,8 @@ export interface ContactMessageEmailData {
   message: string;
   category: string;
   messageId: number;
+  supportEmail?: string;
+  whatsappNumber?: string;
   attachments?: Array<{
     originalName: string;
     encryptedName: string;
@@ -22,6 +24,8 @@ export interface AdminReplyEmailData {
   adminName: string;
   messageId: number;
   originalMessage: string;
+  supportEmail?: string;
+  whatsappNumber?: string;
   attachments?: Array<{
     originalName: string;
     encryptedName: string;
@@ -40,7 +44,9 @@ export const contactMessageTemplates = {
     message,
     category,
     messageId,
-    attachments
+    attachments,
+    supportEmail,
+    whatsappNumber
   }: ContactMessageEmailData) => ({
     subject: `New Contact Message - ${subject}`,
     html: `
@@ -120,6 +126,17 @@ export const contactMessageTemplates = {
             <p style="color: #6b7280; font-size: 14px; margin: 0;">
               This is an automated notification from SMMDOC Contact System.
             </p>
+            ${supportEmail || whatsappNumber ? `
+            <div style="margin-top: 20px;">
+              ${whatsappNumber ? (() => {
+                const cleaned = whatsappNumber.replace(/[^\d+]/g, '');
+                const numbersOnly = cleaned.replace(/^\+/, '');
+                return `<a href="https://wa.me/${numbersOnly}" style="color: #22c55e; text-decoration: none; margin: 0 10px;">WhatsApp</a>`;
+              })() : ''}
+              <a href="https://t.me/Smmdoc" style="color: #3b82f6; text-decoration: none; margin: 0 10px;">Telegram</a>
+              ${supportEmail ? `<a href="mailto:${supportEmail}" style="color: #6b7280; text-decoration: none; margin: 0 10px;">Email Support</a>` : ''}
+            </div>
+            ` : ''}
           </div>
         </div>
       </body>

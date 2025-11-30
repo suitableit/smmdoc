@@ -135,10 +135,13 @@ export async function PUT(
             const { contactEmailTemplates } = await import('@/lib/email-templates');
             const { sendSMS } = await import('@/lib/sms');
             const { smsTemplates } = await import('@/lib/sms');
+            const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
             
             const userEmail = contactMessage.user.email;
             const userName = (contactMessage.user as any).name || contactMessage.user.username || 'User';
             const userPhone = (contactMessage.user as any).phone;
+            const supportEmail = await getSupportEmail();
+            const whatsappNumber = await getWhatsAppNumber();
             
             if (userEmail) {
               let adminAttachments = undefined;
@@ -177,6 +180,8 @@ export async function PUT(
                 adminName: session.user.name || session.user.username || 'Admin',
                 messageId: messageId,
                 originalMessage: contactMessage.message,
+                supportEmail: supportEmail,
+                whatsappNumber: whatsappNumber,
                 attachments: adminAttachments
               });
               

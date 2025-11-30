@@ -76,6 +76,10 @@ export async function POST(
       });
 
       if (transaction.user.email) {
+        const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+        const supportEmail = await getSupportEmail();
+        const whatsappNumber = await getWhatsAppNumber();
+        
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
@@ -83,7 +87,9 @@ export async function POST(
           amount: transaction.usdAmount.toString(),
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: transaction.userId.toString()
+          userId: transaction.userId.toString(),
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
         
         await sendMail({
@@ -94,14 +100,20 @@ export async function POST(
       }
 
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+      const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+      const supportEmail = await getSupportEmail();
+      const whatsappNumber = await getWhatsAppNumber();
+      
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: transaction.user.name || 'Unknown User',
         userEmail: transaction.user.email || '',
         transactionId: (transaction.transactionId || transaction.invoiceId || '0').toString(),
-          amount: transaction.usdAmount.toString(),
-          currency: transaction.currency || 'USD',
+        amount: transaction.usdAmount.toString(),
+        currency: transaction.currency || 'USD',
         date: new Date().toLocaleDateString(),
-        userId: transaction.userId.toString()
+        userId: transaction.userId.toString(),
+        supportEmail: supportEmail,
+        whatsappNumber: whatsappNumber,
       });
       
       await sendMail({
