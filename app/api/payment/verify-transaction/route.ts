@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
                 status: 'Success',
                 admin_status: 'approved',
                 transaction_id: finalTransactionId || payment.transaction_id,
-                sender_number: finalPhone || payment.sender_number,
+                phone_number: finalPhone || payment.phone_number,
                 payment_method: verificationData?.payment_method || payment.payment_method || 'UddoktaPay',
               },
             });
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
           where: { invoice_id },
           data: {
             transaction_id: finalTransactionId,
-            sender_number: finalPhone,
+            phone_number: finalPhone,
             admin_status: 'pending',
           },
         });
@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
             status: 'Cancelled',
             admin_status: 'cancelled',
             transaction_id: finalTransactionId,
-            sender_number: finalPhone,
+            phone_number: finalPhone,
           },
         });
 

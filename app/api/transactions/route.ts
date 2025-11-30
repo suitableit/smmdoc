@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         where.OR = [
           { transaction_id: { contains: search } },
           { invoice_id: { contains: search } },
-          { sender_number: { contains: search } },
+          { phoneNumber: { contains: search } },
           { user: { name: { contains: search } } },
           { user: { email: { contains: search } } },
         ];
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { transaction_id: { contains: search } },
         { invoice_id: { contains: search } },
-        { sender_number: { contains: search } },
+        { phone_number: { contains: search } },
       ];
     }
 
@@ -110,18 +110,18 @@ export async function GET(request: NextRequest) {
           skip: adminView ? skip : offset,
           select: {
             id: true,
-            invoice_id: true,
-            usd_amount: true,
-            bdt_amount: true,
+            invoiceId: true,
+            usdAmount: true,
+            bdtAmount: true,
             status: true,
-            payment_gateway: true,
-            payment_method: true,
-            transaction_id: true,
+            paymentGateway: true,
+            paymentMethod: true,
+            transactionId: true,
             createdAt: true,
             updatedAt: true,
-            sender_number: true,
+            phoneNumber: true,
             currency: true,
-            admin_status: true,
+            adminStatus: true,
             userId: true,
             user: {
               select: {
@@ -175,19 +175,19 @@ export async function GET(request: NextRequest) {
 
     const transformedTransactions = transactions.map((transaction: any) => ({
       id: transaction.id,
-      transactionId: transaction.transaction_id || transaction.id,
-      invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.usd_amount || 0,
-      bdt_amount: transaction.bdt_amount,
+      transactionId: transaction.transactionId || transaction.id,
+      invoice_id: transaction.invoiceId || transaction.id,
+      amount: transaction.usdAmount || 0,
+      bdt_amount: transaction.bdtAmount,
       status: transaction.status || 'Processing',
-      admin_status: transaction.admin_status || 'pending',
-      method: transaction.payment_gateway || 'UddoktaPay',
-      payment_method: transaction.payment_method || 'UddoktaPay',
-      transaction_id: transaction.transaction_id || transaction.id,
+      admin_status: transaction.adminStatus || 'pending',
+      method: transaction.paymentGateway || 'UddoktaPay',
+      payment_method: transaction.paymentMethod || 'UddoktaPay',
+      transaction_id: transaction.transactionId || transaction.id,
       createdAt: transaction.createdAt.toISOString(),
       updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt.toISOString(),
       type: 'deposit',
-      phone: transaction.sender_number || '',
+      phone: transaction.phoneNumber || '',
       currency: transaction.currency || 'BDT',
       userId: transaction.userId,
       user: transaction.user ? {
@@ -219,7 +219,7 @@ export async function GET(request: NextRequest) {
         }),
         totalVolume: await db.addFunds.aggregate({
           where: { ...where, admin_status: 'Success' },
-          _sum: { usd_amount: true }
+          _sum: { usdAmount: true }
         }).then(result => result._sum.usd_amount || 0),
         todayTransactions: await db.addFunds.count({
           where: {

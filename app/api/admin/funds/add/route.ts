@@ -39,15 +39,15 @@ export async function POST(req: NextRequest) {
     const result = await db.$transaction(async (prisma) => {
       const addFund = await prisma.addFunds.create({
         data: {
-          invoice_id: invoiceId,
-          usd_amount: parseFloat(amountUSD),
-          bdt_amount: parseFloat(amountBDT),
+          invoiceId: invoiceId,
+          usdAmount: parseFloat(amountUSD),
+          bdtAmount: parseFloat(amountBDT),
           email: user.email || '',
           name: user.name || '',
           status: status || 'COMPLETED',
-          payment_gateway: 'admin',
-          payment_method: 'admin',
-          transaction_id: `ADMIN-${Date.now()}`,
+          paymentGateway: 'admin',
+          paymentMethod: 'admin',
+          transactionId: `ADMIN-${Date.now()}`,
           userId: userId,
           currency: 'USD',
         },
