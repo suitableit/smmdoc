@@ -13,10 +13,12 @@ export interface GeneralSettings {
   googleTitle: string;
   thumbnail: string;
   footerText: string;
-}
+}
+
 let cachedSettings: GeneralSettings | null = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000;
+const CACHE_DURATION = 5 * 60 * 1000;
+
 const MINIMAL_FALLBACK: GeneralSettings = {
   siteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
   tagline: 'Best SMM Services Provider',
@@ -25,7 +27,7 @@ const MINIMAL_FALLBACK: GeneralSettings = {
   siteLogo: '/logo.png',
   siteDarkLogo: '',
   adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
-  siteUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL || '',
   metaKeywords: 'SMM, Social Media Marketing, Panel',
   metaSiteTitle: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
   googleTitle: 'SMM Panel - Social Media Marketing Services',
@@ -34,13 +36,16 @@ const MINIMAL_FALLBACK: GeneralSettings = {
 };
 
 export async function getGeneralSettings(): Promise<GeneralSettings> {
-  const now = Date.now();
+  const now = Date.now();
+
   if (cachedSettings && (now - lastFetchTime) < CACHE_DURATION) {
     return cachedSettings;
   }
 
-  try {
-    if (typeof window !== 'undefined') {
+  try {
+
+    if (typeof window !== 'undefined') {
+
       const [generalResponse, metaResponse] = await Promise.all([
         fetch('/api/admin/general-settings', {
           method: 'GET',
@@ -57,19 +62,22 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
       ]);
 
       let generalData = null;
-      let metaData = null;
+      let metaData = null;
+
       if (generalResponse.ok) {
         const generalResult = await generalResponse.json();
         if (generalResult.success && generalResult.generalSettings) {
           generalData = generalResult.generalSettings;
         }
-      }
+      }
+
       if (metaResponse.ok) {
         const metaResult = await metaResponse.json();
         if (metaResult.success && metaResult.metaSettings) {
           metaData = metaResult.metaSettings;
         }
-      }
+      }
+
       if (generalData) {
         cachedSettings = {
           siteTitle: generalData.siteTitle || MINIMAL_FALLBACK.siteTitle,
@@ -89,7 +97,8 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
         lastFetchTime = now;
         return cachedSettings;
       }
-    } else {
+    } else {
+
       const { db } = await import('@/lib/db');
 
       const settings = await db.generalSettings.findFirst();
@@ -115,7 +124,8 @@ export async function getGeneralSettings(): Promise<GeneralSettings> {
     }
   } catch (error) {
     console.warn('Failed to fetch general settings:', error);
-  }
+  }
+
   cachedSettings = { ...MINIMAL_FALLBACK };
   lastFetchTime = now;
   return cachedSettings;
@@ -222,7 +232,8 @@ export function clearGeneralSettingsCache(): void {
 
 export function clearAppNameCache(): void {
   clearGeneralSettingsCache();
-}
+}
+
 export {
   getAppName as getSiteTitle,
   getAppNameSync as getSiteTitleSync

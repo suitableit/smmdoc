@@ -218,7 +218,10 @@ export async function PUT(req: NextRequest) {
 
 async function performSync(syncType: string, profitMargin: number) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/admin/providers/sync`, {
+    if (!process.env.NEXT_PUBLIC_APP_URL) {
+      throw new Error('NEXT_PUBLIC_APP_URL environment variable is required');
+    }
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/admin/providers/sync`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

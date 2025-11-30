@@ -6,9 +6,17 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const invoice_id = searchParams.get("invoice_id");
     const from_redirect = searchParams.get("from_redirect") === "true";
-    const transaction_id = searchParams.get("transaction_id");
     
-    console.log("Verifying payment for invoice_id:", invoice_id, "from_redirect:", from_redirect);
+    // Extract transaction_id from various possible parameter names that payment gateway might use
+    const transaction_id = searchParams.get("transaction_id") || 
+                          searchParams.get("trx_id") || 
+                          searchParams.get("transactionId") ||
+                          searchParams.get("transactionID") ||
+                          searchParams.get("trxId") ||
+                          searchParams.get("trxID");
+    
+    console.log("Verifying payment for invoice_id:", invoice_id, "from_redirect:", from_redirect, "transaction_id:", transaction_id);
+    console.log("All URL parameters:", Object.fromEntries(searchParams.entries()));
 
     if (!invoice_id) {
       return NextResponse.json(
@@ -177,7 +185,7 @@ export async function GET(req: NextRequest) {
           isSuccessful = true;
           paymentStatus = "Success";
         } else if (verificationData.status === 'PENDING') {
-          paymentStatus = "Processing";
+            paymentStatus = "Processing";
           console.log('Payment status is PENDING - keeping as Processing');
         } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED') {
           paymentStatus = "Cancelled";
@@ -185,9 +193,23 @@ export async function GET(req: NextRequest) {
           paymentStatus = "Processing";
         }
       } else if (verificationResponse && !verificationResponse.ok) {
-        if (from_redirect && transaction_id) {
-          console.log('Payment redirected but API verification failed - updating transaction info, keeping status as Processing');
-          paymentStatus = "Processing";
+        // For sandbox or pending payments, API might return error but payment is still pending
+        // Check current payment status in database
+        if (from_redirect) {
+          console.log('Payment redirected but API verification failed - checking current payment status');
+          // If payment is currently Processing, keep it as Processing (sandbox pending payments)
+          if (payment.status === "Processing") {
+            paymentStatus = "Processing";
+            console.log('Payment is currently Processing - keeping as Processing (likely sandbox pending payment)');
+          } else if (payment.status === "Success") {
+            paymentStatus = "Success";
+          isSuccessful = true;
+            console.log('Payment is already Success - keeping as Success');
+          } else {
+            paymentStatus = "Processing";
+            console.log('Setting payment status to Processing (sandbox pending payment)');
+          }
+          
           verificationData = verificationData || {};
           verificationData.transaction_id = verificationData.transaction_id || transaction_id || null;
           verificationData.payment_method = verificationData.payment_method || null;
@@ -195,6 +217,11 @@ export async function GET(req: NextRequest) {
         } else {
           const errorText = await verificationResponse.text();
           console.error('UddoktaPay verification API error:', errorText);
+          // Check if payment is currently Processing (sandbox pending)
+          if (payment.status === "Processing") {
+            console.log('Payment is currently Processing - returning as PENDING instead of FAILED');
+            paymentStatus = "Processing";
+          } else {
           return NextResponse.json(
             { 
               error: "Payment verification failed", 
@@ -204,18 +231,37 @@ export async function GET(req: NextRequest) {
             },
             { status: 500 }
           );
+          }
         }
       }
     } catch (apiError) {
       console.error('Error calling UddoktaPay API:', apiError);
-      if (from_redirect && transaction_id) {
-        console.log('Payment redirected but API call failed - updating transaction info, keeping status as Processing');
-        paymentStatus = "Processing";
+      // For sandbox or pending payments, API call might fail but payment is still pending
+      if (from_redirect) {
+        console.log('Payment redirected but API call failed - checking current payment status');
+        // If payment is currently Processing, keep it as Processing (sandbox pending payments)
+        if (payment.status === "Processing") {
+          paymentStatus = "Processing";
+          console.log('Payment is currently Processing - keeping as Processing (likely sandbox pending payment)');
+        } else if (payment.status === "Success") {
+          paymentStatus = "Success";
+        isSuccessful = true;
+          console.log('Payment is already Success - keeping as Success');
+        } else {
+          paymentStatus = "Processing";
+          console.log('Setting payment status to Processing (sandbox pending payment)');
+        }
+        
         verificationData = { 
           transaction_id: transaction_id || null,
           payment_method: null,
           phone_number: null,
         };
+      } else {
+        // Check if payment is currently Processing (sandbox pending)
+        if (payment.status === "Processing") {
+          console.log('Payment is currently Processing - returning as PENDING instead of FAILED');
+          paymentStatus = "Processing";
       } else {
         return NextResponse.json(
           { 
@@ -226,6 +272,7 @@ export async function GET(req: NextRequest) {
           },
           { status: 500 }
         );
+        }
       }
     }
     
@@ -239,12 +286,33 @@ export async function GET(req: NextRequest) {
         paymentStatus: paymentStatus,
       });
       
-      let finalTransactionId = verificationData?.transaction_id || transaction_id || payment.transactionId || null;
+      // Prioritize transaction_id from redirect URL, then API response, then existing DB value
+      let finalTransactionId = transaction_id || 
+                               verificationData?.transaction_id || 
+                               payment.transactionId || 
+                               null;
+      
+      // Also check verificationData for other possible transaction_id field names
+      if (!finalTransactionId && verificationData) {
+        finalTransactionId = verificationData.trx_id || 
+                            verificationData.transactionId || 
+                            verificationData.transactionID ||
+                            verificationData.trxId ||
+                            verificationData.trxID ||
+                            null;
+      }
       
       if (finalTransactionId && finalTransactionId === invoice_id) {
         console.log('WARNING: finalTransactionId matches invoice_id - this is wrong! Setting to null instead.');
-        finalTransactionId = transaction_id || payment.transactionId || null;
+        finalTransactionId = null;
       }
+      
+      console.log('Transaction ID resolution:', {
+        from_url: transaction_id,
+        from_api: verificationData?.transaction_id,
+        from_db: payment.transactionId,
+        final: finalTransactionId
+      });
       const finalPaymentMethod = verificationData?.payment_method || payment.paymentMethod || null;
       const finalSenderNumber = verificationData?.sender_number || payment.phoneNumber || null;
       
@@ -257,38 +325,38 @@ export async function GET(req: NextRequest) {
       
       try {
         if (paymentStatus === "Success") {
-          await db.$transaction(async (prisma) => {
-            await prisma.addFunds.update({
+        await db.$transaction(async (prisma) => {
+          await prisma.addFunds.update({
               where: { invoiceId: invoice_id },
-              data: {
+            data: {
                 status: paymentStatus,
                 transactionId: finalTransactionId,
                 paymentMethod: finalPaymentMethod,
                 phoneNumber: finalSenderNumber,
-              }
-            });
-            
-            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
-            const userSettings = await prisma.userSettings.findFirst();
-            let bonusAmount = 0;
-
-            if (userSettings && userSettings.bonusPercentage > 0) {
-              bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
             }
-
-            const totalAmountToAdd = originalAmount + bonusAmount;
-
-            const user = await prisma.users.update({
-              where: { id: payment.userId },
-              data: {
-                balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usdAmount },
-                total_deposit: { increment: originalAmount }
-              }
-            });
-            
-            console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
           });
+          
+            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+          const userSettings = await prisma.userSettings.findFirst();
+          let bonusAmount = 0;
+
+          if (userSettings && userSettings.bonusPercentage > 0) {
+            bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
+          }
+
+          const totalAmountToAdd = originalAmount + bonusAmount;
+
+          const user = await prisma.users.update({
+            where: { id: payment.userId },
+            data: {
+              balance: { increment: totalAmountToAdd },
+                balanceUSD: { increment: payment.usdAmount },
+              total_deposit: { increment: originalAmount }
+            }
+          });
+          
+          console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
+        });
         } else {
           await db.addFunds.update({
             where: { invoiceId: invoice_id },
@@ -363,6 +431,12 @@ export async function GET(req: NextRequest) {
         } else {
           transactionIdToSave = null;
         }
+      }
+      
+      // If we have transaction_id from URL but not from API, use URL value
+      if (!transactionIdToSave && transaction_id && transaction_id !== invoice_id) {
+        transactionIdToSave = transaction_id;
+        console.log('Using transaction_id from redirect URL:', transactionIdToSave);
       }
       
       console.log('Saving payment with transaction_id:', transactionIdToSave, '(invoice_id:', invoice_id, ')');
@@ -446,9 +520,19 @@ export async function GET(req: NextRequest) {
           },
         });
       } else {
+        // Return appropriate status based on paymentStatus
+        const responseStatus = paymentStatus === "Processing" ? "PENDING" : 
+                              paymentStatus === "Cancelled" ? "CANCELLED" : 
+                              "FAILED";
+        const responseMessage = paymentStatus === "Processing" 
+          ? "Payment is pending verification" 
+          : paymentStatus === "Cancelled"
+          ? "Payment was cancelled"
+          : "Payment verification failed";
+        
         return NextResponse.json({
-          status: "FAILED",
-          message: "Payment verification failed",
+          status: responseStatus,
+          message: responseMessage,
           payment: {
             id: updatedPayment.Id,
             invoice_id: updatedPayment.invoiceId,

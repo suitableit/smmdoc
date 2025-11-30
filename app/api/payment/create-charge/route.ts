@@ -15,7 +15,7 @@ export async function OPTIONS(req: NextRequest) {
     req.headers.get('origin') ||
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXTAUTH_URL ||
-    'http://localhost:3000';
+    '*';
 
   return NextResponse.json(
     {},
@@ -136,18 +136,16 @@ export async function POST(req: NextRequest) {
       const apiKey = await getPaymentGatewayApiKey();
       const checkoutUrl = await getPaymentGatewayCheckoutUrl();
       
-      const requestOrigin = req.headers.get('origin') || 
-                           req.headers.get('referer')?.split('/').slice(0, 3).join('/');
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                     process.env.NEXTAUTH_URL || 
-                     requestOrigin ||
-                     'http://localhost:3000';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
       
-      console.log('App URL determined:', appUrl, {
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-        NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-        requestOrigin: requestOrigin
-      });
+      if (!appUrl) {
+        return NextResponse.json(
+          { error: 'NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required' },
+          { status: 500, headers: corsHeaders }
+        );
+      }
+      
+      console.log('App URL determined:', appUrl);
 
       const paymentAmount = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
       
