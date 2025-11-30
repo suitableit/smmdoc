@@ -6,13 +6,13 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
-    FaCheckCircle,
-    FaClock,
-    FaExclamationTriangle,
-    FaReceipt,
-    FaSearch,
-    FaSync,
-    FaTimes,
+  FaCheckCircle,
+  FaClock,
+  FaExclamationTriangle,
+  FaReceipt,
+  FaSearch,
+  FaSync,
+  FaTimes,
 } from 'react-icons/fa';
 import { TransactionsList } from '../../../components/transactions/transactions-list';
 
@@ -27,21 +27,21 @@ const Toast = ({
   type?: 'success' | 'error' | 'info' | 'pending' | 'warning';
   onClose: () => void;
 }) => {
-  const warningStyle = type === 'warning' 
+  const warningStyle = type === 'warning'
     ? { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fbbf24' }
     : {};
-  
+
   return (
-    <div 
+    <div
       className={`toast toast-${type} toast-enter`}
       style={warningStyle}
     >
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
 };
 
 type Transaction = {
@@ -151,12 +151,12 @@ export default function TransactionsPage() {
 
     const paymentStatus = searchParams.get('payment');
     const invoiceId = searchParams.get('invoice_id');
-    const transactionId = searchParams.get('transaction_id') || 
-                          searchParams.get('trx_id') || 
-                          searchParams.get('transactionId') ||
-                          searchParams.get('transactionID') ||
-                          searchParams.get('trxId') ||
-                          searchParams.get('trxID');
+    const transactionId = searchParams.get('transaction_id') ||
+      searchParams.get('trx_id') ||
+      searchParams.get('transactionId') ||
+      searchParams.get('transactionID') ||
+      searchParams.get('trxId') ||
+      searchParams.get('trxID');
 
     if (paymentStatus) {
       setHasShownPaymentToast(true);
@@ -175,73 +175,96 @@ export default function TransactionsPage() {
                 }
               }
               const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoiceId}&from_redirect=true${transactionIdParam}`;
-              const verifyResponse = await fetch(verifyUrl);
-              const verifyData = await verifyResponse.json();
-              
-              const paymentStatus = verifyData.payment?.status;
-              const topLevelStatus = verifyData.status;
-              const actualStatus = paymentStatus || topLevelStatus;
-              
-              // Extract transaction_id and payment_method from API response
-              const apiTransactionId = verifyData.payment?.transaction_id;
-              const apiPaymentMethod = verifyData.payment?.payment_method;
-              
-              console.log('Payment verification response:', {
-                paymentStatus,
-                topLevelStatus,
-                actualStatus,
-                transaction_id: apiTransactionId,
-                payment_method: apiPaymentMethod,
-                fullResponse: verifyData
-              });
-              
-              // Store transaction data in sessionStorage for later use
-              if (apiTransactionId) {
-                sessionStorage.setItem('payment_transaction_id', apiTransactionId);
-              }
-              if (apiPaymentMethod) {
-                sessionStorage.setItem('payment_method', apiPaymentMethod);
-              }
-              
-              if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
-                const successMessage = apiTransactionId && apiPaymentMethod
-                  ? `Payment completed successfully! Transaction ID: ${apiTransactionId} | Method: ${apiPaymentMethod}`
-                  : invoiceId
-                  ? `Payment completed successfully! Invoice ID: ${invoiceId}`
-                  : 'Payment completed successfully!';
-                showToast(successMessage, 'success');
-              } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
-                const pendingMessage = apiTransactionId
-                  ? `Payment is pending verification. Transaction ID: ${apiTransactionId}`
-                  : invoiceId
-                  ? `Payment is pending verification. Invoice ID: ${invoiceId}`
-                  : 'Payment is pending verification.';
-                showToast(pendingMessage, 'pending');
-              } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
+
+              try {
+                const verifyResponse = await fetch(verifyUrl);
+
+                // Handle 404 or other HTTP errors
+                if (!verifyResponse.ok) {
+                  console.warn(`Verify-payment API returned ${verifyResponse.status}. Showing invoice info only.`);
+                  showToast(
+                    `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
+                    'info'
+                  );
+                  fetchTransactions(true);
+                  return;
+                }
+
+                const verifyData = await verifyResponse.json();
+
+                const paymentStatus = verifyData.payment?.status;
+                const topLevelStatus = verifyData.status;
+                const actualStatus = paymentStatus || topLevelStatus;
+
+                // Extract transaction_id and payment_method from API response
+                const apiTransactionId = verifyData.payment?.transaction_id;
+                const apiPaymentMethod = verifyData.payment?.payment_method;
+
+                console.log('Payment verification response:', {
+                  paymentStatus,
+                  topLevelStatus,
+                  actualStatus,
+                  transaction_id: apiTransactionId,
+                  payment_method: apiPaymentMethod,
+                  fullResponse: verifyData
+                });
+
+                // Store transaction data in sessionStorage for later use
+                if (apiTransactionId) {
+                  sessionStorage.setItem('payment_transaction_id', apiTransactionId);
+                }
+                if (apiPaymentMethod) {
+                  sessionStorage.setItem('payment_method', apiPaymentMethod);
+                }
+
+                if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
+                  const successMessage = apiTransactionId && apiPaymentMethod
+                    ? `Payment completed successfully! Transaction ID: ${apiTransactionId} | Method: ${apiPaymentMethod}`
+                    : invoiceId
+                      ? `Payment completed successfully! Invoice ID: ${invoiceId}`
+                      : 'Payment completed successfully!';
+                  showToast(successMessage, 'success');
+                } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
+                  const pendingMessage = apiTransactionId
+                    ? `Payment is pending verification. Transaction ID: ${apiTransactionId}`
+                    : invoiceId
+                      ? `Payment is pending verification. Invoice ID: ${invoiceId}`
+                      : 'Payment is pending verification.';
+                  showToast(pendingMessage, 'pending');
+                } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
+                  showToast(
+                    invoiceId
+                      ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
+                      : `Payment status: ${actualStatus}`,
+                    'warning'
+                  );
+                } else {
+                  showToast(
+                    invoiceId
+                      ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
+                      : `Payment status: ${actualStatus}`,
+                    'info'
+                  );
+                }
+
+                fetchTransactions(true);
+              } catch (fetchError) {
+                console.error('Error calling verify-payment API:', fetchError);
                 showToast(
-                  invoiceId
-                    ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
-                    : `Payment status: ${actualStatus}`,
-                  'warning'
-                );
-              } else {
-                showToast(
-                  invoiceId
-                    ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
-                    : `Payment status: ${actualStatus}`,
+                  `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
                   'info'
                 );
+                fetchTransactions(true);
               }
-              
-              fetchTransactions(true);
             } catch (error) {
               console.error('Payment verification error:', error);
               showToast(
                 invoiceId
-                  ? `Payment completed successfully! Invoice ID: ${invoiceId}`
-                  : 'Payment completed successfully!',
-                'success'
+                  ? `Payment submitted! Invoice ID: ${invoiceId}`
+                  : 'Payment submitted!',
+                'info'
               );
+              fetchTransactions(true);
             }
           }, 1000);
         } else {
@@ -385,7 +408,7 @@ export default function TransactionsPage() {
       const data = await response.json();
       console.log('API Response:', data);
       console.log('Transactions from API:', data.transactions);
-      
+
       if (data.transactions && Array.isArray(data.transactions)) {
         data.transactions.forEach((tx: any, index: number) => {
           console.log(`Transaction ${index}:`, {
@@ -396,7 +419,7 @@ export default function TransactionsPage() {
           });
         });
       }
-      
+
       const transactionsToShow = data.transactions || [];
       setPagination(data.pagination || {
         page: 1,
@@ -414,42 +437,42 @@ export default function TransactionsPage() {
       const status = urlParams.get('status');
       const phone = urlParams.get('phone');
 
-        if (invoiceId && amount && transactionId) {
-          const existingTransaction = transactionsToShow.find(
-            (tx: Transaction) =>
-              tx.invoice_id === Number(invoiceId) || tx.transaction_id === transactionId
-          );
+      if (invoiceId && amount && transactionId) {
+        const existingTransaction = transactionsToShow.find(
+          (tx: Transaction) =>
+            tx.invoice_id === Number(invoiceId) || tx.transaction_id === transactionId
+        );
 
-          if (!existingTransaction) {
-            const newTransaction = {
-              id: `url-${Date.now()}`,
-              invoice_id: invoiceId,
-              amount: parseFloat(amount),
-              status:
-                status === 'success'
-                  ? ('Success' as const)
-                  : ('Processing' as const),
-              method: 'UddoktaPay',
-              payment_method:
-                status === 'success' ? 'Payment Gateway' : 'Manual Payment',
-              transaction_id: transactionId || null,
-              createdAt: new Date().toISOString(),
-              sender_number: phone || 'N/A',
-              phone: phone || 'N/A',
-            };
+        if (!existingTransaction) {
+          const newTransaction = {
+            id: `url-${Date.now()}`,
+            invoice_id: invoiceId,
+            amount: parseFloat(amount),
+            status:
+              status === 'success'
+                ? ('Success' as const)
+                : ('Processing' as const),
+            method: 'UddoktaPay',
+            payment_method:
+              status === 'success' ? 'Payment Gateway' : 'Manual Payment',
+            transaction_id: transactionId || null,
+            createdAt: new Date().toISOString(),
+            sender_number: phone || 'N/A',
+            phone: phone || 'N/A',
+          };
 
-            transactionsToShow.unshift(newTransaction);
+          transactionsToShow.unshift(newTransaction);
 
-            if (status === 'success') {
-              showToast(
-                `Successful transaction ${invoiceId} loaded`,
-                'success'
-              );
-            } else {
-              showToast(`Pending transaction ${invoiceId} loaded`, 'info');
-            }
+          if (status === 'success') {
+            showToast(
+              `Successful transaction ${invoiceId} loaded`,
+              'success'
+            );
+          } else {
+            showToast(`Pending transaction ${invoiceId} loaded`, 'info');
           }
         }
+      }
 
       setTransactions(transactionsToShow);
     } catch (err) {
@@ -465,25 +488,25 @@ export default function TransactionsPage() {
       const status = urlParams.get('status');
       const phone = urlParams.get('phone');
 
-        if (invoiceId && amount && transactionId) {
-          const newTransaction = {
-            id: Date.now(),
-            invoice_id: Number(invoiceId),
-            amount: parseFloat(amount),
-            status:
-              status === 'success'
-                ? ('Success' as const)
-                : ('Processing' as const),
-            method: 'UddoktaPay',
-            payment_method:
-              status === 'success' ? 'Payment Gateway' : 'Manual Payment',
-            transaction_id: transactionId || null,
-            createdAt: new Date().toISOString(),
-            sender_number: phone || 'N/A',
-            phone: phone || 'N/A',
-          };
-          fallbackTransactions.unshift(newTransaction);
-        }
+      if (invoiceId && amount && transactionId) {
+        const newTransaction = {
+          id: Date.now(),
+          invoice_id: Number(invoiceId),
+          amount: parseFloat(amount),
+          status:
+            status === 'success'
+              ? ('Success' as const)
+              : ('Processing' as const),
+          method: 'UddoktaPay',
+          payment_method:
+            status === 'success' ? 'Payment Gateway' : 'Manual Payment',
+          transaction_id: transactionId || null,
+          createdAt: new Date().toISOString(),
+          sender_number: phone || 'N/A',
+          phone: phone || 'N/A',
+        };
+        fallbackTransactions.unshift(newTransaction);
+      }
 
       setTransactions(fallbackTransactions);
       showToast('Please check your connection and try again', 'error');
@@ -503,7 +526,7 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     const storedInvoiceId = sessionStorage.getItem('payment_invoice_id');
     if (storedInvoiceId && isInitialLoad) {
       setTimeout(() => {
@@ -719,11 +742,10 @@ export default function TransactionsPage() {
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={() => handleTabChange('all')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'all'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'all'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     <FaReceipt className="w-4 h-4" />
                     All ({pagination.total})
@@ -731,11 +753,10 @@ export default function TransactionsPage() {
 
                   <button
                     onClick={() => handleTabChange('success')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'success'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'success'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     <FaCheckCircle className="w-4 h-4" />
                     Success ({successTransactions.length})
@@ -743,11 +764,10 @@ export default function TransactionsPage() {
 
                   <button
                     onClick={() => handleTabChange('pending')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'pending'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'pending'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     <FaClock className="w-4 h-4" />
                     Pending ({pendingTransactions.length})
@@ -755,11 +775,10 @@ export default function TransactionsPage() {
 
                   <button
                     onClick={() => handleTabChange('failed')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
-                      activeTab === 'failed'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'failed'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
                         : 'bg-gray-600 hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     <FaExclamationTriangle className="w-4 h-4" />
                     Failed ({failedTransactions.length})
