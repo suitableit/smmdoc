@@ -36,20 +36,29 @@ export default function ProtectedLayout({
         }
         
         if (status === 'authenticated' && session?.user?.id) {
-          const response = await fetch('/api/auth/session-check', {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store',
-          });
-          const data = await response.json();
-          
-          if (!data.valid || !data.session) {
-            console.log('Session invalid on mount, clearing and redirecting...');
-            const { clearAllSessionData } = await import('@/lib/logout-helper');
-            clearAllSessionData();
-            setIsValidating(false);
-            await signOut({ callbackUrl: '/sign-in', redirect: true });
-            return;
+          try {
+            const response = await fetch('/api/auth/session-check', {
+              method: 'GET',
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              
+              if (!data.valid || !data.session) {
+                console.log('Session invalid on mount, clearing and redirecting...');
+                const { clearAllSessionData } = await import('@/lib/logout-helper');
+                clearAllSessionData();
+                setIsValidating(false);
+                await signOut({ callbackUrl: '/sign-in', redirect: true });
+                return;
+              }
+            } else {
+              console.warn('Session check failed with status:', response.status, '- continuing anyway');
+            }
+          } catch (error) {
+            console.warn('Session check network error (will continue):', error);
           }
         } else if (status === 'authenticated' && !session?.user?.id) {
           console.log('Session missing user data, clearing and redirecting...');
@@ -94,16 +103,20 @@ export default function ProtectedLayout({
     if (!session?.user?.id || isValidating) return;
 
     const checkInterval = setInterval(async () => {
-      const isValid = await checkSessionValidity();
-      if (!isValid) {
-        console.log('Session is no longer valid, logging out...');
-        if (typeof window !== 'undefined') {
-          localStorage.clear();
-          sessionStorage.clear();
+      try {
+        const isValid = await checkSessionValidity();
+        if (!isValid) {
+          console.log('Session is no longer valid, logging out...');
+          if (typeof window !== 'undefined') {
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+          await signOut({ callbackUrl: '/sign-in', redirect: true });
         }
-        await signOut({ callbackUrl: '/sign-in', redirect: true });
+      } catch (error) {
+        console.error('Error checking session validity (will retry):', error);
       }
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(checkInterval);
   }, [session?.user?.id, isValidating]);
