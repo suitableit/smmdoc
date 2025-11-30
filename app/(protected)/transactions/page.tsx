@@ -182,27 +182,41 @@ export default function TransactionsPage() {
               const topLevelStatus = verifyData.status;
               const actualStatus = paymentStatus || topLevelStatus;
               
+              // Extract transaction_id and payment_method from API response
+              const apiTransactionId = verifyData.payment?.transaction_id;
+              const apiPaymentMethod = verifyData.payment?.payment_method;
+              
               console.log('Payment verification response:', {
                 paymentStatus,
                 topLevelStatus,
                 actualStatus,
+                transaction_id: apiTransactionId,
+                payment_method: apiPaymentMethod,
                 fullResponse: verifyData
               });
               
+              // Store transaction data in sessionStorage for later use
+              if (apiTransactionId) {
+                sessionStorage.setItem('payment_transaction_id', apiTransactionId);
+              }
+              if (apiPaymentMethod) {
+                sessionStorage.setItem('payment_method', apiPaymentMethod);
+              }
+              
               if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
-                showToast(
-                  invoiceId
-                    ? `Payment completed successfully! Invoice ID: ${invoiceId}`
-                    : 'Payment completed successfully!',
-                  'success'
-                );
+                const successMessage = apiTransactionId && apiPaymentMethod
+                  ? `Payment completed successfully! Transaction ID: ${apiTransactionId} | Method: ${apiPaymentMethod}`
+                  : invoiceId
+                  ? `Payment completed successfully! Invoice ID: ${invoiceId}`
+                  : 'Payment completed successfully!';
+                showToast(successMessage, 'success');
               } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
-                showToast(
-                  invoiceId
-                    ? `Payment is pending verification. Invoice ID: ${invoiceId}`
-                    : 'Payment is pending verification.',
-                  'pending'
-                );
+                const pendingMessage = apiTransactionId
+                  ? `Payment is pending verification. Transaction ID: ${apiTransactionId}`
+                  : invoiceId
+                  ? `Payment is pending verification. Invoice ID: ${invoiceId}`
+                  : 'Payment is pending verification.';
+                showToast(pendingMessage, 'pending');
               } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
                 showToast(
                   invoiceId
