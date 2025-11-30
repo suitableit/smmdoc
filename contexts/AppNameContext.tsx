@@ -53,7 +53,7 @@ export function useAppNameWithFallback() {
   if (context === undefined) {
 
     return {
-      appName: process.env.NEXT_PUBLIC_APP_NAME || 'SMM Panel',
+      appName: process.env.NEXT_PUBLIC_APP_NAME || '',
       setAppName: () => {}
     };
   }

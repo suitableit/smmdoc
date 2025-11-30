@@ -10,15 +10,18 @@ export interface TransactionEmailData {
   date: string;
   userId?: string;
   phone?: string;
+  supportEmail?: string;
 }
 
-export const transactionTemplates = {
+export const transactionTemplates = {
+
   paymentSuccess: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Successful!',
       headerColor: 'primary-color',
       footerMessage: 'Thank you for your payment!',
-      userEmail: data.userEmail
+      userEmail: data.userEmail,
+      supportEmail: data.supportEmail
     };
 
     const content = `
@@ -48,13 +51,15 @@ export const transactionTemplates = {
       subject: 'Payment Successful - Funds Added to Your Account',
       html: createEmailTemplate(layoutData, content)
     };
-  },
+  },
+
   paymentCancelled: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Cancelled',
       headerColor: 'primary-color',
       footerMessage: 'No charges were made to your account',
-      userEmail: data.userEmail
+      userEmail: data.userEmail,
+      supportEmail: data.supportEmail
     };
 
     const content = `
@@ -85,9 +90,17 @@ export const transactionTemplates = {
       <div style="background-color: #e0f2fe; border-radius: 12px; padding: 25px; margin: 30px 0;">
         <h3 style="color: #1f2937; margin: 0 0 15px 0; font-size: 18px;">Contact Support:</h3>
         <div style="color: #4b5563;">
-          <p style="margin: 5px 0;"><strong>WhatsApp:</strong> +8801723139610</p>
+          ${data.supportEmail || data.whatsappNumber ? `
+          ${data.whatsappNumber ? (() => {
+            const cleaned = data.whatsappNumber.replace(/[^\d+]/g, '');
+            const numbersOnly = cleaned.replace(/^\+/, '');
+            return `<p style="margin: 5px 0;"><strong>WhatsApp:</strong> <a href="https://wa.me/${numbersOnly}" style="color: #3b82f6; text-decoration: none;">${data.whatsappNumber}</a></p>`;
+          })() : ''}
           <p style="margin: 5px 0;"><strong>Telegram:</strong> @Smmdoc</p>
-          <p style="margin: 5px 0;"><strong>Email:</strong> support@example.com</p>
+          ${data.supportEmail ? `<p style="margin: 5px 0;"><strong>Email:</strong> <a href="mailto:${data.supportEmail}" style="color: #3b82f6; text-decoration: none;">${data.supportEmail}</a></p>` : ''}
+          ` : `
+          <p style="margin: 5px 0;"><strong>Telegram:</strong> @Smmdoc</p>
+          `}
         </div>
       </div>
 
@@ -100,13 +113,15 @@ export const transactionTemplates = {
       subject: 'Payment Cancelled - Transaction Not Approved',
       html: createEmailTemplate(layoutData, content)
     };
-  },
+  },
+
   adminPendingReview: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Pending Review',
       headerColor: 'primary-color',
       footerMessage: 'This is an automated admin notification.',
-      userEmail: 'admin@example.com'
+      userEmail: 'admin@example.com',
+      supportEmail: data.supportEmail
     };
 
     const content = `
@@ -138,13 +153,15 @@ export const transactionTemplates = {
       subject: 'Pending Payment Requires Manual Review',
       html: createEmailTemplate(layoutData, content)
     };
-  },
+  },
+
   adminAutoApproved: (data: TransactionEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Payment Auto-Approved',
       headerColor: 'primary-color',
       footerMessage: 'This is an automated admin notification.',
-      userEmail: 'admin@example.com'
+      userEmail: 'admin@example.com',
+      supportEmail: data.supportEmail
     };
 
     const content = `

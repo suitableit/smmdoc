@@ -84,6 +84,10 @@ export async function POST(
       });
 
       if (transaction.user.email) {
+        const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+        const supportEmail = await getSupportEmail();
+        const whatsappNumber = await getWhatsAppNumber();
+        
         const emailData = emailTemplates.paymentSuccess({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
@@ -91,7 +95,9 @@ export async function POST(
           amount: transaction.usdAmount.toString(),
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
-          userId: transaction.userId.toString()
+          userId: transaction.userId.toString(),
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
 
         await sendMail({

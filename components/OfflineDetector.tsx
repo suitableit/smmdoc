@@ -11,7 +11,7 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
     try {
       setIsCheckingConnection(true);
 
-      const response = await fetch('/favicon.ico', {
+      const response = await fetch('/api/manifest', {
         method: 'HEAD',
         cache: 'no-cache',
         signal: AbortSignal.timeout(5000),

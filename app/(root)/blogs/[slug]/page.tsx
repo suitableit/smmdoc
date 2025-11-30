@@ -100,8 +100,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     console.error('Error generating metadata:', error);
 
     const [appName, siteDescription] = await Promise.all([
-      getAppName().catch(() => 'SMM Panel'),
-      getSiteDescription().catch(() => 'Read insightful articles on social media marketing and digital strategies.')
+      getAppName().catch(() => ''),
+      getSiteDescription().catch(() => '')
     ]);
 
     return {

@@ -13,15 +13,19 @@ export interface SupportTicketEmailData {
   userId?: string;
   status?: 'open' | 'in_progress' | 'resolved' | 'closed';
   adminResponse?: string;
+  supportEmail?: string;
 }
 
-export const supportTicketTemplates = {
+export const supportTicketTemplates = {
+
   userTicketCreated: (data: SupportTicketEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'Support Ticket Created',
       headerColor: 'primary-color',
       footerMessage: 'This is an automated message. Please do not reply to this email.',
-      userEmail: data.userEmail
+      userEmail: data.userEmail,
+      supportEmail: data.supportEmail,
+      whatsappNumber: data.whatsappNumber
     };
 
     const content = `
@@ -67,13 +71,16 @@ export const supportTicketTemplates = {
     `;
 
     return createEmailTemplate(layoutData, content);
-  },
+  },
+
   adminNewTicket: (data: SupportTicketEmailData) => {
     const layoutData: EmailLayoutData = {
       title: 'New Support Ticket',
       headerColor: 'primary-color',
       footerMessage: 'Admin notification - please respond promptly',
-      userEmail: data.userEmail
+      userEmail: data.userEmail,
+      supportEmail: data.supportEmail,
+      whatsappNumber: data.whatsappNumber
     };
 
     const content = `
@@ -120,13 +127,16 @@ export const supportTicketTemplates = {
     `;
 
     return createEmailTemplate(layoutData, content);
-  },
+  },
+
   userTicketResponse: (data: SupportTicketEmailData & { adminResponse: string; adminName: string }) => {
     const layoutData: EmailLayoutData = {
       title: 'We\'ve Responded!',
       headerColor: 'primary-color',
       footerMessage: 'We\'re here to help you!',
-      userEmail: data.userEmail
+      userEmail: data.userEmail,
+      supportEmail: data.supportEmail,
+      whatsappNumber: data.whatsappNumber
     };
 
     const content = `

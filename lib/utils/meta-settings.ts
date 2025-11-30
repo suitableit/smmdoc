@@ -13,8 +13,8 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000;
 
 const DEFAULT_META_SETTINGS: MetaSettings = {
-  googleTitle: 'SMM Panel - Social Media Marketing Services',
-  siteTitle: 'SMM Panel',
+  googleTitle: '',
+  siteTitle: '',
   siteDescription: 'Discover the cheapest SMM panel in Bangladesh - a cost-effective solution for amazing business growth. Save money, gain new followers, and easily boost your online presence',
   keywords: 'SMM Panel, Cheapest SMM Panel, SMM Panel Bangladesh, Social Media Marketing, Facebook likes, Instagram followers, YouTube views',
   thumbnail: '/general/og-image.jpg'
@@ -32,11 +32,19 @@ export async function getMetaSettings(): Promise<MetaSettings> {
     const settings = await db.generalSettings.findFirst();
 
     if (settings) {
+      const googleTitle = settings.googleTitle?.trim() || '';
+      
+      const siteDescriptionValue = settings.siteDescription?.trim() || '';
+      const siteDescription = siteDescriptionValue === '' ? DEFAULT_META_SETTINGS.siteDescription : siteDescriptionValue;
+      
+      const keywordsValue = settings.metaKeywords?.trim() || '';
+      const keywords = keywordsValue === '' ? DEFAULT_META_SETTINGS.keywords : keywordsValue;
+      
       const metaSettings: MetaSettings = {
-        googleTitle: settings.googleTitle || DEFAULT_META_SETTINGS.googleTitle,
-        siteTitle: settings.metaSiteTitle || DEFAULT_META_SETTINGS.siteTitle,
-        siteDescription: settings.siteDescription || DEFAULT_META_SETTINGS.siteDescription,
-        keywords: settings.metaKeywords || DEFAULT_META_SETTINGS.keywords,
+        googleTitle: googleTitle,
+        siteTitle: googleTitle,
+        siteDescription: siteDescription,
+        keywords: keywords,
         thumbnail: settings.thumbnail || DEFAULT_META_SETTINGS.thumbnail
       };
 

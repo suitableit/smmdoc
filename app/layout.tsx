@@ -18,6 +18,7 @@ import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
 import StoreProvider from './StoreProvider';
 import UserSwitchWrapper from '@/components/admin/UserSwitchWrapper';
+import FaviconUpdater from '@/components/FaviconUpdater';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -37,9 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `${APP_DESCRIPTION}`,
     metadataBase: new URL(APP_URL || process.env.NEXT_PUBLIC_APP_URL!),
     icons: {
-      icon: '/api/favicon',
-      shortcut: '/api/favicon',
-      apple: '/api/favicon',
+      icon: [],
+      shortcut: [],
+      apple: [],
     },
     manifest: '/api/manifest',
   };
@@ -53,6 +54,7 @@ export default async function RootLayout({
   const session = await auth();
   const serverCurrency = await getUserCurrency();
   const appName = await getAppName();
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -75,6 +77,7 @@ export default async function RootLayout({
               <ServiceWorkerRegistration />
               <CustomCodesInjector />
               <AnalyticsInjector />
+              <FaviconUpdater />
               <AppNameProvider initialAppName={appName}>
                 <CurrencyProvider serverCurrency={serverCurrency}>
                   <OfflineDetector>

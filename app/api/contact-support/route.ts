@@ -170,7 +170,11 @@ export async function POST(request: NextRequest) {
       const userName = session.user.name || session.user.username || 'User';
       
       const { getFromEmailAddress } = await import('@/lib/email-config');
+      const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
       const adminEmail = process.env.ADMIN_EMAIL || await getFromEmailAddress();
+      const supportEmail = await getSupportEmail();
+      const whatsappNumber = await getWhatsAppNumber();
+      
       if (adminEmail) {
         const emailTemplate = contactEmailTemplates.newContactMessageAdmin({
           userName,
@@ -179,7 +183,9 @@ export async function POST(request: NextRequest) {
           message: message.trim(),
           category: categories.find(cat => cat.id === parseInt(category))?.name || 'Unknown',
           messageId: messageId,
-          attachments: attachmentsJson ? JSON.parse(attachmentsJson) : undefined
+          attachments: attachmentsJson ? JSON.parse(attachmentsJson) : undefined,
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber
         });
         
         await sendMail({

@@ -179,7 +179,6 @@ export default function TransactionsPage() {
               try {
                 const verifyResponse = await fetch(verifyUrl);
 
-                // Handle 404 or other HTTP errors
                 if (!verifyResponse.ok) {
                   console.warn(`Verify-payment API returned ${verifyResponse.status}. Showing invoice info only.`);
                   showToast(
@@ -196,7 +195,6 @@ export default function TransactionsPage() {
                 const topLevelStatus = verifyData.status;
                 const actualStatus = paymentStatus || topLevelStatus;
 
-                // Extract transaction_id and payment_method from API response
                 const apiTransactionId = verifyData.payment?.transaction_id;
                 const apiPaymentMethod = verifyData.payment?.payment_method;
 
@@ -209,7 +207,6 @@ export default function TransactionsPage() {
                   fullResponse: verifyData
                 });
 
-                // Store transaction data in sessionStorage for later use
                 if (apiTransactionId) {
                   sessionStorage.setItem('payment_transaction_id', apiTransactionId);
                 }

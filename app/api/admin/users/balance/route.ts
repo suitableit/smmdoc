@@ -204,6 +204,10 @@ export async function POST(request: NextRequest) {
           ? `${displayAmount} has been added to your account by admin.`
           : `${displayAmount} has been deducted from your account by admin.`;
 
+        const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+        const supportEmail = await getSupportEmail();
+        const whatsappNumber = await getWhatsAppNumber();
+        
         const emailData = emailTemplates.paymentSuccess({
           userName: user.name || 'Customer',
           userEmail: user.email,
@@ -211,7 +215,9 @@ export async function POST(request: NextRequest) {
           amount: amount.toString(),
           currency: transactionCurrency,
           date: new Date().toLocaleDateString(),
-          userId: user.id.toString()
+          userId: user.id.toString(),
+          supportEmail: supportEmail,
+          whatsappNumber: whatsappNumber,
         });
 
         await sendMail({
@@ -225,6 +231,10 @@ export async function POST(request: NextRequest) {
       }
 
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+      const { getSupportEmail, getWhatsAppNumber } = await import('@/lib/utils/general-settings');
+      const supportEmail = await getSupportEmail();
+      const whatsappNumber = await getWhatsAppNumber();
+      
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: user.name || 'Unknown User',
         userEmail: user.email || '',
@@ -232,6 +242,8 @@ export async function POST(request: NextRequest) {
         amount: amount.toString(),
         currency: transactionCurrency,
         date: new Date().toLocaleDateString(),
+        supportEmail: supportEmail,
+        whatsappNumber: whatsappNumber,
         userId: user.id.toString()
       });
 

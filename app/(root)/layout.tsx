@@ -173,10 +173,30 @@ export default function RootLayout({
     setIsChatExpanded(!isChatExpanded);
   };
 
+  const [generalWhatsAppNumber, setGeneralWhatsAppNumber] = useState<string>('');
+
+  useEffect(() => {
+    const fetchGeneralWhatsApp = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.whatsappNumber) {
+            setGeneralWhatsAppNumber(data.generalSettings.whatsappNumber);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching WhatsApp number:', error);
+      }
+    };
+    fetchGeneralWhatsApp();
+  }, []);
+
   const handleWhatsApp = () => {
-    const whatsappUrl = liveChatSettings.whatsappNumber 
-      ? `https://wa.me/${liveChatSettings.whatsappNumber.replace(/[^0-9]/g, '')}`
-      : 'https://wa.me/+8801723139610';
+    const whatsappNumber = liveChatSettings.whatsappNumber || generalWhatsAppNumber;
+    const whatsappUrl = whatsappNumber && whatsappNumber.trim() !== ''
+      ? `https://wa.me/${whatsappNumber.replace(/[^\d+]/g, '').replace(/^\+/, '')}`
+      : '#';
     window.open(whatsappUrl, '_blank');
   };
 

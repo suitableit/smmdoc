@@ -17,6 +17,7 @@ const ContactSystemGuard: React.FC<ContactSystemGuardProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [supportEmail, setSupportEmail] = useState<string>('');
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -128,7 +129,13 @@ const ContactSystemGuard: React.FC<ContactSystemGuardProps> = ({
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-900 text-sm">Email</h4>
-                        <p className="text-gray-600 text-sm">support@smmdoc.com</p>
+                        {supportEmail ? (
+                          <a href={`mailto:${supportEmail}`} className="text-gray-600 text-sm hover:text-[var(--primary)] transition-colors">
+                            {supportEmail}
+                          </a>
+                        ) : (
+                          <p className="text-gray-600 text-sm">Not configured</p>
+                        )}
                       </div>
                     </div>
 

@@ -4,8 +4,8 @@ import { clearMetaSettingsCache } from '@/lib/utils/meta-settings';
 import { NextRequest, NextResponse } from 'next/server';
 
 const defaultMetaSettings = {
-  googleTitle: 'SMM Panel - Best Social Media Marketing Services',
-  siteTitle: 'SMM Panel',
+  googleTitle: '',
+  siteTitle: '',
   siteDescription: 'Get the best social media marketing services with fast delivery and affordable prices. Boost your social media presence today!',
   keywords: 'smm panel, social media marketing, instagram followers, youtube views, facebook likes',
   thumbnail: '',
@@ -23,12 +23,12 @@ export async function GET() {
     if (!settings) {
       settings = await db.generalSettings.create({
         data: {
-          siteTitle: 'SMM Panel',
+          siteTitle: '',
           tagline: 'Best SMM Services Provider',
           siteIcon: '',
           siteLogo: '',
           adminEmail: 'admin@example.com',
-          googleTitle: defaultMetaSettings.googleTitle,
+          googleTitle: '',
           metaSiteTitle: defaultMetaSettings.siteTitle,
           siteDescription: defaultMetaSettings.siteDescription,
           metaKeywords: defaultMetaSettings.keywords,
@@ -37,13 +37,21 @@ export async function GET() {
       });
     }
 
+    const googleTitle = settings.googleTitle?.trim() || '';
+    
+    const siteDescriptionValue = settings.siteDescription?.trim() || '';
+    const siteDescription = siteDescriptionValue === '' ? defaultMetaSettings.siteDescription : siteDescriptionValue;
+    
+    const keywordsValue = settings.metaKeywords?.trim() || '';
+    const keywords = keywordsValue === '' ? defaultMetaSettings.keywords : keywordsValue;
+    
     return NextResponse.json({
       success: true,
       metaSettings: {
-        googleTitle: settings.googleTitle || '',
-        siteTitle: settings.metaSiteTitle || '',
-        siteDescription: settings.siteDescription || '',
-        keywords: settings.metaKeywords || '',
+        googleTitle: googleTitle,
+        siteTitle: googleTitle,
+        siteDescription: siteDescription,
+        keywords: keywords,
         thumbnail: settings.thumbnail || '',
       }
     });
@@ -81,12 +89,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!metaSettings.siteTitle?.trim()) {
-      return NextResponse.json(
-        { error: 'Site title is required' },
-        { status: 400 }
-      );
-    }
+    const googleTitleValue = metaSettings.googleTitle.trim();
 
     if (!metaSettings.siteDescription?.trim()) {
       return NextResponse.json(
@@ -105,8 +108,8 @@ export async function POST(request: NextRequest) {
     await db.generalSettings.upsert({
       where: { id: 1 },
       update: {
-        googleTitle: metaSettings.googleTitle.trim(),
-        metaSiteTitle: metaSettings.siteTitle.trim(),
+        googleTitle: googleTitleValue,
+        metaSiteTitle: googleTitleValue,
         siteDescription: metaSettings.siteDescription.trim(),
         metaKeywords: metaSettings.keywords?.trim() || '',
         thumbnail: metaSettings.thumbnail || '',
@@ -114,13 +117,13 @@ export async function POST(request: NextRequest) {
       },
       create: {
         id: 1,
-        siteTitle: 'SMM Panel',
+        siteTitle: '',
         tagline: 'Best SMM Services Provider',
         siteIcon: '',
         siteLogo: '',
         adminEmail: 'admin@example.com',
-        googleTitle: metaSettings.googleTitle.trim(),
-        metaSiteTitle: metaSettings.siteTitle.trim(),
+        googleTitle: googleTitleValue,
+        metaSiteTitle: googleTitleValue,
         siteDescription: metaSettings.siteDescription.trim(),
         metaKeywords: metaSettings.keywords?.trim() || '',
         thumbnail: metaSettings.thumbnail || ''
