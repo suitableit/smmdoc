@@ -7,7 +7,6 @@ export async function GET(req: NextRequest) {
     const invoice_id = searchParams.get("invoice_id");
     const from_redirect = searchParams.get("from_redirect") === "true";
     
-    // Extract transaction_id from various possible parameter names that payment gateway might use
     const transaction_id = searchParams.get("transaction_id") || 
                           searchParams.get("trx_id") || 
                           searchParams.get("transactionId") ||
@@ -89,6 +88,8 @@ export async function GET(req: NextRequest) {
     let verificationData: any = null;
     let isSuccessful = false;
     let paymentStatus = "Processing";
+    let apiTransactionId: string | null = null;
+    let apiPaymentMethod: string | null = null;
     
     try {
       let verificationResponse;
@@ -113,64 +114,147 @@ export async function GET(req: NextRequest) {
         });
 
         if (verificationResponse.ok) {
-          const responseData = await verificationResponse.json();
-          console.log(`=== UddoktaPay verification response (attempt ${attempt}) ===`);
+          const responseData: any = await verificationResponse.json();
+          console.log(`=== UddoktaPay Verify Payment API response (attempt ${attempt}) ===`);
           console.log('Full response:', JSON.stringify(responseData, null, 2));
           console.log('Response keys:', Object.keys(responseData));
-          console.log('invoice_id in response:', responseData.invoice_id);
-          console.log('transaction_id in response:', responseData.transaction_id);
-          console.log('All response values:', Object.entries(responseData).map(([k, v]) => `${k}: ${v}`).join(', '));
-          console.log('========================================================');
-
-          const extractedTransactionId = responseData.transaction_id || 
-                                        responseData.transactionId || 
-                                        responseData.trx_id || 
-                                        responseData.trxId ||
-                                        responseData.transactionID ||
-                                        responseData.data?.transaction_id ||
-                                        responseData.data?.transactionId ||
-                                        responseData.payment?.transaction_id ||
-                                        null;
+          console.log('Response status:', responseData.status);
           
-          if (extractedTransactionId && extractedTransactionId === responseData.invoice_id) {
-            console.log('WARNING: transaction_id matches invoice_id - this is likely wrong!');
-            console.log('Skipping this value and continuing search...');
+          const responseInvoiceId = responseData.invoice_id;
+          
+          const responseTransactionId = responseData.transaction_id;
+          
+          const responsePaymentMethod = responseData.payment_method;
+          
+          console.log('Direct extraction from API response (same pattern as invoice_id):', {
+            invoice_id: responseInvoiceId,
+            transaction_id: responseTransactionId,
+            payment_method: responsePaymentMethod,
+            status: responseData.status,
+            allResponseKeys: Object.keys(responseData),
+          });
+          
+          if (responseTransactionId && responseTransactionId !== invoice_id) {
+            apiTransactionId = responseTransactionId;
+            console.log(`✓ Transaction ID extracted from API (same way as invoice_id): ${apiTransactionId}`);
+          } else if (responseTransactionId === invoice_id) {
+            console.log('⚠ WARNING: API returned transaction_id matching invoice_id - ignoring');
+          } else if (!responseTransactionId) {
+            console.log('⚠ Transaction ID not found in API response (may be PENDING payment)');
           }
           
-          if (!verificationData) {
+          if (responsePaymentMethod) {
+            apiPaymentMethod = responsePaymentMethod;
+            console.log(`✓ Payment Method extracted from API (same way as invoice_id): ${apiPaymentMethod}`);
+          } else {
+            console.log('⚠ Payment Method not found in API response (may be PENDING payment)');
+          }
+          
+          if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
+            apiTransactionId = transaction_id;
+            console.log(`✓ Transaction ID from URL parameter: ${apiTransactionId}`);
+          }
+          
+          console.log('Expected fields from Verify Payment API (same structure as webhook):');
+          console.log('  - invoice_id:', responseData.invoice_id);
+          console.log('  - transaction_id:', responseData.transaction_id);
+          console.log('  - payment_method:', responseData.payment_method);
+          console.log('  - sender_number:', responseData.sender_number);
+          console.log('  - status:', responseData.status);
+          console.log('  - amount:', responseData.amount);
+          console.log('  - charged_amount:', responseData.charged_amount);
+          console.log('  - fee:', responseData.fee);
+          console.log('  - full_name:', responseData.full_name);
+          console.log('  - email:', responseData.email);
+          console.log('  - date:', responseData.date);
+          console.log('========================================================');
+
+          if (responseData.status === 'ERROR') {
+            console.log('API returned ERROR status:', responseData.message || 'Unknown error');
             verificationData = responseData;
+            break;
+          }
+
+          if (!verificationData) {
+            verificationData = { ...responseData };
           } else {
             verificationData = { ...verificationData, ...responseData };
           }
           
-          if (extractedTransactionId && extractedTransactionId !== responseData.invoice_id) {
-            verificationData.transaction_id = extractedTransactionId;
-            console.log(`Transaction ID extracted from API response (attempt ${attempt}):`, extractedTransactionId);
-            console.log(`Invoice ID from response:`, responseData.invoice_id);
-            console.log(`Transaction ID is different from Invoice ID: ${extractedTransactionId !== responseData.invoice_id}`);
+          verificationData.transaction_id = apiTransactionId || verificationData.transaction_id || responseData.transaction_id || null;
+          verificationData.payment_method = apiPaymentMethod || verificationData.payment_method || responseData.payment_method || null;
+          
+          console.log('Stored values (apiTransactionId/apiPaymentMethod):', {
+            apiTransactionId,
+            apiPaymentMethod,
+            verificationData_transaction_id: verificationData.transaction_id,
+            verificationData_payment_method: verificationData.payment_method,
+            responseData_transaction_id: responseData.transaction_id,
+            responseData_payment_method: responseData.payment_method,
+          });
+          
+          if (apiTransactionId) {
+            console.log(`✓ Got valid transaction_id from API, breaking retry loop`);
             break;
-          } else if (extractedTransactionId && extractedTransactionId === responseData.invoice_id) {
-            console.log(`WARNING: Extracted transaction_id (${extractedTransactionId}) matches invoice_id. Not using it as transaction_id.`);
-            if (attempt < attempts) {
-              console.log(`Retrying to get proper transaction_id...`);
-            }
+          } else if (attempt >= attempts) {
+            console.log(`Final attempt completed. Using verificationData as is.`);
+            console.log('Final verificationData:', {
+              invoice_id: verificationData.invoice_id,
+              transaction_id: verificationData.transaction_id,
+              payment_method: verificationData.payment_method,
+              status: verificationData.status
+            });
+            break;
           } else if (attempt < attempts) {
-            console.log(`WARNING: No transaction_id found in API response (attempt ${attempt}). Retrying...`);
-            console.log('Available fields:', Object.keys(responseData));
-            console.log('Full response data:', JSON.stringify(responseData, null, 2));
-          } else {
-            console.log('WARNING: No valid transaction_id found after all attempts.');
-            console.log('Available fields:', Object.keys(verificationData));
-            console.log('Full verification data:', JSON.stringify(verificationData, null, 2));
+            console.log(`Attempt ${attempt}: transaction_id not found or invalid. Retrying...`);
+            console.log('Available fields in response:', Object.keys(responseData));
+            console.log('Response data sample:', JSON.stringify(responseData, null, 2));
+          }
+        } else {
+          try {
+            const errorData = await verificationResponse.json();
+            console.log('API returned HTTP error:', verificationResponse.status, errorData);
+            
+            if (errorData.transaction_id && errorData.transaction_id !== invoice_id) {
+              apiTransactionId = errorData.transaction_id;
+              console.log(`✓ Transaction ID extracted from error response: ${apiTransactionId}`);
+            }
+            if (errorData.payment_method) {
+              apiPaymentMethod = errorData.payment_method;
+              console.log(`✓ Payment Method extracted from error response: ${apiPaymentMethod}`);
+            }
+            
+            if (errorData.status === 'ERROR') {
+              verificationData = errorData;
+              break;
+            }
+          } catch (e) {
+            console.log('Could not parse error response as JSON');
           }
         }
       }
 
-      if (verificationData && !verificationData.payment_method) {
-        verificationData.payment_method = verificationData.paymentMethod || 
-                                         verificationData.payment_method_name ||
-                                         verificationData.method ||
-                                         null;
+      if (verificationData) {
+        if (!verificationData.payment_method) {
+          verificationData.payment_method = verificationData.paymentMethod || 
+                                           verificationData.payment_method_name ||
+                                           verificationData.method ||
+                                           null;
+        }
+        
+        console.log('Final verificationData before saving (webhook structure):', {
+          invoice_id: verificationData.invoice_id,
+          transaction_id: verificationData.transaction_id,
+          payment_method: verificationData.payment_method,
+          sender_number: verificationData.sender_number,
+          status: verificationData.status,
+          amount: verificationData.amount,
+          charged_amount: verificationData.charged_amount,
+          fee: verificationData.fee,
+          full_name: verificationData.full_name,
+          email: verificationData.email,
+          date: verificationData.date
+        });
       }
 
       if (verificationData && !verificationData.sender_number) {
@@ -181,23 +265,25 @@ export async function GET(req: NextRequest) {
       }
 
       if (verificationResponse && verificationResponse.ok && verificationData) {
-        if (verificationData.status === 'COMPLETED' || verificationData.status === 'SUCCESS') {
+        if (verificationData.status === 'ERROR') {
+          console.log('Payment verification returned ERROR status:', verificationData.message || 'Unknown error');
+          paymentStatus = "Cancelled";
+          isSuccessful = false;
+        } else if (verificationData.status === 'COMPLETED' || verificationData.status === 'SUCCESS') {
           isSuccessful = true;
           paymentStatus = "Success";
         } else if (verificationData.status === 'PENDING') {
-            paymentStatus = "Processing";
+          paymentStatus = "Processing";
           console.log('Payment status is PENDING - keeping as Processing');
-        } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED') {
+        } else if (verificationData.status === 'CANCELLED') {
           paymentStatus = "Cancelled";
         } else {
           paymentStatus = "Processing";
+          console.log('Unknown payment status from API:', verificationData.status);
         }
       } else if (verificationResponse && !verificationResponse.ok) {
-        // For sandbox or pending payments, API might return error but payment is still pending
-        // Check current payment status in database
         if (from_redirect) {
           console.log('Payment redirected but API verification failed - checking current payment status');
-          // If payment is currently Processing, keep it as Processing (sandbox pending payments)
           if (payment.status === "Processing") {
             paymentStatus = "Processing";
             console.log('Payment is currently Processing - keeping as Processing (likely sandbox pending payment)');
@@ -211,13 +297,16 @@ export async function GET(req: NextRequest) {
           }
           
           verificationData = verificationData || {};
-          verificationData.transaction_id = verificationData.transaction_id || transaction_id || null;
-          verificationData.payment_method = verificationData.payment_method || null;
+          if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
+            apiTransactionId = transaction_id;
+            console.log(`✓ Transaction ID from URL (API failed): ${apiTransactionId}`);
+          }
+          verificationData.transaction_id = apiTransactionId || verificationData.transaction_id || transaction_id || null;
+          verificationData.payment_method = apiPaymentMethod || verificationData.payment_method || null;
           verificationData.sender_number = verificationData.sender_number || null;
         } else {
           const errorText = await verificationResponse.text();
           console.error('UddoktaPay verification API error:', errorText);
-          // Check if payment is currently Processing (sandbox pending)
           if (payment.status === "Processing") {
             console.log('Payment is currently Processing - returning as PENDING instead of FAILED');
             paymentStatus = "Processing";
@@ -236,10 +325,8 @@ export async function GET(req: NextRequest) {
       }
     } catch (apiError) {
       console.error('Error calling UddoktaPay API:', apiError);
-      // For sandbox or pending payments, API call might fail but payment is still pending
       if (from_redirect) {
         console.log('Payment redirected but API call failed - checking current payment status');
-        // If payment is currently Processing, keep it as Processing (sandbox pending payments)
         if (payment.status === "Processing") {
           paymentStatus = "Processing";
           console.log('Payment is currently Processing - keeping as Processing (likely sandbox pending payment)');
@@ -252,13 +339,16 @@ export async function GET(req: NextRequest) {
           console.log('Setting payment status to Processing (sandbox pending payment)');
         }
         
+        if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
+          apiTransactionId = transaction_id;
+          console.log(`✓ Transaction ID from URL (API error): ${apiTransactionId}`);
+        }
         verificationData = { 
-          transaction_id: transaction_id || null,
-          payment_method: null,
+          transaction_id: apiTransactionId || transaction_id || null,
+          payment_method: apiPaymentMethod || null,
           phone_number: null,
         };
       } else {
-        // Check if payment is currently Processing (sandbox pending)
         if (payment.status === "Processing") {
           console.log('Payment is currently Processing - returning as PENDING instead of FAILED');
           paymentStatus = "Processing";
@@ -286,42 +376,80 @@ export async function GET(req: NextRequest) {
         paymentStatus: paymentStatus,
       });
       
-      // Prioritize transaction_id from redirect URL, then API response, then existing DB value
-      let finalTransactionId = transaction_id || 
-                               verificationData?.transaction_id || 
-                               payment.transactionId || 
-                               null;
+      let transactionIdToSave = apiTransactionId || 
+                                 verificationData?.transaction_id || 
+                                 transaction_id || 
+                                 payment.transactionId || 
+                                 null;
       
-      // Also check verificationData for other possible transaction_id field names
-      if (!finalTransactionId && verificationData) {
-        finalTransactionId = verificationData.trx_id || 
-                            verificationData.transactionId || 
-                            verificationData.transactionID ||
-                            verificationData.trxId ||
-                            verificationData.trxID ||
-                            null;
+      if (transactionIdToSave && transactionIdToSave === invoice_id) {
+        console.log('WARNING: transaction_id matches invoice_id - this is wrong! Setting to null instead.');
+        transactionIdToSave = null;
       }
       
-      if (finalTransactionId && finalTransactionId === invoice_id) {
-        console.log('WARNING: finalTransactionId matches invoice_id - this is wrong! Setting to null instead.');
-        finalTransactionId = null;
-      }
-      
-      console.log('Transaction ID resolution:', {
+      console.log('Transaction ID extraction (same pattern as invoice_id):', {
+        from_api_direct: apiTransactionId,
+        from_api_verificationData: verificationData?.transaction_id,
         from_url: transaction_id,
-        from_api: verificationData?.transaction_id,
         from_db: payment.transactionId,
-        final: finalTransactionId
+        final_transactionId: transactionIdToSave,
+        invoice_id_for_comparison: invoice_id,
+        extraction_pattern: 'Same as invoice_id - direct from responseData.transaction_id'
       });
-      const finalPaymentMethod = verificationData?.payment_method || payment.paymentMethod || null;
-      const finalSenderNumber = verificationData?.sender_number || payment.phoneNumber || null;
       
-      console.log('Final values to save:', {
-        status: paymentStatus,
-        transaction_id: finalTransactionId,
-        payment_method: finalPaymentMethod,
-        phone_number: finalSenderNumber,
+      const paymentMethodToSave = apiPaymentMethod || 
+                                   verificationData?.payment_method || 
+                                   payment.paymentMethod || 
+                                   null;
+      
+      console.log('Payment method mapping (API payment_method → DB paymentMethod):', {
+        from_api_payment_method: verificationData?.payment_method,
+        from_db: payment.paymentMethod,
+        final_paymentMethod: paymentMethodToSave,
+        verificationData_keys: verificationData ? Object.keys(verificationData) : []
       });
+      
+      const phoneNumberToSave = verificationData?.sender_number || payment.phoneNumber || null;
+      const gatewayFeeToSave = verificationData?.fee !== undefined ? verificationData.fee : payment.gatewayFee;
+      const bdtAmountToSave = verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.bdtAmount;
+      const nameToSave = verificationData?.full_name || payment.name || null;
+      const emailToSave = verificationData?.email || payment.email || null;
+      const transactionDateToSave = verificationData?.date ? new Date(verificationData.date) : payment.transactionDate;
+      
+      console.log('Values to save (direct API → DB mapping):', {
+        status: paymentStatus,
+        transactionId: transactionIdToSave,
+        paymentMethod: paymentMethodToSave,
+        phoneNumber: phoneNumberToSave,
+        gatewayFee: gatewayFeeToSave,
+        bdtAmount: bdtAmountToSave,
+        name: nameToSave,
+        email: emailToSave,
+        transactionDate: transactionDateToSave,
+        source_breakdown: {
+          apiTransactionId: apiTransactionId || 'null',
+          apiPaymentMethod: apiPaymentMethod || 'null',
+          verificationData_transaction_id: verificationData?.transaction_id || 'null',
+          verificationData_payment_method: verificationData?.payment_method || 'null',
+          url_transaction_id: transaction_id || 'null',
+        }
+      });
+      
+      if (!transactionIdToSave) {
+        console.log('⚠ WARNING: transactionIdToSave is NULL - checking sources:', {
+          apiTransactionId: apiTransactionId || 'null',
+          verificationData_transaction_id: verificationData?.transaction_id || 'null',
+          url_transaction_id: transaction_id || 'null',
+          payment_transactionId: payment.transactionId || 'null',
+        });
+      }
+      if (!paymentMethodToSave) {
+        console.log('⚠ WARNING: paymentMethodToSave is NULL - checking sources:', {
+          apiPaymentMethod: apiPaymentMethod || 'null',
+          verificationData_payment_method: verificationData?.payment_method || 'null',
+          payment_paymentMethod: payment.paymentMethod || 'null',
+        });
+      }
       
       try {
         if (paymentStatus === "Success") {
@@ -330,9 +458,14 @@ export async function GET(req: NextRequest) {
               where: { invoiceId: invoice_id },
             data: {
                 status: paymentStatus,
-                transactionId: finalTransactionId,
-                paymentMethod: finalPaymentMethod,
-                phoneNumber: finalSenderNumber,
+                transactionId: transactionIdToSave,
+                paymentMethod: paymentMethodToSave,
+                phoneNumber: phoneNumberToSave,
+                gatewayFee: gatewayFeeToSave,
+                bdtAmount: bdtAmountToSave,
+                name: nameToSave,
+                email: emailToSave,
+                transactionDate: transactionDateToSave,
             }
           });
           
@@ -362,9 +495,14 @@ export async function GET(req: NextRequest) {
             where: { invoiceId: invoice_id },
             data: {
               status: paymentStatus,
-              transactionId: finalTransactionId,
-              paymentMethod: finalPaymentMethod,
-              phoneNumber: finalSenderNumber,
+              transactionId: transactionIdToSave,
+              paymentMethod: paymentMethodToSave,
+              phoneNumber: phoneNumberToSave,
+              gatewayFee: gatewayFeeToSave,
+              bdtAmount: bdtAmountToSave,
+              name: nameToSave,
+              email: emailToSave,
+              transactionDate: transactionDateToSave,
             }
           });
         }
@@ -375,7 +513,15 @@ export async function GET(req: NextRequest) {
           where: { invoiceId: invoice_id }
         });
         
-        let finalTransactionIdToReturn = updatedPayment?.transactionId || null;
+        if (!updatedPayment) {
+          console.error('Could not find updated payment after database update');
+          return NextResponse.json({
+            error: "Payment record not found after update",
+            status: "FAILED"
+          }, { status: 500 });
+        }
+        
+        let finalTransactionIdToReturn = updatedPayment.transactionId || null;
         if (finalTransactionIdToReturn && finalTransactionIdToReturn === invoice_id) {
           console.log('ERROR: Database has invoice_id stored as transaction_id! Clearing it.');
           await db.addFunds.update({
@@ -392,25 +538,38 @@ export async function GET(req: NextRequest) {
             where: { invoiceId: invoice_id },
             data: { transactionId: finalTransactionIdToReturn }
           });
+          const reUpdatedPayment = await db.addFunds.findUnique({
+            where: { invoiceId: invoice_id }
+          });
+          if (reUpdatedPayment) {
+            Object.assign(updatedPayment, reUpdatedPayment);
+          }
         }
         
-        console.log('Returning payment with status:', paymentStatus, 'transaction_id:', finalTransactionIdToReturn);
+        const finalStatus = updatedPayment.status;
+        
+        console.log('Returning payment with status:', {
+          paymentStatus,
+          finalStatus,
+          updatedPaymentStatus: updatedPayment.status,
+          transaction_id: finalTransactionIdToReturn
+        });
         
         return NextResponse.json({
-          status: paymentStatus === "Success" ? "COMPLETED" : paymentStatus === "Processing" ? "PENDING" : "FAILED",
-          message: paymentStatus === "Success" 
+          status: finalStatus === "Success" ? "COMPLETED" : finalStatus === "Processing" ? "PENDING" : "FAILED",
+          message: finalStatus === "Success" 
             ? "Payment verified successfully (from redirect)"
-            : paymentStatus === "Processing"
+            : finalStatus === "Processing"
             ? "Payment is pending verification"
             : "Payment verification failed",
           payment: {
-            id: updatedPayment?.Id,
-            invoice_id: updatedPayment?.invoiceId,
-            amount: updatedPayment?.usdAmount,
-            status: updatedPayment?.status || paymentStatus,
+            id: updatedPayment.Id,
+            invoice_id: updatedPayment.invoiceId,
+            amount: updatedPayment.usdAmount,
+            status: finalStatus,
             transaction_id: finalTransactionIdToReturn,
-            payment_method: updatedPayment?.paymentMethod,
-            phone_number: updatedPayment?.phoneNumber,
+            payment_method: updatedPayment.paymentMethod,
+            phone_number: updatedPayment.phoneNumber,
           },
         });
       } catch (redirectError) {
@@ -422,7 +581,13 @@ export async function GET(req: NextRequest) {
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : paymentStatus}`);
       
       let existingPayment = await db.addFunds.findUnique({ where: { invoiceId: invoice_id } });
-      let transactionIdToSave = verificationData?.transaction_id || existingPayment?.transactionId || payment.transactionId || null;
+      
+      let transactionIdToSave = apiTransactionId || 
+                                 verificationData?.transaction_id || 
+                                 transaction_id || 
+                                 existingPayment?.transactionId || 
+                                 payment.transactionId || 
+                                 null;
       
       if (transactionIdToSave && transactionIdToSave === invoice_id) {
         console.log('ERROR: transaction_id matches invoice_id - NOT saving! Setting to null or existing valid transaction_id.');
@@ -433,21 +598,32 @@ export async function GET(req: NextRequest) {
         }
       }
       
-      // If we have transaction_id from URL but not from API, use URL value
-      if (!transactionIdToSave && transaction_id && transaction_id !== invoice_id) {
-        transactionIdToSave = transaction_id;
-        console.log('Using transaction_id from redirect URL:', transactionIdToSave);
-      }
+      const paymentMethodToSave = apiPaymentMethod || 
+                                   verificationData?.payment_method || 
+                                   payment.paymentMethod || 
+                                   null;
       
-      console.log('Saving payment with transaction_id:', transactionIdToSave, '(invoice_id:', invoice_id, ')');
+      console.log('Saving payment (extraction same as invoice_id):', {
+        invoice_id,
+        transactionId: transactionIdToSave,
+        paymentMethod: paymentMethodToSave,
+        from_api_direct_transactionId: apiTransactionId,
+        from_api_direct_paymentMethod: apiPaymentMethod,
+        extraction_pattern: 'Same as invoice_id - direct from responseData.transaction_id'
+      });
       
       const updatedPayment = await db.addFunds.update({
         where: { invoiceId: invoice_id },
         data: {
           status: paymentStatus,
           transactionId: transactionIdToSave,
-          paymentMethod: verificationData?.payment_method || payment.paymentMethod || null,
+          paymentMethod: paymentMethodToSave,
           phoneNumber: verificationData?.sender_number || payment.phoneNumber || null,
+          gatewayFee: verificationData?.fee !== undefined ? verificationData.fee : payment.gatewayFee,
+          bdtAmount: verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.bdtAmount,
+          name: verificationData?.full_name || payment.name || null,
+          email: verificationData?.email || payment.email || null,
+          transactionDate: verificationData?.date ? new Date(verificationData.date) : payment.transactionDate,
         }
       });
       
@@ -520,7 +696,6 @@ export async function GET(req: NextRequest) {
           },
         });
       } else {
-        // Return appropriate status based on paymentStatus
         const responseStatus = paymentStatus === "Processing" ? "PENDING" : 
                               paymentStatus === "Cancelled" ? "CANCELLED" : 
                               "FAILED";

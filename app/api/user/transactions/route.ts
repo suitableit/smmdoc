@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const [transactions, total] = await Promise.all([
+    let [transactions, total] = await Promise.all([
       db.addFunds.findMany({
         where,
         orderBy: {
@@ -51,7 +51,20 @@ export async function GET(request: NextRequest) {
         },
         take: limit,
         skip: skip,
-        include: {
+        select: {
+          Id: true,
+          invoiceId: true,
+          usdAmount: true,
+          bdtAmount: true,
+          status: true,
+          paymentGateway: true,
+          paymentMethod: true,
+          transactionId: true,
+          phoneNumber: true,
+          currency: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
           user: {
             select: {
               name: true,
@@ -62,6 +75,19 @@ export async function GET(request: NextRequest) {
       }),
       db.addFunds.count({ where })
     ]);
+    
+    console.log('Raw transactions from database:', transactions.map(tx => ({
+      invoiceId: tx.invoiceId,
+      status: tx.status,
+      statusType: typeof tx.status,
+      Id: tx.Id,
+      transactionId: tx.transactionId,
+      paymentMethod: tx.paymentMethod,
+      phoneNumber: tx.phoneNumber,
+      paymentGateway: tx.paymentGateway,
+      allFields: Object.keys(tx),
+      fullTransaction: tx
+    })));
 
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
     
@@ -125,44 +151,63 @@ export async function GET(request: NextRequest) {
                                       verificationData.sender_phone ||
                                       null;
 
+          let newStatus = transaction.status;
+          if (verificationData.status === 'COMPLETED' || verificationData.status === 'SUCCESS') {
+            newStatus = 'Success';
+          } else if (verificationData.status === 'PENDING') {
+            newStatus = 'Processing';
+          } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED' || verificationData.status === 'FAILED') {
+            newStatus = 'Cancelled';
+          }
+
           const validTransactionId = extractedTransactionId && 
                                    extractedTransactionId !== transaction.invoiceId
                                    ? extractedTransactionId 
                                    : null;
 
-          if (validTransactionId || extractedPaymentMethod || extractedSenderNumber) {
-            const updateData: any = {};
-            
-            if (validTransactionId && validTransactionId !== transaction.transactionId) {
-              updateData.transactionId = validTransactionId;
+          const updateData: any = {};
+          
+          if (validTransactionId && validTransactionId !== transaction.transactionId) {
+            updateData.transactionId = validTransactionId;
+          }
+          
+          if (extractedPaymentMethod && extractedPaymentMethod !== transaction.paymentMethod) {
+            updateData.paymentMethod = extractedPaymentMethod;
+          }
+          
+          if (extractedSenderNumber && extractedSenderNumber !== transaction.phoneNumber) {
+            updateData.phoneNumber = extractedSenderNumber;
+          }
+
+          if (newStatus !== transaction.status) {
+            updateData.status = newStatus;
+          }
+
+          if (Object.keys(updateData).length > 0) {
+            const updated = await db.addFunds.update({
+              where: { invoiceId: transaction.invoiceId },
+              data: updateData,
+            });
+
+            if (updateData.transactionId) {
+              transaction.transactionId = updateData.transactionId;
             }
-            
-            if (extractedPaymentMethod && extractedPaymentMethod !== transaction.paymentMethod) {
-              updateData.paymentMethod = extractedPaymentMethod;
+            if (updateData.paymentMethod) {
+              transaction.paymentMethod = updateData.paymentMethod;
             }
-            
-            if (extractedSenderNumber && extractedSenderNumber !== transaction.phoneNumber) {
-              updateData.phoneNumber = extractedSenderNumber;
+            if (updateData.phoneNumber) {
+              transaction.phoneNumber = updateData.phoneNumber;
+            }
+            if (updateData.status) {
+              transaction.status = updateData.status;
             }
 
-            if (Object.keys(updateData).length > 0) {
-              await db.addFunds.update({
-                where: { invoiceId: transaction.invoiceId },
-                data: updateData,
-              });
-
-              if (updateData.transactionId) {
-                transaction.transactionId = updateData.transactionId;
-              }
-              if (updateData.paymentMethod) {
-                transaction.paymentMethod = updateData.paymentMethod;
-              }
-              if (updateData.phoneNumber) {
-                transaction.phoneNumber = updateData.phoneNumber;
-              }
-
-              console.log(`Updated transaction ${transaction.invoiceId} with gateway data:`, updateData);
-            }
+            console.log(`Updated transaction ${transaction.invoiceId} with gateway data:`, updateData);
+            console.log(`Updated transaction object:`, {
+              transactionId: transaction.transactionId,
+              paymentMethod: transaction.paymentMethod,
+              status: transaction.status
+            });
           }
         } catch (error) {
           console.error(`Error refreshing transaction ${transaction.invoiceId} from gateway:`, error);
@@ -172,23 +217,99 @@ export async function GET(request: NextRequest) {
       await Promise.all(refreshPromises).catch(err => {
         console.error('Error in batch transaction refresh:', err);
       });
+      
+      if (transactionsToRefresh.length > 0) {
+        console.log('Re-fetching transactions after auto-refresh...');
+        const refreshedTransactions = await db.addFunds.findMany({
+          where,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: limit,
+          skip: skip,
+          select: {
+            Id: true,
+            invoiceId: true,
+            usdAmount: true,
+            bdtAmount: true,
+            status: true,
+            paymentGateway: true,
+            paymentMethod: true,
+            transactionId: true,
+            phoneNumber: true,
+            currency: true,
+            createdAt: true,
+            updatedAt: true,
+            userId: true,
+            user: {
+              select: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+        
+        transactions.length = 0;
+        transactions.push(...refreshedTransactions);
+        console.log('Transactions refreshed, updated transactionId and paymentMethod values:', 
+          transactions.map(tx => ({
+            invoiceId: tx.invoiceId,
+            transactionId: tx.transactionId,
+            paymentMethod: tx.paymentMethod,
+            status: tx.status
+          }))
+        );
+      }
     }
 
     const totalPages = Math.ceil(total / limit);
 
-    const transformedTransactions = transactions.map((transaction) => ({
-      id: transaction.Id,
-      invoice_id: transaction.invoiceId || transaction.Id,
-      amount: transaction.usdAmount || 0,
-      status: mapStatus(transaction.status || 'Processing'),
-      method: transaction.paymentGateway || 'UddoktaPay',
-      payment_method: transaction.paymentMethod || 'UddoktaPay',
-      transaction_id: transaction.transactionId || null,
-      createdAt: transaction.createdAt.toISOString(),
-      sender_number: transaction.phoneNumber,
-      phone: transaction.phoneNumber,
-      currency: transaction.currency || 'USD',
-    }));
+    const transformedTransactions = transactions.map((transaction) => {
+      const dbStatus = transaction.status || 'Processing';
+      const mappedStatus = mapStatus(dbStatus);
+      
+      let finalTransactionId = transaction.transactionId || null;
+      if (finalTransactionId && finalTransactionId === transaction.invoiceId) {
+        console.warn(`Transaction ${transaction.invoiceId} has transactionId matching invoiceId - setting to null`);
+        finalTransactionId = null;
+      }
+      
+      console.log('Transaction mapping (status + transaction_id):', {
+        invoiceId: transaction.invoiceId,
+        rawTransactionId: transaction.transactionId,
+        finalTransactionId,
+        paymentMethod: transaction.paymentMethod,
+        phoneNumber: transaction.phoneNumber,
+        paymentGateway: transaction.paymentGateway,
+        dbStatus,
+        mappedStatus,
+        isTransactionIdValid: finalTransactionId !== null && finalTransactionId !== transaction.invoiceId,
+        rawTransaction: {
+          Id: transaction.Id,
+          status: transaction.status,
+          invoiceId: transaction.invoiceId,
+          transactionId: transaction.transactionId,
+          paymentMethod: transaction.paymentMethod,
+          paymentGateway: transaction.paymentGateway,
+          phoneNumber: transaction.phoneNumber,
+        }
+      });
+      
+      return {
+        id: transaction.Id,
+        invoice_id: transaction.invoiceId || transaction.Id,
+        amount: transaction.usdAmount || 0,
+        status: mappedStatus,
+        method: transaction.paymentGateway || 'UddoktaPay',
+        payment_method: transaction.paymentMethod || 'UddoktaPay',
+        transaction_id: finalTransactionId,
+        createdAt: transaction.createdAt.toISOString(),
+        sender_number: transaction.phoneNumber,
+        phone: transaction.phoneNumber,
+        currency: transaction.currency || 'USD',
+      };
+    });
 
     return NextResponse.json({
       transactions: transformedTransactions,
@@ -211,17 +332,45 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function mapStatus(dbStatus: string): 'Success' | 'Processing' | 'Cancelled' | 'Failed' {
-  switch (dbStatus) {
+function mapStatus(dbStatus: string | null | undefined): 'Success' | 'Processing' | 'Cancelled' | 'Failed' {
+  if (!dbStatus) {
+    console.warn('mapStatus: dbStatus is null/undefined, defaulting to Processing');
+    return 'Processing';
+  }
+  
+  const normalizedStatus = String(dbStatus).trim();
+  
+  switch (normalizedStatus) {
     case 'Success':
+    case 'success':
+    case 'SUCCESS':
+    case 'Completed':
+    case 'completed':
+    case 'COMPLETED':
       return 'Success';
     case 'Processing':
+    case 'processing':
+    case 'PROCESSING':
+    case 'Pending':
+    case 'pending':
+    case 'PENDING':
       return 'Processing';
     case 'Cancelled':
+    case 'cancelled':
+    case 'CANCELLED':
+    case 'Canceled':
+    case 'canceled':
+    case 'CANCELED':
       return 'Cancelled';
     case 'Failed':
+    case 'failed':
+    case 'FAILED':
+    case 'Error':
+    case 'error':
+    case 'ERROR':
       return 'Failed';
     default:
+      console.warn(`mapStatus: Unknown status "${normalizedStatus}", defaulting to Processing`);
       return 'Processing';
   }
 }

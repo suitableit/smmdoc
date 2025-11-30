@@ -93,6 +93,8 @@ export async function getPaymentGatewayCheckoutUrl(): Promise<string> {
 /**
  * Get the verify payment URL
  * Constructs the full verify endpoint URL based on base URL
+ * According to UddoktaPay API: {base_URL}/api/verify-payment
+ * Matches the pattern used in getPaymentGatewayCheckoutUrl
  */
 export async function getPaymentGatewayVerifyUrl(): Promise<string> {
   const config = await getPaymentGatewayConfig();
@@ -104,11 +106,19 @@ export async function getPaymentGatewayVerifyUrl(): Promise<string> {
   
   const cleanUrl = baseUrl.replace(/\/$/, '');
   
+  if (cleanUrl.includes('/api/verify-payment')) {
+    return cleanUrl;
+  }
+  
   if (cleanUrl.includes('/verify-payment')) {
     return cleanUrl;
   }
   
-  return `${cleanUrl}/verify-payment`;
+  if (cleanUrl.includes('/api')) {
+    return `${cleanUrl}/verify-payment`;
+  }
+  
+  return `${cleanUrl}/api/verify-payment`;
 }
 
 /**

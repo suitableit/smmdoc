@@ -151,7 +151,6 @@ export default function TransactionsPage() {
 
     const paymentStatus = searchParams.get('payment');
     const invoiceId = searchParams.get('invoice_id');
-    // Extract transaction_id from various possible parameter names that payment gateway might use
     const transactionId = searchParams.get('transaction_id') || 
                           searchParams.get('trx_id') || 
                           searchParams.get('transactionId') ||
@@ -179,23 +178,32 @@ export default function TransactionsPage() {
               const verifyResponse = await fetch(verifyUrl);
               const verifyData = await verifyResponse.json();
               
-              const actualStatus = verifyData.payment?.status || verifyData.status;
+              const paymentStatus = verifyData.payment?.status;
+              const topLevelStatus = verifyData.status;
+              const actualStatus = paymentStatus || topLevelStatus;
               
-              if (actualStatus === 'Success') {
+              console.log('Payment verification response:', {
+                paymentStatus,
+                topLevelStatus,
+                actualStatus,
+                fullResponse: verifyData
+              });
+              
+              if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
                 showToast(
                   invoiceId
                     ? `Payment completed successfully! Invoice ID: ${invoiceId}`
                     : 'Payment completed successfully!',
                   'success'
                 );
-              } else if (actualStatus === 'Processing') {
+              } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
                 showToast(
                   invoiceId
                     ? `Payment is pending verification. Invoice ID: ${invoiceId}`
                     : 'Payment is pending verification.',
                   'pending'
                 );
-              } else if (actualStatus === 'Failed' || actualStatus === 'FAILED') {
+              } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
                 showToast(
                   invoiceId
                     ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
@@ -362,6 +370,19 @@ export default function TransactionsPage() {
 
       const data = await response.json();
       console.log('API Response:', data);
+      console.log('Transactions from API:', data.transactions);
+      
+      if (data.transactions && Array.isArray(data.transactions)) {
+        data.transactions.forEach((tx: any, index: number) => {
+          console.log(`Transaction ${index}:`, {
+            invoice_id: tx.invoice_id,
+            status: tx.status,
+            statusType: typeof tx.status,
+            fullTransaction: tx
+          });
+        });
+      }
+      
       const transactionsToShow = data.transactions || [];
       setPagination(data.pagination || {
         page: 1,

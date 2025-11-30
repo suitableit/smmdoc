@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
     }
     
     const { 
-      invoice_id, 
-      transaction_id, 
+      invoice_id,
+      transaction_id,
       amount, 
-      status, 
+      status,
       metadata,
       payment_method,
       sender_number,
@@ -34,6 +34,16 @@ export async function POST(req: NextRequest) {
       full_name,
       charged_amount
     } = webhookData;
+    
+    console.log('Webhook payload extracted (same pattern for all fields):', {
+      invoice_id,
+      transaction_id,
+      payment_method,
+      sender_number,
+      status,
+      amount,
+      charged_amount
+    });
     
     if (!invoice_id) {
       console.error("Missing invoice_id in webhook data");
@@ -74,8 +84,8 @@ export async function POST(req: NextRequest) {
           data: {
             status: paymentStatus,
             transactionId: transaction_id || payment.transactionId,
-            paymentMethod: payment_method || payment.paymentMethod || "UddoktaPay",
-            phoneNumber: sender_number || payment.phoneNumber || "N/A",
+            paymentMethod: payment_method || payment.paymentMethod || null,
+            phoneNumber: sender_number || payment.phoneNumber || null,
             gatewayFee: fee !== undefined ? fee : payment.gatewayFee,
             name: full_name || payment.name,
             transactionDate: date ? new Date(date) : payment.transactionDate,

@@ -411,7 +411,7 @@ axios.post(url, payload)
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2">API URL</h4>
                   <p className="text-gray-600 font-mono text-sm">
-                    https://smmdoc.com/api/v2
+                    https:
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
