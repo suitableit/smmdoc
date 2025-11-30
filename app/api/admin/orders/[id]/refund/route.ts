@@ -134,7 +134,7 @@ export async function POST(
           admin_status: 'Approved',
           payment_gateway: 'Admin Refund',
           payment_method: 'Refund',
-          paid_at: new Date(),
+          transaction_date: new Date(),
           createdAt: new Date()
         }
       });

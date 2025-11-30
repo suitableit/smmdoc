@@ -28,7 +28,11 @@ export async function POST(req: NextRequest) {
       status, 
       metadata,
       payment_method,
-      sender_number
+      sender_number,
+      fee,
+      date,
+      full_name,
+      charged_amount
     } = webhookData;
     
     if (!invoice_id) {
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
     
     const payment = await db.addFunds.findUnique({
-      where: { invoice_id },
+      where: { invoiceId: invoice_id },
       include: { user: true }
     });
     
@@ -66,19 +70,23 @@ export async function POST(req: NextRequest) {
     try {
       const result = await db.$transaction(async (prisma) => {
         const updatedPayment = await prisma.addFunds.update({
-          where: { invoice_id },
+          where: { invoiceId: invoice_id },
           data: {
             status: paymentStatus,
-            transaction_id: transaction_id || payment.transaction_id,
-            payment_method: payment_method || payment.payment_method || "UddoktaPay",
-            sender_number: sender_number || payment.sender_number || "N/A",
+            transactionId: transaction_id || payment.transactionId,
+            paymentMethod: payment_method || payment.paymentMethod || "UddoktaPay",
+            phoneNumber: sender_number || payment.phoneNumber || "N/A",
+            gatewayFee: fee !== undefined ? fee : payment.gatewayFee,
+            name: full_name || payment.name,
+            transactionDate: date ? new Date(date) : payment.transactionDate,
+            bdtAmount: charged_amount !== undefined ? charged_amount : payment.bdtAmount,
           }
         });
         
         console.log(`Payment ${invoice_id} status updated to ${paymentStatus}`);
         
         if (paymentStatus === "Success" && payment.user) {
-          const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
+          const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
 
           const user = await prisma.users.update({
             where: { id: payment.userId },
@@ -87,7 +95,7 @@ export async function POST(req: NextRequest) {
                 increment: originalAmount
               },
               balanceUSD: {
-                increment: payment.usd_amount
+                increment: payment.usdAmount
               },
               total_deposit: {
                 increment: originalAmount
@@ -107,8 +115,8 @@ export async function POST(req: NextRequest) {
         data: {
           invoice_id,
           status: paymentStatus,
-          transaction_id: result.updatedPayment.transaction_id,
-          amount: result.updatedPayment.usd_amount
+          transaction_id: result.updatedPayment.transactionId,
+          amount: result.updatedPayment.usdAmount
         }
       });
     } catch (dbError) {

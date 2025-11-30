@@ -219,7 +219,7 @@ export async function GET(req: NextRequest) {
         verificationData = { 
           transaction_id: transaction_id || null,
           payment_method: null,
-          sender_number: null,
+          phone_number: null,
         };
       } else {
         return NextResponse.json(
@@ -250,12 +250,12 @@ export async function GET(req: NextRequest) {
         finalTransactionId = transaction_id || payment.transaction_id || null;
       }
       const finalPaymentMethod = verificationData?.payment_method || payment.payment_method || null;
-      const finalSenderNumber = verificationData?.sender_number || payment.sender_number || null;
+      const finalSenderNumber = verificationData?.sender_number || payment.phone_number || null;
       
       console.log('Final values to save:', {
         transaction_id: finalTransactionId,
         payment_method: finalPaymentMethod,
-        sender_number: finalSenderNumber,
+        phone_number: finalSenderNumber,
       });
       
       try {
@@ -266,7 +266,7 @@ export async function GET(req: NextRequest) {
               status: "Success",
               transaction_id: finalTransactionId,
               payment_method: finalPaymentMethod,
-              sender_number: finalSenderNumber,
+              phone_number: finalSenderNumber,
             }
           });
           
@@ -329,7 +329,7 @@ export async function GET(req: NextRequest) {
             status: updatedPayment?.status || "Success",
             transaction_id: finalTransactionIdToReturn,
             payment_method: updatedPayment?.payment_method,
-            sender_number: updatedPayment?.sender_number,
+            phone_number: updatedPayment?.phone_number,
           },
         });
       } catch (redirectError) {
@@ -360,7 +360,7 @@ export async function GET(req: NextRequest) {
           status: paymentStatus,
           transaction_id: transactionIdToSave,
           payment_method: verificationData?.payment_method || payment.payment_method || null,
-          sender_number: verificationData?.sender_number || payment.sender_number || null,
+          phone_number: verificationData?.sender_number || payment.phone_number || null,
         }
       });
       
@@ -429,7 +429,7 @@ export async function GET(req: NextRequest) {
             status: updatedPayment.status,
               transaction_id: updatedPayment.transaction_id,
               payment_method: updatedPayment.payment_method,
-              sender_number: updatedPayment.sender_number,
+              phone_number: updatedPayment.phone_number,
           },
         });
       } else {

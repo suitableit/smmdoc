@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { transaction_id: { contains: search, mode: 'insensitive' } },
         { invoice_id: { contains: search, mode: 'insensitive' } },
-        { sender_number: { contains: search, mode: 'insensitive' } },
+        { phone_number: { contains: search, mode: 'insensitive' } },
         { payment_method: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -141,8 +141,8 @@ export async function GET(request: NextRequest) {
               updateData.payment_method = extractedPaymentMethod;
             }
             
-            if (extractedSenderNumber && extractedSenderNumber !== transaction.sender_number) {
-              updateData.sender_number = extractedSenderNumber;
+            if (extractedSenderNumber && extractedSenderNumber !== transaction.phone_number) {
+              updateData.phone_number = extractedSenderNumber;
             }
 
             if (Object.keys(updateData).length > 0) {
@@ -157,8 +157,8 @@ export async function GET(request: NextRequest) {
               if (updateData.payment_method) {
                 transaction.payment_method = updateData.payment_method;
               }
-              if (updateData.sender_number) {
-                transaction.sender_number = updateData.sender_number;
+              if (updateData.phone_number) {
+                transaction.phone_number = updateData.phone_number;
               }
 
               console.log(`Updated transaction ${transaction.invoice_id} with gateway data:`, updateData);
@@ -185,8 +185,8 @@ export async function GET(request: NextRequest) {
       payment_method: transaction.payment_method || 'UddoktaPay',
       transaction_id: transaction.transaction_id || null,
       createdAt: transaction.createdAt.toISOString(),
-      sender_number: transaction.sender_number,
-      phone: transaction.sender_number,
+      sender_number: transaction.phone_number,
+      phone: transaction.phone_number,
       currency: 'USD',
     }));
 

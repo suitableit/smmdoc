@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
         status: payment.status,
         transaction_id: payment.transaction_id,
         payment_method: payment.payment_method,
-        sender_number: payment.sender_number,
+        sender_number: payment.phone_number,
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
       },

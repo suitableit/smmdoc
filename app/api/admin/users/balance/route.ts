@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
           admin_status: 'Success',
           payment_gateway: 'manual_adjustment',
           payment_method: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
-          sender_number: '',
+          phone_number: '',
           transaction_id: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
           currency: 'USD'
         }

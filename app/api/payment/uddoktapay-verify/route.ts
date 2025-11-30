@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
     
     const payment = await db.addFunds.findUnique({
-      where: { invoice_id },
+      where: { invoiceId: invoice_id },
       include: { user: true }
     });
     
@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
         status: "COMPLETED",
         message: "Payment already verified and completed",
         payment: {
-          invoice_id: payment.invoice_id,
-          amount: payment.usd_amount,
+          invoice_id: payment.invoiceId,
+          amount: payment.usdAmount,
           status: payment.status,
-          transaction_id: payment.transaction_id
+          transaction_id: payment.transactionId
         }
       });
     }
@@ -79,16 +79,16 @@ export async function POST(req: NextRequest) {
         try {
           await db.$transaction(async (prisma) => {
             await prisma.addFunds.update({
-              where: { invoice_id },
+              where: { invoiceId: invoice_id },
               data: {
                 status: "Success",
-                admin_status: "approved",
-                transaction_id: transaction_id,
-                sender_number: phone,
+                adminStatus: "approved",
+                transactionId: transaction_id,
+                phoneNumber: phone,
               }
             });
             
-            const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
+            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usd_amount },
+                balanceUSD: { increment: payment.usdAmount },
                 total_deposit: { increment: originalAmount }
               }
             });
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
               userName: payment.user.name || 'Customer',
               userEmail: payment.user.email,
               transactionId: transaction_id,
-              amount: payment.usd_amount.toString(),
+              amount: payment.usdAmount.toString(),
               currency: payment.currency || 'USD',
               date: new Date().toLocaleDateString(),
               userId: payment.userId.toString()
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
             message: "Payment successful! Funds have been added to your account.",
             payment: {
               invoice_id: payment.invoice_id,
-              amount: payment.usd_amount,
+              amount: payment.usdAmount,
               status: "Success",
               transaction_id: transaction_id
             }
@@ -189,11 +189,11 @@ export async function POST(req: NextRequest) {
       
       else if (verificationStatus === "PENDING") {
         await db.addFunds.update({
-          where: { invoice_id },
+          where: { invoiceId: invoice_id },
           data: {
-            transaction_id: transaction_id,
-            sender_number: phone,
-            admin_status: "pending",
+            transactionId: transaction_id,
+            phoneNumber: phone,
+            adminStatus: "pending",
             status: "Processing"
           }
         });
@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
           message: "Payment is being processed and requires manual verification. You will be notified once approved.",
           payment: {
             invoice_id: payment.invoice_id,
-            amount: payment.usd_amount,
+            amount: payment.usdAmount,
             status: "Processing",
             transaction_id: transaction_id
           }
@@ -230,12 +230,12 @@ export async function POST(req: NextRequest) {
       
       else {
         await db.addFunds.update({
-          where: { invoice_id },
+          where: { invoiceId: invoice_id },
           data: {
             status: "Cancelled",
-            admin_status: "cancelled",
-            transaction_id: transaction_id,
-            sender_number: phone,
+            adminStatus: "cancelled",
+            transactionId: transaction_id,
+            phoneNumber: phone,
           }
         });
         
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
           message: "Payment verification failed or was cancelled",
           payment: {
             invoice_id: payment.invoice_id,
-            amount: payment.usd_amount,
+            amount: payment.usdAmount,
             status: "Cancelled",
             transaction_id: transaction_id
           }
