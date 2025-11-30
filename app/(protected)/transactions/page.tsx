@@ -148,13 +148,6 @@ export default function TransactionsPage() {
       setHasShownPaymentToast(true);
 
       if (paymentStatus === 'success') {
-        showToast(
-          invoiceId
-            ? `Payment completed successfully! Invoice ID: ${invoiceId}`
-            : 'Payment completed successfully!',
-          'success'
-        );
-        
         if (invoiceId) {
           setTimeout(async () => {
             try {
@@ -168,11 +161,47 @@ export default function TransactionsPage() {
                 }
               }
               const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoiceId}&from_redirect=true${transactionIdParam}`;
-              await fetch(verifyUrl);
+              const verifyResponse = await fetch(verifyUrl);
+              const verifyData = await verifyResponse.json();
+              
+              const actualStatus = verifyData.payment?.status || verifyData.status;
+              
+              if (actualStatus === 'Success') {
+                showToast(
+                  invoiceId
+                    ? `Payment completed successfully! Invoice ID: ${invoiceId}`
+                    : 'Payment completed successfully!',
+                  'success'
+                );
+              } else if (actualStatus === 'Processing') {
+                showToast(
+                  invoiceId
+                    ? `Payment is pending verification. Invoice ID: ${invoiceId}`
+                    : 'Payment is pending verification.',
+                  'pending'
+                );
+              } else {
+                showToast(
+                  invoiceId
+                    ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
+                    : `Payment status: ${actualStatus}`,
+                  'info'
+                );
+              }
+              
+              fetchTransactions(true);
             } catch (error) {
               console.error('Payment verification error:', error);
+              showToast(
+                invoiceId
+                  ? `Payment completed successfully! Invoice ID: ${invoiceId}`
+                  : 'Payment completed successfully!',
+                'success'
+              );
             }
           }, 1000);
+        } else {
+          showToast('Payment completed successfully!', 'success');
         }
       } else if (paymentStatus === 'pending') {
         showToast(

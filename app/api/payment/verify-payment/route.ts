@@ -177,21 +177,17 @@ export async function GET(req: NextRequest) {
           isSuccessful = true;
           paymentStatus = "Success";
         } else if (verificationData.status === 'PENDING') {
-          if (from_redirect || transaction_id) {
-            console.log('Payment redirected to success page - treating as successful despite PENDING status');
-            isSuccessful = true;
-            paymentStatus = "Success";
-          } else {
-            paymentStatus = "Processing";
-          }
+          paymentStatus = "Processing";
+          console.log('Payment status is PENDING - keeping as Processing');
         } else if (verificationData.status === 'ERROR' || verificationData.status === 'CANCELLED') {
           paymentStatus = "Cancelled";
+        } else {
+          paymentStatus = "Processing";
         }
       } else if (verificationResponse && !verificationResponse.ok) {
-        if (from_redirect || transaction_id) {
-          console.log('Payment redirected to success page - treating as successful despite API error');
-          isSuccessful = true;
-          paymentStatus = "Success";
+        if (from_redirect && transaction_id) {
+          console.log('Payment redirected but API verification failed - updating transaction info, keeping status as Processing');
+          paymentStatus = "Processing";
           verificationData = verificationData || {};
           verificationData.transaction_id = verificationData.transaction_id || transaction_id || null;
           verificationData.payment_method = verificationData.payment_method || null;
@@ -212,10 +208,9 @@ export async function GET(req: NextRequest) {
       }
     } catch (apiError) {
       console.error('Error calling UddoktaPay API:', apiError);
-      if (from_redirect || transaction_id) {
-        console.log('Payment redirected to success page - treating as successful despite API error');
-        isSuccessful = true;
-        paymentStatus = "Success";
+      if (from_redirect && transaction_id) {
+        console.log('Payment redirected but API call failed - updating transaction info, keeping status as Processing');
+        paymentStatus = "Processing";
         verificationData = { 
           transaction_id: transaction_id || null,
           payment_method: null,
@@ -235,12 +230,13 @@ export async function GET(req: NextRequest) {
     }
     
     if (from_redirect && payment.user) {
-      console.log('Payment redirected to success - processing as successful with fetched transaction details');
+      console.log('Payment redirected - updating with fetched transaction details');
       console.log('Verification data available:', {
         hasVerificationData: !!verificationData,
         transaction_id_from_api: verificationData?.transaction_id,
         transaction_id_from_url: transaction_id,
         transaction_id_from_db: payment.transactionId,
+        paymentStatus: paymentStatus,
       });
       
       let finalTransactionId = verificationData?.transaction_id || transaction_id || payment.transactionId || null;
@@ -253,44 +249,57 @@ export async function GET(req: NextRequest) {
       const finalSenderNumber = verificationData?.sender_number || payment.phoneNumber || null;
       
       console.log('Final values to save:', {
+        status: paymentStatus,
         transaction_id: finalTransactionId,
         payment_method: finalPaymentMethod,
         phone_number: finalSenderNumber,
       });
       
       try {
-        await db.$transaction(async (prisma) => {
-          await prisma.addFunds.update({
+        if (paymentStatus === "Success") {
+          await db.$transaction(async (prisma) => {
+            await prisma.addFunds.update({
+              where: { invoiceId: invoice_id },
+              data: {
+                status: paymentStatus,
+                transactionId: finalTransactionId,
+                paymentMethod: finalPaymentMethod,
+                phoneNumber: finalSenderNumber,
+              }
+            });
+            
+            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+            const userSettings = await prisma.userSettings.findFirst();
+            let bonusAmount = 0;
+
+            if (userSettings && userSettings.bonusPercentage > 0) {
+              bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
+            }
+
+            const totalAmountToAdd = originalAmount + bonusAmount;
+
+            const user = await prisma.users.update({
+              where: { id: payment.userId },
+              data: {
+                balance: { increment: totalAmountToAdd },
+                balanceUSD: { increment: payment.usdAmount },
+                total_deposit: { increment: originalAmount }
+              }
+            });
+            
+            console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
+          });
+        } else {
+          await db.addFunds.update({
             where: { invoiceId: invoice_id },
             data: {
-              status: "Success",
+              status: paymentStatus,
               transactionId: finalTransactionId,
               paymentMethod: finalPaymentMethod,
               phoneNumber: finalSenderNumber,
             }
           });
-          
-          const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
-          const userSettings = await prisma.userSettings.findFirst();
-          let bonusAmount = 0;
-
-          if (userSettings && userSettings.bonusPercentage > 0) {
-            bonusAmount = (originalAmount * userSettings.bonusPercentage) / 100;
-          }
-
-          const totalAmountToAdd = originalAmount + bonusAmount;
-
-          const user = await prisma.users.update({
-            where: { id: payment.userId },
-            data: {
-              balance: { increment: totalAmountToAdd },
-              balanceUSD: { increment: payment.usdAmount },
-              total_deposit: { increment: originalAmount }
-            }
-          });
-          
-          console.log(`User ${payment.userId} balance updated. New balance: ${user.balance}`);
-        });
+        }
         
         await new Promise(resolve => setTimeout(resolve, 500));
         
@@ -317,16 +326,20 @@ export async function GET(req: NextRequest) {
           });
         }
         
-        console.log('Returning payment with transaction_id:', finalTransactionIdToReturn, '(invoice_id:', invoice_id, ')');
+        console.log('Returning payment with status:', paymentStatus, 'transaction_id:', finalTransactionIdToReturn);
         
         return NextResponse.json({
-          status: "COMPLETED",
-          message: "Payment verified successfully (from redirect)",
+          status: paymentStatus === "Success" ? "COMPLETED" : paymentStatus === "Processing" ? "PENDING" : "FAILED",
+          message: paymentStatus === "Success" 
+            ? "Payment verified successfully (from redirect)"
+            : paymentStatus === "Processing"
+            ? "Payment is pending verification"
+            : "Payment verification failed",
           payment: {
             id: updatedPayment?.Id,
             invoice_id: updatedPayment?.invoiceId,
             amount: updatedPayment?.usdAmount,
-            status: updatedPayment?.status || "Success",
+            status: updatedPayment?.status || paymentStatus,
             transaction_id: finalTransactionIdToReturn,
             payment_method: updatedPayment?.paymentMethod,
             phone_number: updatedPayment?.phoneNumber,
