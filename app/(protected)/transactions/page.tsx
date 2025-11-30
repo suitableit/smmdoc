@@ -193,12 +193,15 @@ export default function TransactionsPage() {
       }
 
       setTimeout(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('payment');
-        url.searchParams.delete('invoice_id');
-        url.searchParams.delete('transaction_id');
-        router.replace(url.pathname + url.search);
-      }, 100);
+        if (typeof window !== 'undefined' && window.history) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('payment');
+          url.searchParams.delete('invoice_id');
+          url.searchParams.delete('transaction_id');
+          const newUrl = url.pathname + (url.search ? url.search : '');
+          window.history.replaceState({}, '', newUrl);
+        }
+      }, 500);
     }
   }, [searchParams, hasShownPaymentToast]);
 
