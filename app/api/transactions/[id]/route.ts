@@ -34,7 +34,7 @@ export async function PATCH(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: transactionId },
+      where: { Id: transactionId },
       include: { user: true }
     });
 
@@ -44,7 +44,6 @@ export async function PATCH(
 
     let updateData: {
       status?: string;
-      admin_status?: string;
     } = {};
     let balanceChange = 0;
     let notificationMessage = '';
@@ -61,44 +60,41 @@ export async function PATCH(
 
       if (status === 'approved' || status === 'Success') {
         updateData = {
-          status: 'Success',
-          admin_status: 'Success'
+          status: 'Success'
         };
 
-        if (transaction.admin_status !== 'Success' && transaction.admin_status !== 'approved') {
-          balanceChange = transaction.usd_amount;
+        if (transaction.status !== 'Success' && transaction.status !== 'approved') {
+          balanceChange = transaction.usdAmount;
           await prisma.users.update({
             where: { id: transaction.userId },
             data: {
-              balance: { increment: transaction.usd_amount },
-              total_deposit: { increment: transaction.usd_amount }
+              balance: { increment: transaction.usdAmount },
+              total_deposit: { increment: transaction.usdAmount }
             }
           });
-          notificationMessage = `Your deposit of $${transaction.usd_amount} has been approved and added to your account.`;
+          notificationMessage = `Your deposit of $${transaction.usdAmount} has been approved and added to your account.`;
         }
       } else if (status === 'cancelled' || status === 'Cancelled') {
         updateData = {
-          status: 'Cancelled',
-          admin_status: 'Cancelled'
+          status: 'Cancelled'
         };
-        notificationMessage = `Your deposit of $${transaction.usd_amount} has been cancelled.`;
+        notificationMessage = `Your deposit of $${transaction.usdAmount} has been cancelled.`;
       } else if (status === 'Pending' || status === 'pending') {
         updateData = {
-          status: 'Processing',
-          admin_status: 'Pending'
+          status: 'Processing'
         };
 
-        if (transaction.admin_status === 'Success') {
-          if (currentUser.balance >= transaction.usd_amount) {
-            balanceChange = -transaction.usd_amount;
+        if (transaction.status === 'Success') {
+          if (currentUser.balance >= transaction.usdAmount) {
+            balanceChange = -transaction.usdAmount;
             await prisma.users.update({
               where: { id: transaction.userId },
               data: {
-                balance: { decrement: transaction.usd_amount },
-                total_deposit: { decrement: transaction.usd_amount }
+                balance: { decrement: transaction.usdAmount },
+                total_deposit: { decrement: transaction.usdAmount }
               }
             });
-            notificationMessage = `Your transaction of $${transaction.usd_amount} has been moved to pending status. Amount has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${transaction.usdAmount} has been moved to pending status. Amount has been deducted from your account.`;
           } else {
             const deductAmount = currentUser.balance;
             balanceChange = -deductAmount;
@@ -109,26 +105,25 @@ export async function PATCH(
                 total_deposit: { decrement: deductAmount }
               }
             });
-            notificationMessage = `Your transaction of $${transaction.usd_amount} has been moved to pending status. Available balance of $${deductAmount} has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${transaction.usdAmount} has been moved to pending status. Available balance of $${deductAmount} has been deducted from your account.`;
           }
         } else {
-          notificationMessage = `Your deposit of $${transaction.usd_amount} is now pending review.`;
+          notificationMessage = `Your deposit of $${transaction.usdAmount} is now pending review.`;
         }
       } else if (status === 'Suspicious') {
         updateData = {
-          status: 'Processing',
-          admin_status: 'Suspicious'
+          status: 'Processing'
         };
-        notificationMessage = `Your transaction of $${transaction.usd_amount} is under review for suspicious activity.`;
+        notificationMessage = `Your transaction of $${transaction.usdAmount} is under review for suspicious activity.`;
       } else {
         updateData = {
-          admin_status: status
+          status: status
         };
         notificationMessage = `Your transaction status has been updated to ${status}.`;
       }
 
       const updatedTransaction = await prisma.addFunds.update({
-        where: { id: transactionId },
+        where: { Id: transactionId },
         data: updateData
       });
 
@@ -140,8 +135,8 @@ export async function PATCH(
         const emailData = emailTemplates.paymentSuccess({
           userName: result.currentUser.name || 'Customer',
           userEmail: result.currentUser.email,
-          transactionId: (transaction.transaction_id || transaction.id.toString()),
-          amount: transaction.usd_amount.toString(),
+          transactionId: (transaction.transactionId || transaction.Id.toString()),
+          amount: transaction.usdAmount.toString(),
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
@@ -149,8 +144,8 @@ export async function PATCH(
 
         await sendMail({
           sendTo: result.currentUser.email,
-          subject: `Transaction Status Updated - ${updateData.admin_status || status}`,
-          html: emailData.html.replace('Payment Successful!', `Transaction ${updateData.admin_status || status}`)
+          subject: `Transaction Status Updated - ${updateData.status || status}`,
+          html: emailData.html.replace('Payment Successful!', `Transaction ${updateData.status || status}`)
             .replace('Your payment has been successfully processed', notificationMessage)
         });
       }
@@ -159,8 +154,8 @@ export async function PATCH(
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: result.currentUser.name || 'Unknown User',
         userEmail: result.currentUser.email || '',
-        transactionId: (transaction.transaction_id || transaction.id.toString()),
-        amount: transaction.usd_amount.toString(),
+        transactionId: (transaction.transactionId || transaction.Id.toString()),
+        amount: transaction.usdAmount.toString(),
         currency: 'BDT',
         date: new Date().toLocaleDateString(),
         userId: transaction.userId.toString()
@@ -168,8 +163,8 @@ export async function PATCH(
 
       await sendMail({
         sendTo: adminEmail,
-        subject: `Transaction Status Updated by Admin - ${updateData.admin_status || status}`,
-        html: adminEmailData.html.replace('Auto-Approved', `Status Updated to ${updateData.admin_status || status}`)
+        subject: `Transaction Status Updated by Admin - ${updateData.status || status}`,
+        html: adminEmailData.html.replace('Auto-Approved', `Status Updated to ${updateData.status || status}`)
       });
     } catch (emailError) {
       console.error('Error sending notification emails:', emailError);
@@ -177,7 +172,7 @@ export async function PATCH(
 
     return NextResponse.json({
       success: true,
-      message: `Transaction updated to ${updateData.admin_status || status} successfully`,
+      message: `Transaction updated to ${updateData.status || status} successfully`,
       data: result.updatedTransaction,
       balanceChange: result.balanceChange,
       notification: result.notificationMessage
@@ -212,7 +207,7 @@ export async function GET(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: transactionId },
+      where: { Id: transactionId },
       include: {
         user: {
           select: {
@@ -232,18 +227,18 @@ export async function GET(
     }
 
     const transformedTransaction = {
-      id: transaction.id,
-      invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.usd_amount || 0,
+      id: transaction.Id,
+      invoice_id: transaction.invoiceId || transaction.Id,
+      amount: transaction.usdAmount || 0,
       status: mapStatus(transaction.status || 'Processing'),
-      method: transaction.payment_gateway || 'UddoktaPay',
-      payment_method: transaction.payment_method || 'UddoktaPay',
-      transaction_id: transaction.transaction_id || transaction.id,
+      method: transaction.paymentGateway || 'UddoktaPay',
+      payment_method: transaction.paymentMethod || 'UddoktaPay',
+      transaction_id: transaction.transactionId || transaction.Id,
       createdAt: transaction.createdAt.toISOString(),
-      sender_number: transaction.phone_number,
-      phone: transaction.phone_number,
-      currency: 'USD',
-      admin_status: transaction.admin_status,
+      sender_number: transaction.phoneNumber,
+      phone: transaction.phoneNumber,
+      currency: transaction.currency || 'USD',
+      admin_status: transaction.status,
     };
 
     return NextResponse.json(transformedTransaction);

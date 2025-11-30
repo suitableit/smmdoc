@@ -112,6 +112,14 @@ export async function getPaymentGatewayVerifyUrl(): Promise<string> {
 }
 
 /**
+ * Get the gateway name from payment gateway settings
+ */
+export async function getPaymentGatewayName(): Promise<string> {
+  const config = await getPaymentGatewayConfig();
+  return config.gatewayName;
+}
+
+/**
  * Clear the cached payment gateway config (useful after settings updates)
  */
 export function clearPaymentGatewayCache(): void {

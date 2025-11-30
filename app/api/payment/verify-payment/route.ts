@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const payment = await db.addFunds.findUnique({
       where: {
-        invoice_id,
+        invoiceId: invoice_id,
       },
       include: {
         user: true,
@@ -28,18 +28,18 @@ export async function GET(req: NextRequest) {
 
     console.log("Payment record found:", payment);
     
-    if (payment && payment.transaction_id && payment.transaction_id === invoice_id) {
+    if (payment && payment.transactionId && payment.transactionId === invoice_id) {
       console.log('CRITICAL: Found corrupted data - transaction_id equals invoice_id! Fixing...');
       await db.addFunds.update({
-        where: { invoice_id },
-        data: { transaction_id: null }
+        where: { invoiceId: invoice_id },
+        data: { transactionId: null }
       });
       const fixedPayment = await db.addFunds.findUnique({
-        where: { invoice_id },
+        where: { invoiceId: invoice_id },
         include: { user: true },
       });
       if (fixedPayment) {
-        payment.transaction_id = null;
+        payment.transactionId = null;
       }
     }
 
@@ -56,11 +56,11 @@ export async function GET(req: NextRequest) {
         message: "Payment already verified",
         status: "COMPLETED",
         payment: {
-          id: payment.id,
-          invoice_id: payment.invoice_id,
-          amount: payment.usd_amount,
+          id: payment.Id,
+          invoice_id: payment.invoiceId,
+          amount: payment.usdAmount,
           status: payment.status,
-          transaction_id: payment.transaction_id,
+          transaction_id: payment.transactionId,
         }
       });
     }
@@ -240,17 +240,17 @@ export async function GET(req: NextRequest) {
         hasVerificationData: !!verificationData,
         transaction_id_from_api: verificationData?.transaction_id,
         transaction_id_from_url: transaction_id,
-        transaction_id_from_db: payment.transaction_id,
+        transaction_id_from_db: payment.transactionId,
       });
       
-      let finalTransactionId = verificationData?.transaction_id || transaction_id || payment.transaction_id || null;
+      let finalTransactionId = verificationData?.transaction_id || transaction_id || payment.transactionId || null;
       
       if (finalTransactionId && finalTransactionId === invoice_id) {
         console.log('WARNING: finalTransactionId matches invoice_id - this is wrong! Setting to null instead.');
-        finalTransactionId = transaction_id || payment.transaction_id || null;
+        finalTransactionId = transaction_id || payment.transactionId || null;
       }
-      const finalPaymentMethod = verificationData?.payment_method || payment.payment_method || null;
-      const finalSenderNumber = verificationData?.sender_number || payment.phone_number || null;
+      const finalPaymentMethod = verificationData?.payment_method || payment.paymentMethod || null;
+      const finalSenderNumber = verificationData?.sender_number || payment.phoneNumber || null;
       
       console.log('Final values to save:', {
         transaction_id: finalTransactionId,
@@ -261,16 +261,16 @@ export async function GET(req: NextRequest) {
       try {
         await db.$transaction(async (prisma) => {
           await prisma.addFunds.update({
-            where: { invoice_id },
+            where: { invoiceId: invoice_id },
             data: {
               status: "Success",
-              transaction_id: finalTransactionId,
-              payment_method: finalPaymentMethod,
-              phone_number: finalSenderNumber,
+              transactionId: finalTransactionId,
+              paymentMethod: finalPaymentMethod,
+              phoneNumber: finalSenderNumber,
             }
           });
           
-          const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
+          const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
           const userSettings = await prisma.userSettings.findFirst();
           let bonusAmount = 0;
 
@@ -284,7 +284,7 @@ export async function GET(req: NextRequest) {
             where: { id: payment.userId },
             data: {
               balance: { increment: totalAmountToAdd },
-              balanceUSD: { increment: payment.usd_amount },
+              balanceUSD: { increment: payment.usdAmount },
               total_deposit: { increment: originalAmount }
             }
           });
@@ -295,15 +295,15 @@ export async function GET(req: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const updatedPayment = await db.addFunds.findUnique({
-          where: { invoice_id }
+          where: { invoiceId: invoice_id }
         });
         
-        let finalTransactionIdToReturn = updatedPayment?.transaction_id || null;
+        let finalTransactionIdToReturn = updatedPayment?.transactionId || null;
         if (finalTransactionIdToReturn && finalTransactionIdToReturn === invoice_id) {
           console.log('ERROR: Database has invoice_id stored as transaction_id! Clearing it.');
           await db.addFunds.update({
-            where: { invoice_id },
-            data: { transaction_id: null }
+            where: { invoiceId: invoice_id },
+            data: { transactionId: null }
           });
           finalTransactionIdToReturn = null;
         }
@@ -312,8 +312,8 @@ export async function GET(req: NextRequest) {
           console.log('Found transaction_id in API response, updating database...');
           finalTransactionIdToReturn = verificationData.transaction_id;
           await db.addFunds.update({
-            where: { invoice_id },
-            data: { transaction_id: finalTransactionIdToReturn }
+            where: { invoiceId: invoice_id },
+            data: { transactionId: finalTransactionIdToReturn }
           });
         }
         
@@ -323,13 +323,13 @@ export async function GET(req: NextRequest) {
           status: "COMPLETED",
           message: "Payment verified successfully (from redirect)",
           payment: {
-            id: updatedPayment?.id,
-            invoice_id: updatedPayment?.invoice_id,
-            amount: updatedPayment?.usd_amount,
+            id: updatedPayment?.Id,
+            invoice_id: updatedPayment?.invoiceId,
+            amount: updatedPayment?.usdAmount,
             status: updatedPayment?.status || "Success",
             transaction_id: finalTransactionIdToReturn,
-            payment_method: updatedPayment?.payment_method,
-            phone_number: updatedPayment?.phone_number,
+            payment_method: updatedPayment?.paymentMethod,
+            phone_number: updatedPayment?.phoneNumber,
           },
         });
       } catch (redirectError) {
@@ -340,13 +340,13 @@ export async function GET(req: NextRequest) {
     try {
       console.log(`Payment verification result: ${isSuccessful ? 'Success' : paymentStatus}`);
       
-      let existingPayment = await db.addFunds.findUnique({ where: { invoice_id } });
-      let transactionIdToSave = verificationData?.transaction_id || existingPayment?.transaction_id || payment.transaction_id || null;
+      let existingPayment = await db.addFunds.findUnique({ where: { invoiceId: invoice_id } });
+      let transactionIdToSave = verificationData?.transaction_id || existingPayment?.transactionId || payment.transactionId || null;
       
       if (transactionIdToSave && transactionIdToSave === invoice_id) {
         console.log('ERROR: transaction_id matches invoice_id - NOT saving! Setting to null or existing valid transaction_id.');
-        if (existingPayment?.transaction_id && existingPayment.transaction_id !== invoice_id) {
-          transactionIdToSave = existingPayment.transaction_id;
+        if (existingPayment?.transactionId && existingPayment.transactionId !== invoice_id) {
+          transactionIdToSave = existingPayment.transactionId;
         } else {
           transactionIdToSave = null;
         }
@@ -355,37 +355,37 @@ export async function GET(req: NextRequest) {
       console.log('Saving payment with transaction_id:', transactionIdToSave, '(invoice_id:', invoice_id, ')');
       
       const updatedPayment = await db.addFunds.update({
-        where: { invoice_id },
+        where: { invoiceId: invoice_id },
         data: {
           status: paymentStatus,
-          transaction_id: transactionIdToSave,
-          payment_method: verificationData?.payment_method || payment.payment_method || null,
-          phone_number: verificationData?.sender_number || payment.phone_number || null,
+          transactionId: transactionIdToSave,
+          paymentMethod: verificationData?.payment_method || payment.paymentMethod || null,
+          phoneNumber: verificationData?.sender_number || payment.phoneNumber || null,
         }
       });
       
-      const finalCheck = await db.addFunds.findUnique({ where: { invoice_id } });
-      if (finalCheck?.transaction_id && finalCheck.transaction_id === invoice_id) {
+      const finalCheck = await db.addFunds.findUnique({ where: { invoiceId: invoice_id } });
+      if (finalCheck?.transactionId && finalCheck.transactionId === invoice_id) {
         console.error('CRITICAL ERROR: invoice_id was saved as transaction_id! Fixing...');
         await db.addFunds.update({
-          where: { invoice_id },
-          data: { transaction_id: null }
+          where: { invoiceId: invoice_id },
+          data: { transactionId: null }
         });
       }
 
-      console.log(`Payment ${invoice_id} status updated to ${paymentStatus} with transaction_id: ${updatedPayment.transaction_id}`);
+      console.log(`Payment ${invoice_id} status updated to ${paymentStatus} with transaction_id: ${updatedPayment.transactionId}`);
       
       if (isSuccessful && payment.user) {
         try {
           await db.$transaction(async (prisma) => {
             await prisma.addFunds.update({
-              where: { invoice_id },
+              where: { invoiceId: invoice_id },
               data: {
                 status: "Success",
               }
             });
             
-            const originalAmount = payment.bdt_amount || payment.usd_amount || 0;
+            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -400,7 +400,7 @@ export async function GET(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usd_amount },
+                balanceUSD: { increment: payment.usdAmount },
                 total_deposit: { increment: originalAmount }
               }
             });
@@ -423,13 +423,13 @@ export async function GET(req: NextRequest) {
           status: "COMPLETED",
           message: "Payment verified successfully",
           payment: {
-            id: updatedPayment.id,
-            invoice_id: updatedPayment.invoice_id,
-            amount: updatedPayment.usd_amount,
+            id: updatedPayment.Id,
+            invoice_id: updatedPayment.invoiceId,
+            amount: updatedPayment.usdAmount,
             status: updatedPayment.status,
-              transaction_id: updatedPayment.transaction_id,
-              payment_method: updatedPayment.payment_method,
-              phone_number: updatedPayment.phone_number,
+              transaction_id: updatedPayment.transactionId,
+              payment_method: updatedPayment.paymentMethod,
+              phone_number: updatedPayment.phoneNumber,
           },
         });
       } else {
@@ -437,11 +437,11 @@ export async function GET(req: NextRequest) {
           status: "FAILED",
           message: "Payment verification failed",
           payment: {
-            id: updatedPayment.id,
-            invoice_id: updatedPayment.invoice_id,
-            amount: updatedPayment.usd_amount,
+            id: updatedPayment.Id,
+            invoice_id: updatedPayment.invoiceId,
+            amount: updatedPayment.usdAmount,
             status: updatedPayment.status,
-              transaction_id: updatedPayment.transaction_id,
+              transaction_id: updatedPayment.transactionId,
           }
         });
       }

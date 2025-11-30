@@ -29,7 +29,7 @@ export async function POST(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { id: transactionId },
+      where: { Id: transactionId },
       include: { user: true }
     });
     
@@ -54,7 +54,7 @@ export async function POST(
       );
     }
     
-    if (transaction.admin_status !== 'pending') {
+    if (transaction.status !== 'Processing' && transaction.status !== 'Pending') {
       return NextResponse.json(
         { error: 'Transaction is not pending approval' },
         { status: 400 }
@@ -63,10 +63,9 @@ export async function POST(
     
     try {
       await db.addFunds.update({
-        where: { id: transactionId },
+        where: { Id: transactionId },
         data: {
           status: "Cancelled",
-          admin_status: "Cancelled",
           updatedAt: new Date(),
         }
       });
@@ -75,9 +74,9 @@ export async function POST(
         const emailData = emailTemplates.paymentCancelled({
           userName: transaction.user.name || 'Customer',
           userEmail: transaction.user.email,
-          transactionId: (transaction.transaction_id || transaction.invoice_id || '0').toString(),
-          amount: transaction.usd_amount.toString(),
-          currency: 'BDT',
+          transactionId: (transaction.transactionId || transaction.invoiceId || '0').toString(),
+          amount: transaction.usdAmount.toString(),
+          currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString()
         });
@@ -95,8 +94,8 @@ export async function POST(
         success: true,
         message: 'Transaction cancelled successfully',
         data: {
-          transactionId: transaction.id,
-          amount: transaction.usd_amount,
+          transactionId: transaction.Id,
+          amount: transaction.usdAmount,
           userId: transaction.userId,
           status: 'Cancelled'
         }

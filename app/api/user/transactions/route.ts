@@ -22,20 +22,20 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { transaction_id: { contains: search, mode: 'insensitive' } },
-        { invoice_id: { contains: search, mode: 'insensitive' } },
-        { phone_number: { contains: search, mode: 'insensitive' } },
-        { payment_method: { contains: search, mode: 'insensitive' } },
+        { transactionId: { contains: search, mode: 'insensitive' } },
+        { invoiceId: { contains: search, mode: 'insensitive' } },
+        { phoneNumber: { contains: search, mode: 'insensitive' } },
+        { paymentMethod: { contains: search, mode: 'insensitive' } },
       ];
     }
 
     if (status && status !== 'all') {
       if (status === 'success') {
-        where.admin_status = 'Success';
+        where.status = 'Success';
       } else if (status === 'pending') {
-        where.admin_status = 'Pending';
+        where.status = 'Processing';
       } else if (status === 'failed') {
-        where.admin_status = { in: ['Failed', 'Cancelled'] };
+        where.status = { in: ['Failed', 'Cancelled'] };
       }
     }
 
@@ -67,11 +67,11 @@ export async function GET(request: NextRequest) {
     
     const transactionsToRefresh = transactions.filter(tx => {
       const isRecent = tx.createdAt >= tenMinutesAgo;
-      const needsRefresh = !tx.transaction_id || 
-                          !tx.payment_method || 
+      const needsRefresh = !tx.transactionId || 
+                          !tx.paymentMethod || 
                           tx.status === 'Processing' ||
-                          tx.transaction_id === tx.invoice_id;
-      return isRecent && needsRefresh && tx.payment_gateway === 'UddoktaPay';
+                          tx.transactionId === tx.invoiceId;
+      return isRecent && needsRefresh && tx.paymentGateway === 'UddoktaPay';
     });
 
     if (transactionsToRefresh.length > 0) {
@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
               'Accept': 'application/json',
               'RT-UDDOKTAPAY-API-KEY': apiKey,
             },
-            body: JSON.stringify({ invoice_id: transaction.invoice_id }),
+            body: JSON.stringify({ invoice_id: transaction.invoiceId }),
           });
 
           if (!verificationResponse.ok) {
@@ -126,46 +126,46 @@ export async function GET(request: NextRequest) {
                                       null;
 
           const validTransactionId = extractedTransactionId && 
-                                   extractedTransactionId !== transaction.invoice_id
+                                   extractedTransactionId !== transaction.invoiceId
                                    ? extractedTransactionId 
                                    : null;
 
           if (validTransactionId || extractedPaymentMethod || extractedSenderNumber) {
             const updateData: any = {};
             
-            if (validTransactionId && validTransactionId !== transaction.transaction_id) {
-              updateData.transaction_id = validTransactionId;
+            if (validTransactionId && validTransactionId !== transaction.transactionId) {
+              updateData.transactionId = validTransactionId;
             }
             
-            if (extractedPaymentMethod && extractedPaymentMethod !== transaction.payment_method) {
-              updateData.payment_method = extractedPaymentMethod;
+            if (extractedPaymentMethod && extractedPaymentMethod !== transaction.paymentMethod) {
+              updateData.paymentMethod = extractedPaymentMethod;
             }
             
-            if (extractedSenderNumber && extractedSenderNumber !== transaction.phone_number) {
-              updateData.phone_number = extractedSenderNumber;
+            if (extractedSenderNumber && extractedSenderNumber !== transaction.phoneNumber) {
+              updateData.phoneNumber = extractedSenderNumber;
             }
 
             if (Object.keys(updateData).length > 0) {
               await db.addFunds.update({
-                where: { invoice_id: transaction.invoice_id },
+                where: { invoiceId: transaction.invoiceId },
                 data: updateData,
               });
 
-              if (updateData.transaction_id) {
-                transaction.transaction_id = updateData.transaction_id;
+              if (updateData.transactionId) {
+                transaction.transactionId = updateData.transactionId;
               }
-              if (updateData.payment_method) {
-                transaction.payment_method = updateData.payment_method;
+              if (updateData.paymentMethod) {
+                transaction.paymentMethod = updateData.paymentMethod;
               }
-              if (updateData.phone_number) {
-                transaction.phone_number = updateData.phone_number;
+              if (updateData.phoneNumber) {
+                transaction.phoneNumber = updateData.phoneNumber;
               }
 
-              console.log(`Updated transaction ${transaction.invoice_id} with gateway data:`, updateData);
+              console.log(`Updated transaction ${transaction.invoiceId} with gateway data:`, updateData);
             }
           }
         } catch (error) {
-          console.error(`Error refreshing transaction ${transaction.invoice_id} from gateway:`, error);
+          console.error(`Error refreshing transaction ${transaction.invoiceId} from gateway:`, error);
         }
       });
 
@@ -177,17 +177,17 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit);
 
     const transformedTransactions = transactions.map((transaction) => ({
-      id: transaction.id,
-      invoice_id: transaction.invoice_id || transaction.id,
-      amount: transaction.usd_amount || 0,
+      id: transaction.Id,
+      invoice_id: transaction.invoiceId || transaction.Id,
+      amount: transaction.usdAmount || 0,
       status: mapStatus(transaction.status || 'Processing'),
-      method: transaction.payment_gateway || 'UddoktaPay',
-      payment_method: transaction.payment_method || 'UddoktaPay',
-      transaction_id: transaction.transaction_id || null,
+      method: transaction.paymentGateway || 'UddoktaPay',
+      payment_method: transaction.paymentMethod || 'UddoktaPay',
+      transaction_id: transaction.transactionId || null,
       createdAt: transaction.createdAt.toISOString(),
-      sender_number: transaction.phone_number,
-      phone: transaction.phone_number,
-      currency: 'USD',
+      sender_number: transaction.phoneNumber,
+      phone: transaction.phoneNumber,
+      currency: transaction.currency || 'USD',
     }));
 
     return NextResponse.json({

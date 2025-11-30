@@ -130,7 +130,8 @@ interface Transaction {
   sender_number?: string;
   method: string;
   payment_method?: string;
-  type: 'deposit' | 'withdrawal';
+  paymentGateway?: string;
+  paymentMethod?: string;
   status: 'pending' | 'completed' | 'cancelled' | 'Processing' | 'Success' | 'Cancelled';
   admin_status: 'Pending' | 'pending' | 'Success' | 'Cancelled' | 'Suspicious';
   notes?: string;
@@ -306,10 +307,6 @@ const AdminAllTransactionsPage = () => {
         params.append('status', statusFilter);
       }
 
-      if (typeFilter !== 'all') {
-        params.append('type', typeFilter);
-      }
-
       if (searchTerm) {
         params.append('search', searchTerm);
         params.append('searchType', searchType);
@@ -397,7 +394,7 @@ const AdminAllTransactionsPage = () => {
     } finally {
       setTransactionsLoading(false);
     }
-  }, [pagination.page, pagination.limit, statusFilter, typeFilter, searchTerm, searchType]);
+  }, [pagination.page, pagination.limit, statusFilter, searchTerm, searchType]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -456,7 +453,7 @@ const AdminAllTransactionsPage = () => {
   useEffect(() => {
     setTransactionsLoading(true);
     fetchTransactions();
-  }, [pagination.page, pagination.limit, statusFilter, typeFilter, fetchTransactions]);
+  }, [pagination.page, pagination.limit, statusFilter, fetchTransactions]);
 
   useEffect(() => {
     fetchStats();
@@ -548,27 +545,20 @@ const AdminAllTransactionsPage = () => {
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'deposit':
-        return 'bg-green-100 text-green-800';
-      case 'withdrawal':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const displayMethod = (transaction: Transaction) => {
-    const gateway = transaction.method || '';
-    const methodName = transaction.payment_method || '';
+    const gateway = transaction.method || (transaction as any).paymentGateway || '';
+    const methodName = transaction.payment_method || (transaction as any).paymentMethod || '';
     
     if (!gateway && !methodName) {
-      return null;
+      return 'Unknown';
     }
     
     if (gateway && methodName) {
       return `${gateway} - ${methodName}`;
+    }
+    
+    if (gateway && !methodName) {
+      return `${gateway} - Unknown`;
     }
     
     return gateway || methodName;
@@ -690,8 +680,7 @@ const AdminAllTransactionsPage = () => {
 
     if (!defaultId) {
       const timestamp = new Date().getTime();
-      const prefix = transaction?.type === 'deposit' ? 'DEP' : 'WDR';
-      defaultId = `${prefix}-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
+      defaultId = `DEP-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
     }
 
     setDefaultTransactionId(defaultId);
@@ -707,7 +696,7 @@ const AdminAllTransactionsPage = () => {
   const confirmApprove = async (transactionId: number) => {
     const transaction = approveConfirmDialog.transaction;
 
-    if (transaction?.type === 'deposit' && !approveTransactionId.trim()) {
+    if (!approveTransactionId.trim()) {
       showToast('Please enter a transaction ID', 'error');
       return;
     }
@@ -722,7 +711,6 @@ const AdminAllTransactionsPage = () => {
           },
           body: JSON.stringify({
             modifiedTransactionId: approveTransactionId.trim(),
-            transactionType: transaction?.type,
           }),
         }
       );
@@ -904,16 +892,6 @@ const AdminAllTransactionsPage = () => {
                   <option value="50">50</option>
                   <option value="100">100</option>
                   <option value="all">All</option>
-                </select>
-
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="pl-4 pr-8 py-2.5 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer text-sm"
-                >
-                  <option value="all">All Types</option>
-                  <option value="deposit">Deposit</option>
-                  <option value="withdrawal">Withdrawal</option>
                 </select>
 
                 <button
@@ -1124,13 +1102,7 @@ const AdminAllTransactionsPage = () => {
                           className="text-left p-3 font-semibold"
                           style={{ color: 'var(--text-primary)' }}
                         >
-                          Method
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          Type
+                          Payment Method
                         </th>
                         <th
                           className="text-left p-3 font-semibold"
@@ -1214,21 +1186,8 @@ const AdminAllTransactionsPage = () => {
                             </span>
                           </td>
                           <td className="p-3">
-                            {displayMethod(transaction) ? (
-                              <div className="text-xs font-medium text-gray-700">
-                                {displayMethod(transaction)}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className={`text-xs font-medium px-2 py-1 rounded capitalize ${getTypeColor(
-                                transaction.type
-                              )}`}
-                            >
-                              {transaction.type}
+                            <div className="text-xs font-medium text-gray-700">
+                              {displayMethod(transaction)}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1446,7 +1405,7 @@ const AdminAllTransactionsPage = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-sm font-medium text-gray-700">
                               Amount
@@ -1460,29 +1419,11 @@ const AdminAllTransactionsPage = () => {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-700">
-                              Type
+                              Payment Method
                             </label>
-                            <div
-                              className={`text-xs font-medium px-2 py-2 rounded capitalize ${getTypeColor(
-                                viewDetailsDialog.transaction.type
-                              )}`}
-                            >
-                              {viewDetailsDialog.transaction.type}
+                            <div className="text-xs font-medium p-2 text-gray-700">
+                              {displayMethod(viewDetailsDialog.transaction)}
                             </div>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">
-                              Method
-                            </label>
-                            {displayMethod(viewDetailsDialog.transaction) ? (
-                              <div className="text-xs font-medium p-2 text-gray-700">
-                                {displayMethod(viewDetailsDialog.transaction)}
-                              </div>
-                            ) : (
-                              <div className="text-sm bg-gray-50 p-2 rounded text-gray-400">
-                                -
-                              </div>
-                            )}
                           </div>
                         </div>
 
@@ -1619,13 +1560,7 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="mb-6">
                           <p className="text-gray-700 mb-4">
-                            Are you sure you want to approve this{' '}
-                            {approveConfirmDialog.transaction?.type}? This will{' '}
-                            {approveConfirmDialog.transaction?.type ===
-                            'withdrawal'
-                              ? 'process the withdrawal and assign a transaction ID'
-                              : "add funds to the user's account"}
-                            .
+                            Are you sure you want to approve this transaction? This will add funds to the user's account.
                           </p>
 
                           <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
@@ -1663,12 +1598,12 @@ const AdminAllTransactionsPage = () => {
                             </div>
                             <div className="flex justify-between">
                               <span className="font-medium text-gray-600">
-                                Method:
+                                Payment Method:
                               </span>
                               <span>
                                 {displayMethod(
                                   approveConfirmDialog.transaction
-                                ) || '-'}
+                                )}
                               </span>
                             </div>
                             <div className="flex justify-between">
@@ -1695,7 +1630,7 @@ const AdminAllTransactionsPage = () => {
                               required
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                              Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved {approveConfirmDialog.transaction?.type}.
+                              Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved transaction.
                             </p>
                           </div>
                         </div>
@@ -1718,11 +1653,7 @@ const AdminAllTransactionsPage = () => {
                             onClick={() =>
                               confirmApprove(approveConfirmDialog.transactionId)
                             }
-                            disabled={
-                              (approveConfirmDialog.transaction?.type === 'deposit' ||
-                               approveConfirmDialog.transaction?.type === 'withdrawal') &&
-                              !approveTransactionId.trim()
-                            }
+                            disabled={!approveTransactionId.trim()}
                             className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
                           >
                             <FaCheckCircle className="h-4 w-4" />
@@ -1783,12 +1714,12 @@ const AdminAllTransactionsPage = () => {
                             </div>
                             <div className="flex justify-between">
                               <span className="font-medium text-gray-600">
-                                Method:
+                                Payment Method:
                               </span>
                               <span>
                                 {displayMethod(
                                   cancelConfirmDialog.transaction
-                                ) || '-'}
+                                )}
                               </span>
                             </div>
                             <div className="flex justify-between">

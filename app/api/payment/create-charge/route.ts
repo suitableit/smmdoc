@@ -7,6 +7,7 @@ import {
   fetchCurrencyData,
 } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
+import { getPaymentGatewayName } from '@/lib/payment-gateway-config';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function OPTIONS(req: NextRequest) {
@@ -95,6 +96,8 @@ export async function POST(req: NextRequest) {
       amountBDT: amountBDT,
     });
 
+    const gatewayName = await getPaymentGatewayName();
+
     try {
       const payment = await db.addFunds.create({
         data: {
@@ -104,8 +107,7 @@ export async function POST(req: NextRequest) {
           email: session.user.email || '',
           name: session.user.name || '',
           status: 'Processing',
-          adminStatus: 'pending',
-          paymentGateway: body.method || 'UddoktaPay',
+          paymentGateway: gatewayName,
           phoneNumber: body.phone,
           userId: session.user.id,
           currency: currency,
@@ -124,7 +126,7 @@ export async function POST(req: NextRequest) {
           username,
           amountUSD,
           'USD',
-          'UddoktaPay'
+          gatewayName
         );
       } catch (error) {
         console.error('Failed to log payment creation activity:', error);

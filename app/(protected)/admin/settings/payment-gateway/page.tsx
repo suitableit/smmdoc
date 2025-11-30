@@ -231,9 +231,18 @@ const PaymentGatewayPage = () => {
                   <input
                     type="text"
                     value={gatewaySettings.gatewayName}
-                    readOnly
-                    className="form-field w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                    onChange={(e) =>
+                      setGatewaySettings(prev => ({
+                        ...prev,
+                        gatewayName: e.target.value
+                      }))
+                    }
+                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                    placeholder="Enter gateway name (e.g., UddoktaPay, Stripe, PayPal)"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    This name will be used when creating payment records in the database
+                  </p>
                 </div>
 
                 <div className="form-group">
@@ -257,7 +266,7 @@ const PaymentGatewayPage = () => {
                   </select>
                   {gatewaySettings.mode === 'Sandbox' && (
                     <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
-                      <strong>Sandbox Mode:</strong> Use sandbox API credentials for testing. Payments will not be processed with real money. Live credentials are saved separately.
+                      Use sandbox API credentials for testing. Payments will not be processed with real money.
                     </p>
                   )}
                 </div>
@@ -295,12 +304,12 @@ const PaymentGatewayPage = () => {
                       }))
                     }
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                    placeholder={gatewaySettings.mode === 'Sandbox' ? "https://sandbox.uddoktapay.com/api/checkout-v2" : "https://pay.smmdoc.com/api"}
+                    placeholder={gatewaySettings.mode === 'Sandbox' ? "e.g., https://sandbox.uddoktapay.com/api/checkout-v2" : "e.g., https://pay.smmdoc.com/api/checkout-v2"}
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {gatewaySettings.mode === 'Sandbox' 
-                      ? "Enter your sandbox API base URL (without /checkout-v2 or /verify-payment)"
-                      : "Enter your live API base URL (without /checkout-v2 or /verify-payment)"}
+                      ? "Enter your sandbox API URL"
+                      : "Enter your live API URL"}
                   </p>
                 </div>
 

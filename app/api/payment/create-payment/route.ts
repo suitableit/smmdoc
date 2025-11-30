@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { convertCurrency, fetchCurrencyData } from '@/lib/currency-utils';
+import { getPaymentGatewayName } from '@/lib/payment-gateway-config';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -26,26 +27,28 @@ export async function POST(req: NextRequest) {
     const { currencies } = await fetchCurrencyData();
     const amountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
 
+    const gatewayName = await getPaymentGatewayName();
+
     console.log('Creating payment record with:', {
       invoice_id,
       amount: amountUSD,
       email: session.user.email,
       name: session.user.name,
       status: 'Processing',
-      method: body.method,
+      gatewayName: gatewayName,
       userId: session.user.id,
     });
 
     try {
       const payment = await db.addFunds.create({
         data: {
-          invoice_id,
-          usd_amount: amountUSD,
-          bdt_amount: amountBDT,
+          invoiceId: invoice_id,
+          usdAmount: amountUSD,
+          bdtAmount: amountBDT,
           email: session.user.email || '',
           name: session.user.name || '',
           status: 'Processing',
-          payment_gateway: body.method,
+          paymentGateway: gatewayName,
           userId: session.user.id,
           currency: 'USD',
         },
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
       console.log('Payment URLs:', { success_url, cancel_url, payment_url });
 
       return NextResponse.json({
-        invoice_id: payment.invoice_id,
+        invoice_id: payment.invoiceId,
         payment_url,
         success_url,
         cancel_url,

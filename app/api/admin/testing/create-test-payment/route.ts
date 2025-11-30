@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
     
     const existingPayment = await db.addFunds.findUnique({
-      where: { invoice_id }
+      where: { invoiceId: invoice_id }
     });
     
     if (existingPayment) {
@@ -57,17 +57,14 @@ export async function POST(req: NextRequest) {
 
     const testPayment = await db.addFunds.create({
       data: {
-        invoice_id,
-        usd_amount: amountUSD,
-        bdt_amount: amountBDT,
+        invoiceId: invoice_id,
+        usdAmount: amountUSD,
+        bdtAmount: amountBDT,
         userId: testUser.id,
         status: 'Processing',
-        admin_status: 'pending',
-        payment_gateway: 'UddoktaPay',
-        phone_number: phone,
+        paymentGateway: 'Test Gateway',
+        phoneNumber: phone,
         email: testUser.email || '',
-        createdAt: new Date(),
-        updatedAt: new Date(),
       }
     });
     
@@ -77,8 +74,8 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Test payment created successfully',
       data: {
-        invoice_id: testPayment.invoice_id,
-        amount: testPayment.usd_amount,
+        invoice_id: testPayment.invoiceId,
+        amount: testPayment.usdAmount,
         userId: testPayment.userId,
         status: testPayment.status
       }

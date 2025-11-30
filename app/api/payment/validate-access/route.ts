@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     }
 
     const payment = await db.addFunds.findUnique({
-      where: { invoice_id },
+      where: { invoiceId: invoice_id },
       include: {
         user: {
           select: {
@@ -54,14 +54,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       valid: true,
       payment: {
-        id: payment.id,
-        invoice_id: payment.invoice_id,
-        amount: payment.usd_amount,
-        bdt_amount: payment.bdt_amount,
+        id: payment.Id,
+        invoice_id: payment.invoiceId,
+        amount: payment.usdAmount,
+        bdt_amount: payment.bdtAmount,
         status: payment.status,
-        transaction_id: payment.transaction_id,
-        payment_method: payment.payment_method,
-        sender_number: payment.phone_number,
+        transaction_id: payment.transactionId,
+        payment_method: payment.paymentMethod,
+        sender_number: payment.phoneNumber,
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
       },
