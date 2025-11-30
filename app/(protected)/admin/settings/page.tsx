@@ -577,7 +577,6 @@ const GeneralSettingsPage = () => {
         console.error('Error saving user settings:', errorMessage);
         showToast(errorMessage, 'error');
         
-        // If migration is required, show additional info
         if (data.migrationRequired) {
           console.warn('Database migration required. Please add the minimumFundsToAddUSD column.');
         }
@@ -1317,37 +1316,40 @@ const GeneralSettingsPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Minimum funds to add (in USD)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={userSettings.minimumFundsToAddUSD}
-                    onChange={(e) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        minimumFundsToAddUSD: parseFloat(e.target.value) || 10
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Maximum funds to add (in USD)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={userSettings.maximumFundsToAddUSD}
-                    onChange={(e) =>
-                      setUserSettings(prev => ({
-                        ...prev,
-                        maximumFundsToAddUSD: parseFloat(e.target.value) || 10000
-                      }))
-                    }
-                    className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label">Minimum funds to add (in USD)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={userSettings.minimumFundsToAddUSD}
+                        onChange={(e) =>
+                          setUserSettings(prev => ({
+                            ...prev,
+                            minimumFundsToAddUSD: parseFloat(e.target.value) || 10
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Maximum funds to add (in USD)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={userSettings.maximumFundsToAddUSD}
+                        onChange={(e) =>
+                          setUserSettings(prev => ({
+                            ...prev,
+                            maximumFundsToAddUSD: parseFloat(e.target.value) || 10000
+                          }))
+                        }
+                        className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="form-group">

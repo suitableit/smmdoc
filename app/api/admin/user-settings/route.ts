@@ -128,7 +128,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build update data object, excluding minimumFundsToAddUSD if not provided
     const updateData: any = {
       resetPasswordEnabled: userSettings.resetPasswordEnabled ?? true,
       signUpPageEnabled: userSettings.signUpPageEnabled ?? true,
@@ -142,12 +141,10 @@ export async function POST(request: NextRequest) {
       bonusPercentage: userSettings.bonusPercentage ?? 0,
     };
     
-    // Only include minimumFundsToAddUSD if it's explicitly provided
     if (userSettings.minimumFundsToAddUSD !== undefined) {
       updateData.minimumFundsToAddUSD = userSettings.minimumFundsToAddUSD ?? 10;
     }
     
-    // Only include maximumFundsToAddUSD if it's explicitly provided
     if (userSettings.maximumFundsToAddUSD !== undefined) {
       updateData.maximumFundsToAddUSD = userSettings.maximumFundsToAddUSD ?? 10000;
     }
@@ -181,7 +178,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error saving user settings:', error);
     
-    // Check if error is related to missing database column
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorString = errorMessage.toLowerCase();
     
