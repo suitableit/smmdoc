@@ -147,7 +147,16 @@ export default auth(async (req) => {
     console.log('Proxy: User role:', userRole?.role);
     try {
 
-      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:3000`;
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+      
+      if (!baseUrl) {
+        console.error('NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required');
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        });
+      }
       console.log('Proxy: Fetching contact status from:', `${baseUrl}/api/contact-system-status`);
       const response = await fetch(`${baseUrl}/api/contact-system-status`, {
         method: 'GET',

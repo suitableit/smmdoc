@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: `${appName}`,
     },
     description: `${APP_DESCRIPTION}`,
-    metadataBase: new URL(APP_URL || 'http://localhost:3000'),
+    metadataBase: new URL(APP_URL || process.env.NEXT_PUBLIC_APP_URL!),
     icons: {
       icon: '/api/favicon',
       shortcut: '/api/favicon',

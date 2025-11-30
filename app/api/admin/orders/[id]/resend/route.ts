@@ -501,9 +501,13 @@ export async function POST(
 
     if (updatedOrder.providerOrderId && updatedOrder.service.providerId) {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}` 
-          : 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+          process.env.NEXTAUTH_URL || 
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+        
+        if (!baseUrl) {
+          throw new Error('NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required');
+        }
         
         fetch(`${baseUrl}/api/admin/provider-sync`, {
           method: 'POST',

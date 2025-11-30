@@ -21,7 +21,11 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
     const siteUrl = generalSettings.siteUrl;
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+    
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required');
+    }
 
     let metaKeywords = '';
     try {
@@ -110,7 +114,11 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   try {
     const { slug } = await params;
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+    
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required');
+    }
     const response = await fetch(`${baseUrl}/api/blogs/${slug}`, {
       cache: 'no-store'
     });

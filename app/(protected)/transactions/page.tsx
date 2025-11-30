@@ -24,16 +24,25 @@ const Toast = ({
   onClose,
 }: {
   message: string;
-  type?: 'success' | 'error' | 'info' | 'pending';
+  type?: 'success' | 'error' | 'info' | 'pending' | 'warning';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
+}) => {
+  const warningStyle = type === 'warning' 
+    ? { backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #fbbf24' }
+    : {};
+  
+  return (
+    <div 
+      className={`toast toast-${type} toast-enter`}
+      style={warningStyle}
+    >
     <span className="font-medium">{message}</span>
     <button onClick={onClose} className="toast-close">
       <FaTimes className="toast-close-icon" />
     </button>
   </div>
 );
+};
 
 type Transaction = {
   id: number;
@@ -117,7 +126,7 @@ export default function TransactionsPage() {
   });
   const [toast, setToast] = useState<{
     message: string;
-    type: 'success' | 'error' | 'info' | 'pending';
+    type: 'success' | 'error' | 'info' | 'pending' | 'warning';
   } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -127,7 +136,7 @@ export default function TransactionsPage() {
 
   const showToast = (
     message: string,
-    type: 'success' | 'error' | 'info' | 'pending' = 'success'
+    type: 'success' | 'error' | 'info' | 'pending' | 'warning' = 'success'
   ) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -142,7 +151,13 @@ export default function TransactionsPage() {
 
     const paymentStatus = searchParams.get('payment');
     const invoiceId = searchParams.get('invoice_id');
-    const transactionId = searchParams.get('transaction_id');
+    // Extract transaction_id from various possible parameter names that payment gateway might use
+    const transactionId = searchParams.get('transaction_id') || 
+                          searchParams.get('trx_id') || 
+                          searchParams.get('transactionId') ||
+                          searchParams.get('transactionID') ||
+                          searchParams.get('trxId') ||
+                          searchParams.get('trxID');
 
     if (paymentStatus) {
       setHasShownPaymentToast(true);
@@ -179,6 +194,13 @@ export default function TransactionsPage() {
                     ? `Payment is pending verification. Invoice ID: ${invoiceId}`
                     : 'Payment is pending verification.',
                   'pending'
+                );
+              } else if (actualStatus === 'Failed' || actualStatus === 'FAILED') {
+                showToast(
+                  invoiceId
+                    ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
+                    : `Payment status: ${actualStatus}`,
+                  'warning'
                 );
               } else {
                 showToast(
@@ -395,10 +417,6 @@ export default function TransactionsPage() {
         }
 
       setTransactions(transactionsToShow);
-
-      if (!invoiceId && transactionsToShow.length > 0) {
-        showToast('Transactions loaded successfully!', 'success');
-      }
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transactions');

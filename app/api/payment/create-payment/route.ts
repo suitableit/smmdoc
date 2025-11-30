@@ -56,18 +56,16 @@ export async function POST(req: NextRequest) {
 
       console.log('Payment record created:', payment);
 
-      const requestOrigin = req.headers.get('origin') || 
-                           req.headers.get('referer')?.split('/').slice(0, 3).join('/');
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                     process.env.NEXTAUTH_URL || 
-                     requestOrigin ||
-                     'http://localhost:3000';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
       
-      console.log('App URL determined:', appUrl, {
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-        NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-        requestOrigin: requestOrigin
-      });
+      if (!appUrl) {
+        return NextResponse.json(
+          { error: 'NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required' },
+          { status: 500 }
+        );
+      }
+      
+      console.log('App URL determined:', appUrl);
 
       const success_url = body.success_url || `${appUrl}/transactions?payment=success&invoice_id=${invoice_id}`;
       const cancel_url =
