@@ -65,7 +65,7 @@ function sanitizeProviderUrl(raw: string | null | undefined): string {
 
     url = url.replace(/\s+/g, '');
 
-    if (!/^https?:\/\
+    if (!/^https?:\/\//.test(url)) {
       url = `https://${url}`;
     }
 
