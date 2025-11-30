@@ -280,7 +280,7 @@ function AffiliateStatsCards() {
                     style={{ color: 'var(--text-muted)' }}
                   >
                     {referralLink
-                      ? referralLink.replace(/^https?:\/\//, '')
+                      ? referralLink.replace(/^https?:\/\
                       : 'Login to generate'}
                   </p>
                   {referralLink && (

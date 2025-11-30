@@ -60,7 +60,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    const sessionId = session?.user?.id || 'unknown';
+    let invoice_id = `INV-${timestamp}-${random}-${sessionId}`;
+    
+    const existingPayment = await db.addFunds.findUnique({
+      where: { invoiceId: invoice_id }
+    });
+    
+    if (existingPayment) {
+      console.error('Duplicate invoice_id detected:', invoice_id);
+      invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 10000)}-${sessionId}`;
+      console.log('Generated new invoice_id:', invoice_id);
+    }
 
     const { currencies } = await fetchCurrencyData();
 
@@ -98,29 +111,72 @@ export async function POST(req: NextRequest) {
 
     const gatewayName = await getPaymentGatewayName();
 
+    let payment;
     try {
-      const payment = await db.addFunds.create({
-        data: {
-          invoiceId: invoice_id,
-          usdAmount: amountUSD,
-          bdtAmount: amountBDT,
-          email: session.user.email || '',
-          name: session.user.name || '',
-          status: 'Processing',
-          paymentGateway: gatewayName,
-          phoneNumber: body.phone,
-          userId: session.user.id,
-          currency: currency,
-        },
+      payment = await db.$transaction(async (prisma) => {
+        const tenSecondsAgo = new Date(Date.now() - 10000);
+        const recentPayment = await prisma.addFunds.findFirst({
+          where: {
+            userId: session.user.id,
+            usdAmount: amountUSD,
+            phoneNumber: body.phone,
+            createdAt: {
+              gte: tenSecondsAgo,
+            },
+            status: 'Processing',
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        if (recentPayment) {
+          console.log('Duplicate payment attempt detected within transaction:', {
+            userId: session.user.id,
+            amount: amountUSD,
+            existingInvoiceId: recentPayment.invoiceId,
+            newInvoiceId: invoice_id,
+            timeDiff: Date.now() - recentPayment.createdAt.getTime(),
+          });
+          throw new Error('DUPLICATE_PAYMENT');
+        }
+
+        return await prisma.addFunds.create({
+          data: {
+            invoiceId: invoice_id,
+            usdAmount: amountUSD,
+            bdtAmount: amountBDT,
+            email: session.user.email || '',
+            name: session.user.name || '',
+            status: 'Processing',
+            paymentGateway: gatewayName,
+            phoneNumber: body.phone,
+            userId: session.user.id,
+            currency: currency,
+          },
+        });
       });
 
       console.log('Payment record created:', payment);
+    } catch (error: any) {
+      if (error?.message === 'DUPLICATE_PAYMENT') {
+        console.error('Duplicate payment prevented:', error);
+        return NextResponse.json(
+          { 
+            error: 'Duplicate payment request detected. Please wait a moment and try again.',
+          },
+          { status: 429, headers: corsHeaders }
+        );
+      }
+      throw error;
+    }
 
+    try {
+      const username =
+        session.user.username ||
+        session.user.email?.split('@')[0] ||
+        `user${session.user.id}`;
       try {
-        const username =
-          session.user.username ||
-          session.user.email?.split('@')[0] ||
-          `user${session.user.id}`;
         await ActivityLogger.fundAdded(
           session.user.id,
           username,
@@ -253,15 +309,25 @@ export async function POST(req: NextRequest) {
           { status: 500, headers: corsHeaders }
         );
       }
-    } catch (dbError) {
-      console.error('Database error:', dbError);
+    } catch (paymentError) {
+      console.error('Payment gateway error:', paymentError);
       return NextResponse.json(
-        { error: 'Database operation failed', details: String(dbError) },
+        { error: 'Payment gateway operation failed', details: String(paymentError) },
         { status: 500, headers: corsHeaders }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating payment:', error);
+    
+    if (error?.message === 'DUPLICATE_PAYMENT') {
+      return NextResponse.json(
+        { 
+          error: 'Duplicate payment request detected. Please wait a moment and try again.',
+        },
+        { status: 429, headers: corsHeaders }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to create payment', details: String(error) },
       { status: 500, headers: corsHeaders }

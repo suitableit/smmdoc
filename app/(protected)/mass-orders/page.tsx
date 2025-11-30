@@ -127,7 +127,7 @@ const InstructionsPanel: React.FC = () => {
           rel="noopener noreferrer"
           className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
         >
-          https://smmdoc.com/services
+          https:
           <FaExternalLinkAlt className="ml-2 text-xs" />
         </a>
 

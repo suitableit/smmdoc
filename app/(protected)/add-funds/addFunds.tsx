@@ -67,6 +67,7 @@ export function AddFundForm() {
   const [isLoading, setIsLoading] = useState(true);
   const [amountUSDError, setAmountUSDError] = useState<string | null>(null);
   const [convertedAmountError, setConvertedAmountError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setPageTitle('Add Funds', appName);
@@ -298,6 +299,13 @@ export function AddFundForm() {
   };
 
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
+    if (isSubmitting) {
+      console.log('Submission already in progress, ignoring duplicate request');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
     startTransition(async () => {
       try {
         const currentRate = rate || 120;
@@ -308,6 +316,7 @@ export function AddFundForm() {
 
         if (!user?.name || !user?.email || !values.phone || amountInBDT <= 0) {
           showToast('Please fill in all required information', 'error');
+          setIsSubmitting(false);
           return;
         }
 
@@ -354,6 +363,8 @@ export function AddFundForm() {
           return;
         }
 
+        const requestId = `req-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        
         const formValues = {
           method: 'UddoktaPay',
           amount: amountValue.toString(),
@@ -362,6 +373,7 @@ export function AddFundForm() {
           full_Name: user?.name || 'John Doe',
           email: user?.email || 'customer@example.com',
           phone: cleanedPhone,
+          requestId: requestId,
         };
 
         showToast('Payment processing...', 'pending');
@@ -408,6 +420,7 @@ export function AddFundForm() {
           }, 500);
         } else {
           showToast('Payment processing failed. Please try again.', 'error');
+          setIsSubmitting(false);
         }
       } catch (error: any) {
         console.error('Payment error:', {
@@ -416,6 +429,7 @@ export function AddFundForm() {
           status: error?.response?.status,
         });
         showToast('Payment processing failed. Please try again.', 'error');
+        setIsSubmitting(false);
       }
     });
   };
@@ -695,10 +709,10 @@ export function AddFundForm() {
           <button
             type="button"
             onClick={form.handleSubmit(onSubmit)}
-            disabled={isPending || !form.formState.isValid}
+            disabled={isPending || isSubmitting || !form.formState.isValid}
             className="btn btn-primary w-full h-14 text-lg font-bold"
           >
-            {isPending ? (
+            {isPending || isSubmitting ? (
               <div className="flex items-center gap-2">
                 Processing...
               </div>
