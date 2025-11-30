@@ -65,6 +65,8 @@ export function AddFundForm() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [amountUSDError, setAmountUSDError] = useState<string | null>(null);
+  const [convertedAmountError, setConvertedAmountError] = useState<string | null>(null);
 
   useEffect(() => {
     setPageTitle('Add Funds', appName);
@@ -86,6 +88,46 @@ export function AddFundForm() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const formatNumber = (num: number | string): string => {
+    const numValue = typeof num === 'string' ? parseFloat(num) || 0 : num;
+    return numValue.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const validateConvertedAmount = (usdAmount: number) => {
+    if (!usdAmount || usdAmount === 0) {
+      setConvertedAmountError(null);
+      return;
+    }
+
+    const minAmountUSD = userSettings?.minimumFundsToAddUSD;
+    const maxAmountUSD = userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 
+      ? userSettings.maximumFundsToAddUSD 
+      : null;
+
+    if (minAmountUSD && usdAmount < minAmountUSD) {
+      const currentRate = rate || 120;
+      const minAmountBDT = minAmountUSD * currentRate;
+      if (activeCurrency === 'USD') {
+        setConvertedAmountError(`Minimum amount is ${formatNumber(minAmountBDT)} BDT (${formatNumber(minAmountUSD)} USD)`);
+      } else {
+        setConvertedAmountError(`Minimum amount is ${formatNumber(minAmountUSD)} USD (≈ ${formatNumber(minAmountBDT)} BDT)`);
+      }
+    } else if (maxAmountUSD && usdAmount > maxAmountUSD) {
+      const currentRate = rate || 120;
+      const maxAmountBDT = maxAmountUSD * currentRate;
+      if (activeCurrency === 'USD') {
+        setConvertedAmountError(`Maximum amount is ${formatNumber(maxAmountBDT)} BDT (${formatNumber(maxAmountUSD)} USD)`);
+      } else {
+        setConvertedAmountError(`Maximum amount is ${formatNumber(maxAmountUSD)} USD (≈ ${formatNumber(maxAmountBDT)} BDT)`);
+      }
+    } else {
+      setConvertedAmountError(null);
+    }
+  };
+
   const [activeCurrency, setActiveCurrency] = useState<'USD' | 'BDT'>(
     globalCurrency === 'USD' ? 'USD' : 'BDT'
   );
@@ -98,14 +140,12 @@ export function AddFundForm() {
     defaultValues: addFundDefaultValues,
   });
 
-  // Initialize form with minimum amount when userSettings loads and currency is USD
   useEffect(() => {
     if (userSettings?.minimumFundsToAddUSD && activeCurrency === 'USD') {
       const minAmountUSD = userSettings.minimumFundsToAddUSD;
       const currentRate = rate || 120;
       const minAmountBDT = minAmountUSD * currentRate;
       
-      // Only set if current values are empty or zero
       const currentUSD = form.watch('amountUSD');
       if (!currentUSD || parseFloat(currentUSD) === 0) {
         form.setValue('amountUSD', minAmountUSD.toFixed(2), { shouldValidate: true });
@@ -123,8 +163,9 @@ export function AddFundForm() {
   useEffect(() => {
     const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
     setActiveCurrency(newCurrency);
+    setAmountUSDError(null);
+    setConvertedAmountError(null);
 
-    // Initialize with minimum if USD and userSettings available
     if (newCurrency === 'USD' && userSettings?.minimumFundsToAddUSD) {
       const minAmountUSD = userSettings.minimumFundsToAddUSD;
       const currentRate = rate || 120;
@@ -148,12 +189,28 @@ export function AddFundForm() {
     }
   }, [globalCurrency, form, user, userSettings, rate]);
 
+  const amountUSDValue = form.watch('amountUSD');
+  const amountBDTValue = form.watch('amountBDT');
+  
+  useEffect(() => {
+    if (activeCurrency === 'USD') {
+      const usdValue = parseFloat(amountUSDValue || '0');
+      validateConvertedAmount(usdValue);
+    } else {
+      const currentRate = rate || 120;
+      const bdtValue = parseFloat(amountBDTValue || '0');
+      const usdValue = bdtValue / currentRate;
+      validateConvertedAmount(usdValue);
+    }
+  }, [amountUSDValue, amountBDTValue, activeCurrency, rate, userSettings]);
+
   const toggleCurrency = () => {
     const newCurrency = activeCurrency === 'USD' ? 'BDT' : 'USD';
     setActiveCurrency(newCurrency);
+    setAmountUSDError(null);
+    setConvertedAmountError(null);
 
     if (newCurrency === 'USD' && userSettings?.minimumFundsToAddUSD) {
-      // Set to minimum USD amount when switching to USD
       const minAmountUSD = userSettings.minimumFundsToAddUSD;
       const currentRate = rate || 120;
       const minAmountBDT = minAmountUSD * currentRate;
@@ -187,8 +244,26 @@ export function AddFundForm() {
 
   const handleUSDChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const currentRate = rate || 120;
-    const usdValue = parseFloat(e.target.value) || 0;
+    const inputValue = e.target.value;
+    const usdValue = parseFloat(inputValue) || 0;
     const bdtValue = usdValue * currentRate;
+
+    if (!inputValue || inputValue.trim() === '') {
+      setAmountUSDError(null);
+    } else {
+      const minAmountUSD = userSettings?.minimumFundsToAddUSD;
+      const maxAmountUSD = userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 
+        ? userSettings.maximumFundsToAddUSD 
+        : null;
+
+      if (minAmountUSD && usdValue > 0 && usdValue < minAmountUSD) {
+        setAmountUSDError(`Minimum amount is ${formatNumber(minAmountUSD)} USD`);
+      } else if (maxAmountUSD && usdValue > maxAmountUSD) {
+        setAmountUSDError(`Maximum amount is ${formatNumber(maxAmountUSD)} USD`);
+      } else {
+        setAmountUSDError(null);
+      }
+    }
 
     form.setValue('amountUSD', e.target.value, { shouldValidate: true });
     form.setValue('amountBDT', bdtValue.toFixed(2), { shouldValidate: true });
@@ -201,6 +276,8 @@ export function AddFundForm() {
       amount: bdtValue,
       currency: 'BDT',
     });
+
+    validateConvertedAmount(usdValue);
   };
 
   const handleBDTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +293,8 @@ export function AddFundForm() {
       amount: bdtValue,
       currency: 'BDT',
     });
+
+    validateConvertedAmount(usdValue);
   };
 
   const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
@@ -238,7 +317,6 @@ export function AddFundForm() {
         const maxAmountBDT = maxAmountUSD && maxAmountUSD > 0 ? maxAmountUSD * currentRate : null;
         const finalAmount = Math.round(amountInBDT);
         
-        // Validate USD amount directly if USD currency is selected
         if (activeCurrency === 'USD') {
           const enteredUSD = parseFloat(values.amountUSD || '0');
           if (enteredUSD < minAmountUSD) {
@@ -463,7 +541,11 @@ export function AddFundForm() {
                       min={userSettings?.minimumFundsToAddUSD || 0}
                       max={userSettings?.maximumFundsToAddUSD && userSettings.maximumFundsToAddUSD > 0 ? userSettings.maximumFundsToAddUSD : undefined}
                       step="0.01"
-                      className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className={`form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border ${
+                        amountUSDError 
+                          ? 'border-red-500 dark:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                       disabled={isPending}
                       value={form.watch('amountUSD') || ''}
                       onChange={handleUSDChange}
@@ -472,6 +554,11 @@ export function AddFundForm() {
                       $
                     </span>
                   </div>
+                  {amountUSDError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {amountUSDError}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="form-group">
@@ -516,30 +603,52 @@ export function AddFundForm() {
                 Converted Amount
               </div>
               {activeCurrency === 'USD' ? (
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                    disabled
-                    placeholder="0.00 BDT"
-                    value={form.watch('amountBDTConverted') || '0.00'}
-                  />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
-                    ৳
-                  </span>
+                <div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className={`form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border ${
+                        convertedAmountError 
+                          ? 'border-red-500 dark:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
+                      disabled
+                      placeholder="0.00 BDT"
+                      value={formatNumber(form.watch('amountBDTConverted') || '0.00')}
+                    />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                      ৳
+                    </span>
+                  </div>
+                  {convertedAmountError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {convertedAmountError}
+                    </p>
+                  )}
                 </div>
               ) : (
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                    disabled
-                    placeholder="0.00 USD"
-                    value={form.watch('amountUSD') || '0.00'}
-                  />
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
-                    $
-                  </span>
+                <div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className={`form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border ${
+                        convertedAmountError 
+                          ? 'border-red-500 dark:border-red-500' 
+                          : 'border-gray-300 dark:border-gray-600'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
+                      disabled
+                      placeholder="0.00 USD"
+                      value={formatNumber(form.watch('amountUSD') || '0.00')}
+                    />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                      $
+                    </span>
+                  </div>
+                  {convertedAmountError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {convertedAmountError}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -569,17 +678,17 @@ export function AddFundForm() {
                 Total Amount:
               </span>
               <span className="text-2xl font-bold text-blue-600">
-                {totalAmount.amount.toFixed(2)} {totalAmount.currency}
+                {formatNumber(totalAmount.amount)} {totalAmount.currency}
               </span>
             </div>
             {totalAmount.currency === 'BDT' && (
               <div className="text-sm text-gray-600">
-                ≈ ${(totalAmount.amount / (rate || 120)).toFixed(2)} USD
+                ≈ ${formatNumber(totalAmount.amount / (rate || 120))} USD
               </div>
             )}
             {totalAmount.currency === 'USD' && (
               <div className="text-sm text-gray-600">
-                ≈ ৳{(totalAmount.amount * (rate || 120)).toFixed(2)} BDT
+                ≈ ৳{formatNumber(totalAmount.amount * (rate || 120))} BDT
               </div>
             )}
           </div>
@@ -595,7 +704,6 @@ export function AddFundForm() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <FaWallet />
                 Add Funds
               </div>
             )}

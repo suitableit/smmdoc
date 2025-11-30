@@ -137,7 +137,6 @@ export default function TransactionsPage() {
     setPageTitle('Transactions', appName);
   }, [appName]);
 
-  // Handle payment redirect toasts
   useEffect(() => {
     if (typeof window === 'undefined' || hasShownPaymentToast) return;
 
@@ -156,7 +155,6 @@ export default function TransactionsPage() {
           'success'
         );
         
-        // Verify payment if invoice_id is provided
         if (invoiceId) {
           setTimeout(async () => {
             try {
@@ -194,7 +192,6 @@ export default function TransactionsPage() {
         );
       }
 
-      // Clean up URL parameters after showing toast
       setTimeout(() => {
         const url = new URL(window.location.href);
         url.searchParams.delete('payment');
@@ -203,7 +200,6 @@ export default function TransactionsPage() {
         router.replace(url.pathname + url.search);
       }, 100);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, hasShownPaymentToast]);
 
   useEffect(() => {
