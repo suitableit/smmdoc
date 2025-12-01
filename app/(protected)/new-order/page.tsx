@@ -211,8 +211,8 @@ const ServiceDetailsCard = ({
       <div className="card card-padding">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Example Link</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Example Link</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                 selected.exampleLink ? 'bg-blue-100' : 'bg-red-100'
               }`}>
@@ -225,19 +225,19 @@ const ServiceDetailsCard = ({
                   href={selected.exampleLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate max-w-48"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline truncate max-w-48"
                   title={selected.exampleLink}
                 >
                   {selected.exampleLink}
                 </a>
               ) : (
-                <span className="text-sm">-</span>
+                <span className="text-sm dark:text-gray-300">-</span>
               )}
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Speed</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Speed</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                 !selected.serviceSpeed ? 'bg-gray-100' :
                 selected.serviceSpeed === 'slow' ? 'bg-red-100' :
@@ -247,21 +247,21 @@ const ServiceDetailsCard = ({
                 'bg-gray-100'
               }`}>
                 <FaTachometerAlt className={`text-sm ${
-                  !selected.serviceSpeed ? 'text-gray-600' :
-                  selected.serviceSpeed === 'slow' ? 'text-red-600' :
-                  selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600' :
-                  selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600' :
-                  selected.serviceSpeed === 'fast' ? 'text-green-600' :
-                  'text-gray-600'
+                  !selected.serviceSpeed ? 'text-gray-600 dark:text-gray-400' :
+                  selected.serviceSpeed === 'slow' ? 'text-red-600 dark:text-red-400' :
+                  selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600 dark:text-orange-400' :
+                  selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                  selected.serviceSpeed === 'fast' ? 'text-green-600 dark:text-green-400' :
+                  'text-gray-600 dark:text-gray-400'
                 }`} />
               </div>
               <span className={`text-sm font-medium ${
-                !selected.serviceSpeed ? 'text-gray-600' :
-                selected.serviceSpeed === 'slow' ? 'text-red-600' :
-                selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600' :
-                selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600' :
-                selected.serviceSpeed === 'fast' ? 'text-green-600' :
-                'text-gray-600'
+                !selected.serviceSpeed ? 'text-gray-600 dark:text-gray-400' :
+                selected.serviceSpeed === 'slow' ? 'text-red-600 dark:text-red-400' :
+                selected.serviceSpeed === 'sometimes_slow' ? 'text-orange-600 dark:text-orange-400' :
+                selected.serviceSpeed === 'normal' || selected.serviceSpeed === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                selected.serviceSpeed === 'fast' ? 'text-green-600 dark:text-green-400' :
+                'text-gray-600 dark:text-gray-400'
               }`}>
                 {(() => {
                   if (!selected.serviceSpeed) return '-';
@@ -280,17 +280,17 @@ const ServiceDetailsCard = ({
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Start Time</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Start Time</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                 <FaClock className="text-blue-600 text-sm" />
               </div>
-              <span className="text-sm">Instant</span>
+              <span className="text-sm dark:text-gray-300">Instant</span>
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Refill</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Refill</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                 selected.refill ? 'bg-green-100' : 'bg-red-100'
               }`}>
@@ -306,8 +306,8 @@ const ServiceDetailsCard = ({
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Cancel</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Cancel</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                 selected.cancel ? 'bg-green-100' : 'bg-red-100'
               }`}>
@@ -323,19 +323,19 @@ const ServiceDetailsCard = ({
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Average Time</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Average Time</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                 <FaClock className="text-blue-600 text-sm" />
               </div>
-              <span className="text-sm">
+              <span className="text-sm dark:text-gray-300">
                 {selected.avg_time || 'Not enough data'}
               </span>
             </div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">Guarantee</h4>
-            <div className="flex items-center text-gray-600">
+            <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Guarantee</h4>
+            <div className="flex items-center text-gray-600 dark:text-gray-400">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
                 selected.refill ? 'bg-green-100' : 'bg-red-100'
               }`}>
@@ -357,10 +357,10 @@ const ServiceDetailsCard = ({
           </div>
         </div>
         <div className="mt-6">
-          <h4 className="font-medium text-gray-900 mb-2">More Details</h4>
-          <div className="bg-gray-50 rounded-lg p-4">
+          <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">More Details</h4>
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
             <div
-              className="text-sm text-gray-700 leading-relaxed"
+              className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed"
               dangerouslySetInnerHTML={{
                 __html: decodeHTML(
                   selected.description || 'No additional details available.'
@@ -369,24 +369,24 @@ const ServiceDetailsCard = ({
             />
           </div>
         </div>
-        <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+        <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {toString(selected.min_order) || '0'}
             </div>
-            <div className="text-xs text-gray-500">Min Order</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Min Order</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {toString(selected.max_order) || '0'}
             </div>
-            <div className="text-xs text-gray-500">Max Order</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Max Order</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
               ${selected.rate || '0.00'}
             </div>
-            <div className="text-xs text-gray-500">Per 1000</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Per 1000</div>
           </div>
         </div>
       </div>
@@ -1115,7 +1115,7 @@ function NewOrder() {
                   </button>
                   <button
                     onClick={() => router.push('/mass-orders')}
-                    className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
+                    className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 dark:hover:from-gray-800 dark:hover:to-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400"
                   >
                     <FaLayerGroup className="mr-2 w-4 h-4" />
                     Mass Orders
@@ -1197,7 +1197,7 @@ function NewOrder() {
                     <label className="form-label">Search Services</label>
                     <div className="relative w-full" ref={searchRef}>
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                        <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                        <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                       </div>
                       <input
                         type="search"
@@ -1213,19 +1213,19 @@ function NewOrder() {
                         style={{ width: '100%', minWidth: '0' }}
                       />
                       {showDropdown && (
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
+                        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                           {isSearchLoading && (
-                            <div className="p-3 text-sm text-gray-500">Searching...</div>
+                            <div className="p-3 text-sm text-gray-500 dark:text-gray-400">Searching...</div>
                           )}
                           {!isSearchLoading && servicesData.length === 0 && search.trim().length > 0 && (
-                            <div className="p-3 text-sm text-gray-500">No services found</div>
+                            <div className="p-3 text-sm text-gray-500 dark:text-gray-400">No services found</div>
                           )}
                           {!isSearchLoading && servicesData.length > 0 && (
                             <>
                               {servicesData.map((service) => (
                                 <div
                                   key={service.id}
-                                  className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                                  className="p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                                   onClick={() =>
                                     handleSearchSelect(
                                       service.id,
@@ -1234,10 +1234,10 @@ function NewOrder() {
                                   }
                                 >
                                   <div className="flex justify-between items-center w-full">
-                                    <span className="text-sm text-gray-900 truncate pr-2 flex-1">
+                                    <span className="text-sm text-gray-900 dark:text-gray-100 truncate pr-2 flex-1">
                                       {service.name}
                                     </span>
-                                    <span className="text-xs text-gray-500 flex-shrink-0">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                                       ${service.rate || '0.00'}
                                     </span>
                                   </div>

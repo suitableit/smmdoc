@@ -287,13 +287,13 @@ const ChildPanel: React.FC = () => {
       <div className="page-container">
           <div className="page-content">
             <div className="mb-6">
-              <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
+              <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-800">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
                   <div className="lg:col-span-2">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                       Create A Child Panel
                     </h1>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">
                       Create a child panel with your own domain and start your own
                       business. You can connect your child panel with {appName} and
                       start selling services to your customers.
@@ -304,8 +304,8 @@ const ChildPanel: React.FC = () => {
                   </div>
                   <div className="lg:col-span-1 hidden lg:block">
                     <div className="flex justify-center">
-                      <div className="w-48 h-32 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <FaServer className="w-16 h-16 text-purple-600" />
+                      <div className="w-48 h-32 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                        <FaServer className="w-16 h-16 text-purple-600 dark:text-purple-400" />
                       </div>
                     </div>
                   </div>
@@ -330,7 +330,7 @@ const ChildPanel: React.FC = () => {
                         <div className="h-10 w-full gradient-shimmer rounded-lg" />
                       </div>
 
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                         <div className="h-4 w-48 gradient-shimmer rounded mb-2" />
                         <div className="h-3 w-32 gradient-shimmer rounded mb-1" />
                         <div className="h-3 w-40 gradient-shimmer rounded" />
@@ -382,11 +382,11 @@ const ChildPanel: React.FC = () => {
                     {faqs.slice(0, 3).map((faq, index) => (
                       <div key={index} className="card">
                         <div className="w-full p-4 text-left flex justify-between items-center">
-                          <span className="flex items-start gap-2 font-medium text-gray-900 pr-4">
+                          <span className="flex items-start gap-2 font-medium text-gray-900 dark:text-gray-100 pr-4">
                             <FaInfoCircle className="w-4 h-4 flex-shrink-0 mt-1" />
                             <span>{faq.question}</span>
                           </span>
-                          <FaChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          <FaChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                         </div>
                       </div>
                     ))}
@@ -413,13 +413,13 @@ const ChildPanel: React.FC = () => {
 
       <div className="page-content">
         <div className="mb-6">
-          <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50">
+          <div className="card card-padding bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-800">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
               <div className="lg:col-span-2">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                   Create A Child Panel
                 </h1>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
                   Create a child panel with your own domain and start your own
                   business. You can connect your child panel with {appName} and
                   start selling services to your customers.
@@ -433,8 +433,8 @@ const ChildPanel: React.FC = () => {
               </div>
               <div className="lg:col-span-1 hidden lg:block">
                 <div className="flex justify-center">
-                  <div className="w-48 h-32 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <FaServer className="w-16 h-16 text-purple-600" />
+                  <div className="w-48 h-32 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                    <FaServer className="w-16 h-16 text-purple-600 dark:text-purple-400" />
                   </div>
                 </div>
               </div>
@@ -469,8 +469,8 @@ const ChildPanel: React.FC = () => {
                     />
                   </div>
 
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="text-sm text-blue-800">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="text-sm text-blue-800 dark:text-blue-200">
                       <div className="font-semibold mb-2 flex items-center">
                         <FaInfoCircle className="mr-2" />
                         Please change nameservers to:
@@ -481,7 +481,7 @@ const ChildPanel: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(nameservers.ns1, 'Nameserver copied!')}
-                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
+                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded cursor-pointer"
                             title="Copy nameserver"
                           >
                             <FaCopy className="h-3.5 w-3.5" />
@@ -492,7 +492,7 @@ const ChildPanel: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => copyToClipboard(nameservers.ns2, 'Nameserver copied!')}
-                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 rounded cursor-pointer"
+                            className="ml-2 p-1 opacity-50 group-hover:opacity-100 transition-opacity hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded cursor-pointer"
                             title="Copy nameserver"
                           >
                             <FaCopy className="h-3.5 w-3.5" />
@@ -567,7 +567,7 @@ const ChildPanel: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="password-toggle"
+                        className="password-toggle text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       >
                         {showPassword ? (
                           <FaEyeSlash className="h-4 w-4" />
@@ -596,7 +596,7 @@ const ChildPanel: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="password-toggle"
+                        className="password-toggle text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                       >
                         {showConfirmPassword ? (
                           <FaEyeSlash className="h-4 w-4" />
@@ -653,10 +653,10 @@ const ChildPanel: React.FC = () => {
                 {faqs.map((faq, index) => (
                   <div key={index} className="card">
                     <button
-                      className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                      className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                       onClick={() => toggleFAQ(index)}
                     >
-                      <span className="flex items-start gap-2 font-medium text-gray-900 pr-4">
+                      <span className="flex items-start gap-2 font-medium text-gray-900 dark:text-gray-100 pr-4">
                         <FaInfoCircle className="w-4 h-4 flex-shrink-0 mt-1" />
                         <span>{faq.question}</span>
                       </span>
@@ -665,7 +665,7 @@ const ChildPanel: React.FC = () => {
                           openFAQ === index ? 'rotate-180' : 'rotate-0'
                         }`}
                       >
-                        <FaChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                        <FaChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                       </div>
                     </button>
 
@@ -676,8 +676,8 @@ const ChildPanel: React.FC = () => {
                           : 'max-h-0 opacity-0'
                       }`}
                     >
-                      <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50">
-                        <p className="text-gray-600 leading-relaxed mt-3">
+                      <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed mt-3">
                           {faq.answer}
                         </p>
                       </div>

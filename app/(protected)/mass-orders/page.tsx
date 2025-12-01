@@ -389,7 +389,7 @@ export default function MassOrder() {
               <div className="flex space-x-2">
                 <button
                   onClick={handleNewOrderClick}
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 dark:hover:from-gray-800 dark:hover:to-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400"
                 >
                   <FaShoppingCart className="mr-2 w-4 h-4" />
                   New Order

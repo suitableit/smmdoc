@@ -38,18 +38,18 @@ const Toast = ({
   <div
     className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
       type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
         : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
         : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
     }`}
   >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -314,7 +314,7 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Use this key to authenticate your API requests. Keep it secret
                 and secure.
               </p>
@@ -339,7 +339,7 @@ axios.post(url, payload)
                     />
                     <button
                       onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                       {showApiKey ? (
                         <FaEyeSlash className="h-4 w-4" />
@@ -378,12 +378,12 @@ axios.post(url, payload)
                 </div>
               )}
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                 <div className="flex">
-                  <FaExclamationTriangle className="text-yellow-600 mt-0.5 mr-3" />
+                  <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-400 mt-0.5 mr-3" />
                   <div>
-                    <h4 className="text-yellow-800 font-medium">Important</h4>
-                    <p className="text-yellow-700 text-sm mt-1">
+                    <h4 className="text-yellow-800 dark:text-yellow-200 font-medium">Important</h4>
+                    <p className="text-yellow-700 dark:text-yellow-300 text-sm mt-1">
                       Generating a new API key will invalidate your previous
                       key. Make sure to update your applications.
                     </p>
@@ -402,27 +402,27 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
                     HTTP Method
                   </h4>
-                  <p className="text-gray-600">POST</p>
+                  <p className="text-gray-600 dark:text-gray-300">POST</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">API URL</h4>
-                  <p className="text-gray-600 font-mono text-sm">
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">API URL</h4>
+                  <p className="text-gray-600 dark:text-gray-300 font-mono text-sm">
                     https:
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
                     Response Format
                   </h4>
-                  <p className="text-gray-600">JSON</p>
+                  <p className="text-gray-600 dark:text-gray-300">JSON</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">API Key</h4>
-                  <p className="text-gray-600">Required for all requests</p>
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">API Key</h4>
+                  <p className="text-gray-600 dark:text-gray-300">Required for all requests</p>
                 </div>
               </div>
             </div>
@@ -437,27 +437,27 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         services
                       </td>
                     </tr>
@@ -466,7 +466,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -511,29 +511,29 @@ axios.post(url, payload)
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {getCurrentServiceType().parameters.map((param, index) => (
-                      <tr key={index} className="border-b border-gray-100">
+                      <tr key={index} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
                         <td className="py-3 px-4">
-                          <span className="font-mono text-sm">
+                          <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
                             {param.name}
                           </span>
                           {param.required && (
-                            <span className="text-red-500 ml-1">*</span>
+                            <span className="text-red-500 dark:text-red-400 ml-1">*</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
+                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                           {param.description}
                         </td>
                       </tr>
@@ -543,7 +543,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -564,33 +564,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         status
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">order</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">order</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Order ID
                       </td>
                     </tr>
@@ -599,7 +599,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -624,33 +624,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         status
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">orders</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">orders</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Order IDs (separated by a comma, up to 100 IDs)
                       </td>
                     </tr>
@@ -659,7 +659,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -696,33 +696,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         refill
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">order</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">order</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Order ID
                       </td>
                     </tr>
@@ -731,7 +731,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -752,33 +752,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         refill
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">orders</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">orders</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Order IDs (separated by a comma, up to 100 IDs)
                       </td>
                     </tr>
@@ -787,7 +787,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -821,33 +821,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         refill_status
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">refill</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">refill</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Refill ID
                       </td>
                     </tr>
@@ -856,7 +856,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -877,33 +877,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         refill_status
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">refills</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">refills</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Refill IDs (separated by a comma, up to 100 IDs)
                       </td>
                     </tr>
@@ -912,7 +912,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -946,33 +946,33 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         cancel
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">orders</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">orders</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Order IDs (separated by a comma, up to 100 IDs)
                       </td>
                     </tr>
@@ -981,7 +981,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -1011,27 +1011,27 @@ axios.post(url, payload)
 
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Parameters
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Description
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">key</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">key</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         Your API key
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-100">
-                      <td className="py-3 px-4 font-mono text-sm">action</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
+                    <tr className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="py-3 px-4 font-mono text-sm text-gray-900 dark:text-gray-100">action</td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-300">
                         balance
                       </td>
                     </tr>
@@ -1040,7 +1040,7 @@ axios.post(url, payload)
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   Example Response
                 </h4>
                 <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-sm">
@@ -1061,13 +1061,13 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-6">
-              <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+              <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
                 <button
                   onClick={() => setActiveTab('php')}
                   className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
                     activeTab === 'php'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-white dark:bg-gradient-to-r dark:from-[var(--primary)] dark:to-[var(--secondary)] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   PHP
@@ -1076,8 +1076,8 @@ axios.post(url, payload)
                   onClick={() => setActiveTab('python')}
                   className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
                     activeTab === 'python'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-white dark:bg-gradient-to-r dark:from-[var(--primary)] dark:to-[var(--secondary)] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   Python
@@ -1086,8 +1086,8 @@ axios.post(url, payload)
                   onClick={() => setActiveTab('nodejs')}
                   className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all ${
                     activeTab === 'nodejs'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'bg-white dark:bg-gradient-to-r dark:from-[var(--primary)] dark:to-[var(--secondary)] text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
                   Node.js
@@ -1095,7 +1095,7 @@ axios.post(url, payload)
               </div>
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">
                     {activeTab === 'php' && 'PHP'}
                     {activeTab === 'python' && 'Python'}
                     {activeTab === 'nodejs' && 'Node.js'}
@@ -1140,7 +1140,7 @@ axios.post(url, payload)
             </div>
 
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 If you need assistance with API integration, please contact our
                 support team or check our detailed documentation.
               </p>

@@ -35,18 +35,18 @@ const Toast = ({
   <div
     className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
       type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
         : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
         : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
     }`}
   >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -378,12 +378,12 @@ const FavoriteServicesTable: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
                     {Array.from({ length: 11 }).map((_, idx) => (
-                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                           <div className="h-4 w-20 gradient-shimmer rounded" />
                         </th>
                       ))}
@@ -521,41 +521,41 @@ const FavoriteServicesTable: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                     Fav
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     ID
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Service
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Type
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Rate per 1000
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Min order
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Max order
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Average time
                   </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-900">
+                  <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Refill
                   </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-900">
+                  <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Cancel
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
                     Action
                   </th>
                 </tr>
@@ -651,7 +651,7 @@ const FavoriteServicesTable: React.FC = () => {
                                     className="p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors duration-200"
                                     title="Remove from favorites"
                                   >
-                                    <FaStar className="w-4 h-4 text-yellow-500" />
+                                    <FaStar className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
                                   </button>
                                 </td>
                                 <td className="py-3 px-4">
@@ -697,13 +697,13 @@ const FavoriteServicesTable: React.FC = () => {
                                     <div className="flex items-center justify-center gap-1">
                                       {service.refill ? (
                                         <>
-                                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                          <span className="text-xs text-green-600 font-medium">ON</span>
+                                          <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+                                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">ON</span>
                                         </>
                                       ) : (
                                         <>
-                                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                          <span className="text-xs text-red-600 font-medium">OFF</span>
+                                          <div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full"></div>
+                                          <span className="text-xs text-red-600 dark:text-red-400 font-medium">OFF</span>
                                         </>
                                       )}
                                     </div>
@@ -723,13 +723,13 @@ const FavoriteServicesTable: React.FC = () => {
                                   <div className="flex items-center justify-center gap-1">
                                     {service.cancel ? (
                                       <>
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <span className="text-xs text-green-600 font-medium">ON</span>
+                                        <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+                                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">ON</span>
                                       </>
                                     ) : (
                                       <>
-                                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                        <span className="text-xs text-red-600 font-medium">OFF</span>
+                                        <div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full"></div>
+                                        <span className="text-xs text-red-600 dark:text-red-400 font-medium">OFF</span>
                                       </>
                                     )}
                                   </div>
@@ -749,9 +749,9 @@ const FavoriteServicesTable: React.FC = () => {
                           {expandedCategories[categoryName] && categoryServices.length === 0 && (
                             <tr>
                               <td colSpan={11} className="py-8 text-center">
-                                <div className="flex flex-col items-center justify-center text-gray-500">
-                                  <FaClipboardList className="text-2xl md:text-4xl mb-2" />
-                                  <p className="text-sm font-medium">No services found!</p>
+                                <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                  <FaClipboardList className="text-2xl md:text-4xl mb-2 dark:text-gray-500" />
+                                  <p className="text-sm font-medium dark:text-gray-300">No services found!</p>
                                 </div>
                               </td>
                             </tr>
