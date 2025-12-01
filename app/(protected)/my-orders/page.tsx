@@ -61,8 +61,8 @@ const CancelModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">
           Cancel Order #{formatID(orderId || 0)}
         </h3>
 
@@ -152,24 +152,24 @@ const RefillModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Request Refill
           </h3>
         </div>
 
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-2">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
             You are requesting a refill for Order #{orderId ? formatID(orderId) : 'N/A'}
           </p>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
             Refill requests are reviewed within 24 hours.
           </p>
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Reason (Optional)
           </label>
           <textarea
@@ -794,38 +794,38 @@ export default function OrdersList() {
               )}
             </div>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                     ID
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Date
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Link
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Charge
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Start count
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Quantity
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Service
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Remains
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Status
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
                     Quick Actions
                   </th>
                 </tr>
@@ -834,7 +834,7 @@ export default function OrdersList() {
                 {isLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, idx) => (
-                      <tr key={idx} className="border-b border-gray-100">
+                      <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
                         <td className="py-3 px-4">
                           <div className="h-4 w-16 gradient-shimmer rounded" />
                         </td>
@@ -872,7 +872,7 @@ export default function OrdersList() {
                   </>
                 ) : error ? (
                   <tr>
-                    <td colSpan={10} className="py-8 text-center text-red-500">
+                    <td colSpan={10} className="py-8 text-center text-red-500 dark:text-red-400">
                       <div className="flex flex-col items-center">
                         <FaExclamationTriangle className="text-4xl mb-4" />
                         <div className="text-lg font-medium">Error loading orders!</div>
@@ -886,7 +886,7 @@ export default function OrdersList() {
                     return (
                       <tr
                         key={order.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] ${
                           isLastRow ? 'last:border-b-0' : ''
                         }`}
                       >
@@ -895,15 +895,15 @@ export default function OrdersList() {
                             isLastRow ? 'first:rounded-bl-lg' : ''
                           }`}
                         >
-                          <span className="text-sm font-mono text-gray-700">
+                          <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                             {order.id}
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {moment(order.createdAt).format('DD/MM/YYYY')}
                           </span>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {moment(order.createdAt).format('HH:mm')}
                           </div>
                         </td>
@@ -913,7 +913,7 @@ export default function OrdersList() {
                               href={order.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 text-xs flex items-center hover:underline"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs flex items-center hover:underline"
                               title={order.link}
                             >
                               <span className="truncate mr-1">
@@ -925,7 +925,7 @@ export default function OrdersList() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {(() => {
 
                               const usdPrice = order.usdPrice || 0;
@@ -950,25 +950,25 @@ export default function OrdersList() {
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {formatCount(order.startCount || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {formatCount(order.qty || 0)}
                           </span>
                         </td>
                         <td className="py-3 px-4 max-w-[200px]">
-                          <div className="truncate text-sm font-medium text-gray-900">
+                          <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                             {order.service?.name || 'N/A'}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {order.category?.category_name || 'N/A'}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {formatCount(order.remains || order.qty || 0)}
                           </span>
                         </td>
@@ -1050,13 +1050,13 @@ export default function OrdersList() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={10} className="py-8 text-center text-gray-500">
+                    <td colSpan={10} className="py-8 text-center text-gray-500 dark:text-gray-400">
                       <div className="flex flex-col items-center">
-                        <FaClipboardList className="text-4xl text-gray-400 mb-4" />
-                        <div className="text-lg font-medium">
+                        <FaClipboardList className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
+                        <div className="text-lg font-medium dark:text-gray-300">
                           No results found!
                         </div>
-                        <div className="text-sm">
+                        <div className="text-sm dark:text-gray-400">
                           Try adjusting your search or filter criteria
                         </div>
                       </div>

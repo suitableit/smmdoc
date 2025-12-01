@@ -70,31 +70,31 @@ function StatusBadge({ status }: { status: Transaction['status'] }) {
   switch (status) {
     case 'Success':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">
           Success
         </span>
       );
     case 'Processing':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">
           Processing
         </span>
       );
     case 'Cancelled':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
           Cancelled
         </span>
       );
     case 'Failed':
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
           Failed
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
           {status}
         </span>
       );
@@ -629,9 +629,9 @@ export default function TransactionsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
+                      <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
                         {Array.from({ length: 7 }).map((_, idx) => (
-                          <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                          <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                             <div className="h-4 w-24 gradient-shimmer rounded" />
                           </th>
                         ))}
@@ -639,7 +639,7 @@ export default function TransactionsPage() {
                     </thead>
                     <tbody>
                       {Array.from({ length: 10 }).map((_, idx) => (
-                        <tr key={idx} className="border-b border-gray-100">
+                        <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
                           <td className="py-3 px-4">
                             <div className="h-4 w-8 gradient-shimmer rounded" />
                           </td>
@@ -669,7 +669,7 @@ export default function TransactionsPage() {
               </div>
             </>
           ) : error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300 p-4 rounded-lg">
               <p className="flex items-center">
                 <FaExclamationTriangle className="h-5 w-5 mr-2" />
                 <span>{error}</span>
@@ -741,7 +741,7 @@ export default function TransactionsPage() {
                     onClick={() => handleTabChange('all')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'all'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                       }`}
                   >
                     <FaReceipt className="w-4 h-4" />
@@ -752,7 +752,7 @@ export default function TransactionsPage() {
                     onClick={() => handleTabChange('success')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'success'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                       }`}
                   >
                     <FaCheckCircle className="w-4 h-4" />
@@ -763,7 +763,7 @@ export default function TransactionsPage() {
                     onClick={() => handleTabChange('pending')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'pending'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                       }`}
                   >
                     <FaClock className="w-4 h-4" />
@@ -774,7 +774,7 @@ export default function TransactionsPage() {
                     onClick={() => handleTabChange('failed')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${activeTab === 'failed'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                       }`}
                   >
                     <FaExclamationTriangle className="w-4 h-4" />
@@ -787,9 +787,9 @@ export default function TransactionsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
                           {Array.from({ length: 7 }).map((_, idx) => (
-                            <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                            <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                               <div className="h-4 w-24 gradient-shimmer rounded" />
                             </th>
                           ))}
@@ -797,7 +797,7 @@ export default function TransactionsPage() {
                       </thead>
                       <tbody>
                         {Array.from({ length: 10 }).map((_, idx) => (
-                          <tr key={idx} className="border-b border-gray-100">
+                          <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
                             <td className="py-3 px-4">
                               <div className="h-4 w-8 gradient-shimmer rounded" />
                             </td>

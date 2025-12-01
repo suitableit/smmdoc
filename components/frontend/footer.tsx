@@ -180,10 +180,10 @@ const Footer = () => {
                     <li key={index}>
                       <Link
                         href={social.url}
-                        className="social_link w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] hover:text-white transition-all duration-300 text-slate-900 group"
+                        className="social_link w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-[var(--primary)] dark:hover:bg-[var(--secondary)] transition-all duration-300 group"
                         aria-label={social.name}
                       >
-                        <IconComponent className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                        <IconComponent className="w-5 h-5 text-slate-900 group-hover:text-white group-hover:scale-110 transition-all duration-200" />
                       </Link>
                     </li>
                   );

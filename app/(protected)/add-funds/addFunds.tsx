@@ -36,18 +36,18 @@ const Toast = ({
   <div
     className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
       type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
         : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
         : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
     }`}
   >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -440,9 +440,8 @@ export function AddFundForm() {
           <div className="card card-padding">
             <div className="space-y-6">
               <div
-                className="card"
+                className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:!bg-gray-800 dark:from-gray-800 dark:to-gray-800"
                 style={{
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
                   padding: '20px',
                 }}
               >
@@ -459,7 +458,7 @@ export function AddFundForm() {
                     <div className="h-12 w-40 gradient-shimmer rounded-lg" />
                   </div>
                 </div>
-                <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
                   <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
@@ -467,7 +466,7 @@ export function AddFundForm() {
               <div className="form-group">
                 <div className="h-10 w-full gradient-shimmer rounded-lg" />
               </div>
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
                 <div className="flex justify-between items-center mb-2">
                   <div className="h-4 w-24 gradient-shimmer rounded" />
                   <div className="h-8 w-32 gradient-shimmer rounded" />
@@ -485,7 +484,7 @@ export function AddFundForm() {
                 </div>
                 <h3 className="card-title">Secure Payment</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 SSL encrypted transactions with UddoktaPay
               </p>
             </div>
@@ -496,7 +495,7 @@ export function AddFundForm() {
                 </div>
                 <h3 className="card-title">100% Safe</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Your financial data is protected
               </p>
             </div>
@@ -507,7 +506,7 @@ export function AddFundForm() {
                 </div>
                 <h3 className="card-title">Instant Credit</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Funds added immediately after payment
               </p>
             </div>
@@ -528,18 +527,17 @@ export function AddFundForm() {
       <div className="card card-padding">
         <div className="space-y-6">
           <div
-            className="card"
+            className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:!bg-gray-800 dark:from-gray-800 dark:to-gray-800"
             style={{
-              background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
               padding: '20px',
             }}
           >
             <div className="flex flex-wrap items-center justify-between mb-4">
-              <h4 className="font-semibold text-gray-900">
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
                 <FaCalculator className="inline mr-2" />
                 Amount Details
               </h4>
-              <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
+              <div className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 mt-2 sm:mt-0 mx-auto sm:mx-0">
                 Rate: 1 USD = {rate || 120} BDT
               </div>
             </div>
@@ -564,7 +562,7 @@ export function AddFundForm() {
                       value={form.watch('amountUSD') || ''}
                       onChange={handleUSDChange}
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-semibold">
                       $
                     </span>
                   </div>
@@ -589,7 +587,7 @@ export function AddFundForm() {
                       value={form.watch('amountBDT') || ''}
                       onChange={handleBDTChange}
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-semibold">
                       ৳
                     </span>
                   </div>
@@ -605,15 +603,15 @@ export function AddFundForm() {
                     activeCurrency === 'USD' ? 'BDT' : 'USD'
                   }`}
                 >
-                  <FaExchangeAlt className="text-blue-600" />
+                  <FaExchangeAlt className="text-blue-600 dark:text-blue-400" />
                   <span className="text-sm font-semibold">
                     Switch to {activeCurrency === 'USD' ? 'BDT' : 'USD'}
                   </span>
                 </button>
               </div>
             </div>
-            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-              <div className="text-sm text-gray-600 mb-2 font-medium">
+            <div className="mt-4 p-4 bg-white dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 font-medium">
                 Converted Amount
               </div>
               {activeCurrency === 'USD' ? (
@@ -630,7 +628,7 @@ export function AddFundForm() {
                       placeholder="0.00 BDT"
                       value={formatNumber(form.watch('amountBDTConverted') || '0.00')}
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-bold">
                       ৳
                     </span>
                   </div>
@@ -654,7 +652,7 @@ export function AddFundForm() {
                       placeholder="0.00 USD"
                       value={formatNumber(form.watch('amountUSD') || '0.00')}
                     />
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-bold">
                       $
                     </span>
                   </div>
@@ -686,22 +684,22 @@ export function AddFundForm() {
               </p>
             )}
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800/90 rounded-lg p-6 border border-blue-200 dark:border-gray-700">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                 Total Amount:
               </span>
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {formatNumber(totalAmount.amount)} {totalAmount.currency}
               </span>
             </div>
             {totalAmount.currency === 'BDT' && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 ≈ ${formatNumber(totalAmount.amount / (rate || 120))} USD
               </div>
             )}
             {totalAmount.currency === 'USD' && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 ≈ ৳{formatNumber(totalAmount.amount * (rate || 120))} BDT
               </div>
             )}
@@ -732,7 +730,7 @@ export function AddFundForm() {
             </div>
             <h3 className="card-title">Secure Payment</h3>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             SSL encrypted transactions with UddoktaPay
           </p>
         </div>
@@ -743,7 +741,7 @@ export function AddFundForm() {
             </div>
             <h3 className="card-title">100% Safe</h3>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Your financial data is protected
           </p>
         </div>
@@ -754,7 +752,7 @@ export function AddFundForm() {
             </div>
             <h3 className="card-title">Instant Credit</h3>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Funds added immediately after payment
           </p>
         </div>

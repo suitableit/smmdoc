@@ -526,7 +526,7 @@ const TicketPage: React.FC = () => {
                   className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm ${
                     activeTab === 'new'
                       ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600 dark:hover:from-gray-800 dark:hover:to-purple-900/30 dark:hover:text-purple-400'
                   }`}
                 >
                   <FaTicketAlt className="mr-2 w-4 h-4" />
@@ -534,7 +534,7 @@ const TicketPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleticketsHistoryClick}
-                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600"
+                  className="flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600 dark:hover:from-gray-800 dark:hover:to-purple-900/30 dark:hover:text-purple-400"
                 >
                   <FaClock className="mr-2 w-4 h-4" />
                   Tickets History
@@ -761,10 +761,10 @@ const TicketPage: React.FC = () => {
               <div className="space-y-3 mt-4">
                 <div className="card">
                   <button
-                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                     onClick={() => toggleAccordion('item-1')}
                   >
-                    <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
+                    <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100 pr-4">
                       <FaCreditCard className="w-4 h-4" />
                       How to Create Ticket ?
                     </span>
@@ -773,7 +773,7 @@ const TicketPage: React.FC = () => {
                         openAccordion === 'item-1' ? 'rotate-180' : 'rotate-0'
                       }`}
                     >
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                     </div>
                   </button>
 
@@ -784,11 +784,11 @@ const TicketPage: React.FC = () => {
                         : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50">
-                      <p className="text-gray-600 leading-relaxed mt-3">
+                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed mt-3">
                         To Create a Ticket you need to choose a Subject above (
-                        <strong>AI Support</strong> or{' '}
-                        <strong>Human Support</strong>). Then you can write your
+                        <strong className="text-gray-900 dark:text-gray-100">AI Support</strong> or{' '}
+                        <strong className="text-gray-900 dark:text-gray-100">Human Support</strong>). Then you can write your
                         problem and click Submit button.
                       </p>
                     </div>
@@ -796,10 +796,10 @@ const TicketPage: React.FC = () => {
                 </div>
                 <div className="card">
                   <button
-                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                     onClick={() => toggleAccordion('item-2')}
                   >
-                    <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
+                    <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100 pr-4">
                       <FaClock className="w-4 h-4" />
                       How long does it take to get a reply from support
                       regarding my complaint?
@@ -809,7 +809,7 @@ const TicketPage: React.FC = () => {
                         openAccordion === 'item-2' ? 'rotate-180' : 'rotate-0'
                       }`}
                     >
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                     </div>
                   </button>
 
@@ -820,12 +820,12 @@ const TicketPage: React.FC = () => {
                         : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50">
-                      <div className="text-gray-600 leading-relaxed mt-3">
-                        <strong>Reply Time:</strong> Our support team usually
+                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                      <div className="text-gray-600 dark:text-gray-300 leading-relaxed mt-3">
+                        <strong className="text-gray-900 dark:text-gray-100">Reply Time:</strong> Our support team usually
                         responds within 5 to 45 minutes.
                         <br />
-                        <strong>Resolution Time:</strong> Solving your issue may
+                        <strong className="text-gray-900 dark:text-gray-100">Resolution Time:</strong> Solving your issue may
                         take anywhere between 5 minutes to 48 hours, depending
                         on the complexity of the problem.
                       </div>
@@ -834,10 +834,10 @@ const TicketPage: React.FC = () => {
                 </div>
                 <div className="card">
                   <button
-                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                    className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                     onClick={() => toggleAccordion('item-3')}
                   >
-                    <span className="flex items-center gap-2 font-medium text-gray-900 pr-4">
+                    <span className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100 pr-4">
                       <FaInfoCircle className="w-4 h-4" />
                       Important Guidelines
                     </span>
@@ -846,7 +846,7 @@ const TicketPage: React.FC = () => {
                         openAccordion === 'item-3' ? 'rotate-180' : 'rotate-0'
                       }`}
                     >
-                      <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                     </div>
                   </button>
 
@@ -857,15 +857,15 @@ const TicketPage: React.FC = () => {
                         : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50">
-                      <div className="space-y-3 text-gray-600 leading-relaxed mt-3">
+                    <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                      <div className="space-y-3 text-gray-600 dark:text-gray-300 leading-relaxed mt-3">
                         <p>
                           Please open only one ticket for the same or similar
                           issue. Avoid creating multiple Ticket for the same
                           issue, as it may delay the resolution process.
                         </p>
                         <p>
-                          <strong>
+                          <strong className="text-gray-900 dark:text-gray-100">
                             Important Notice: Use of Inappropriate Language
                           </strong>
                         </p>
@@ -875,23 +875,23 @@ const TicketPage: React.FC = () => {
                         </p>
                         <ol className="list-decimal list-inside space-y-2 ml-4">
                           <li>
-                            <strong>No Use of Bad Language:</strong> Any form of
+                            <strong className="text-gray-900 dark:text-gray-100">No Use of Bad Language:</strong> Any form of
                             offensive, abusive, or inappropriate language will
                             not be tolerated.
                           </li>
                           <li>
-                            <strong>Respect Our Support Team:</strong> Our team
+                            <strong className="text-gray-900 dark:text-gray-100">Respect Our Support Team:</strong> Our team
                             is here to assist you. Treat them with respect to
                             ensure smooth communication and faster resolution.
                           </li>
                           <li>
-                            <strong>Consequences of Violations:</strong> First
+                            <strong className="text-gray-900 dark:text-gray-100">Consequences of Violations:</strong> First
                             Offense: A warning will be issued. Repeated
                             Offenses: Your account may face temporary or
                             permanent suspension without prior notice
                           </li>
                           <li>
-                            <strong>How to Communicate:</strong> Be clear and
+                            <strong className="text-gray-900 dark:text-gray-100">How to Communicate:</strong> Be clear and
                             respectful in your messages. Provide all necessary
                             details about your issue to help us assist you
                             effectively. We value all our users, and maintaining

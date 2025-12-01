@@ -27,18 +27,18 @@ const Toast = ({
   <div
     className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
       type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
         : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
         : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
     }`}
   >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -98,10 +98,6 @@ export default function UpdateServiceTable() {
     checkServiceUpdateLogsStatus();
   }, [router]);
 
-  if (isAccessCheckLoading || !isAccessAllowed) {
-    return null;
-  }
-
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'info' | 'pending' = 'success'
@@ -120,6 +116,8 @@ export default function UpdateServiceTable() {
   }, [search]);
 
   useEffect(() => {
+    if (!isAccessAllowed) return;
+    
     const fetchServices = async () => {
       setLoading(true);
       try {
@@ -150,7 +148,11 @@ export default function UpdateServiceTable() {
     };
 
     fetchServices();
-  }, [page, debouncedSearch, user?.id]);
+  }, [page, debouncedSearch, user?.id, isAccessAllowed]);
+
+  if (isAccessCheckLoading || !isAccessAllowed) {
+    return null;
+  }
 
   const handlePrevious = () => {
     if (page > 1) setPage(page - 1);
@@ -175,12 +177,12 @@ export default function UpdateServiceTable() {
             <div className="mb-6">
               <div className="h-10 w-full gradient-shimmer rounded-lg" />
             </div>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
                     {Array.from({ length: 4 }).map((_, idx) => (
-                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         <div className="h-4 w-20 gradient-shimmer rounded" />
                       </th>
                     ))}
@@ -188,7 +190,7 @@ export default function UpdateServiceTable() {
                 </thead>
                 <tbody>
                   {Array.from({ length: 10 }).map((_, idx) => (
-                    <tr key={idx} className="border-b border-gray-200">
+                    <tr key={idx} className="border-b border-gray-200 dark:border-gray-700">
                       <td className="px-6 py-4">
                         <div className="h-4 w-12 gradient-shimmer rounded" />
                       </td>
@@ -206,7 +208,7 @@ export default function UpdateServiceTable() {
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="h-5 w-32 gradient-shimmer rounded" />
               <div className="flex gap-2">
                 <div className="h-9 w-20 gradient-shimmer rounded" />
@@ -240,7 +242,7 @@ export default function UpdateServiceTable() {
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaSearch className="w-4 h-4 text-gray-500" />
+                <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </div>
               <input
                 type="search"
@@ -253,34 +255,34 @@ export default function UpdateServiceTable() {
             </div>
           </div>
           {services?.length > 0 ? (
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                       ID
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 max-w-[400px]">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 max-w-[400px]">
                       Service Name
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                       Date & Time
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 w-[300px] last:rounded-tr-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 w-[300px] last:rounded-tr-lg">
                       Update
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {services?.map((service, i) => (
-                    <tr key={service.id} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={service.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         {service.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         {service.name}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-md">
                         <div className="break-words">
                           {(() => {
                             try {
@@ -384,7 +386,7 @@ export default function UpdateServiceTable() {
                         }
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {new Date(service.updatedAt).toLocaleString()}
                       </td>
                     </tr>
@@ -394,18 +396,18 @@ export default function UpdateServiceTable() {
             </div>
           ) : (
             <div className="text-center py-8 flex flex-col items-center">
-              <FaClipboardList className="text-4xl text-gray-400 mb-4" />
-              <div className="text-lg font-medium">
+              <FaClipboardList className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
+              <div className="text-lg font-medium dark:text-gray-300">
                 No service updates found
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
                 Try adjusting your search criteria
               </div>
             </div>
           )}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 Page <span className="font-medium">{page}</span> of{' '}
                 <span className="font-medium">{totalPages}</span>
               </div>

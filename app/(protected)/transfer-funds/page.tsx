@@ -309,9 +309,8 @@ export default function TransferFund() {
                   <div className="h-10 w-full gradient-shimmer rounded-lg" />
                 </div>
                 <div
-                  className="card"
+                  className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:!bg-gray-800 dark:from-gray-800 dark:to-gray-800"
                   style={{
-                    background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
                     padding: '20px',
                   }}
                 >
@@ -328,7 +327,7 @@ export default function TransferFund() {
                       <div className="h-12 w-40 gradient-shimmer rounded-lg" />
                     </div>
                   </div>
-                  <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                  <div className="mt-4 p-4 bg-white dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="h-4 w-32 gradient-shimmer rounded mb-2" />
                     <div className="h-10 w-full gradient-shimmer rounded-lg" />
                   </div>
@@ -387,17 +386,17 @@ export default function TransferFund() {
                   />
                   {isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FaSpinner className="animate-spin text-gray-400 w-4 h-4" />
+                      <FaSpinner className="animate-spin text-gray-400 dark:text-gray-500 w-4 h-4" />
                     </div>
                   )}
                   {isUserValid && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FaCheckCircle className="text-green-500 w-4 h-4" />
+                      <FaCheckCircle className="text-green-500 dark:text-green-400 w-4 h-4" />
                     </div>
                   )}
                   {userValidationError && !isValidatingUser && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FaTimesCircle className="w-4 h-4 text-red-500" />
+                      <FaTimesCircle className="w-4 h-4 text-red-500 dark:text-red-400" />
                     </div>
                   )}
                 </div>
@@ -432,16 +431,14 @@ export default function TransferFund() {
                 )}
               </div>
               <div
-                className="card"
+                className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:!bg-gray-800 dark:from-gray-800 dark:to-gray-800"
                 style={{
-                  background:
-                    'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
                   padding: '20px',
                 }}
               >
                 <div className="flex flex-wrap items-center justify-between mb-4">
-                  <h3 className="card-title">Amount Details</h3>
-                  <div className="text-xs text-gray-600 bg-white px-3 py-1 rounded-full border mt-2 sm:mt-0 mx-auto sm:mx-0">
+                  <h3 className="card-title dark:text-gray-100">Amount Details</h3>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 mt-2 sm:mt-0 mx-auto sm:mx-0">
                     Rate: 1 USD = {bdtRate.toFixed(2)} BDT
                   </div>
                 </div>
@@ -457,11 +454,11 @@ export default function TransferFund() {
                           min="0"
                           value={amountUSD}
                           onChange={handleUSDChange}
-                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="0.00"
                           disabled={isPending}
                         />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-semibold">
                           $
                         </span>
                       </div>
@@ -476,11 +473,11 @@ export default function TransferFund() {
                           min="0"
                           value={amountBDT}
                           onChange={handleBDTChange}
-                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-nonew-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="form-field w-full pl-10 pr-4 py-3 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           placeholder="0.00"
                           disabled={isPending}
                         />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-semibold">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-semibold">
                           ৳
                         </span>
                       </div>
@@ -496,15 +493,15 @@ export default function TransferFund() {
                         activeCurrency === 'USD' ? 'BDT' : 'USD'
                       }`}
                     >
-                      <FaExchangeAlt className="text-blue-600" />
+                      <FaExchangeAlt className="text-blue-600 dark:text-blue-400" />
                       <span className="text-sm font-semibold">
                         Switch to {activeCurrency === 'USD' ? 'BDT' : 'USD'}
                       </span>
                     </button>
                   </div>
                 </div>
-                <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                  <div className="text-sm text-gray-600 mb-2 font-medium">
+                <div className="mt-4 p-4 bg-white dark:bg-gray-800/80 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-300 mb-2 font-medium">
                     Converted Amount
                   </div>
                   {activeCurrency === 'USD' ? (
@@ -516,7 +513,7 @@ export default function TransferFund() {
                         placeholder="0.00 BDT"
                         value={amountBDTConverted || '0.00'}
                       />
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-bold">
                         ৳
                       </span>
                     </div>
@@ -529,7 +526,7 @@ export default function TransferFund() {
                         placeholder="0.00 USD"
                         value={amountUSD || '0.00'}
                       />
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 font-bold">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600 dark:text-blue-400 font-bold">
                         $
                       </span>
                     </div>
@@ -537,43 +534,43 @@ export default function TransferFund() {
                 </div>
               </div>
               {currentAmount > 0 && (
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-800/90 rounded-lg p-6 border border-blue-200 dark:border-gray-700">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         Transfer Amount:
                       </span>
-                      <span className="text-lg font-semibold text-gray-900">
+                      <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {activeCurrency === 'USD' ? '$' : '৳'}
                         {currentAmount.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         Processing Fee ({feePercentage}%):
                       </span>
-                      <span className="text-lg font-semibold text-red-600">
+                      <span className="text-lg font-semibold text-red-600 dark:text-red-400">
                         {activeCurrency === 'USD' ? '$' : '৳'}
                         {fee.toFixed(2)}
                       </span>
                     </div>
-                    <hr className="border-gray-300" />
+                    <hr className="border-gray-300 dark:border-gray-600" />
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                         Total Deduction:
                       </span>
-                      <span className="text-2xl font-bold text-blue-600">
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {activeCurrency === 'USD' ? '$' : '৳'}
                         {totalAmount.toFixed(2)}
                       </span>
                     </div>
                     {activeCurrency === 'USD' && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
                         ≈ ৳{(totalAmount * rate).toFixed(2)} BDT
                       </div>
                     )}
                     {activeCurrency === 'BDT' && (
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
                         ≈ ${(totalAmount / rate).toFixed(2)} USD
                       </div>
                     )}

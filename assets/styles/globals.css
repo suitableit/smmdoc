@@ -875,7 +875,6 @@ body {
 .dark .page-content,
 .dark .dashboard-content,
 .dark .h-full:not(.sidebar):not(.bg-\[\#170c21\]) {
-  background-color: #0d0712;
   color: #e5e7eb;
 }
 
@@ -888,7 +887,7 @@ body {
 .dark button:not(.sidebar button):not(.bg-\[\#170c21\] button),
 .dark .dialog,
 .dark .modal {
-  background-color: #0d0712;
+  background-color: #262329;
   color: #e5e7eb;
   border-color: #374151;
 }

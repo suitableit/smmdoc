@@ -33,18 +33,18 @@ const Toast = ({
   <div
     className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
       type === 'success'
-        ? 'bg-green-50 border-green-200 text-green-800'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
         : type === 'error'
-        ? 'bg-red-50 border-red-200 text-red-800'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
         : type === 'info'
-        ? 'bg-blue-50 border-blue-200 text-blue-800'
-        : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
     }`}
   >
     <div className="flex items-center space-x-2">
       {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
       <span className="font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 rounded">
+      <button onClick={onClose} className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded">
         <FaTimes className="w-3 h-3" />
       </button>
     </div>
@@ -393,38 +393,28 @@ function ContactSupportPage() {
 
                   <div className="space-y-4">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                        <FaEnvelope className="text-blue-600 text-sm" />
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-3">
+                        <FaEnvelope className="text-blue-600 dark:text-blue-400 text-sm" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900 text-sm">Email</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Email</h4>
                         {supportEmail ? (
-                          <a href={`mailto:${supportEmail}`} className="text-gray-600 text-sm hover:text-[var(--primary)] transition-colors">
+                          <a href={`mailto:${supportEmail}`} className="text-gray-600 dark:text-gray-300 text-sm hover:text-[var(--primary)] transition-colors">
                             {supportEmail}
                           </a>
                         ) : (
-                          <p className="text-gray-600 text-sm">Not configured</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm">Not configured</p>
                         )}
                       </div>
                     </div>
 
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                        <FaPhone className="text-green-600 text-sm" />
+                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mr-3">
+                        <FaClock className="text-purple-600 dark:text-purple-400 text-sm" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900 text-sm">Phone</h4>
-                        <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                        <FaClock className="text-purple-600 text-sm" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 text-sm">Hours</h4>
-                        <p className="text-gray-600 text-sm">24/7 Support</p>
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Hours</h4>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">24/7 Support</p>
                       </div>
                     </div>
                   </div>
@@ -439,7 +429,7 @@ function ContactSupportPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       For ongoing issues, you can also create a Support Tickets
                       and track its progress.
                     </p>
@@ -462,7 +452,7 @@ function ContactSupportPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Check our FAQ section for quick answers to common questions.
                     </p>
                     <Link
@@ -573,7 +563,7 @@ function ContactSupportPage() {
                     }
                     required
                   />
-                  <small className="text-xs text-gray-500 mt-1">
+                  <small className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Include any relevant details that might help us resolve your
                     issue faster.
                   </small>
@@ -681,38 +671,28 @@ function ContactSupportPage() {
 
               <div className="space-y-4">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <FaEnvelope className="text-blue-600 text-sm" />
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-3">
+                    <FaEnvelope className="text-blue-600 dark:text-blue-400 text-sm" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 text-sm">Email</h4>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Email</h4>
                     {supportEmail ? (
-                      <a href={`mailto:${supportEmail}`} className="text-gray-600 text-sm hover:text-[var(--primary)] transition-colors">
+                      <a href={`mailto:${supportEmail}`} className="text-gray-600 dark:text-gray-300 text-sm hover:text-[var(--primary)] transition-colors">
                         {supportEmail}
                       </a>
                     ) : (
-                      <p className="text-gray-600 text-sm">Not configured</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">Not configured</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                    <FaPhone className="text-green-600 text-sm" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mr-3">
+                    <FaClock className="text-purple-600 dark:text-purple-400 text-sm" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 text-sm">Phone</h4>
-                    <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                    <FaClock className="text-purple-600 text-sm" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 text-sm">Hours</h4>
-                    <p className="text-gray-600 text-sm">24/7 Support</p>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Hours</h4>
+                    <p className="text-gray-600 dark:text-gray-300 text-sm">24/7 Support</p>
                   </div>
                 </div>
               </div>
@@ -726,7 +706,7 @@ function ContactSupportPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   For ongoing issues, you can also create a Support Tickets and
                   track its progress.
                 </p>
@@ -748,7 +728,7 @@ function ContactSupportPage() {
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Check our FAQ section for quick answers to common questions.
                 </p>
                 <Link

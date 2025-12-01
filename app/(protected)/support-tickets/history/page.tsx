@@ -280,43 +280,43 @@ export default function TicketsHistory() {
       key: 'all',
       label: 'All',
       icon: FaTicketAlt,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'open',
       label: 'Open',
       icon: FaClock,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'answered',
       label: 'Answered',
       icon: FaCheckCircle,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'customer_reply',
       label: 'Customer Reply',
       icon: FaTicketAlt,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'on_hold',
       label: 'On Hold',
       icon: FaSpinner,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'in_progress',
       label: 'In Progress',
       icon: FaSpinner,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
     {
       key: 'closed',
       label: 'Closed',
       icon: FaBan,
-      color: 'bg-gray-600 hover:bg-gray-700',
+      color: 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400',
     },
   ];
 
@@ -324,24 +324,24 @@ export default function TicketsHistory() {
     switch (status) {
       case 'Open':
       case 'open':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'Answered':
       case 'answered':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
       case 'Customer Reply':
       case 'customer_reply':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
+        return 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       case 'On Hold':
       case 'on_hold':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+        return 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
       case 'In Progress':
       case 'in_progress':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
+        return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
       case 'Closed':
       case 'closed':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -384,7 +384,7 @@ export default function TicketsHistory() {
       <div className="page-container">
         <div className="page-content">
           <div className="card card-padding">
-            <div className="text-red-500 text-center flex flex-col items-center py-8">
+            <div className="text-red-500 dark:text-red-400 text-center flex flex-col items-center py-8">
               <FaExclamationTriangle className="text-4xl mb-4" />
               <div className="text-lg font-medium">Error loading tickets!</div>
             </div>
@@ -419,7 +419,7 @@ export default function TicketsHistory() {
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'all'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 hover:text-blue-600 dark:hover:from-gray-800 dark:hover:to-blue-900/30 dark:hover:text-blue-400'
               }`}
             >
               <FaTicketAlt className="mr-2 w-4 h-4" />
@@ -434,7 +434,7 @@ export default function TicketsHistory() {
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'human'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-purple-50 hover:text-purple-600 dark:hover:from-gray-800 dark:hover:to-purple-900/30 dark:hover:text-purple-400'
               }`}
             >
               <FaUser className="mr-2 w-4 h-4" />
@@ -449,7 +449,7 @@ export default function TicketsHistory() {
               className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg font-medium text-sm w-full ${
                 activeTab === 'ai'
                   ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg'
-                  : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50 hover:text-green-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-50 hover:to-green-50 hover:text-green-600 dark:hover:from-gray-800 dark:hover:to-green-900/30 dark:hover:text-green-400'
               }`}
             >
               <FaRobot className="mr-2 w-4 h-4" />
@@ -461,7 +461,7 @@ export default function TicketsHistory() {
           <div className="mb-6">
             <div className="relative w-full" ref={searchRef}>
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                <FaSearch className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
               </div>
               <input
                 type="search"
@@ -481,20 +481,20 @@ export default function TicketsHistory() {
                 style={{ width: '100%', minWidth: '0' }}
               />
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
+                <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto left-0 right-0">
                   {searchResults.map((ticket) => (
                     <div
                       key={ticket.id}
-                      className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                      className="p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                       onClick={() => handleSearchSelect(ticket)}
                     >
                       <div className="flex justify-between items-center w-full">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {ticket.id}
                             </span>
-                            <span className="text-sm text-gray-700 truncate">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
                               {ticket.subject}
                             </span>
                           </div>
@@ -507,17 +507,17 @@ export default function TicketsHistory() {
                               {formatStatusDisplay(ticket.status)}
                             </span>
                             {ticket.type === 'ai' ? (
-                              <span className="text-xs text-purple-600 flex items-center gap-1">
+                              <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
                                 <FaRobot className="w-3 h-3" /> AI
                               </span>
                             ) : (
-                              <span className="text-xs text-blue-600 flex items-center gap-1">
+                              <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
                                 <FaUser className="w-3 h-3" /> Human
                               </span>
                             )}
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                           {moment(ticket.createdAt).format('DD/MM')}
                         </span>
                       </div>
@@ -562,29 +562,29 @@ export default function TicketsHistory() {
               )}
             </div>
           </div>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                     Ticket ID
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Type
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Subject
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Status
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Created
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                     Last Updated
                   </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                  <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
                     Actions
                   </th>
                 </tr>
@@ -593,7 +593,7 @@ export default function TicketsHistory() {
                 {isLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, index) => (
-                      <tr key={index} className="border-b border-gray-100">
+                      <tr key={index} className="border-b border-gray-100 dark:border-gray-700">
                         <td className="py-3 px-4">
                           <div className="h-4 w-16 gradient-shimmer rounded" />
                         </td>
@@ -626,7 +626,7 @@ export default function TicketsHistory() {
                     return (
                       <tr
                         key={ticket.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] ${
                           isLastRow ? 'last:border-b-0' : ''
                         }`}
                       >
@@ -635,7 +635,7 @@ export default function TicketsHistory() {
                             isLastRow ? 'first:rounded-bl-lg' : ''
                           }`}
                         >
-                          <span className="text-sm font-mono text-gray-700">
+                          <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                             {ticket.id}
                           </span>
                         </td>
@@ -643,15 +643,15 @@ export default function TicketsHistory() {
                           <div className="flex items-center gap-1">
                             {ticket.type === 'ai' ? (
                               <>
-                                <FaRobot className="w-4 h-4 text-purple-600" />
-                                <span className="text-xs font-medium text-purple-600">
+                                <FaRobot className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
                                   AI
                                 </span>
                               </>
                             ) : (
                               <>
-                                <FaUser className="w-4 h-4 text-blue-600" />
-                                <span className="text-xs font-medium text-blue-600">
+                                <FaUser className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
                                   Human
                                 </span>
                               </>
@@ -659,7 +659,7 @@ export default function TicketsHistory() {
                           </div>
                         </td>
                         <td className="py-3 px-4 max-w-[300px]">
-                          <div className="truncate text-sm font-medium text-gray-900">
+                          <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                             {ticket.subject}
                           </div>
                         </td>
@@ -673,20 +673,20 @@ export default function TicketsHistory() {
                           </span>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {moment(ticket.createdAt).format('DD/MM/YYYY')}
                           </span>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {moment(ticket.createdAt).format('HH:mm')}
                           </div>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
                             {ticket.lastUpdated
                               ? moment(ticket.lastUpdated).format('DD/MM/YYYY')
                               : '-'}
                           </span>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {ticket.lastUpdated
                               ? moment(ticket.lastUpdated).format('HH:mm')
                               : ''}
@@ -699,7 +699,7 @@ export default function TicketsHistory() {
                         >
                           <button
                             onClick={() => handleViewTicket(ticket.id.toString())}
-                            className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs px-2 py-1 border border-blue-300 dark:border-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30"
                             title="View Ticket"
                           >
                             View
@@ -710,10 +710,10 @@ export default function TicketsHistory() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-500">
+                    <td colSpan={7} className="py-8 text-center text-gray-500 dark:text-gray-400">
                       <div className="flex flex-col items-center">
-                        <FaTicketAlt className="text-4xl text-gray-400 mb-4" />
-                        <div className="text-lg font-medium">
+                        <FaTicketAlt className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
+                        <div className="text-lg font-medium dark:text-gray-300">
                           No{' '}
                           {activeTab === 'all'
                             ? ''
@@ -722,7 +722,7 @@ export default function TicketsHistory() {
                             : 'AI'}{' '}
                           tickets found
                         </div>
-                        <div className="text-sm">
+                        <div className="text-sm dark:text-gray-400">
                           Try adjusting your search or filter criteria
                         </div>
                       </div>
@@ -733,8 +733,8 @@ export default function TicketsHistory() {
             </table>
           </div>
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-300">
                 Showing{' '}
                 <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
                 <span className="font-medium">
@@ -773,7 +773,7 @@ export default function TicketsHistory() {
                           className={`px-3 py-2 text-sm rounded-lg ${
                             page === pageNum
                               ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                           }`}
                         >
                           {pageNum}
