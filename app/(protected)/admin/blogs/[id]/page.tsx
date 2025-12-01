@@ -12,6 +12,7 @@ import {
   FaUpload
 } from 'react-icons/fa';
 import JoditEditor from 'jodit-react';
+import { useTheme } from 'next-themes';
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
@@ -19,7 +20,7 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+      <div className="absolute inset-1 rounded-full bg-white dark:bg-gray-800"></div>
     </div>
   </div>
 );
@@ -32,15 +33,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface PostFormData {
   id: string;
@@ -61,8 +79,16 @@ interface PostFormData {
 
 const EditBlogPostPage = () => {
   const { appName } = useAppNameWithFallback();
+  const { theme, systemTheme } = useTheme();
   const params = useParams();
   const postId = params.id as string;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isDarkMode = mounted && (theme === 'dark' || (theme === 'system' && systemTheme === 'dark'));
 
   const [formData, setFormData] = useState<PostFormData>({
     id: '',
@@ -264,7 +290,7 @@ const EditBlogPostPage = () => {
     spellcheck: true,
     language: 'en',
     toolbarButtonSize: 'middle' as const,
-    theme: 'default',
+    theme: isDarkMode ? 'dark' : 'default',
     enableDragAndDropFileToEditor: true,
     uploader: {
       insertImageAsBase64URI: true
@@ -277,16 +303,16 @@ const EditBlogPostPage = () => {
     askBeforePasteFromWord: false,
     defaultActionOnPaste: 'insert_clear_html' as const,
     style: {
-      background: '#ffffff',
-      color: '#000000'
+      background: isDarkMode ? '#1f2937' : '#ffffff',
+      color: isDarkMode ? '#f3f4f6' : '#000000'
     },
-    editorCssClass: 'jodit-editor-white-bg',
+    editorCssClass: isDarkMode ? 'jodit-editor-dark-bg' : 'jodit-editor-white-bg',
     events: {
       afterInit: function (editor: any) {
         editor.focus();
       }
     }
-  }), []);
+  }), [isDarkMode]);
 
   const handleImageUpload = async (file: File) => {
     try {
@@ -453,10 +479,10 @@ const EditBlogPostPage = () => {
                 <FaArrowLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Edit Post
                 </h1>
-                <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm mt-1 text-gray-600 dark:text-gray-400">
                   {hasUnsavedChanges && (
                     <span className="text-orange-600 dark:text-orange-400 font-medium">
                       • Unsaved changes
@@ -552,10 +578,10 @@ const EditBlogPostPage = () => {
                     config={editorConfig}
                     onBlur={(newContent) => handleInputChange('content', newContent)}
                     onChange={(newContent) => handleInputChange('content', newContent)}
-                    className="jodit-editor-white-bg"
+                    className={isDarkMode ? 'jodit-editor-dark-bg' : 'jodit-editor-white-bg'}
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Use the rich text editor to format your content with images, links, and styling.
                 </p>
               </div>
@@ -579,7 +605,7 @@ const EditBlogPostPage = () => {
                   className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                   placeholder={autoFilledFields.excerpt ? "Auto-generated from content (leave empty to use auto-generated)" : "Write a brief excerpt or summary of your post..."}
                 />
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   {autoFilledFields.excerpt 
                     ? "This field will be auto-generated from your content if left empty"
                     : "This will be used in post previews and search results (optional)"
@@ -590,7 +616,7 @@ const EditBlogPostPage = () => {
 
             {}
             <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 SEO Settings
               </h3>
               <div className="space-y-4">
@@ -610,7 +636,7 @@ const EditBlogPostPage = () => {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                     placeholder={autoFilledFields.metaTitle ? "Auto-generated from title (leave empty to use auto-generated)" : "SEO title for search engines..."}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {formData.metaTitle.length}/60 characters (recommended)
                     {autoFilledFields.metaTitle && " - Auto-generated from post title if left empty"}
                   </p>
@@ -631,7 +657,7 @@ const EditBlogPostPage = () => {
                     className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     placeholder={autoFilledFields.metaDescription ? "Auto-generated from content (leave empty to use auto-generated)" : "SEO description for search engines..."}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {formData.metaDescription.length}/160 characters (recommended)
                     {autoFilledFields.metaDescription && " - Auto-generated from content if left empty"}
                   </p>
@@ -644,7 +670,7 @@ const EditBlogPostPage = () => {
           <div className="space-y-6">
             {}
             <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Post Information
               </h3>
               <div className="space-y-3 text-sm">
@@ -680,7 +706,7 @@ const EditBlogPostPage = () => {
             </div>
 
             <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Publish Settings
               </h3>
               <div className="space-y-4">
@@ -699,7 +725,7 @@ const EditBlogPostPage = () => {
               </div>
             </div>
             <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Featured Image
               </h3>
               <div className="space-y-3">
@@ -718,7 +744,7 @@ const EditBlogPostPage = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                     <input
                       type="file"
                       accept="image/*"
@@ -747,7 +773,7 @@ const EditBlogPostPage = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <div className="flex flex-1 gap-3">
           {hasUnsavedChanges && (
             <button

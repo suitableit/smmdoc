@@ -1695,3 +1695,58 @@ body {
     box-shadow: 0 0px 0px 0 rgba(0, 0, 0, 0.05);
   }
 }
+
+/* JoditEditor Dark Mode Styles */
+.jodit-editor-dark-bg .jodit-container,
+.jodit-editor-dark-bg .jodit-container .jodit-wysiwyg,
+.jodit-editor-dark-bg .jodit-container .jodit-wysiwyg iframe {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.jodit-editor-dark-bg .jodit-toolbar,
+.jodit-editor-dark-bg .jodit-toolbar-editor-collection {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.jodit-editor-dark-bg .jodit-toolbar-button,
+.jodit-editor-dark-bg .jodit-toolbar-button__button {
+  color: #f3f4f6 !important;
+}
+
+.jodit-editor-dark-bg .jodit-toolbar-button:hover,
+.jodit-editor-dark-bg .jodit-toolbar-button__button:hover {
+  background-color: #4b5563 !important;
+}
+
+.jodit-editor-dark-bg .jodit-toolbar-button.jodit-toolbar-button_active,
+.jodit-editor-dark-bg .jodit-toolbar-button__button.jodit-toolbar-button_active {
+  background-color: #6b7280 !important;
+}
+
+.jodit-editor-dark-bg .jodit-statusbar {
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
+.jodit-editor-dark-bg .jodit-statusbar .jodit-statusbar-item {
+  color: #f3f4f6 !important;
+}
+
+.jodit-editor-dark-bg .jodit-placeholder {
+  color: #9ca3af !important;
+}
+
+.jodit-editor-dark-bg .jodit-wysiwyg p,
+.jodit-editor-dark-bg .jodit-wysiwyg div,
+.jodit-editor-dark-bg .jodit-wysiwyg span,
+.jodit-editor-dark-bg .jodit-wysiwyg h1,
+.jodit-editor-dark-bg .jodit-wysiwyg h2,
+.jodit-editor-dark-bg .jodit-wysiwyg h3,
+.jodit-editor-dark-bg .jodit-wysiwyg h4,
+.jodit-editor-dark-bg .jodit-wysiwyg h5,
+.jodit-editor-dark-bg .jodit-wysiwyg h6 {
+  color: #f3f4f6 !important;
+}

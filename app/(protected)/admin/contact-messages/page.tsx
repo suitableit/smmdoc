@@ -24,7 +24,7 @@ const ContactMessagesTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 8 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -69,8 +69,8 @@ const ContactMessagesTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -91,15 +91,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface ContactMessage {
   id: string;
@@ -233,13 +250,13 @@ const ContactMessagesPage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Unread':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
+        return 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       case 'Read':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'Replied':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -515,8 +532,7 @@ const ContactMessagesPage = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -530,20 +546,20 @@ const ContactMessagesPage = () => {
           </div>
         </div>
         {fallbackMode && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg flex items-start gap-3">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-yellow-800 mb-1">
+              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
                 Database Connection Issue
               </h3>
-              <p className="text-sm text-yellow-700">
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">
                 {warningMessage}
               </p>
-              <p className="text-xs text-yellow-600 mt-1">
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
                 The system will automatically reconnect when the database becomes available.
               </p>
             </div>
@@ -558,7 +574,7 @@ const ContactMessagesPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -566,7 +582,7 @@ const ContactMessagesPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {messageCounts.total}
@@ -577,7 +593,7 @@ const ContactMessagesPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Unread'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Unread
@@ -585,7 +601,7 @@ const ContactMessagesPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Unread'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                     }`}
                   >
                     {messageCounts.unread}
@@ -596,7 +612,7 @@ const ContactMessagesPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Read'
                       ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Read
@@ -604,7 +620,7 @@ const ContactMessagesPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Read'
                         ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                     }`}
                   >
                     {messageCounts.read}
@@ -615,7 +631,7 @@ const ContactMessagesPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Replied'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Replied
@@ -623,7 +639,7 @@ const ContactMessagesPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Replied'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {messageCounts.replied}
@@ -635,11 +651,10 @@ const ContactMessagesPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {selectedMessages.length > 0 && (
-              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b dark:border-gray-700 mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
                   <span
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {selectedMessages.length} selected
                   </span>
@@ -682,16 +697,14 @@ const ContactMessagesPage = () => {
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No messages found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No contact messages match your search criteria or no messages exist yet.
                 </p>
               </div>
@@ -699,11 +712,10 @@ const ContactMessagesPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -712,48 +724,41 @@ const ContactMessagesPage = () => {
                               getPaginatedData().length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Email
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Category
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Created
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -763,7 +768,7 @@ const ContactMessagesPage = () => {
                       {getPaginatedData().length === 0 ? (
                         <tr>
                           <td colSpan={8} className="p-8 text-center">
-                            <div className="text-gray-500">
+                            <div className="text-gray-500 dark:text-gray-400">
                               <FaEnvelope className="mx-auto h-12 w-12 mb-4 opacity-50" />
                               <p className="text-lg font-medium mb-2">No contact messages found</p>
                               <p className="text-sm">Try adjusting your search or filter criteria.</p>
@@ -774,48 +779,46 @@ const ContactMessagesPage = () => {
                         getPaginatedData().map((message) => (
                         <tr
                           key={message.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             <input
                               type="checkbox"
                               checked={selectedMessages.includes(message.id)}
                               onChange={() => handleSelectMessage(message.id)}
-                              className="rounded border-gray-300 w-4 h-4"
+                              className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                             />
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {formatMessageID(message.id)}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {message.user?.username || message.username || 'No Username'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-sm text-gray-900 dark:text-gray-100"
                             >
                               {message.email || 'No Email'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                            <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                               {message.category}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(message.createdAt).toLocaleDateString()}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(message.createdAt).toLocaleTimeString()}
                               </div>
                             </div>
@@ -857,7 +860,7 @@ const ContactMessagesPage = () => {
                                   setDeleteDialogOpen(true);
                                 }}
                               >
-                                <FaTrash className="h-3 w-3 text-red-600" />
+                                <FaTrash className="h-3 w-3 text-red-600 dark:text-red-400" />
                               </button>
                             </div>
                           </td>
@@ -867,10 +870,9 @@ const ContactMessagesPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {messagesLoading ? (
                       <div className="flex items-center gap-2">
@@ -899,8 +901,7 @@ const ContactMessagesPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {messagesLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -928,9 +929,9 @@ const ContactMessagesPage = () => {
         </div>
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Delete Message</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Delete Message</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete this contact message? This action
                 cannot be undone.
               </p>
