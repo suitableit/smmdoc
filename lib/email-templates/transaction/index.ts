@@ -11,6 +11,7 @@ export interface TransactionEmailData {
   userId?: string;
   phone?: string;
   supportEmail?: string;
+  whatsappNumber?: string;
 }
 
 export const transactionTemplates = {

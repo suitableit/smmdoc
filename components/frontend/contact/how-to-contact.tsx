@@ -18,7 +18,11 @@ import { GradientSpinner } from '@/components/ui/GradientSpinner';
 import ReCAPTCHA from '@/components/ReCAPTCHA';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
-const ContactForm: React.FC = () => {
+interface ContactFormProps {
+  supportEmail?: string;
+}
+
+const ContactForm: React.FC<ContactFormProps> = ({ supportEmail }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -459,7 +463,7 @@ const HowToContact: React.FC = () => {
             </div>
           </div>
           <div>
-            <ContactForm />
+            <ContactForm supportEmail={supportEmail} />
           </div>
         </div>
       </div>
