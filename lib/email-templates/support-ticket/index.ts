@@ -14,6 +14,7 @@ export interface SupportTicketEmailData {
   status?: 'open' | 'in_progress' | 'resolved' | 'closed';
   adminResponse?: string;
   supportEmail?: string;
+  whatsappNumber?: string;
 }
 
 export const supportTicketTemplates = {
