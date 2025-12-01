@@ -119,13 +119,13 @@ const HeaderNotificationBox = ({ open, onOpenChange }: HeaderNotificationBoxProp
 
   const getNotificationIcon = (type: string) => {
     const iconMap: { [key: string]: { icon: any; bgColor: string; iconColor: string } } = {
-      order: { icon: FaShoppingCart, bgColor: 'bg-green-100', iconColor: 'text-green-600' },
-      payment: { icon: FaWallet, bgColor: 'bg-green-100', iconColor: 'text-green-600' },
-      ticket: { icon: FaTicketAlt, bgColor: 'bg-purple-100', iconColor: 'text-purple-600' },
-      user: { icon: FaUserCog, bgColor: 'bg-orange-100', iconColor: 'text-orange-600' },
-      system: { icon: FaCog, bgColor: 'bg-red-100', iconColor: 'text-red-600' },
-      revenue: { icon: FaMoneyBillWave, bgColor: 'bg-green-100', iconColor: 'text-green-600' },
-      default: { icon: FaBell, bgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
+      order: { icon: FaShoppingCart, bgColor: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600 dark:text-green-400' },
+      payment: { icon: FaWallet, bgColor: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600 dark:text-green-400' },
+      ticket: { icon: FaTicketAlt, bgColor: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600 dark:text-purple-400' },
+      user: { icon: FaUserCog, bgColor: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600 dark:text-orange-400' },
+      system: { icon: FaCog, bgColor: 'bg-red-100 dark:bg-red-900/30', iconColor: 'text-red-600 dark:text-red-400' },
+      revenue: { icon: FaMoneyBillWave, bgColor: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600 dark:text-green-400' },
+      default: { icon: FaBell, bgColor: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600 dark:text-blue-400' },
     };
     return iconMap[type] || iconMap.default;
   };
@@ -209,7 +209,7 @@ const HeaderNotificationBox = ({ open, onOpenChange }: HeaderNotificationBoxProp
             </div>
           ) : notificationsError ? (
             <div className="p-4 text-center">
-              <p className="text-sm text-red-500">{notificationsError}</p>
+              <p className="text-sm text-red-500 dark:text-red-400">{notificationsError}</p>
               <button
                 onClick={fetchNotifications}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2"

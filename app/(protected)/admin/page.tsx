@@ -40,10 +40,10 @@ const TransactionsTableSkeleton = () => {
     <>
       <div className="hidden lg:block overflow-x-auto min-h-[300px]">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 9 }).map((_, idx) => (
-                <th key={idx} className="text-left p-3">
+                <th key={idx} className="text-left p-3 text-gray-900 dark:text-gray-100">
                   <div className="h-4 rounded w-3/4 gradient-shimmer" />
                 </th>
               ))}
@@ -91,12 +91,12 @@ const TransactionsTableSkeleton = () => {
       <div className="lg:hidden">
         <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
           {rows.map((_, idx) => (
-            <div key={idx} className="card card-padding border-l-4 border-yellow-500 mb-4">
+            <div key={idx} className="card card-padding border-l-4 border-yellow-500 dark:border-yellow-400 mb-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="h-6 w-16 gradient-shimmer rounded" />
                 <div className="h-6 w-20 gradient-shimmer rounded-full" />
               </div>
-              <div className="mb-4 pb-4 border-b">
+              <div className="mb-4 pb-4 border-b dark:border-gray-700">
                 <div className="h-4 w-32 gradient-shimmer rounded" />
               </div>
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -134,10 +134,10 @@ const UsersTableSkeleton = () => {
     <>
       <div className="hidden lg:block overflow-x-auto min-h-[400px]">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 5 }).map((_, idx) => (
-                <th key={idx} className="text-left p-3">
+                <th key={idx} className="text-left p-3 text-gray-900 dark:text-gray-100">
                   <div className="h-4 rounded w-3/4 gradient-shimmer" />
                 </th>
               ))}
@@ -171,7 +171,7 @@ const UsersTableSkeleton = () => {
       <div className="lg:hidden">
         <div className="space-y-4">
           {rows.map((_, idx) => (
-            <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+            <div key={idx} className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4">
               <div className="h-6 w-16 gradient-shimmer rounded mb-4" />
               <div className="space-y-4">
                 <div className="h-4 w-32 gradient-shimmer rounded" />
@@ -759,7 +759,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.totalUsers || 1}
                   </p>
                 )}
@@ -777,7 +777,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-20 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatDashboardCurrency(stats.totalRevenue || 0)}
                   </p>
                 )}
@@ -795,7 +795,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {stats.totalOrders || 0}
                   </p>
                 )}
@@ -813,7 +813,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-20 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {formatDashboardCurrency(stats.totalRevenue || 0)}
                   </p>
                 )}
@@ -832,7 +832,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-20 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-cyan-600">
+                  <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                     {formatDashboardCurrency(stats.totalRevenue || 0)}
                   </p>
                 )}
@@ -850,7 +850,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-20 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-rose-600">
+                  <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">
                     {formatDashboardCurrency(stats.todaysProfit || 0)}
                   </p>
                 )}
@@ -868,7 +868,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-teal-600">
+                  <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                     {stats.todaysOrders || 0}
                   </p>
                 )}
@@ -886,7 +886,7 @@ export default function AdminDashboardPage() {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-indigo-600">
+                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     {stats.newUsersToday || 0}
                   </p>
                 )}

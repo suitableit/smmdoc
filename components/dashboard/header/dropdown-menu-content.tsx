@@ -86,12 +86,9 @@ const DropdownMenuContentComponent = ({
             }}
           >
             <div
-              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-              style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              }}
+              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900/30"
             >
-              <FaShoppingCart className="h-4 w-4 text-blue-500" />
+              <FaShoppingCart className="h-4 w-4 text-blue-500 dark:text-blue-400" />
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-sm">New Order</span>
@@ -115,12 +112,9 @@ const DropdownMenuContentComponent = ({
             }}
           >
             <div
-              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-              style={{
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-              }}
+              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-green-100 dark:bg-green-900/30"
             >
-              <FaMoneyBillWave className="h-4 w-4 text-green-500" />
+              <FaMoneyBillWave className="h-4 w-4 text-green-500 dark:text-green-400" />
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-sm">Add Funds</span>
@@ -144,12 +138,9 @@ const DropdownMenuContentComponent = ({
             }}
           >
             <div
-              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-              style={{
-                backgroundColor: 'rgba(147, 51, 234, 0.1)',
-              }}
+              className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-purple-100 dark:bg-purple-900/30"
             >
-              <FaTicketAlt className="h-4 w-4 text-purple-500" />
+              <FaTicketAlt className="h-4 w-4 text-purple-500 dark:text-purple-400" />
             </div>
             <div className="flex flex-col">
               <span className="font-medium text-sm">Create Support Ticket</span>
@@ -174,12 +165,9 @@ const DropdownMenuContentComponent = ({
               }}
             >
               <div
-                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-                style={{
-                  backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                }}
+                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-orange-100 dark:bg-orange-900/30"
               >
-                <FaHeadset className="h-4 w-4 text-orange-500" />
+                <FaHeadset className="h-4 w-4 text-orange-500 dark:text-orange-400" />
               </div>
               <div className="flex flex-col">
                 <span className="font-medium text-sm">Contact Support</span>
@@ -205,12 +193,9 @@ const DropdownMenuContentComponent = ({
               }}
             >
               <div
-                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0"
-                style={{
-                  backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                }}
+                className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-pink-100 dark:bg-pink-900/30"
               >
-                <FaUsers className="h-4 w-4 text-pink-500" />
+                <FaUsers className="h-4 w-4 text-pink-500 dark:text-pink-400" />
               </div>
               <div className="flex flex-col">
                 <span className="font-medium text-sm">Create Child Panel</span>

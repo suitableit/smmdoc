@@ -337,16 +337,16 @@ function AffiliateStatsCards() {
           <label className="text-sm font-medium text-white/80 whitespace-nowrap">
             Your Unique Referral Link
           </label>
-                <div className="flex items-center bg-white rounded-lg overflow-hidden shadow-sm w-full md:flex-1">
+                <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm w-full md:flex-1">
                   <input
                     type="text"
                     value={referralLink}
                     readOnly
-                    className="flex-1 bg-white px-4 py-3 text-gray-800 font-medium text-sm outline-none border-none"
+                    className="flex-1 bg-white dark:bg-gray-800 px-4 py-3 text-gray-800 dark:text-gray-200 font-medium text-sm outline-none border-none"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="px-4 py-3 text-[var(--primary)] hover:text-[var(--secondary)] hover:bg-gray-50 transition-colors duration-200 border-none"
+                    className="px-4 py-3 text-[var(--primary)] hover:text-[var(--secondary)] hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 border-none"
                     title={copied ? 'Copied!' : 'Copy link'}
                   >
                     <FaCopy className="h-4 w-4" />
@@ -901,7 +901,7 @@ function AffiliateEarningsSection() {
                       className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                         isActive
                           ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                          : 'bg-gray-600 hover:bg-gray-700'
+                          : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                       }`}
                     >
                       {f.label} ({count})
@@ -915,29 +915,29 @@ function AffiliateEarningsSection() {
 
         <div className="px-4 md:px-6">
           {earningsLoading ? (
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                       ID
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                       User
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                       Registration
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                       Service
                     </th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-900">
+                    <th className="text-right py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                       Amount
                     </th>
-                    <th className="text-right py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                    <th className="text-right py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                       Commission
                     </th>
-                    <th className="text-center py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
                       Status
                     </th>
                   </tr>
@@ -946,7 +946,7 @@ function AffiliateEarningsSection() {
                   {Array.from({ length: 10 }).map((_, index) => {
                     const isLastRow = index === 9;
                     return (
-                      <tr key={index} className={`border-b border-gray-100 ${isLastRow ? 'last:border-b-0' : ''}`}>
+                      <tr key={index} className={`border-b border-gray-100 dark:border-gray-700 ${isLastRow ? 'last:border-b-0' : ''}`}>
                         <td className={`py-3 px-4 ${isLastRow ? 'first:rounded-bl-lg' : ''}`}>
                           <div className="h-4 w-16 gradient-shimmer rounded" />
                         </td>
@@ -993,29 +993,29 @@ function AffiliateEarningsSection() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50 rounded-t-lg">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 first:rounded-tl-lg">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)] rounded-t-lg">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 first:rounded-tl-lg">
                         ID
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         User
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                         Registration
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Service
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                         Amount
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 hidden md:table-cell">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 hidden md:table-cell">
                         Commission
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 last:rounded-tr-lg">
+                      <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100 last:rounded-tr-lg">
                         Status
                       </th>
                     </tr>
@@ -1026,7 +1026,7 @@ function AffiliateEarningsSection() {
                       return (
                         <tr
                           key={earning.id}
-                          className={`border-b border-gray-100 hover:bg-gray-50 ${
+                          className={`border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] ${
                             isLastRow ? 'last:border-b-0' : ''
                           }`}
                         >
@@ -1035,12 +1035,12 @@ function AffiliateEarningsSection() {
                               isLastRow ? 'first:rounded-bl-lg' : ''
                             }`}
                           >
-                            <span className="text-sm font-mono text-gray-700">
+                            <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
                               {safeFormatId(earning.id)}
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {earning.user?.username ||
                                 earning.user?.email?.split('@')[0] ||
                                 earning.user?.name ||
@@ -1049,34 +1049,34 @@ function AffiliateEarningsSection() {
                           </td>
                           <td className="py-3 px-4 hidden md:table-cell">
                             <div>
-                              <div className="text-sm font-medium text-gray-700">
+                              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {new Date(earning.signupDate).toLocaleDateString()}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {new Date(earning.signupDate).toLocaleTimeString()}
                               </div>
                             </div>
                           </td>
                           <td className="py-3 px-4 max-w-[200px]">
-                            <div className="truncate text-sm font-medium text-gray-900">
+                            <div className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                               {earning.service}
                             </div>
                             {earning.category && (
-                              <div className="text-xs text-gray-500 mt-1 truncate" title={earning.category}>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate" title={earning.category}>
                                 {earning.category.length > 30 ? `${earning.category.substring(0, 30)}...` : earning.category}
                               </div>
                             )}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               ${formatPrice(earning.amount, 2)}
                             </span>
                           </td>
                           <td className="py-3 px-4 hidden md:table-cell">
-                            <span className="text-sm font-medium text-green-600">
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
                               ${formatPrice(earning.commission, 2)}
                             </span>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {((earning.commission / earning.amount) * 100).toFixed(1)}%
                             </div>
                           </td>
@@ -1088,10 +1088,10 @@ function AffiliateEarningsSection() {
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 earning.status === 'completed'
-                                  ? 'bg-green-100 text-green-800'
+                                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800'
                                   : earning.status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-red-100 text-red-800'
+                                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800'
                               }`}
                             >
                               {getStatusIcon(earning.status)}
@@ -1104,8 +1104,8 @@ function AffiliateEarningsSection() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 border-t border-gray-200 gap-3">
-                <div className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 pb-4 border-t border-gray-200 dark:border-gray-700 gap-3">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                   Page <span className="font-medium">{pagination.page}</span> of{' '}
                   <span className="font-medium">{pagination.totalPages}</span>
                   {' '}({pagination.total || 0} earnings total)
@@ -1114,7 +1114,7 @@ function AffiliateEarningsSection() {
                   <button
                     onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                     disabled={pagination.page <= 1 || earningsLoading}
-                    className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     Previous
                   </button>
@@ -1123,7 +1123,7 @@ function AffiliateEarningsSection() {
                       setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))
                     }
                     disabled={pagination.page >= pagination.totalPages || earningsLoading}
-                    className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
                     Next
                   </button>
@@ -1142,10 +1142,10 @@ function AffiliateEarningsSection() {
           <div className="relative w-full max-w-md max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-xl">
             <div className="max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Request Withdrawal</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Request Withdrawal</h3>
               <button
                 onClick={() => setWithdrawalModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <FaTimes className="h-5 w-5" />
               </button>
@@ -1184,7 +1184,7 @@ function AffiliateEarningsSection() {
                         Withdrawal Amount
                       </label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">$</span>
                         <input
                           type="number"
                           step="0.01"
@@ -1230,11 +1230,11 @@ function AffiliateEarningsSection() {
                     </option>
                   ))}
                 </select>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Choose from your configured withdrawal methods
                 </div>
                 {withdrawalForm.selectedWithdrawalMethod && (
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
                     Selected: {(() => {
                       const sel = savedWithdrawalMethods.find(wm => String(wm.id) === String(withdrawalForm.selectedWithdrawalMethod))
                       if (!sel) return ''
@@ -1244,16 +1244,16 @@ function AffiliateEarningsSection() {
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <div className="flex items-start gap-3">
-                  <div className="text-blue-500 mt-0.5">
+                  <div className="text-blue-500 dark:text-blue-400 mt-0.5">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-blue-800 mb-1">Processing Information</div>
-                    <div className="text-xs text-blue-700">
+                    <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">Processing Information</div>
+                    <div className="text-xs text-blue-700 dark:text-blue-300">
                       • Withdrawals are processed within 1-3 business days<br/>
                       • Minimum withdrawal amount is ${minWithdrawalValue.toFixed(2)}<br/>
                       • Processing fees may apply depending on withdrawal method

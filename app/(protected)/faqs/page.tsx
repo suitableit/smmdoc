@@ -176,7 +176,7 @@ const FAQPage = () => {
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <FaSearch className="w-4 h-4 text-gray-500" />
+                    <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </div>
                   <div className="h-10 w-full gradient-shimmer rounded-lg pl-10" />
                 </div>
@@ -203,7 +203,7 @@ const FAQPage = () => {
                               <div className="h-5 w-full gradient-shimmer rounded mb-2" />
                               <div className="h-5 w-3/4 gradient-shimmer rounded" />
                             </div>
-                            <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0 ml-4" />
+                            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 ml-4" />
                           </div>
                         </div>
                       ))}
@@ -224,7 +224,7 @@ const FAQPage = () => {
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <FaSearch className="w-4 h-4 text-gray-500" />
+                <FaSearch className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </div>
               <input
                 type="search"
@@ -238,11 +238,11 @@ const FAQPage = () => {
           </div>
           {Object.keys(groupedFAQs).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <FaQuestionCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <div className="text-lg">
+              <FaQuestionCircle className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-500" />
+              <div className="text-lg text-gray-900 dark:text-gray-300">
                 No questions found matching your search.
               </div>
-              <p className="mt-2 text-sm">
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 Try different keywords or browse all categories.
               </p>
             </div>
@@ -259,7 +259,7 @@ const FAQPage = () => {
                         {categoryNames[category]?.name || category}
                       </h3>
                     </div>
-                    <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center">
+                    <span className="bg-primary/10 dark:bg-[var(--primary)]/20 text-primary dark:text-[var(--primary)] border border-primary/20 dark:border-[var(--primary)]/30 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center">
                       {items.length}{' '}
                       {items.length === 1 ? 'question' : 'questions'}
                     </span>
@@ -268,10 +268,10 @@ const FAQPage = () => {
                     {items.map((item) => (
                       <div key={item.id} className="card">
                         <button
-                          className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                          className="w-full p-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                           onClick={() => toggleItem(item.id)}
                         >
-                          <span className="font-medium text-gray-900 pr-4">
+                          <span className="font-medium text-gray-900 dark:text-gray-100 pr-4">
                             {item.question}
                           </span>
                           <div
@@ -281,7 +281,7 @@ const FAQPage = () => {
                                 : 'rotate-0'
                             }`}
                           >
-                            <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                           </div>
                         </button>
 
@@ -292,8 +292,8 @@ const FAQPage = () => {
                               : 'max-h-0 opacity-0'
                           }`}
                         >
-                          <div className="px-4 pb-4 pt-0 border-t border-gray-100 bg-gray-50">
-                            <p className="text-gray-600 leading-relaxed mt-3">
+                          <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed mt-3">
                               {item.answer}
                             </p>
                           </div>

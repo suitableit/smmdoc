@@ -116,11 +116,10 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm min-w-[1200px]">
-        <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
           <tr>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               <input
                 type="checkbox"
@@ -133,80 +132,67 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
               />
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               ID
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               User
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Charge
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Link
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Provider
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Start
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Quantity
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Service
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Status
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Remains
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Date
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Mode
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Actions
             </th>
@@ -216,7 +202,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
           {orders.map((order) => (
             <tr
               key={order.id}
-              className="border-t hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200"
+              className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
             >
               <td className="p-3">
                 <input
@@ -227,7 +213,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                 />
               </td>
               <td className="p-3">
-                <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                   {order.id || 'null'}
                 </div>
               </td>
@@ -253,7 +239,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                       ? formatPriceProp(order.charge, 2)
                       : '0.00'}
                   </div>
-                  <div className="text-xs text-green-600">
+                  <div className="text-xs text-green-600 dark:text-green-400">
                     Profit: $
                     {order.profit
                       ? formatPriceProp(order.profit, 2)
@@ -269,7 +255,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                         href={order.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-xs truncate flex-1"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs truncate flex-1"
                       >
                         {(() => {
                           const cleanedLink = cleanLinkDisplay(order.link);
@@ -282,7 +268,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                         onClick={() =>
                           window.open(order.link, '_blank')
                         }
-                        className="text-blue-500 hover:text-blue-700 p-1 flex-shrink-0"
+                        className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 flex-shrink-0"
                         title="Open link in new tab"
                       >
                         <FaExternalLinkAlt className="h-3 w-3" />
@@ -324,7 +310,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                   >
                     {order.qty ? formatCount(order.qty) : 'null'}
                   </div>
-                  <div className="text-xs text-green-600">
+                  <div className="text-xs text-green-600 dark:text-green-400">
                     {order.qty && order.remains !== undefined && order.remains !== null
                       ? formatCount(Number(order.qty) - Number(order.remains))
                       : '0'}{' '}
@@ -357,9 +343,9 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                 </div>
               </td>
               <td className="p-3">
-                <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
                   {getStatusIconProp(order.status)}
-                  <span className="text-xs font-medium capitalize">
+                  <span className="text-xs font-medium capitalize text-gray-900 dark:text-gray-100">
                     {order.status ? order.status.replace('_', ' ') : 'null'}
                   </span>
                 </div>
@@ -378,7 +364,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                       : 0}
                     %
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                     <div
                       className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full transition-all duration-300"
                       style={{
@@ -406,14 +392,14 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
               </td>
               <td className="p-3">
                 <div>
-                  <div className="text-xs">
+                  <div className="text-xs text-gray-900 dark:text-gray-300">
                     {order.createdAt
                       ? new Date(
                           order.createdAt
                         ).toLocaleDateString()
                       : 'null'}
                   </div>
-                  <div className="text-xs">
+                  <div className="text-xs text-gray-900 dark:text-gray-300">
                     {order.createdAt
                       ? new Date(
                           order.createdAt
@@ -426,10 +412,10 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                 <div
                   className={`text-xs font-medium px-2 py-1 rounded ${
                     order.mode === 'Auto'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                       : order.mode === 'Manual'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
                   }`}
                 >
                   {order.mode || 'null'}

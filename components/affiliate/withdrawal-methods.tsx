@@ -244,7 +244,7 @@ export default function WithdrawalMethodsSection({
           </div>
         ) : (
           <div className="text-center py-8 bg-gray-50 dark:bg-[#1e1f2e] border border-gray-200 dark:border-gray-600 rounded-lg">
-            <FaWallet className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <FaWallet className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               No withdrawal methods added yet. Click "Add Withdrawal Method" to get started.
             </p>
@@ -252,7 +252,7 @@ export default function WithdrawalMethodsSection({
         )}
 
         {errors.withdrawalMethods && (
-          <p className="text-red-500 text-sm mt-1">{String(errors.withdrawalMethods)}</p>
+          <p className="text-red-500 dark:text-red-400 text-sm mt-1">{String(errors.withdrawalMethods)}</p>
         )}
       </div>
       {showAddForm && (
@@ -293,7 +293,7 @@ export default function WithdrawalMethodsSection({
                 <option value="bank" disabled={methodExists('bank')}>Bank Transfer</option>
               </select>
               {formErrors.method && (
-                <p className="text-red-500 text-sm mt-1">{formErrors.method}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.method}</p>
               )}
             </div>
             {newWithdrawalMethod.method && newWithdrawalMethod.method !== 'bank' && (
@@ -314,7 +314,7 @@ export default function WithdrawalMethodsSection({
                   placeholder="e.g., 01712345678"
                 />
                 {formErrors.mobileNumber && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors.mobileNumber}</p>
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.mobileNumber}</p>
                 )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   Enter your {newWithdrawalMethod.method} registered mobile number
@@ -340,7 +340,7 @@ export default function WithdrawalMethodsSection({
                     placeholder="e.g., Dutch Bangla Bank, BRAC Bank"
                   />
                   {formErrors.bankName && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.bankName}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.bankName}</p>
                   )}
                 </div>
 
@@ -361,7 +361,7 @@ export default function WithdrawalMethodsSection({
                     placeholder="Enter account holder name"
                   />
                   {formErrors.accountHolderName && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.accountHolderName}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.accountHolderName}</p>
                   )}
                 </div>
 
@@ -382,7 +382,7 @@ export default function WithdrawalMethodsSection({
                     placeholder="Enter your account number"
                   />
                   {formErrors.bankAccountNumber && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.bankAccountNumber}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.bankAccountNumber}</p>
                   )}
                 </div>
 
@@ -403,7 +403,7 @@ export default function WithdrawalMethodsSection({
                     placeholder="Enter routing number or branch name"
                   />
                   {formErrors.routingNumber && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.routingNumber}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.routingNumber}</p>
                   )}
                 </div>
 
@@ -416,7 +416,7 @@ export default function WithdrawalMethodsSection({
                     id="newSwiftCode"
                     value={newWithdrawalMethod.swiftCode}
                     onChange={(e) => handleNewWithdrawalMethodChange('swiftCode', e.target.value)}
-                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
+                    className={`form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ${
                       formErrors.swiftCode
                         ? 'border-red-500 dark:border-red-500'
                         : 'border-gray-300 dark:border-gray-600'
@@ -424,7 +424,7 @@ export default function WithdrawalMethodsSection({
                     placeholder="Enter swift code"
                   />
                   {formErrors.swiftCode && (
-                    <p className="text-red-500 text-sm mt-1">{formErrors.swiftCode}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{formErrors.swiftCode}</p>
                   )}
                 </div>
               </div>
