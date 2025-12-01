@@ -33,15 +33,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 const StepProgress = ({ currentStep }: { currentStep: number }) => {
   const steps = [
@@ -64,10 +81,10 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
                     isCompleted
-                      ? 'bg-green-500 border-green-500 text-white'
+                      ? 'bg-green-500 dark:bg-green-400 border-green-500 dark:border-green-400 text-white'
                       : isActive
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 border-purple-600 text-white shadow-lg'
-                      : 'bg-gray-100 border-gray-300 text-gray-400'
+                      : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500'
                   }`}
                 >
                   {isCompleted ? (
@@ -80,34 +97,32 @@ const StepProgress = ({ currentStep }: { currentStep: number }) => {
                   <div
                     className={`text-sm font-medium ${
                       isActive
-                        ? 'text-blue-600'
+                        ? 'text-blue-600 dark:text-blue-400'
                         : isCompleted
-                        ? 'text-green-600'
-                        : 'text-gray-500'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-500 dark:text-gray-400'
                     }`}
-                    style={isActive ? { color: 'var(--text-primary)' } : {}}
                   >
                     Step {step.number}
                   </div>
                   <div
                     className={`text-xs ${
                       isActive
-                        ? 'text-blue-600'
+                        ? 'text-blue-600 dark:text-blue-400'
                         : isCompleted
-                        ? 'text-green-600'
-                        : 'text-gray-400'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-400 dark:text-gray-500'
                     }`}
-                    style={isActive ? { color: 'var(--text-muted)' } : {}}
                   >
                     {step.title}
                   </div>
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div className="flex-1 h-0.5 mx-4 bg-gray-200">
+                <div className="flex-1 h-0.5 mx-4 bg-gray-200 dark:bg-gray-700">
                   <div
                     className={`h-full transition-all duration-300 ${
-                      currentStep > step.number ? 'bg-green-500' : 'bg-gray-200'
+                      currentStep > step.number ? 'bg-green-500 dark:bg-green-400' : 'bg-gray-200 dark:bg-gray-700'
                     }`}
                   />
                 </div>
@@ -660,8 +675,7 @@ const ImportServicesPage = () => {
         <div className="card animate-in fade-in duration-500">
           <div className="px-6 py-6">
             <h2
-              className="text-xl font-semibold mb-6"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100"
             >
               {currentStep === 1 && 'Choose Provider'}
               {currentStep === 2 && 'Select Categories'}
@@ -671,8 +685,7 @@ const ImportServicesPage = () => {
               <div className="space-y-6">
                 <div>
                   <label
-                    className="form-label mb-3"
-                    style={{ color: 'var(--text-primary)' }}
+                    className="form-label mb-3 text-gray-700 dark:text-gray-300"
                   >
                     Select API Provider
                   </label>
@@ -705,14 +718,14 @@ const ImportServicesPage = () => {
 
                         if (selectedProviderData?.status === 'inactive') {
                           return (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                               <div className="flex items-center gap-2">
-                                <FaExclamationTriangle className="text-red-500 w-4 h-4" />
-                                <div className="text-sm text-red-700 font-medium">
+                                <FaExclamationTriangle className="text-red-500 dark:text-red-400 w-4 h-4" />
+                                <div className="text-sm text-red-700 dark:text-red-200 font-medium">
                                   This provider is inactive and cannot be used for importing services.
                                 </div>
                               </div>
-                              <div className="text-xs text-red-600 mt-1">
+                              <div className="text-xs text-red-600 dark:text-red-300 mt-1">
                                 Please select an active provider to continue.
                               </div>
                             </div>
@@ -720,10 +733,9 @@ const ImportServicesPage = () => {
                         }
 
                         return (
-                          <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
                             <div
-                              className="text-sm"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-sm text-gray-600 dark:text-gray-400"
                             >
                               {selectedProviderData?.description}
                             </div>
@@ -735,8 +747,7 @@ const ImportServicesPage = () => {
                 </div>
                 <div>
                   <label
-                    className="form-label mb-3"
-                    style={{ color: 'var(--text-primary)' }}
+                    className="form-label mb-3 text-gray-700 dark:text-gray-300"
                   >
                     Profit Percent
                   </label>
@@ -750,7 +761,7 @@ const ImportServicesPage = () => {
                         onChange={(e) =>
                           setProfitPercent(parseInt(e.target.value))
                         }
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                       />
                       <div className="flex items-center gap-2">
                         <input
@@ -769,16 +780,14 @@ const ImportServicesPage = () => {
                           max="100"
                         />
                         <span
-                          className="font-medium"
-                          style={{ color: 'var(--text-muted)' }}
+                          className="font-medium text-gray-600 dark:text-gray-400"
                         >
                           %
                         </span>
                       </div>
                     </div>
                     <p
-                      className="text-xs mt-2"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-xs mt-2 text-gray-500 dark:text-gray-400"
                     >
                       This percentage will be added to all imported service
                       prices as your profit margin.
@@ -786,11 +795,11 @@ const ImportServicesPage = () => {
                   </div>
                 </div>
                 {selectedProvider && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-800 mb-2">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
                       Import Summary
                     </h4>
-                    <div className="text-sm text-blue-700 space-y-1">
+                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                       <p>
                         <strong>Provider:</strong>{' '}
                         {getProviderName(selectedProvider)}
@@ -812,7 +821,7 @@ const ImportServicesPage = () => {
               <div className="space-y-6">
                 {categoriesLoading ? (
                   <>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
@@ -823,7 +832,7 @@ const ImportServicesPage = () => {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm min-w-[600px]">
-                        <thead className="sticky top-0 bg-white border-b z-10">
+                        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                           <tr>
                             <th className="text-left p-3">
                               <div className="h-4 w-4 gradient-shimmer rounded" />
@@ -841,7 +850,7 @@ const ImportServicesPage = () => {
                         </thead>
                         <tbody>
                           {Array.from({ length: 8 }).map((_, idx) => (
-                            <tr key={idx} className="border-t">
+                            <tr key={idx} className="border-t dark:border-gray-700">
                               <td className="p-3">
                                 <div className="h-4 w-4 gradient-shimmer rounded" />
                               </td>
@@ -862,18 +871,16 @@ const ImportServicesPage = () => {
                   </>
                 ) : (
                   <>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
                           <h4
-                            className="font-semibold"
-                            style={{ color: 'var(--text-primary)' }}
+                            className="font-semibold text-gray-900 dark:text-gray-100"
                           >
                             Connected to {getProviderName(selectedProvider)}
                           </h4>
                           <p
-                            className="text-sm"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-sm text-gray-600 dark:text-gray-400"
                           >
                             Select categories to import services from
                           </p>
@@ -889,7 +896,7 @@ const ImportServicesPage = () => {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm min-w-[600px]">
-                        <thead className="sticky top-0 bg-white border-b z-10">
+                        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                           <tr>
                             <th className="text-left p-3 font-semibold">
                               <input
@@ -902,20 +909,17 @@ const ImportServicesPage = () => {
                               />
                             </th>
                             <th
-                              className="text-left p-3 font-semibold"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                             >
                               Category Name
                             </th>
                             <th
-                              className="text-left p-3 font-semibold"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                             >
                               Services Count
                             </th>
                             <th
-                              className="text-left p-3 font-semibold"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                             >
                               Status
                             </th>
@@ -925,8 +929,8 @@ const ImportServicesPage = () => {
                           {apiCategories.map((category) => (
                             <tr
                               key={category.id}
-                              className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
-                                category.selected ? 'bg-blue-50' : ''
+                              className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200 ${
+                                category.selected ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                               }`}
                             >
                               <td className="p-3">
@@ -941,20 +945,18 @@ const ImportServicesPage = () => {
                               </td>
                               <td className="p-3">
                                 <div
-                                  className="font-medium"
-                                  style={{ color: 'var(--text-primary)' }}
+                                  className="font-medium text-gray-900 dark:text-gray-100"
                                 >
                                   {category.name}
                                 </div>
                               </td>
                               <td className="p-3">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-blue-600">
+                                  <span className="font-semibold text-blue-600 dark:text-blue-400">
                                     {category.servicesCount.toString()}
                                   </span>
                                   <span
-                                    className="text-xs"
-                                    style={{ color: 'var(--text-muted)' }}
+                                    className="text-xs text-gray-500 dark:text-gray-400"
                                   >
                                     services
                                   </span>
@@ -962,15 +964,15 @@ const ImportServicesPage = () => {
                               </td>
                               <td className="p-3">
                                 {category.selected ? (
-                                  <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full w-fit">
-                                    <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                    <span className="text-xs font-medium text-green-700">
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full w-fit">
+                                    <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                                    <span className="text-xs font-medium text-green-700 dark:text-green-300">
                                       Selected
                                     </span>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-                                    <span className="text-xs font-medium text-gray-600">
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                                       Available
                                     </span>
                                   </div>
@@ -982,11 +984,11 @@ const ImportServicesPage = () => {
                       </table>
                     </div>
                     {apiCategories.some((cat) => cat.selected) && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-green-800 mb-2">
+                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">
                           Selection Summary
                         </h4>
-                        <div className="text-sm text-green-700 space-y-1">
+                        <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
                           <p>
                             <strong>Selected Categories:</strong>{' '}
                             {apiCategories.filter((cat) => cat.selected).length}
@@ -1009,7 +1011,7 @@ const ImportServicesPage = () => {
               <div className="space-y-6">
                 {isLoading ? (
                   <>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                       <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                         <div className="mb-2 md:mb-0">
                           <div className="h-5 w-48 gradient-shimmer rounded mb-2" />
@@ -1025,7 +1027,7 @@ const ImportServicesPage = () => {
                     <div className="hidden lg:block card animate-in fade-in duration-500">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm min-w-[1000px]">
-                          <thead className="sticky top-0 bg-white border-b z-10">
+                          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                             <tr>
                               {Array.from({ length: 8 }).map((_, idx) => (
                                 <th key={idx} className="text-left p-3">
@@ -1037,7 +1039,7 @@ const ImportServicesPage = () => {
                           <tbody>
                             {Array.from({ length: 3 }).map((_, catIdx) => (
                               <React.Fragment key={catIdx}>
-                                <tr className="bg-gray-50 border-t-2 border-gray-200">
+                                <tr className="bg-gray-50 dark:bg-gray-800/50 border-t-2 border-gray-200 dark:border-gray-700">
                                   <td colSpan={8} className="p-3">
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center gap-3">
@@ -1049,7 +1051,7 @@ const ImportServicesPage = () => {
                                   </td>
                                 </tr>
                                 {Array.from({ length: 3 }).map((_, serviceIdx) => (
-                                  <tr key={serviceIdx} className="border-t">
+                                  <tr key={serviceIdx} className="border-t dark:border-gray-700">
                                     <td className="p-3 pl-8">
                                       <div className="h-6 w-16 gradient-shimmer rounded" />
                                     </td>
@@ -1139,24 +1141,24 @@ const ImportServicesPage = () => {
                   </>
                 ) : (
                   <>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
                     <div className="mb-2 md:mb-0">
-                      <h4 className="font-semibold text-blue-800">
+                      <h4 className="font-semibold text-blue-800 dark:text-blue-200">
                         Services Ready for Import
                       </h4>
-                      <p className="text-sm text-blue-700">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
                         {services.length} services loaded{totalServices > 0 && ` of ${totalServices} total`} with {profitPercent}%
                         profit margin applied
                       </p>
                       {hasMoreServices && (
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                           📄 Page {currentPage} of {totalPages} • {totalServices - services.length} more services available
                         </p>
                       )}
                     </div>
                     <div className="text-left md:text-right">
-                      <div className="text-sm text-blue-700">
+                      <div className="text-sm text-blue-700 dark:text-blue-300">
                         <strong>Provider:</strong>{' '}
                         {getProviderName(selectedProvider)}
                       </div>
@@ -1166,8 +1168,7 @@ const ImportServicesPage = () => {
                 <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-2">
                   <div className="relative flex-1 md:max-w-md">
                     <FaSearch
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                     />
                     <input
                       type="text"
@@ -1179,9 +1180,9 @@ const ImportServicesPage = () => {
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                     {hasChanges && (
-                      <div className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <FaEdit className="h-4 w-4 text-yellow-600" />
-                        <span className="text-sm text-yellow-800 font-medium">
+                      <div className="flex items-center justify-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <FaEdit className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
                           You have unsaved changes
                         </span>
                       </div>
@@ -1205,7 +1206,7 @@ const ImportServicesPage = () => {
                           setCollapsedCategories(newCollapsed);
                         }
                       }}
-                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                       title={
                         Object.keys(groupedServices).every(
                           (cat) => collapsedCategories[cat]
@@ -1237,18 +1238,15 @@ const ImportServicesPage = () => {
                 {Object.keys(groupedServices).length === 0 ? (
                   <div className="text-center py-12">
                     <FaExclamationTriangle
-                      className="h-16 w-16 mx-auto mb-4"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                     />
                     <h3
-                      className="text-lg font-semibold mb-2"
-                      style={{ color: 'var(--text-primary)' }}
+                      className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                     >
                       No services found
                     </h3>
                     <p
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-500 dark:text-gray-400"
                     >
                       {searchTerm
                         ? 'No services match your search criteria.'
@@ -1260,53 +1258,45 @@ const ImportServicesPage = () => {
                     <div className="hidden lg:block card animate-in fade-in duration-500">
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm min-w-[1000px]">
-                          <thead className="sticky top-0 bg-white border-b z-10">
+                          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                             <tr>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 ID
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Service Name
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Type
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Price (USD)
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Percent
                               </th>
                               <th
-                                className="text-center p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-center p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Refill
                               </th>
                               <th
-                                className="text-center p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-center p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Cancel
                               </th>
                               <th
-                                className="text-left p-3 font-semibold"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                               >
                                 Description
                               </th>
@@ -1316,7 +1306,7 @@ const ImportServicesPage = () => {
                             {Object.entries(groupedServices).map(
                               ([category, categoryServices]) => (
                                 <React.Fragment key={category}>
-                                  <tr className="bg-gray-50 border-t-2 border-gray-200">
+                                  <tr className="bg-gray-50 dark:bg-gray-800/50 border-t-2 border-gray-200 dark:border-gray-700">
                                     <td colSpan={8} className="p-3">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -1324,31 +1314,31 @@ const ImportServicesPage = () => {
                                             onClick={() =>
                                               toggleCategoryCollapse(category)
                                             }
-                                            className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                                            className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded p-1 transition-colors"
                                           >
                                             {collapsedCategories[category] ? (
-                                              <FaChevronRight className="h-3 w-3" />
+                                              <FaChevronRight className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                                             ) : (
-                                              <FaChevronDown className="h-3 w-3" />
+                                              <FaChevronDown className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                                             )}
                                           </button>
 
-                                          <span className="font-semibold text-md text-gray-800">
+                                          <span className="font-semibold text-md text-gray-800 dark:text-gray-100">
                                             {category}
                                           </span>
-                                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
+                                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-1 rounded-full text-sm font-medium">
                                             {categoryServices.length} service
                                             {categoryServices.length !== 1
                                               ? 's'
                                               : ''}
                                           </span>
                                         </div>
-                                        <div className="text-xs text-gray-500">
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">
                                           {categoryServices.filter(
                                             (service) =>
                                               editedServices[service.id]
                                           ).length > 0 && (
-                                            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                                            <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 px-2 py-1 rounded-full">
                                               {
                                                 categoryServices.filter(
                                                   (service) =>
@@ -1367,11 +1357,11 @@ const ImportServicesPage = () => {
                                       categoryServices.map((service, index) => (
                                         <tr
                                           key={`${category}-${service.id}-${index}`}
-                                          className={`border-t hover:bg-gray-50 transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
+                                          className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200 animate-in fade-in slide-in-from-left-1 ${
                                             duplicateServices.has(service.id.toString())
-                                              ? 'bg-red-50/70'
+                                              ? 'bg-red-50/70 dark:bg-red-900/20'
                                               : editedServices[service.id]
-                                              ? 'bg-yellow-50'
+                                              ? 'bg-yellow-50 dark:bg-yellow-900/20'
                                               : ''
                                           }`}
                                           style={{
@@ -1379,13 +1369,13 @@ const ImportServicesPage = () => {
                                           }}
                                         >
                                           <td className="p-3 pl-8">
-                                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
+                                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded w-fit">
                                               {formatID(service.id)}
                                             </div>
                                           </td>
                                           <td className="p-3">
                                             {duplicateServices.has(service.id.toString()) ? (
-                                              <div className="px-4 py-3 text-gray-900 dark:text-white font-medium">
+                                              <div className="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">
                                                 {getCurrentValue(service, 'name') as string}
                                               </div>
                                             ) : (
@@ -1410,7 +1400,7 @@ const ImportServicesPage = () => {
                                           </td>
                                           {duplicateServices.has(service.id.toString()) ? (
                                             <td colSpan={6} className="p-3 text-center">
-                                              <div className="text-red-600 font-medium text-sm flex items-center justify-center gap-1">
+                                              <div className="text-red-600 dark:text-red-400 font-medium text-sm flex items-center justify-center gap-1">
                                                 Already imported!
                                               </div>
                                             </td>
@@ -1418,7 +1408,7 @@ const ImportServicesPage = () => {
                                             <>
                                               <td className="p-3">
                                                 <div className="text-sm">
-                                                  <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                                                  <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-xs font-medium">
                                                     {service.type || 'Default'}
                                                   </span>
                                                 </div>
@@ -1426,14 +1416,11 @@ const ImportServicesPage = () => {
                                               <td className="p-3">
                                                 <div className="text-left">
                                                   <div
-                                                    className="font-semibold text-sm"
-                                                    style={{
-                                                      color: 'var(--text-primary)',
-                                                    }}
+                                                    className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                                                   >
                                                     ${getCurrentSalePrice(service)}
                                                   </div>
-                                                  <div className="text-xs text-gray-500">
+                                                  <div className="text-xs text-gray-500 dark:text-gray-400">
                                                     Provider: $
                                                     {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
                                                   </div>
@@ -1467,8 +1454,8 @@ const ImportServicesPage = () => {
                                                   <button
                                                     className={`p-1 rounded transition-colors duration-200 ${
                                                       service.refill
-                                                        ? 'text-green-600 hover:bg-green-50'
-                                                        : 'text-gray-400 hover:bg-gray-50'
+                                                        ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                                        : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                                     }`}
                                                     title={
                                                       service.refill ? 'Refill Enabled' : 'Refill Disabled'
@@ -1488,8 +1475,8 @@ const ImportServicesPage = () => {
                                                   <button
                                                     className={`p-1 rounded transition-colors duration-200 ${
                                                       service.cancel
-                                                        ? 'text-green-600 hover:bg-green-50'
-                                                        : 'text-gray-400 hover:bg-gray-50'
+                                                        ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                                        : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                                     }`}
                                                     title={
                                                       service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
@@ -1528,14 +1515,14 @@ const ImportServicesPage = () => {
                                         </tr>
                                       ))
                                     ) : (
-                                      <tr className="border-t">
+                                      <tr className="border-t dark:border-gray-700">
                                         <td
                                           colSpan={8}
                                           className="p-8 text-center"
                                         >
-                                          <div className="flex flex-col items-center justify-center text-gray-500">
-                                            <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400" />
-                                            <p className="text-sm font-medium">
+                                          <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                            <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+                                            <p className="text-sm font-medium text-gray-900 dark:text-gray-300">
                                               No services in this category
                                             </p>
                                           </div>
@@ -1556,26 +1543,26 @@ const ImportServicesPage = () => {
                             key={category}
                             className="space-y-4 animate-in fade-in duration-500"
                           >
-                            <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border-l-4 border-blue-500 dark:border-blue-400">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1">
                                   <button
                                     onClick={() =>
                                       toggleCategoryCollapse(category)
                                     }
-                                    className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                                    className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded p-1 transition-colors"
                                   >
                                     {collapsedCategories[category] ? (
-                                      <FaChevronRight className="h-3 w-3" />
+                                      <FaChevronRight className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                                     ) : (
-                                      <FaChevronDown className="h-3 w-3" />
+                                      <FaChevronDown className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                                     )}
                                   </button>
 
-                                  <span className="font-semibold text-md text-gray-800">
+                                  <span className="font-semibold text-md text-gray-800 dark:text-gray-100">
                                     {category}
                                   </span>
-                                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium ml-auto">
+                                  <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-1 rounded-full text-sm font-medium ml-auto">
                                     {categoryServices.length} service
                                     {categoryServices.length !== 1 ? 's' : ''}
                                   </span>
@@ -1585,7 +1572,7 @@ const ImportServicesPage = () => {
                                 (service) => editedServices[service.id]
                               ).length > 0 && (
                                 <div className="mt-2">
-                                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
+                                  <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 px-2 py-1 rounded-full text-xs">
                                     {
                                       categoryServices.filter(
                                         (service) => editedServices[service.id]
@@ -1602,9 +1589,9 @@ const ImportServicesPage = () => {
                                   categoryServices.map((service, index) => (
                                     <div
                                       key={`${category}-${service.id}-${index}`}
-                                      className={`card card-padding border-l-4 border-blue-500 animate-in fade-in slide-in-from-right-1 ${
+                                      className={`card card-padding border-l-4 border-blue-500 dark:border-blue-400 animate-in fade-in slide-in-from-right-1 ${
                                         editedServices[service.id]
-                                          ? 'bg-yellow-50'
+                                          ? 'bg-yellow-50 dark:bg-yellow-900/20'
                                           : ''
                                       }`}
                                       style={{
@@ -1612,17 +1599,17 @@ const ImportServicesPage = () => {
                                       }}
                                     >
                                       <div className="flex items-center justify-between mb-4">
-                                        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                        <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                                           {formatID(service.id)}
                                         </div>
                                         {editedServices[service.id] && (
-                                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                          <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 px-2 py-1 rounded">
                                             Modified
                                           </span>
                                         )}
                                       </div>
                                       <div className="mb-4">
-                                        <label className="form-label mb-2">
+                                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                           Service Name
                                         </label>
                                         <input
@@ -1645,26 +1632,23 @@ const ImportServicesPage = () => {
                                       </div>
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                          <label className="form-label mb-2">
+                                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                             Price (USD)
                                           </label>
                                           <div className="space-y-1">
                                             <div
-                                              className="font-semibold text-sm bg-gray-50 px-3 py-2 rounded"
-                                              style={{
-                                                color: 'var(--text-primary)',
-                                              }}
+                                              className="font-semibold text-sm bg-gray-50 dark:bg-gray-800/50 px-3 py-2 rounded text-gray-900 dark:text-gray-100"
                                             >
                                               ${getCurrentSalePrice(service)}
                                             </div>
-                                            <div className="text-xs text-gray-500 px-3">
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 px-3">
                                               Provider: $
                                               {service.providerPrice ? parseFloat(service.providerPrice.toString()).toFixed(2) : '0.00'}
                                             </div>
                                           </div>
                                         </div>
                                         <div>
-                                          <label className="form-label mb-2">
+                                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                             Profit Percent
                                           </label>
                                           <input
@@ -1691,15 +1675,15 @@ const ImportServicesPage = () => {
                                       </div>
                                       <div className="grid grid-cols-2 gap-4 mb-4">
                                         <div>
-                                          <label className="form-label mb-2">
+                                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                             Refill
                                           </label>
                                           <div className="flex items-center">
                                             <button
                                               className={`p-1 rounded transition-colors duration-200 ${
                                                 service.refill
-                                                  ? 'text-green-600 hover:bg-green-50'
-                                                  : 'text-gray-400 hover:bg-gray-50'
+                                                  ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                               }`}
                                               title={
                                                 service.refill ? 'Refill Enabled' : 'Refill Disabled'
@@ -1712,21 +1696,21 @@ const ImportServicesPage = () => {
                                                 <FaToggleOff className="h-6 w-6" />
                                               )}
                                             </button>
-                                            <span className="ml-2 text-sm text-gray-600">
+                                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                                               {service.refill ? 'Enabled' : 'Disabled'}
                                             </span>
                                           </div>
                                         </div>
                                         <div>
-                                          <label className="form-label mb-2">
+                                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                             Cancel
                                           </label>
                                           <div className="flex items-center">
                                             <button
                                               className={`p-1 rounded transition-colors duration-200 ${
                                                 service.cancel
-                                                  ? 'text-green-600 hover:bg-green-50'
-                                                  : 'text-gray-400 hover:bg-gray-50'
+                                                  ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                               }`}
                                               title={
                                                 service.cancel ? 'Cancel Enabled' : 'Cancel Disabled'
@@ -1739,14 +1723,14 @@ const ImportServicesPage = () => {
                                                 <FaToggleOff className="h-6 w-6" />
                                               )}
                                             </button>
-                                            <span className="ml-2 text-sm text-gray-600">
+                                            <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                                               {service.cancel ? 'Enabled' : 'Disabled'}
                                             </span>
                                           </div>
                                         </div>
                                       </div>
                                       <div>
-                                        <label className="form-label mb-2">
+                                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                                           Description
                                         </label>
                                         <textarea
@@ -1771,9 +1755,9 @@ const ImportServicesPage = () => {
                                   ))
                                 ) : (
                                   <div className="p-8 text-center">
-                                    <div className="flex flex-col items-center justify-center text-gray-500">
-                                      <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400" />
-                                      <p className="text-sm font-medium">
+                                    <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                                      <FaExclamationTriangle className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+                                      <p className="text-sm font-medium text-gray-900 dark:text-gray-300">
                                         No services in this category
                                       </p>
                                     </div>
@@ -1811,7 +1795,7 @@ const ImportServicesPage = () => {
                 )}
               </div>
             )}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t mt-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t dark:border-gray-700 mt-8">
               <div className="w-full md:w-auto">
                 {currentStep > 1 && (
                   <button
