@@ -31,7 +31,7 @@ const BlogsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1400px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 7 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -76,8 +76,8 @@ const BlogsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -98,15 +98,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface BlogPost {
   id: number;
@@ -436,11 +453,11 @@ const BlogsPage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
       case 'draft':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -642,8 +659,7 @@ const BlogsPage = () => {
             <div className="w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -667,7 +683,7 @@ const BlogsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -675,7 +691,7 @@ const BlogsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalBlogs}
@@ -686,7 +702,7 @@ const BlogsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'published'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Published
@@ -694,7 +710,7 @@ const BlogsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'published'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.publishedBlogs}
@@ -705,7 +721,7 @@ const BlogsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'draft'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Draft
@@ -713,7 +729,7 @@ const BlogsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'draft'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.draftBlogs}
@@ -727,10 +743,7 @@ const BlogsPage = () => {
             {selectedBlogs.length > 0 && (
               <div className="flex flex-wrap md:flex-nowrap items-start gap-2">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
-                  <span
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {selectedBlogs.length} selected
                   </span>
                   <select
@@ -856,17 +869,11 @@ const BlogsPage = () => {
               </div>
             ) : blogs.length === 0 ? (
               <div className="text-center py-12">
-                <FaNewspaper
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <FaNewspaper className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300">
                   No blogs found.
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No blogs match your current filters or no blogs exist yet.
                 </p>
               </div>
@@ -874,12 +881,9 @@ const BlogsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           <input
                             type="checkbox"
                             checked={
@@ -887,44 +891,26 @@ const BlogsPage = () => {
                               blogs.length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           ID
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Title
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Author
                         </th>
 
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Published
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Status
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Actions
                         </th>
                       </tr>
@@ -933,7 +919,7 @@ const BlogsPage = () => {
                       {Array.isArray(blogs) ? blogs.map((blog) => (
                         <tr
                           key={blog.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             <input
@@ -944,26 +930,24 @@ const BlogsPage = () => {
                               onChange={() =>
                                 handleSelectBlog(blog.id.toString())
                               }
-                              className="rounded border-gray-300 w-4 h-4"
+                              className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                             />
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">
                               {formatID(blog.id.toString())}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="max-w-xs">
                               <div
-                                className="font-medium text-sm truncate"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-medium text-sm truncate text-gray-900 dark:text-gray-100"
                                 title={blog.title}
                               >
                                 {blog.title}
                               </div>
                               <div
-                                className="text-xs truncate mt-1"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="text-xs truncate mt-1 text-gray-600 dark:text-gray-400"
                                 title={blog.excerpt}
                               >
                                 {blog.excerpt}
@@ -972,10 +956,7 @@ const BlogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="font-medium text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
+                              <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                                 {blog.author?.username || 'unknown'}
                               </div>
                             </div>
@@ -985,25 +966,16 @@ const BlogsPage = () => {
                             <div>
                               {blog.status === 'published' && blog.publishedAt && (
                                 <>
-                                  <div
-                                    className="text-sm font-medium"
-                                    style={{ color: 'var(--text-primary)' }}
-                                  >
+                                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {formatDate(blog.publishedAt)}
                                   </div>
-                                  <div
-                                    className="text-xs"
-                                    style={{ color: 'var(--text-muted)' }}
-                                  >
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {formatTime(blog.publishedAt)}
                                   </div>
                                 </>
                               )}
                               {blog.status === 'draft' && (
-                                <div
-                                  className="text-sm"
-                                  style={{ color: 'var(--text-muted)' }}
-                                >
+                                <div className="text-sm text-gray-600 dark:text-gray-400">
                                   Not published
                                 </div>
                               )}
@@ -1046,29 +1018,29 @@ const BlogsPage = () => {
                                 </button>
 
                                 {dropdownOpen === blog.id && (
-                                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
+                                  <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 text-gray-900 dark:text-gray-300"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         router.push(`/admin/blogs/${blog.id}`);
                                       }}
                                     >
-                                      <FaEdit className="h-3 w-3 text-blue-600" />
+                                      <FaEdit className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                                       Edit Blog
                                     </button>
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 text-gray-900 dark:text-gray-300"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         openStatusDialog(blog.id, blog.status);
                                       }}
                                     >
-                                      <FaCheckCircle className="h-3 w-3 text-green-600" />
+                                      <FaCheckCircle className="h-3 w-3 text-green-600 dark:text-green-400" />
                                       Change Status
                                     </button>
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 text-red-600"
+                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2 text-red-600 dark:text-red-400"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         openDeleteDialog(blog.id, blog.title);
@@ -1085,7 +1057,7 @@ const BlogsPage = () => {
                         </tr>
                       )) : (
                         <tr>
-                          <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                          <td colSpan={7} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                             No blogs available
                           </td>
                         </tr>
@@ -1093,11 +1065,8 @@ const BlogsPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-                  <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {blogsLoading ? (
                       <div className="flex items-center gap-2">
                         <span>Loading pagination...</span>
@@ -1126,10 +1095,7 @@ const BlogsPage = () => {
                     >
                       Previous
                     </button>
-                    <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {blogsLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
@@ -1154,11 +1120,11 @@ const BlogsPage = () => {
                 </div>
                 {deleteDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4 text-red-600">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">
                         Delete Blog
                       </h3>
-                      <p className="text-sm text-gray-600 mb-6">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
                         Are you sure you want to delete "{deleteDialog.blogTitle}"? 
                         This action cannot be undone.
                       </p>
@@ -1200,12 +1166,12 @@ const BlogsPage = () => {
                 )}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Change Blog Status
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">New Status</label>
+                        <label className="form-label mb-2 dark:text-gray-300">New Status</label>
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}

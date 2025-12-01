@@ -32,7 +32,7 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+      <div className="absolute inset-1 rounded-full bg-white dark:bg-gray-800"></div>
     </div>
   </div>
 );
@@ -45,15 +45,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
 
@@ -569,8 +586,8 @@ const ContactDetailsPage = () => {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <GradientSpinner size="w-16 h-16" className="mx-auto mb-4" />
-              <p className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>Loading contact details...</p>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Please wait while we fetch the message information.</p>
+              <p className="text-lg font-medium text-gray-900 dark:text-gray-100">Loading contact details...</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Please wait while we fetch the message information.</p>
             </div>
           </div>
         </div>
@@ -584,9 +601,9 @@ const ContactDetailsPage = () => {
         <div className="page-content">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Message Not Found</h2>
-              <p className="text-lg mb-4" style={{ color: 'var(--text-muted)' }}>The requested contact message could not be found.</p>
+              <div className="text-red-500 dark:text-red-400 text-6xl mb-4">⚠️</div>
+              <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">Message Not Found</h2>
+              <p className="text-lg mb-4 text-gray-600 dark:text-gray-400">The requested contact message could not be found.</p>
               <button 
                 onClick={() => window.history.back()}
                 className="btn btn-primary flex items-center gap-2 mx-auto"
@@ -632,7 +649,7 @@ const ContactDetailsPage = () => {
             </div>
 
             <div className="flex flex-row items-center gap-1 md:gap-2">
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Message {formatMessageID(contactDetails?.id || '1')}
               </h1>
 
@@ -656,25 +673,25 @@ const ContactDetailsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="form-label">Subject</label>
-                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails?.subject || 'No Subject'}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">{contactDetails?.subject || 'No Subject'}</p>
                 </div>
                 <div>
                   <label className="form-label">Category</label>
-                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contactDetails?.category || 'Unknown'}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">{contactDetails?.category || 'Unknown'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <label className="form-label">Created</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100">
                     {contactDetails?.createdAt ? new Date(contactDetails.createdAt).toLocaleDateString() : 'Unknown'} at{' '}
                     {contactDetails?.createdAt ? new Date(contactDetails.createdAt).toLocaleTimeString() : 'Unknown'}
                   </p>
                 </div>
                 <div>
                   <label className="form-label">Last Updated</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100">
                     {contactDetails?.lastUpdated ? new Date(contactDetails.lastUpdated).toLocaleDateString() : 'Unknown'} at{' '}
                     {contactDetails?.lastUpdated ? new Date(contactDetails.lastUpdated).toLocaleTimeString() : 'Unknown'}
                   </p>
@@ -697,13 +714,13 @@ const ContactDetailsPage = () => {
                   .map((message) => (
                   <div key={message.id}>
                     <div className="prose prose-sm max-w-none">
-                      <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                      <div className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">{message.content}</div>
                     </div>
 
                     {}
                     {message.attachments && message.attachments.length > 0 && (
                       <div className="mt-4 space-y-2">
-                        <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Attachments:</h4>
                         {message.attachments.map((attachment, index) => {
 
                           const attachmentUrl = attachment.url || attachment.fileUrl;
@@ -715,15 +732,15 @@ const ContactDetailsPage = () => {
                             <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                               {getFileIcon(mimetype)}
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                                   {filename}
                                 </div>
-                                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
                                   {filesize ? `${filesize} • ` : ''}Attachment
                                 </div>
                               </div>
                               <button 
-                                className="text-blue-600 hover:text-blue-800"
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                                 onClick={() => window.open(attachmentUrl, '_blank')}
                                 title="View attachment"
                               >
@@ -756,19 +773,19 @@ const ContactDetailsPage = () => {
                     .map((message) => (
                     <div key={message.id}>
                       <div className="mb-2">
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                           {message.author} • {new Date(message.createdAt).toLocaleDateString()} at {new Date(message.createdAt).toLocaleTimeString()}
                         </span>
                       </div>
 
                       <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">{message.content}</div>
                       </div>
 
                       {}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Attachments:</h4>
                           {message.attachments.map((attachment, index) => {
 
                             const attachmentUrl = attachment.url || attachment.fileUrl;
@@ -780,15 +797,15 @@ const ContactDetailsPage = () => {
                               <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                  <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                                     {filename}
                                   </div>
-                                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {filesize ? `${filesize} • ` : ''}Attachment
                                   </div>
                                 </div>
                                 <button 
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                                   onClick={() => window.open(attachmentUrl, '_blank')}
                                   title="View attachment"
                                 >
@@ -802,7 +819,7 @@ const ContactDetailsPage = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8" style={{ color: 'var(--text-muted)' }}>
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <FaReply className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No replied yet</p>
                   </div>
@@ -829,7 +846,7 @@ const ContactDetailsPage = () => {
                       rows={6}
                       className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-48 overflow-y-auto"
                     />
-                    <small className="text-xs text-gray-500 mt-1 block">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                       This reply will be sent to the customer and will update the message status to "Replied". You can only reply once.
                     </small>
                   </div>
@@ -848,7 +865,7 @@ const ContactDetailsPage = () => {
                       className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                       accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip,.rar"
                     />
-                    <small className="text-xs text-gray-500 mt-1">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       You can upload screenshots or other relevant files (max 5MB each).
                     </small>
                   </div>
@@ -856,7 +873,7 @@ const ContactDetailsPage = () => {
                   {}
                   {selectedFiles.length > 0 && (
                     <div className="mt-3 space-y-2">
-                      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Selected Files ({selectedFiles.length}):
                       </p>
                       {selectedFiles.map((file, index) => (
@@ -865,10 +882,10 @@ const ContactDetailsPage = () => {
                             {getFileIcon(file.type)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                            <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                               {file.name}
                             </div>
-                            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </div>
                           </div>
@@ -933,24 +950,24 @@ const ContactDetailsPage = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.username || 'No Username'}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{contactDetails?.username || 'No Username'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.fullName || 'No Name'}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{contactDetails?.userInfo?.fullName || 'No Name'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.email || contactDetails?.userEmail}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{contactDetails?.userInfo?.email || contactDetails?.userEmail}</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t dark:border-gray-700">
                     <div>
                       <div className="form-label">Total Messages</div>
-                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{contactDetails?.userInfo?.totalMessages || 0}</div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{contactDetails?.userInfo?.totalMessages || 0}</div>
                     </div>
                     <div>
                       <div className="form-label">Open Messages</div>
-                      <div className="text-lg font-semibold text-orange-600">{contactDetails?.userInfo?.openMessages || 0}</div>
+                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">{contactDetails?.userInfo?.openMessages || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -983,7 +1000,7 @@ const ContactDetailsPage = () => {
                       rows={3}
                       className="form-field w-full min-w-0 px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none max-h-32 overflow-y-auto"
                     />
-                    <small className="text-xs text-gray-500 mt-1 block">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                       Internal notes are only visible to support staff members.
                     </small>
                     <button
@@ -999,11 +1016,11 @@ const ContactDetailsPage = () => {
                   {}
                   <div className="space-y-3">
                     {(contactDetails?.notes || []).map((note) => (
-                       <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                         <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                       <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                         <div className="text-xs mb-1 text-gray-600 dark:text-gray-400">
                            {note.author} • {new Date(note.createdAt).toLocaleDateString()}
                          </div>
-                         <div className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{note.content}</div>
+                         <div className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100">{note.content}</div>
                        </div>
                      ))}
                   </div>
