@@ -205,12 +205,12 @@ export default function TermsPage() {
                 <div className="h-4 w-3/4 gradient-shimmer rounded" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
                     <div className="h-5 w-24 gradient-shimmer rounded mb-2" />
                     <div className="h-4 w-40 gradient-shimmer rounded" />
                   </div>
 
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
                     <div className="h-5 w-28 gradient-shimmer rounded mb-2" />
                     <div className="h-4 w-32 gradient-shimmer rounded" />
                   </div>
@@ -223,9 +223,9 @@ export default function TermsPage() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mt-6">
               <div className="flex items-start">
-                <FaExclamationTriangle className="text-yellow-600 mt-1 mr-3 flex-shrink-0" />
+                <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-400 mt-1 mr-3 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="h-5 w-32 gradient-shimmer rounded mb-2" />
                   <div className="h-4 w-full gradient-shimmer rounded mb-1" />
@@ -255,13 +255,13 @@ export default function TermsPage() {
                 <FaFileContract />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Last Updated</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">Last Updated</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   These terms were last updated on January 1, 2025
                 </p>
               </div>
             </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
               Version 1.0
             </div>
           </div>
@@ -274,14 +274,14 @@ export default function TermsPage() {
                   <div className="card-icon">{section.icon}</div>
                   <h3 className="card-title">{section.title}</h3>
                 </div>
-                <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center sm:ml-auto">
+                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-3 py-1 rounded-full text-sm font-medium w-full sm:w-auto text-center sm:ml-auto">
                   Section {index + 1}
                 </span>
               </div>
 
               <div className="space-y-3">
                 {section.content.map((paragraph, idx) => (
-                  <p key={idx} className="text-gray-700 leading-relaxed">
+                  <p key={idx} className="text-gray-700 dark:text-gray-300 leading-relaxed">
                     {paragraph}
                   </p>
                 ))}
@@ -298,30 +298,30 @@ export default function TermsPage() {
           </div>
 
           <div className="space-y-4">
-            <p className="text-gray-700">
+            <p className="text-gray-700 dark:text-gray-300">
               If you have any questions about these Terms of Service, please
               don't hesitate to contact us.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   Email Support
                 </h4>
                 {supportEmail ? (
-                  <a href={`mailto:${supportEmail}`} className="text-sm text-gray-600 hover:text-[var(--primary)] transition-colors">
+                  <a href={`mailto:${supportEmail}`} className="text-sm text-gray-600 dark:text-gray-300 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors">
                     {supportEmail}
                   </a>
                 ) : (
-                  <p className="text-sm text-gray-600">Not configured</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Not configured</p>
                 )}
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-2">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   Response Time
                 </h4>
-                <p className="text-sm text-gray-600">Within 24 hours</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Within 24 hours</p>
               </div>
             </div>
 
@@ -341,14 +341,14 @@ export default function TermsPage() {
             </div>
           </div>
         </div>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mt-6">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mt-6">
           <div className="flex items-start">
-            <FaExclamationTriangle className="text-yellow-600 mt-1 mr-3 flex-shrink-0" />
+            <FaExclamationTriangle className="text-yellow-600 dark:text-yellow-400 mt-1 mr-3 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-yellow-800 mb-2">
+              <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
                 Important Notice
               </h4>
-              <p className="text-yellow-700 text-sm leading-relaxed">
+              <p className="text-yellow-700 dark:text-yellow-300 text-sm leading-relaxed">
                 By continuing to use our services, you acknowledge that you have
                 read, understood, and agree to be bound by these Terms of
                 Service. If you do not agree with these terms, please

@@ -42,35 +42,30 @@ const LatestUsers = React.memo(function LatestUsers({
     <>
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="sticky top-0 bg-white border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 ID
               </th>
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 Username
               </th>
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 Email
               </th>
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 Balance
               </th>
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 Registered Date
               </th>
@@ -80,10 +75,10 @@ const LatestUsers = React.memo(function LatestUsers({
             {latestUsers.map((user) => (
               <tr
                 key={user.id}
-                className="border-t hover:bg-gray-50 transition-colors duration-200"
+                className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
               >
                 <td className="p-3">
-                  <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                  <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                     {user.id || 'N/A'}
                   </div>
                 </td>
@@ -105,15 +100,15 @@ const LatestUsers = React.memo(function LatestUsers({
                   <div className="flex items-center gap-1 mt-1">
                     {user.emailVerified ? (
                       <>
-                        <FaCheckCircle className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">
+                        <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                        <span className="text-xs text-green-600 dark:text-green-400">
                           Verified
                         </span>
                       </>
                     ) : (
                       <>
-                        <FaTimesCircle className="h-3 w-3 text-red-500" />
-                        <span className="text-xs text-red-600">
+                        <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+                        <span className="text-xs text-red-600 dark:text-red-400">
                           Unverified
                         </span>
                       </>
@@ -168,11 +163,11 @@ const LatestUsers = React.memo(function LatestUsers({
           {latestUsers.map((user) => (
             <div
               key={user.id}
-              className="card card-padding border-l-4 border-blue-500 mb-4"
+              className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                  <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                     {user.id || 'N/A'}
                   </div>
                 </div>
@@ -210,15 +205,15 @@ const LatestUsers = React.memo(function LatestUsers({
                   <div className="flex items-center gap-1">
                     {user.emailVerified ? (
                       <>
-                        <FaCheckCircle className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-green-600">
+                        <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                        <span className="text-xs text-green-600 dark:text-green-400">
                           Verified
                         </span>
                       </>
                     ) : (
                       <>
-                        <FaTimesCircle className="h-3 w-3 text-red-500" />
-                        <span className="text-xs text-red-600">
+                        <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+                        <span className="text-xs text-red-600 dark:text-red-400">
                           Unverified
                         </span>
                       </>

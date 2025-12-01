@@ -23,11 +23,28 @@ const Toast = ({
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
 }) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+        : type === 'error'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+        : type === 'info'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+    }`}
+  >
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheckCircle className="w-4 h-4" />}
+      {type === 'error' && <FaExclamationTriangle className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+      >
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
   </div>
 );
 
@@ -268,9 +285,9 @@ export default function WithdrawalsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
+                      <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
                         {Array.from({ length: 7 }).map((_, idx) => (
-                          <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                          <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                             <div className="h-4 w-24 gradient-shimmer rounded" />
                           </th>
                         ))}
@@ -278,7 +295,7 @@ export default function WithdrawalsPage() {
                     </thead>
                     <tbody>
                       {Array.from({ length: 10 }).map((_, idx) => (
-                        <tr key={idx} className="border-b border-gray-100">
+                        <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
                           <td className="py-3 px-4">
                             <div className="h-4 w-8 gradient-shimmer rounded" />
                           </td>
@@ -305,7 +322,7 @@ export default function WithdrawalsPage() {
               </div>
             </>
           ) : error ? (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300 p-4 rounded-lg">
               <p className="flex items-center">
                 <FaExclamationTriangle className="h-5 w-5 mr-2" />
                 <span>{error}</span>
@@ -378,7 +395,7 @@ export default function WithdrawalsPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'all'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                     }`}
                   >
                     <FaReceipt className="w-4 h-4" />
@@ -390,7 +407,7 @@ export default function WithdrawalsPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'success'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                     }`}
                   >
                     <FaCheckCircle className="w-4 h-4" />
@@ -402,7 +419,7 @@ export default function WithdrawalsPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'pending'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                     }`}
                   >
                     <FaClock className="w-4 h-4" />
@@ -414,7 +431,7 @@ export default function WithdrawalsPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-white ${
                       activeTab === 'cancelled'
                         ? 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] shadow-lg'
-                        : 'bg-gray-600 hover:bg-gray-700'
+                        : 'bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400'
                     }`}
                   >
                     <FaTimes className="w-4 h-4" />
@@ -427,9 +444,9 @@ export default function WithdrawalsPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
+                        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
                           {Array.from({ length: 6 }).map((_, idx) => (
-                            <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900">
+                            <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                               <div className="h-4 w-24 gradient-shimmer rounded" />
                             </th>
                           ))}
@@ -437,7 +454,7 @@ export default function WithdrawalsPage() {
                       </thead>
                       <tbody>
                         {Array.from({ length: 10 }).map((_, idx) => (
-                          <tr key={idx} className="border-b border-gray-100">
+                          <tr key={idx} className="border-b border-gray-100 dark:border-gray-700">
                             <td className="py-3 px-4">
                               <div className="h-4 w-8 gradient-shimmer rounded" />
                             </td>
@@ -469,7 +486,7 @@ export default function WithdrawalsPage() {
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
                           <thead>
-                            <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-800">
+                            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
                               {Array.from({ length: 6 }).map((_, idx) => (
                                 <th key={idx} className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                                   <div className="h-4 w-24 gradient-shimmer rounded" />

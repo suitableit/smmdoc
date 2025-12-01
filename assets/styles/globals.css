@@ -647,7 +647,15 @@ html {
 
 /* Dark mode specific overrides */
 .dark .switch-unchecked {
-  background-color: #6b7280;
+  background-color: #6b7280 !important;
+}
+
+.dark .switch-checked {
+  background-color: var(--primary) !important;
+}
+
+.dark .switch-thumb {
+  background-color: white !important;
 }
 
 /* Toast System */

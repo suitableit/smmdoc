@@ -46,9 +46,9 @@ export function WithdrawalsList({
     return (
       <div className="card card-padding">
         <div className="text-center py-8 flex flex-col items-center">
-          <FaSearch className="text-4xl text-gray-400 mb-4" />
-          <div className="text-lg font-medium">No withdrawals found</div>
-          <div className="text-sm text-gray-500">
+          <FaSearch className="text-4xl text-gray-400 dark:text-gray-500 mb-4" />
+          <div className="text-lg font-medium text-gray-900 dark:text-gray-300">No withdrawals found</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             You haven't made any withdrawal requests yet.
           </div>
         </div>
@@ -59,9 +59,9 @@ export function WithdrawalsList({
   return (
     <div className="card">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+        <table className="w-full border-collapse border border-gray-200 dark:border-gray-700">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 dark:bg-gray-800">
+            <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[var(--card-bg)]">
               <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
                 Sl. No.
               </th>
@@ -91,7 +91,7 @@ export function WithdrawalsList({
               return (
               <tr
                 key={withdrawal.id}
-                className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)]"
               >
                 <td className="py-3 px-4">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">

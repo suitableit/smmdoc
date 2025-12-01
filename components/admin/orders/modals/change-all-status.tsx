@@ -30,16 +30,16 @@ const ChangeAllStatusModal: React.FC<ChangeAllStatusModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
           Change All Orders Status
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           This will change the status of {selectedOrdersCount}{' '}
           selected order{selectedOrdersCount !== 1 ? 's' : ''}.
         </p>
         <div className="mb-4">
-          <label className="form-label mb-2">
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
             Select New Status
           </label>
           <select

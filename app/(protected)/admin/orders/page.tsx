@@ -68,10 +68,10 @@ const GradientTableLoader = () => {
   return (
     <div className="lg:block">
       <table className="w-full text-sm min-w-[1200px]">
-        <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
           <tr>
             {Array.from({ length: 14 }).map((_, idx) => (
-              <th key={idx} className="text-left p-3">
+              <th key={idx} className="text-left p-3 text-gray-900 dark:text-gray-100">
                 <div className="h-4 rounded w-3/4 gradient-shimmer" />
               </th>
             ))}
@@ -654,21 +654,21 @@ const AdminOrdersPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return <FaClock className="h-3 w-3 text-yellow-500" />;
+        return <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />;
       case 'processing':
       case 'in_progress':
-        return <FaSync className="h-3 w-3 text-blue-500" />;
+        return <FaSync className="h-3 w-3 text-blue-500 dark:text-blue-400" />;
       case 'completed':
-        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+        return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
       case 'cancelled':
       case 'refunded':
-        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+        return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
       case 'partial':
-        return <FaExclamationCircle className="h-3 w-3 text-orange-500" />;
+        return <FaExclamationCircle className="h-3 w-3 text-orange-500 dark:text-orange-400" />;
       case 'failed':
-        return <FaTimesCircle className="h-3 w-3 text-gray-500" />;
+        return <FaTimesCircle className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
       default:
-        return <FaClock className="h-3 w-3 text-gray-500" />;
+        return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -938,7 +938,7 @@ const AdminOrdersPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.totalOrders}
                   </p>
                 )}
@@ -956,7 +956,7 @@ const AdminOrdersPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                     {stats.pendingOrders}
                   </p>
                 )}
@@ -974,7 +974,7 @@ const AdminOrdersPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {stats.completedOrders}
                   </p>
                 )}
@@ -992,7 +992,7 @@ const AdminOrdersPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-20 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     ${formatPrice(stats.totalRevenue, 2)}
                   </p>
                 )}
@@ -1065,7 +1065,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -1073,7 +1073,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
                     }`}
                   >
                     {stats.totalOrders}
@@ -1084,7 +1084,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -1092,7 +1092,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                     }`}
                   >
                     {stats.pendingOrders}
@@ -1103,7 +1103,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'processing'
                       ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Processing
@@ -1111,7 +1111,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'processing'
                         ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                     }`}
                   >
                     {stats.processingOrders}
@@ -1122,7 +1122,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'completed'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Completed
@@ -1130,7 +1130,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'completed'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                     }`}
                   >
                     {stats.completedOrders}
@@ -1141,7 +1141,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'partial'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Partial
@@ -1149,7 +1149,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'partial'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                     }`}
                   >
                     {stats.statusBreakdown?.partial || 0}
@@ -1160,7 +1160,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'cancelled'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Cancelled
@@ -1168,7 +1168,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'cancelled'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.statusBreakdown?.cancelled || 0}
@@ -1179,7 +1179,7 @@ const AdminOrdersPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'failed'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Failed
@@ -1187,7 +1187,7 @@ const AdminOrdersPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'failed'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                     }`}
                   >
                     {stats.statusBreakdown?.failed || 0}
@@ -1199,7 +1199,7 @@ const AdminOrdersPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {selectedOrders.length > 0 && (
-              <div className="flex items-center gap-2 py-4 border-b mb-4">
+              <div className="flex items-center gap-2 py-4 border-b dark:border-gray-700 mb-4">
                 <span
                   className="text-sm"
                   style={{ color: 'var(--text-muted)' }}
@@ -1265,7 +1265,7 @@ const AdminOrdersPage = () => {
                   getStatusIcon={getStatusIcon}
                   calculateProgress={calculateProgress}
                 />
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t px-6">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700 px-6">
                   <div
                     className="text-sm mb-4 md:mb-0"
                     style={{ color: 'var(--text-muted)' }}

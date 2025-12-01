@@ -932,7 +932,7 @@ const CancelRequestsPage = () => {
                           </td>
 
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {formatID(String(request.order.id).slice(-8))}
                             </div>
                           </td>
@@ -1405,7 +1405,7 @@ const CancelRequestsPage = () => {
                                 <label className="text-sm font-medium text-gray-600">
                                   Order ID
                                 </label>
-                                <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
+                                <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded w-fit mt-1">
                                   {viewDialog.request.order.id}
                                 </div>
                               </div>

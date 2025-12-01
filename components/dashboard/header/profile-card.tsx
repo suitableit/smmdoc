@@ -413,8 +413,7 @@ const ProfileCard = ({
           >
             {isLoading ? (
               <div
-                className="p-3 sm:p-6"
-                style={{ backgroundColor: 'rgb(243 243 243)' }}
+                className="p-3 sm:p-6 bg-gray-100 dark:bg-gray-800"
               >
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-full gradient-shimmer flex-shrink-0"></div>
@@ -434,8 +433,7 @@ const ProfileCard = ({
               </div>
             ) : (
               <div
-                className="p-3 sm:p-6"
-                style={{ backgroundColor: 'rgb(243 243 243)' }}
+                className="p-3 sm:p-6 bg-gray-100 dark:bg-gray-800"
               >
                 <div className="flex items-center space-x-2 sm:space-x-4 mb-3 sm:mb-4">
                   <Avatar className="h-10 w-10 sm:h-14 sm:w-14 ring-2 sm:ring-3 ring-[var(--primary)]/20">
@@ -552,7 +550,7 @@ const ProfileCard = ({
                 className="w-full px-3 sm:px-6 py-2 sm:py-3 text-left hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 flex items-center space-x-2 sm:space-x-3 group rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="p-1.5 sm:p-2 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors duration-200">
-                  <FaSignOutAlt className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
+                  <FaSignOutAlt className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 dark:text-red-400" />
                 </div>
                 <span className="font-semibold text-red-600 dark:text-red-400 text-xs sm:text-base">
                   {isLoggingOut ? 'Signing Out...' : 'Sign Out'}

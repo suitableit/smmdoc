@@ -30,12 +30,27 @@ const Toast = ({
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
 }) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheck className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
+  <div
+    className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg backdrop-blur-sm border ${
+      type === 'success'
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+        : type === 'error'
+        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+        : type === 'info'
+        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200'
+    }`}
+  >
+    <div className="flex items-center space-x-2">
+      {type === 'success' && <FaCheck className="w-4 h-4" />}
+      <span className="font-medium">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+      >
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
   </div>
 );
 
@@ -64,7 +79,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, any>(
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="password-toggle"
+          className="password-toggle text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           {showPassword ? (
             <FaEyeSlash className="h-4 w-4" />
@@ -1027,7 +1042,7 @@ const ProfilePage = () => {
                     placeholder="Enter username"
                   />
                   {validationErrors.username && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.username}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.username}</p>
                   )}
                 </div>
 
@@ -1047,7 +1062,7 @@ const ProfilePage = () => {
                     placeholder="Enter full name"
                   />
                   {validationErrors.fullName && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.fullName}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.fullName}</p>
                   )}
                 </div>
 
@@ -1082,7 +1097,7 @@ const ProfilePage = () => {
                     </div>
                   </div>
                   {validationErrors.email && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.email}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.email}</p>
                   )}
                   {pendingEmailChange && (
                     <p className="text-blue-600 dark:text-blue-400 text-sm mt-1">
@@ -1193,7 +1208,7 @@ const ProfilePage = () => {
                     placeholder="Enter current password"
                   />
                   {validationErrors.currentPass && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.currentPass}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.currentPass}</p>
                   )}
                 </div>
 
@@ -1217,7 +1232,7 @@ const ProfilePage = () => {
                     placeholder="Enter new password"
                   />
                   {validationErrors.newPass && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.newPass}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.newPass}</p>
                   )}
                 </div>
 
@@ -1241,7 +1256,7 @@ const ProfilePage = () => {
                     placeholder="Confirm new password"
                   />
                   {validationErrors.confirmNewPass && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.confirmNewPass}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.confirmNewPass}</p>
                   )}
                 </div>
 
