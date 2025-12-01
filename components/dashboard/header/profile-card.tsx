@@ -369,10 +369,12 @@ const ProfileCard = ({
   return (
     <div className="relative flex items-center justify-center">
       <button
-        className="relative focus:outline-none flex items-center justify-center"
+        type="button"
+        className="relative focus:outline-none flex items-center justify-center !bg-transparent hover:!bg-transparent active:!bg-transparent border-0 shadow-none p-0 m-0"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="User menu"
         disabled={isLoggingOut}
+        style={{ background: 'transparent', backgroundColor: 'transparent' }}
       >
         <Avatar className="h-10 w-10 sm:h-10 sm:w-10">
           {(user?.photo || user?.image || userData?.image) && !imageError ? (

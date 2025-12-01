@@ -320,10 +320,12 @@ const Header: React.FC<HeaderProps> = ({
     return (
       <div className="relative flex items-center justify-center">
         <button
-          className="pl-4 relative focus:outline-none flex items-center justify-center"
+          type="button"
+          className="pl-4 relative focus:outline-none flex items-center justify-center !bg-transparent hover:!bg-transparent active:!bg-transparent border-0 shadow-none p-0 m-0"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="User menu"
           disabled={isLoggingOut}
+          style={{ background: 'transparent', backgroundColor: 'transparent' }}
         >
           <Avatar className="h-12 w-12">
             {(user?.photo || user?.image) && !imageError ? (
@@ -368,7 +370,7 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm sm:text-xl font-bold truncate text-gray-900 dark:text-white">{username}</h3>
                     <p className="truncate text-xs sm:text-sm text-gray-600 dark:text-gray-300">{user?.email}</p>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${isAdmin ? 'bg-purple-50 text-purple-700' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${isAdmin ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
                       {isAdmin ? 'Admin' : 'User'}
                     </span>
                   </div>
