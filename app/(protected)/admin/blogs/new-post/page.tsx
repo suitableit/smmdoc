@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   FaCheckCircle,
   FaGlobe,
@@ -67,6 +68,7 @@ interface PostFormData {
 }
 
 const NewPostPage = () => {
+  const router = useRouter();
   const { appName } = useAppNameWithFallback();
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -324,7 +326,7 @@ const NewPostPage = () => {
       showToast('Post published successfully!', 'success');
 
       setTimeout(() => {
-        window.location.href = '/admin/blogs';
+        router.push('/admin/blogs');
       }, 2000);
 
     } catch (error) {
