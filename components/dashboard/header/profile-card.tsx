@@ -471,7 +471,7 @@ const ProfileCard = ({
                     <span
                       className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${
                         isAdmin
-                          ? 'bg-purple-50 text-purple-700'
+                          ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                           : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       }`}
                     >

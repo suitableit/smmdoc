@@ -63,7 +63,7 @@ const ChildPanelsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 7 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -74,7 +74,7 @@ const ChildPanelsTableSkeleton = () => {
           </thead>
           <tbody>
             {rows.map((_, rowIdx) => (
-              <tr key={rowIdx} className="border-t dark:border-gray-700">
+              <tr key={rowIdx} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="p-3">
                   <div className="h-4 w-4 gradient-shimmer rounded" />
                 </td>
@@ -106,7 +106,7 @@ const ChildPanelsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t border-gray-200 dark:border-gray-700">
         <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
@@ -436,17 +436,17 @@ const ChildPanelsPage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800';
       case 'inactive':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
       case 'suspended':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800';
       case 'expired':
-        return 'bg-orange-100 text-orange-700';
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -650,7 +650,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -658,7 +658,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalPanels}
@@ -669,7 +669,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -677,7 +677,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.activePanels}
@@ -688,7 +688,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'inactive'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Inactive
@@ -696,7 +696,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'inactive'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.inactivePanels}
@@ -707,7 +707,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'suspended'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Suspended
@@ -715,7 +715,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'suspended'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                     }`}
                   >
                     {stats.suspendedPanels}
@@ -726,7 +726,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -734,7 +734,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {stats.pendingPanels}
@@ -745,7 +745,7 @@ const ChildPanelsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'expired'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Expired
@@ -753,7 +753,7 @@ const ChildPanelsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'expired'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                     }`}
                   >
                     {stats.expiredPanels}
@@ -830,16 +830,14 @@ const ChildPanelsPage = () => {
             ) : childPanels.length === 0 ? (
               <div className="text-center py-12">
                 <FaServer
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No child panels found.
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No child panels match your current filters or no panels
                   exist yet.
                 </p>
@@ -847,12 +845,11 @@ const ChildPanelsPage = () => {
             ) : (
               <React.Fragment>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[1000px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                  <table className="w-full text-sm min-w-[1000px] border border-gray-200 dark:border-gray-700">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b border-gray-200 dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -861,42 +858,36 @@ const ChildPanelsPage = () => {
                               childPanels.length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Domain
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Created
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -906,7 +897,7 @@ const ChildPanelsPage = () => {
                       {childPanels.map((panel, index) => (
                         <tr
                           key={panel.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             {panel.status !== 'suspended' && (
@@ -918,26 +909,24 @@ const ChildPanelsPage = () => {
                                 onChange={() =>
                                   handleSelectPanel(panel.id.toString())
                                 }
-                                className="rounded border-gray-300 w-4 h-4"
+                                className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                               />
                             )}
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">
                               {(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
                               <div
-                                className="font-medium text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-medium text-sm text-gray-900 dark:text-gray-100"
                               >
                                 {panel.user?.username || 'Unknown'}
                               </div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="text-xs text-gray-500 dark:text-gray-400"
                               >
                                 {panel.user?.email || 'No email'}
                               </div>
@@ -948,19 +937,19 @@ const ChildPanelsPage = () => {
                               href={`https://${panel.domain}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-medium text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                              className="font-medium text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                             >
                               {panel.domain}
                             </a>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-700 dark:text-gray-300">
                                 {panel.createdAt
                                   ? new Date(panel.createdAt).toLocaleDateString()
                                   : 'Unknown'}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {panel.createdAt
                                   ? new Date(panel.createdAt).toLocaleTimeString()
                                   : ''}
@@ -1008,35 +997,35 @@ const ChildPanelsPage = () => {
                                 </button>
 
                                 {dropdownOpen === panel.id && (
-                                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
+                                  <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         openStatusDialog(panel.id, panel.status);
                                       }}
                                     >
-                                      <FaUserCheck className="h-3 w-3 text-blue-600" />
+                                      <FaUserCheck className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                                       Change Status
                                     </button>
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         openSettingsDialog(panel);
                                       }}
                                     >
-                                      <FaCog className="h-3 w-3 text-gray-600" />
+                                      <FaCog className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                                       Panel Settings
                                     </button>
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         window.open(`https://${panel.domain}`, '_blank');
                                       }}
                                     >
-                                      <FaGlobe className="h-3 w-3 text-green-600" />
+                                      <FaGlobe className="h-3 w-3 text-green-600 dark:text-green-400" />
                                       Visit Panel
                                     </button>
                                   </div>
@@ -1049,10 +1038,9 @@ const ChildPanelsPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t border-gray-200 dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {panelsLoading ? (
                       <div className="flex items-center gap-2">
@@ -1083,8 +1071,7 @@ const ChildPanelsPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {panelsLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -1110,12 +1097,12 @@ const ChildPanelsPage = () => {
                 </div>
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Change Panel Status
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">New Status</label>
+                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">New Status</label>
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}
@@ -1128,7 +1115,7 @@ const ChildPanelsPage = () => {
                         </select>
                       </div>
                       <div className="mb-4">
-                        <label className="form-label mb-2">
+                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                           Reason for Change
                         </label>
                         <textarea
@@ -1174,28 +1161,28 @@ const ChildPanelsPage = () => {
                 )}
                 {settingsDialog.open && settingsDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                           Panel Settings - {settingsDialog.panel.panelName}
                         </h3>
                         <button
                           onClick={() =>
                             setSettingsDialog({ open: false, panel: null })
                           }
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         >
                           <FaTimes className="h-5 w-5" />
                         </button>
                       </div>
-                      <div className="border-b border-gray-200 mb-6">
+                      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
                         <nav className="-mb-px flex flex-wrap space-x-0 sm:space-x-8 gap-2">
                           <button
                             onClick={() => setActiveSettingsTab('general')}
                             className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'general'
-                                ? 'border-purple-500 text-purple-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-purple-500 dark:border-purple-400 text-purple-600 dark:text-purple-400'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                             }`}
                           >
                             General
@@ -1204,8 +1191,8 @@ const ChildPanelsPage = () => {
                             onClick={() => setActiveSettingsTab('appearance')}
                             className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'appearance'
-                                ? 'border-purple-500 text-purple-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-purple-500 dark:border-purple-400 text-purple-600 dark:text-purple-400'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                             }`}
                           >
                             Appearance
@@ -1214,8 +1201,8 @@ const ChildPanelsPage = () => {
                             onClick={() => setActiveSettingsTab('api')}
                             className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'api'
-                                ? 'border-purple-500 text-purple-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-purple-500 dark:border-purple-400 text-purple-600 dark:text-purple-400'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                             }`}
                           >
                             API & Limits
@@ -1224,8 +1211,8 @@ const ChildPanelsPage = () => {
                             onClick={() => setActiveSettingsTab('features')}
                             className={`py-2 px-4 sm:px-1 border-b-2 font-medium text-sm flex-1 text-center ${
                               activeSettingsTab === 'features'
-                                ? 'border-purple-500 text-purple-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-purple-500 dark:border-purple-400 text-purple-600 dark:text-purple-400'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                             }`}
                           >
                             Features
@@ -1303,7 +1290,7 @@ const ChildPanelsPage = () => {
                                 min="1"
                                 max="10000"
                               />
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Maximum number of users that can register on this panel
                               </div>
                             </div>
@@ -1377,16 +1364,16 @@ const ChildPanelsPage = () => {
                                 />
                                 <span className="font-medium">Enable Custom Branding</span>
                               </label>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-gray-600 dark:text-gray-400">
                                 Allow this panel to use custom branding, logos, and remove "Powered by" links
                               </div>
                             </div>
 
-                            <div className="bg-blue-50 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-blue-800 mb-2">Theme Preview</h4>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                              <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Theme Preview</h4>
                               <div className="flex items-center gap-2">
                                 <div 
-                                  className="w-8 h-8 rounded border-2 border-white shadow-sm"
+                                  className="w-8 h-8 rounded border-2 border-white dark:border-gray-700 shadow-sm"
                                   style={{
                                     backgroundColor: 
                                       settingsData.theme === 'Dark Blue' ? '#1e40af' :
@@ -1399,7 +1386,7 @@ const ChildPanelsPage = () => {
                                       settingsData.theme === 'Teal' ? '#0d9488' : '#6b7280'
                                   }}
                                 ></div>
-                                <span className="text-sm text-gray-700">Primary Color: {settingsData.theme}</span>
+                                <span className="text-sm text-gray-700 dark:text-gray-300">Primary Color: {settingsData.theme}</span>
                               </div>
                             </div>
                           </div>
@@ -1423,32 +1410,32 @@ const ChildPanelsPage = () => {
                                 min="100"
                                 max="10000"
                               />
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Maximum API calls this panel can make per hour
                               </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-gray-800 mb-3">Current API Usage</h4>
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                              <h4 className="text-sm font-medium text-gray-800 dark:text-gray-100 mb-3">Current API Usage</h4>
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <div className="text-xs text-gray-600">Today</div>
-                                  <div className="text-lg font-semibold text-blue-600">
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">Today</div>
+                                  <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                                     {formatNumber(settingsDialog.panel.apiCallsToday)}
                                   </div>
                                 </div>
                                 <div>
-                                  <div className="text-xs text-gray-600">Total</div>
-                                  <div className="text-lg font-semibold text-purple-600">
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">Total</div>
+                                  <div className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                                     {formatNumber(settingsDialog.panel.apiCallsTotal)}
                                   </div>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-yellow-800 mb-2">API Information</h4>
-                              <div className="text-sm text-yellow-700 space-y-1">
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                              <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">API Information</h4>
+                              <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
                                 <div>API Key: <span className="font-mono text-xs">{settingsDialog.panel.apiKey}</span></div>
                                 <div className="text-xs">Keep this API key secure and do not share it publicly</div>
                               </div>
@@ -1459,7 +1446,7 @@ const ChildPanelsPage = () => {
                         {activeSettingsTab === 'features' && (
                           <div className="space-y-6">
                             <div>
-                              <h4 className="text-md font-semibold mb-4 text-gray-800">Panel Features</h4>
+                              <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">Panel Features</h4>
                               <div className="mb-4">
                                 <label className="flex items-center gap-2">
                                   <input
@@ -1634,20 +1621,20 @@ const ChildPanelsPage = () => {
                                   </label>
                                 </div>
                               </div>
-                              <div className="mt-4 text-sm text-gray-600">
+                              <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                                 {Object.values(settingsData.featuresEnabled).every(v => !v) ? (
-                                  <span className="text-amber-600">No features selected. Panel will have limited functionality.</span>
+                                  <span className="text-amber-600 dark:text-amber-400">No features selected. Panel will have limited functionality.</span>
                                 ) : (
-                                  <span className="text-green-600">
+                                  <span className="text-green-600 dark:text-green-400">
                                     {Object.values(settingsData.featuresEnabled).filter(v => v).length} features enabled.
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <div className="bg-green-50 rounded-lg p-4">
-                              <h4 className="text-sm font-medium text-green-800 mb-2">Current Plan</h4>
-                              <div className="text-sm text-green-700">
+                            <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                              <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Current Plan</h4>
+                              <div className="text-sm text-green-700 dark:text-green-300">
                                 <div className="text-xs">
                                   Expires: {settingsDialog.panel.expiryDate 
                                     ? new Date(settingsDialog.panel.expiryDate).toLocaleDateString()
@@ -1659,7 +1646,7 @@ const ChildPanelsPage = () => {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-3 justify-end pt-4 border-t">
+                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                         <button
                           onClick={() => setSettingsDialog({ open: false, panel: null })}
                           className="btn btn-secondary"
@@ -1678,67 +1665,67 @@ const ChildPanelsPage = () => {
                 )}
                 {viewDialog.open && viewDialog.panel && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                           Child Panel Details
                         </h3>
                         <button
                           onClick={() =>
                             setViewDialog({ open: false, panel: null })
                           }
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         >
                           <FaTimes className="h-5 w-5" />
                         </button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Basic Information
                           </h4>
                           <div className="space-y-3">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Panel ID
                               </label>
-                              <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
+                              <div className="font-mono text-sm bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded w-fit mt-1">
                                 {formatID(viewDialog.panel.id.toString())}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Panel Name
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.panel.panelName}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Domain
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 <a 
                                   href={`https://${viewDialog.panel.domain}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                                 >
                                   {viewDialog.panel.domain}
                                 </a>
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Owner
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.panel.user?.username} ({viewDialog.panel.user?.email})
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Status
                               </label>
                               <div className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium mt-1 ${getStatusColor(viewDialog.panel.status)}`}>
@@ -1752,47 +1739,47 @@ const ChildPanelsPage = () => {
                         </div>
 
                         <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Performance Metrics
                           </h4>
                           <div className="space-y-3">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Total Orders
                               </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">
                                 {formatNumber(viewDialog.panel.totalOrders)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Total Revenue
                               </label>
-                              <div className="text-lg font-semibold text-green-600 mt-1">
+                              <div className="text-lg font-semibold text-green-600 dark:text-green-400 mt-1">
                                 ${formatPrice(viewDialog.panel.totalRevenue, 2)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 API Calls Today
                               </label>
-                              <div className="text-lg font-semibold text-blue-600 mt-1">
+                              <div className="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-1">
                                 {formatNumber(viewDialog.panel.apiCallsToday)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Total API Calls
                               </label>
-                              <div className="text-lg font-semibold text-purple-600 mt-1">
+                              <div className="text-lg font-semibold text-purple-600 dark:text-purple-400 mt-1">
                                 {formatNumber(viewDialog.panel.apiCallsTotal)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Plan
                               </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.panel.plan}
                               </div>
                             </div>
@@ -1800,62 +1787,62 @@ const ChildPanelsPage = () => {
                         </div>
                       </div>
                       <div className="mb-6">
-                        <h4 className="text-md font-semibold mb-4 text-gray-800">
+                        <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                           Technical Details
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="bg-gray-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-gray-600 mb-1">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
                               API Key
                             </div>
-                            <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-900 dark:text-gray-100">
                               {viewDialog.panel.apiKey}
                             </div>
                           </div>
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-blue-600 mb-1">
+                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                            <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
                               Theme
                             </div>
-                            <div className="text-sm font-semibold text-blue-700">
+                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                               {viewDialog.panel.theme}
                             </div>
                           </div>
-                          <div className="bg-green-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-green-600 mb-1">
+                          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                            <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">
                               Custom Branding
                             </div>
-                            <div className="text-sm font-semibold text-green-700">
+                            <div className="text-sm font-semibold text-green-700 dark:text-green-300">
                               {viewDialog.panel.customBranding ? 'Enabled' : 'Disabled'}
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="mb-6">
-                        <h4 className="text-md font-semibold mb-4 text-gray-800">
+                        <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                           Important Dates
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-600">
+                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                               Created
                             </label>
-                            <div className="text-sm text-gray-900 mt-1">
+                            <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                               {new Date(viewDialog.panel.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">
+                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                               Last Activity
                             </label>
-                            <div className="text-sm text-gray-900 mt-1">
+                            <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                               {new Date(viewDialog.panel.lastActivity).toLocaleDateString()}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-600">
+                            <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                               Expires
                             </label>
-                            <div className="text-sm text-gray-900 mt-1">
+                            <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                               {viewDialog.panel.expiryDate 
                                 ? new Date(viewDialog.panel.expiryDate).toLocaleDateString()
                                 : 'Never'
@@ -1864,7 +1851,7 @@ const ChildPanelsPage = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-3 justify-end pt-4 border-t">
+                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                         <button
                           onClick={() => {
                             window.open(`https://${viewDialog.panel!.domain}`, '_blank');

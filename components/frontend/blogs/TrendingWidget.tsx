@@ -100,7 +100,7 @@ const TrendingWidget: React.FC = () => {
       </div>
       <div className="space-y-3">
         {trendingPosts.map((post, index) => (
-          <Link key={post.id} href={`/blogs/${post.slug}`}>
+          <Link key={post.id} href={`/blog/${post.slug}`}>
             <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-[var(--primary)]/30 dark:hover:border-[var(--secondary)]/30 transition-all duration-200 cursor-pointer group">
               <div className="flex items-start justify-between mb-1">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-200 group-hover:text-[var(--primary)] dark:group-hover:text-[var(--secondary)] line-clamp-2 flex-1 mr-2">

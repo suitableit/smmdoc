@@ -39,8 +39,8 @@ const ProvidersTableSkeleton = () => {
         </div>
       </div>
       <div className="hidden md:block">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+        <table className="w-full text-sm border border-gray-200 dark:border-gray-700">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b border-gray-200 dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 8 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -51,7 +51,7 @@ const ProvidersTableSkeleton = () => {
           </thead>
           <tbody>
             {rows.map((_, rowIdx) => (
-              <tr key={rowIdx} className="border-t dark:border-gray-700">
+              <tr key={rowIdx} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="p-3">
                   <div className="h-6 w-16 gradient-shimmer rounded" />
                 </td>
@@ -1142,17 +1142,17 @@ const APIProvidersPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'inactive': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'active': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+      case 'inactive': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <FaCheckCircle className="w-4 h-4" />;
-      case 'inactive': return <FaTimes className="w-4 h-4" />;
-      default: return <FaExclamationTriangle className="w-4 h-4" />;
+      case 'active': return <FaCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />;
+      case 'inactive': return <FaTimes className="w-4 h-4 text-red-600 dark:text-red-400" />;
+      default: return <FaExclamationTriangle className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
     }
   };
 
@@ -1372,7 +1372,7 @@ const APIProvidersPage = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="card card-padding">
                 <div className="card-header">
-                  <h3 className="text-lg font-semibold">Add New Provider</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Add New Provider</h3>
                 </div>
 
                 <form onSubmit={handleAddProvider} className="space-y-6">
@@ -1560,7 +1560,7 @@ const APIProvidersPage = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="card card-padding">
                 <div className="card-header">
-                  <h3 className="text-lg font-semibold">Edit Provider - {editingProvider.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Provider - {editingProvider.name}</h3>
                 </div>
 
                 <form onSubmit={handleEditProvider} className="space-y-6">
@@ -1846,16 +1846,14 @@ const APIProvidersPage = () => {
                   return (
                     <div className="p-12 text-center">
                       <FaGlobe
-                        className="h-16 w-16 mx-auto mb-4"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                       />
                       <h3
-                        className="text-lg font-semibold mb-2"
-                        style={{ color: 'var(--text-primary)' }}
+                        className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                       >
                         No providers found
                       </h3>
-                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {searchQuery && statusFilter !== 'all'
                           ? `No ${statusFilter} providers match your search "${searchQuery}".`
                           : searchQuery
@@ -1869,38 +1867,38 @@ const APIProvidersPage = () => {
                 }
 
                 return (
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                  <table className="w-full text-sm border border-gray-200 dark:border-gray-700">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b border-gray-200 dark:border-gray-700 z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Provider</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Services</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Orders</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Current Balance</th>
-                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Sync</th>}
-                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Status</th>}
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>API Status</th>
-                        <th className="text-center p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">ID</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Provider</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Services</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Orders</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Current Balance</th>
+                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Last Sync</th>}
+                        {statusFilter !== 'trash' && <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Status</th>}
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">API Status</th>
+                        <th className="text-center p-3 font-semibold text-gray-900 dark:text-gray-100">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredProviders
                     .map((provider, index) => (
-                    <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                    <tr key={provider.id || `provider-${provider.name}-${index}`} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200">
                       <td className="p-3">
-                        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                        <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                           {provider.id}
                         </div>
                       </td>
                       <td className="p-3">
-                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.name}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{provider.name}</div>
                       </td>
                       <td className="p-3">
                         <div className="text-sm">
-                          <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
                             {provider.importedServices || provider.services} Total
                           </div>
-                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             {provider.status === 'trash' 
                               ? `${provider.inactiveServices || 0} Deactive`
                               : `${provider.activeServices} Active`
@@ -1909,10 +1907,10 @@ const APIProvidersPage = () => {
                         </div>
                       </td>
                       <td className="p-3">
-                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>{provider.orders.toLocaleString()}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{provider.orders.toLocaleString()}</div>
                       </td>
                       <td className="p-3">
-                        <div className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">
                           ${provider.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
@@ -1920,16 +1918,14 @@ const APIProvidersPage = () => {
                         <td className="p-3">
                           <div>
                             <div
-                              className="text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-sm text-gray-900 dark:text-gray-100"
                             >
                               {provider.lastSync
                                 ? new Date(provider.lastSync).toLocaleDateString()
                                 : 'null'}
                             </div>
                             <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-xs text-gray-500 dark:text-gray-400"
                             >
                               {provider.lastSync
                                 ? new Date(provider.lastSync).toLocaleTimeString()
@@ -1944,8 +1940,8 @@ const APIProvidersPage = () => {
                             onClick={() => handleToggleStatus(provider.id)}
                             className={`p-1 rounded transition-colors ${
                               provider.status === 'active'
-                                ? 'text-green-600 hover:bg-green-50'
-                                : 'text-red-600 hover:bg-red-50'
+                                ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                             }`}
                             title={
                               provider.status === 'active'
@@ -2008,16 +2004,14 @@ const APIProvidersPage = () => {
                 }).length === 0 ? (
                 <div className="text-center py-12">
                   <FaGlobe
-                    className="h-16 w-16 mx-auto mb-4"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                   />
                   <h3
-                    className="text-lg font-semibold mb-2"
-                    style={{ color: 'var(--text-primary)' }}
+                    className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                   >
                     No providers found
                   </h3>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {searchQuery && statusFilter !== 'all'
                       ? `No ${statusFilter} providers match your search "${searchQuery}".`
                       : searchQuery
@@ -2052,8 +2046,8 @@ const APIProvidersPage = () => {
                       onClick={() => handleToggleStatus(provider.id)}
                       className={`p-1 rounded transition-colors ${
                         provider.status === 'active'
-                          ? 'text-green-600 hover:bg-green-50'
-                          : 'text-red-600 hover:bg-red-50'
+                          ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                          : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                       }`}
                       title={
                         provider.status === 'active'
@@ -2167,41 +2161,41 @@ const APIProvidersPage = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Providers</span>
-                  <span className="font-semibold">{providers.length}</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{providers.length}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active Providers</span>
-                  <span className="font-semibold text-green-600">
+                  <span className="font-semibold text-green-600 dark:text-green-400">
                     {providers.filter(p => p.status === 'active').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Inactive Providers</span>
-                  <span className="font-semibold text-red-600">
+                  <span className="font-semibold text-red-600 dark:text-red-400">
                     {providers.filter(p => p.status === 'inactive').length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Orders</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">
                     {providers.reduce((sum, p) => sum + p.orders, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Imported Services</span>
-                  <span className="font-semibold text-orange-600">
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
                     {providers.reduce((sum, p) => sum + p.importedServices, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active Services</span>
-                  <span className="font-semibold text-purple-600">
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">
                     {providers.reduce((sum, p) => sum + p.activeServices, 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Balance</span>
-                  <span className="font-semibold text-blue-600">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
                     ${providers.reduce((sum, p) => sum + p.currentBalance, 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -2251,14 +2245,13 @@ const APIProvidersPage = () => {
       {showDeletePopup && providerToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div
-            className="bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
+            className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-full max-w-lg">
               <div className="flex items-center justify-between p-6">
                 <h3
-                  className="text-lg font-semibold"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold text-gray-900 dark:text-gray-100"
                 >
                   {providerToDelete.status === 'trash' 
                     ? `Permanently Delete "${providerToDelete.name}" Provider`
@@ -2267,7 +2260,7 @@ const APIProvidersPage = () => {
                 </h3>
                 <button
                   onClick={() => setShowDeletePopup(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   title="Close"
                 >
                   <FaTimes className="h-5 w-5" />
@@ -2276,19 +2269,19 @@ const APIProvidersPage = () => {
 
               <div className="px-6 pb-6">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200">
-                    <FaExclamationTriangle className="h-6 w-6 text-red-500 flex-shrink-0" />
+                  <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <FaExclamationTriangle className="h-6 w-6 text-red-500 dark:text-red-400 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-red-800">
+                      <p className="font-medium text-red-800 dark:text-red-200">
                         This provider may have associated services
                       </p>
-                      <p className="text-sm text-red-600 mt-1">
+                      <p className="text-sm text-red-600 dark:text-red-300 mt-1">
                         Choose how to handle the provider and its services.
                       </p>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <p className="font-medium text-gray-800">
+                    <p className="font-medium text-gray-800 dark:text-gray-100">
                       {providerToDelete.status === 'trash' 
                         ? 'This provider is currently in trash. This action will permanently delete it.'
                         : 'What would you like to do with this provider?'
@@ -2297,18 +2290,18 @@ const APIProvidersPage = () => {
 
                     {providerToDelete.status === 'trash' ? (
 
-                      <div className="p-3 border rounded-lg bg-red-50 border-red-200">
-                        <div className="font-medium text-red-800">
+                      <div className="p-3 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20">
+                        <div className="font-medium text-red-800 dark:text-red-200">
                           Permanently Delete
                         </div>
-                        <div className="text-sm text-red-600">
+                        <div className="text-sm text-red-600 dark:text-red-300">
                           This will permanently remove the provider and all imported services. This action cannot be undone.
                         </div>
                       </div>
                     ) : (
 
                       <>
-                        <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <label className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                           <input
                             type="radio"
                             name="deleteOption"
@@ -2318,15 +2311,15 @@ const APIProvidersPage = () => {
                             className="mt-0.5"
                           />
                           <div>
-                            <div className="font-medium text-gray-800">
+                            <div className="font-medium text-gray-800 dark:text-gray-100">
                               Move to Trash
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                               All imported services will be permanently deleted
                             </div>
                           </div>
                         </label>
-                        <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                        <label className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                           <input
                             type="radio"
                             name="deleteOption"
@@ -2336,10 +2329,10 @@ const APIProvidersPage = () => {
                             className="mt-0.5"
                           />
                           <div>
-                            <div className="font-medium text-gray-800">
+                            <div className="font-medium text-gray-800 dark:text-gray-100">
                               Permanently Delete
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                               Permanently remove the provider and all imported services
                             </div>
                           </div>
@@ -2347,13 +2340,13 @@ const APIProvidersPage = () => {
                       </>
                     )}
                   </div>
-                   <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                     <p className="text-sm text-red-800">
+                   <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                     <p className="text-sm text-red-800 dark:text-red-200">
                        <strong>Warning:</strong> The action will be scheduled until the completion of any orders/refill/cancel request operation.
                      </p>
                    </div>
-                   <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                     <p className="text-sm text-blue-800">
+                   <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                     <p className="text-sm text-blue-800 dark:text-blue-200">
                        <strong>Note:</strong> After being scheduled, users are not able to see the associated services of the scheduled deletion or trash of the provider.
                      </p>
                    </div>
