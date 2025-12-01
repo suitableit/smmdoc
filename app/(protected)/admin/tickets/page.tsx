@@ -25,7 +25,7 @@ const TicketsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 8 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -71,8 +71,8 @@ const TicketsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -93,15 +93,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface SupportTicket {
   id: string;
@@ -230,20 +247,20 @@ const SupportTicketsPage = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Open':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'Answered':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
       case 'Customer Reply':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
+        return 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       case 'On Hold':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+        return 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
       case 'In Progress':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
+        return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
       case 'Closed':
       case 'closed':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -521,8 +538,7 @@ const SupportTicketsPage = () => {
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -544,7 +560,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -552,7 +568,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {filteredTickets.length}
@@ -563,7 +579,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Open'
                       ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Open
@@ -571,7 +587,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Open'
                         ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'Open').length}
@@ -582,7 +598,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Answered'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Answered
@@ -590,7 +606,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Answered'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'Answered').length}
@@ -601,7 +617,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Customer Reply'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Customer Reply
@@ -609,7 +625,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Customer Reply'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'Customer Reply').length}
@@ -620,7 +636,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'On Hold'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   On Hold
@@ -628,7 +644,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'On Hold'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'On Hold').length}
@@ -639,7 +655,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'In Progress'
                       ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   In Progress
@@ -647,7 +663,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'In Progress'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'In Progress').length}
@@ -658,7 +674,7 @@ const SupportTicketsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Closed'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Closed
@@ -666,7 +682,7 @@ const SupportTicketsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Closed'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {supportTickets.filter(t => t.status === 'Closed').length}
@@ -678,11 +694,10 @@ const SupportTicketsPage = () => {
 
           <div style={{ padding: '0 24px' }}>
             {selectedTickets.length > 0 && (
-              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b mb-4">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 py-4 border-b dark:border-gray-700 mb-4">
                 <div className="flex items-center gap-2 mb-2 md:mb-0">
                   <span
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {selectedTickets.length} selected
                   </span>
@@ -718,16 +733,14 @@ const SupportTicketsPage = () => {
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No tickets found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No support tickets match your search criteria or no tickets exist yet.
                 </p>
               </div>
@@ -735,11 +748,10 @@ const SupportTicketsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -748,48 +760,41 @@ const SupportTicketsPage = () => {
                               getPaginatedData().length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Subject
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Created
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Last Updated
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -799,43 +804,41 @@ const SupportTicketsPage = () => {
                       {getPaginatedData().map((ticket) => (
                         <tr
                           key={ticket.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             <input
                               type="checkbox"
                               checked={selectedTickets.includes(ticket.id)}
                               onChange={() => handleSelectTicket(ticket.id)}
-                              className="rounded border-gray-300 w-4 h-4"
+                              className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                             />
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {formatTicketID(ticket.id)}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {ticket.username}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className={`text-sm ${!ticket.isRead ? 'font-bold' : 'font-normal'}`}
-                              style={{ color: 'var(--text-primary)' }}
+                              className={`text-sm text-gray-900 dark:text-gray-100 ${!ticket.isRead ? 'font-bold' : 'font-normal'}`}
                             >
                               {ticket.subject}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(ticket.createdAt).toLocaleDateString()}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(ticket.createdAt).toLocaleTimeString()}
                               </div>
                             </div>
@@ -844,15 +847,15 @@ const SupportTicketsPage = () => {
                             <div>
                               {ticket.lastUpdated && ticket.lastUpdated !== ticket.createdAt ? (
                                 <>
-                                  <div className="text-xs">
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {new Date(ticket.lastUpdated).toLocaleDateString()}
                                   </div>
-                                  <div className="text-xs">
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {new Date(ticket.lastUpdated).toLocaleTimeString()}
                                   </div>
                                 </>
                               ) : (
-                                <div className="text-xs text-gray-500">-</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-500">-</div>
                               )}
                             </div>
                           </td>
@@ -895,7 +898,7 @@ const SupportTicketsPage = () => {
                                 >
                                   <FaEllipsisH className="h-3 w-3" />
                                 </button>
-                                <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                <div className="dropdown-menu hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                                   <div className="py-1">
                                     <button
                                       onClick={() => {
@@ -904,7 +907,7 @@ const SupportTicketsPage = () => {
                                           .querySelector('.dropdown-menu:not(.hidden)')
                                           ?.classList.add('hidden');
                                       }}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                     >
                                       {ticket.isRead ? (
                                         <FaEyeSlash className="h-3 w-3" />
@@ -921,7 +924,7 @@ const SupportTicketsPage = () => {
                                             .querySelector('.dropdown-menu:not(.hidden)')
                                             ?.classList.add('hidden');
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                         disabled={ticket.status === 'closed' || closingTicketId === ticket.id}
                                       >
                                         <FaCheck className="h-3 w-3" />
@@ -936,7 +939,7 @@ const SupportTicketsPage = () => {
                                           .querySelector('.dropdown-menu:not(.hidden)')
                                           ?.classList.add('hidden');
                                       }}
-                                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-red-900/30 flex items-center gap-2"
                                     >
                                       <FaTrash className="h-3 w-3" />
                                       Delete
@@ -951,10 +954,9 @@ const SupportTicketsPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {ticketsLoading ? (
                       <div className="flex items-center gap-2">
@@ -983,8 +985,7 @@ const SupportTicketsPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {ticketsLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -1012,9 +1013,9 @@ const SupportTicketsPage = () => {
         </div>
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Delete Ticket</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Delete Ticket</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete this support ticket? This action
                 cannot be undone.
               </p>

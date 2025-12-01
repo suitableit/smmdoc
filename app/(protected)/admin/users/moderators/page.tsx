@@ -34,7 +34,7 @@ const ModeratorsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1400px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 8 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -81,8 +81,8 @@ const ModeratorsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -103,15 +103,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface Moderator {
   id: number;
@@ -421,17 +438,17 @@ const ModeratorsPage = () => {
 
   const getStatusIcon = (status: string) => {
     const icons = {
-      active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
-      inactive: <FaClock className="h-3 w-3 text-gray-500" />,
+      active: <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />,
+      inactive: <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />,
     };
     return icons[status as keyof typeof icons] || icons.inactive;
   };
 
   const getRoleIcon = (role: string) => {
     const icons = {
-      super_admin: <FaCrown className="h-3 w-3 text-yellow-500" />,
+      super_admin: <FaCrown className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />,
       admin: null,
-      moderator: <FaUserShield className="h-3 w-3 text-purple-500" />,
+      moderator: <FaUserShield className="h-3 w-3 text-purple-500 dark:text-purple-400" />,
     };
     return icons[role as keyof typeof icons] || null;
   };
@@ -616,8 +633,7 @@ const ModeratorsPage = () => {
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -641,7 +657,7 @@ const ModeratorsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -649,7 +665,7 @@ const ModeratorsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-yellow-50 text-yellow-700'
+                        : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {stats.totalModerators.toLocaleString()}
@@ -660,7 +676,7 @@ const ModeratorsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -668,7 +684,7 @@ const ModeratorsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.activeModerators.toLocaleString()}
@@ -679,7 +695,7 @@ const ModeratorsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'inactive'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Inactive
@@ -687,7 +703,7 @@ const ModeratorsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'inactive'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.inactiveModerators.toLocaleString()}
@@ -705,16 +721,14 @@ const ModeratorsPage = () => {
             ) : moderators.length === 0 ? (
               <div className="text-center py-12">
                 <FaUserShield
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No moderators found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {debouncedSearchTerm && statusFilter !== 'all' 
                     ? `No ${statusFilter} moderators match your search "${debouncedSearchTerm}".`
                     : debouncedSearchTerm 
@@ -728,45 +742,45 @@ const ModeratorsPage = () => {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>ID</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Username</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Email</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Role</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Balance</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Registered Date</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Last Login</th>
-                        <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>Actions</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">ID</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Username</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Email</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Role</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Balance</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Registered Date</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Last Login</th>
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {moderators.map((moderator) => (
-                        <tr key={moderator.id} className="border-t hover:bg-gray-50 transition-colors duration-200">
+                        <tr key={moderator.id} className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200">
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {moderator.id?.toString().slice(-8) || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                               {moderator.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                            <div className="text-sm text-gray-900 dark:text-gray-100">
                               {moderator.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {moderator.emailVerified ? (
                                 <>
-                                  <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">Verified</span>
+                                  <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                                  <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
                                 </>
                               ) : (
                                 <>
-                                  <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">Unverified</span>
+                                  <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+                                  <span className="text-xs text-red-600 dark:text-red-400">Unverified</span>
                                 </>
                               )}
                             </div>
@@ -775,10 +789,10 @@ const ModeratorsPage = () => {
                             <div>
                               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                                 moderator.role === 'super_admin' 
-                                  ? 'bg-yellow-100 text-yellow-700'
+                                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                                   : moderator.role === 'admin'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-yellow-50 text-yellow-700'
+                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                  : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                               }`}>
                                 {moderator.role === 'super_admin' ? 'SUPER ADMIN' : moderator.role === 'admin' ? 'Admin' : 'Moderator'}
                               </span>
@@ -786,17 +800,17 @@ const ModeratorsPage = () => {
                           </td>
                           <td className="p-3">
                             <div className="text-left">
-                              <div className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                              <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                                 {formatCurrency(moderator.balance || 0)}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {moderator.createdAt ? new Date(moderator.createdAt).toLocaleDateString() : 'null'}
                               </div>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {moderator.createdAt ? new Date(moderator.createdAt).toLocaleTimeString() : 'null'}
                               </div>
                             </div>
@@ -805,15 +819,15 @@ const ModeratorsPage = () => {
                             <div>
                               {moderator.lastLoginAt ? (
                                 <>
-                                  <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {new Date(moderator.lastLoginAt).toLocaleDateString()}
                                   </div>
-                                  <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {new Date(moderator.lastLoginAt).toLocaleTimeString()}
                                   </div>
                                 </>
                               ) : (
-                                <div className="text-xs text-gray-500">Never</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Never</div>
                               )}
                             </div>
                           </td>
@@ -947,25 +961,25 @@ const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, 
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
             <div className="py-1">
               <button
                 onClick={() => {
                   onChangeRole(moderator.id, moderator.role);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
               >
                 <FaUserCheck className="h-3 w-3" />
                 Change Role
               </button>
-              <hr className="my-1" />
+              <hr className="my-1 dark:border-gray-700" />
               <button
                 onClick={() => {
                   onDelete(moderator.id);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
               >
                 <FaTrash className="h-3 w-3" />
                 Delete Moderator
@@ -979,8 +993,8 @@ const ModeratorActions: React.FC<ModeratorActionsProps> = ({ moderator, onEdit, 
 };
 
 const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoading }) => (
-  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-    <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+    <div className="text-sm text-gray-600 dark:text-gray-400">
       {isLoading ? (
         <div className="flex items-center gap-2">
           <span>Loading pagination...</span>
@@ -1000,7 +1014,7 @@ const Pagination: React.FC<PaginationProps> = ({ pagination, onPageChange, isLoa
       >
         Previous
       </button>
-      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <span className="text-sm text-gray-600 dark:text-gray-400">
         {isLoading ? (
           <GradientSpinner size="w-4 h-4" />
         ) : (
@@ -1023,9 +1037,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ isOpe
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4 text-red-600">Delete Moderator?</h3>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">Delete Moderator?</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Are you sure you want to delete this moderator? This action cannot be undone and will permanently remove all moderator data.
         </p>
         <div className="flex gap-2 justify-end">
@@ -1057,10 +1071,10 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">{title}</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">Select New Status</label>
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Select New Status</label>
           <select
             value={newStatus}
             onChange={(e) => onStatusChange(e.target.value)}
@@ -1089,10 +1103,10 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Change Moderator Role</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Change Moderator Role</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">Select New Role</label>
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Select New Role</label>
           <select
             value={newRole}
             onChange={(e) => onRoleChange(e.target.value)}
@@ -1103,8 +1117,8 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, 
             <option value="moderator">Moderator</option>
             <option value="user">User</option>
           </select>
-          <div className="text-xs text-gray-500 mt-1">
-            Current role: <span className="font-medium capitalize">{currentRole.replace('_', ' ')}</span>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Current role: <span className="font-medium capitalize text-gray-700 dark:text-gray-300">{currentRole.replace('_', ' ')}</span>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
@@ -1187,12 +1201,12 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">Edit Moderator</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Edit Moderator</h3>
 
         <div className="space-y-4">
           <div className="mb-4">
-            <label className="form-label mb-2">Username</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Username</label>
             <input
               type="text"
               value={formData.username || ''}
@@ -1204,7 +1218,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Email</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Email</label>
             <input
               type="email"
               value={formData.email || ''}
@@ -1216,7 +1230,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Full Name</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Full Name</label>
             <input
               type="text"
               value={formData.name || ''}
@@ -1227,7 +1241,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Password</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Password</label>
             <div className="relative">
               <input
                 type="text"
@@ -1240,19 +1254,19 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               <button
                 type="button"
                 onClick={generatePassword}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-purple-600 transition-colors duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200"
                 title="Generate random password"
                 disabled={isLoading}
               >
                 <FaSync className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Leave blank to keep current password, or click the refresh icon to generate a new one
             </p>
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Status</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Status</label>
             <select
               value={formData.status || 'active'}
               onChange={(e) => handleInputChange('status', e.target.value)}
@@ -1264,7 +1278,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
             </select>
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Role</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Role</label>
             <select
               value={formData.role || 'moderator'}
               onChange={(e) => handleInputChange('role', e.target.value)}
@@ -1278,9 +1292,9 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
           </div>
           {formData.role === 'moderator' && (
             <div className="mb-4">
-              <label className="form-label mb-2">Permissions</label>
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <div className="mb-3 pb-3 border-b border-gray-200">
+              <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Permissions</label>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1292,7 +1306,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                       className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                       disabled={isLoading}
                     />
-                    <span className="text-sm font-medium text-gray-900">Select All Permissions</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select All Permissions</span>
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -1308,16 +1322,16 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
                         className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                         disabled={isLoading}
                       />
-                      <span className="text-sm text-gray-700">{permission.label}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{permission.label}</span>
                     </label>
                   ))}
                 </div>
                 {formData.permissions && formData.permissions.length === 0 ? (
-                  <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                     No permissions selected. Moderator will have limited access.
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                     {formData.permissions?.length || 0} of {availablePermissions.length} permissions selected.
                   </p>
                 )}

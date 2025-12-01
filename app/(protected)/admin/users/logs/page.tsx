@@ -21,7 +21,7 @@ const ActivityLogsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 6 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -60,8 +60,8 @@ const ActivityLogsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -82,15 +82,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface UserActivityLog {
   id: string;
@@ -336,8 +353,7 @@ const UserActivityLogsPage = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -355,8 +371,7 @@ const UserActivityLogsPage = () => {
             {selectedLogs.length > 0 && (
               <div className="flex items-center gap-2 mt-4">
                 <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="text-sm text-gray-600 dark:text-gray-400"
                 >
                   {selectedLogs.length} selected
                 </span>
@@ -379,16 +394,14 @@ const UserActivityLogsPage = () => {
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No activity logs found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No activity logs match your search criteria or no activity logs exist yet.
                 </p>
               </div>
@@ -396,11 +409,10 @@ const UserActivityLogsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -409,37 +421,32 @@ const UserActivityLogsPage = () => {
                               getPaginatedData().length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
 
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Details
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           IP Address
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           History
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Action
                         </th>
@@ -449,20 +456,20 @@ const UserActivityLogsPage = () => {
                       {getPaginatedData().map((log) => (
                         <tr
                           key={log.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             <input
                               type="checkbox"
                               checked={selectedLogs.includes(log.id)}
                               onChange={() => handleSelectLog(log.id)}
-                              className="rounded border-gray-300 w-4 h-4"
+                              className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                             />
                           </td>
 
                           <td className="p-3">
                             <div
-                              className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded"
+                              className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded"
                             >
                               {log.username}
                             </div>
@@ -470,8 +477,7 @@ const UserActivityLogsPage = () => {
                           <td className="p-3">
                             <div className="max-w-xs">
                               <div
-                                className="text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-sm text-gray-900 dark:text-gray-100"
                                 title={log.details}
                               >
                                 {log.details.length > 50 ? `${log.details.substring(0, 50)}...` : log.details}
@@ -483,7 +489,7 @@ const UserActivityLogsPage = () => {
                               href={getIpTrackerUrl(log.ipAddress)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-mono"
+                              className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm font-mono"
                               title="Click to track IP address"
                             >
                               {log.ipAddress}
@@ -493,14 +499,12 @@ const UserActivityLogsPage = () => {
                           <td className="p-3">
                             <div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="text-xs text-gray-600 dark:text-gray-400"
                               >
                                 {new Date(log.history).toLocaleDateString()}
                               </div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
+                                className="text-xs text-gray-600 dark:text-gray-400"
                               >
                                 {new Date(log.history).toLocaleTimeString()}
                               </div>
@@ -512,7 +516,7 @@ const UserActivityLogsPage = () => {
                                 setLogToDelete(log.id);
                                 setDeleteDialogOpen(true);
                               }}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors duration-200"
                               title="Delete Log"
                             >
                               <FaTrash className="h-3 w-3" />
@@ -528,7 +532,7 @@ const UserActivityLogsPage = () => {
                     {getPaginatedData().map((log) => (
                       <div
                         key={log.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
+                        className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -536,10 +540,10 @@ const UserActivityLogsPage = () => {
                               type="checkbox"
                               checked={selectedLogs.includes(log.id)}
                               onChange={() => handleSelectLog(log.id)}
-                              className="rounded border-gray-300 w-4 h-4"
+                              className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                             />
 
-                            <div className="font-medium text-sm font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-medium text-sm font-mono bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {log.username}
                             </div>
                           </div>
@@ -549,7 +553,7 @@ const UserActivityLogsPage = () => {
                                 setLogToDelete(log.id);
                                 setDeleteDialogOpen(true);
                               }}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors duration-200"
                               title="Delete Log"
                             >
                               <FaTrash className="h-3 w-3" />
@@ -558,14 +562,12 @@ const UserActivityLogsPage = () => {
                         </div>
                         <div className="mb-4">
                           <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                           >
                             Details
                           </div>
                           <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-primary)' }}
+                            className="text-sm text-gray-900 dark:text-gray-100"
                           >
                             {log.details}
                           </div>
@@ -573,8 +575,7 @@ const UserActivityLogsPage = () => {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                             >
                               IP Address
                             </div>
@@ -582,7 +583,7 @@ const UserActivityLogsPage = () => {
                               href={getIpTrackerUrl(log.ipAddress)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-sm font-mono"
+                              className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm font-mono"
                               title="Click to track IP address"
                             >
                               {log.ipAddress}
@@ -591,20 +592,17 @@ const UserActivityLogsPage = () => {
                           </div>
                           <div>
                             <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                             >
                               History
                             </div>
                             <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs text-gray-600 dark:text-gray-400"
                             >
                               {new Date(log.history).toLocaleDateString()}
                             </div>
                             <div
-                              className="text-xs"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs text-gray-600 dark:text-gray-400"
                             >
                               {new Date(log.history).toLocaleTimeString()}
                             </div>
@@ -615,11 +613,10 @@ const UserActivityLogsPage = () => {
                   </div>
                 </div>
                 <div
-                  className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t"
+                  className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700"
                 >
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {logsLoading ? (
                       <div className="flex items-center gap-2">
@@ -641,8 +638,7 @@ const UserActivityLogsPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {logsLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -665,11 +661,11 @@ const UserActivityLogsPage = () => {
         </div>
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Delete Activity Log
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete this activity log? This action cannot be undone.
               </p>
               <div className="flex gap-2 justify-end">
@@ -707,11 +703,11 @@ const UserActivityLogsPage = () => {
         )}
         {bulkDeleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Delete Selected Activity Logs
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete {selectedLogs.length} selected activity log{selectedLogs.length !== 1 ? 's' : ''}? This action cannot be undone.
               </p>
               <div className="flex gap-2 justify-end">

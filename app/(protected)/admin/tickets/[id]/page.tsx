@@ -34,7 +34,7 @@ import TicketSystemGuard from '@/components/TicketSystemGuard';
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+      <div className="absolute inset-1 rounded-full bg-white dark:bg-gray-800"></div>
     </div>
   </div>
 );
@@ -47,15 +47,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 const ButtonLoader = () => <GradientSpinner size="w-5 h-5" />;
 
@@ -251,20 +268,20 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Open':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
+        return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800';
       case 'Answered':
-        return 'bg-green-50 text-green-700 border-green-200';
+        return 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800';
       case 'Customer Reply':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
+        return 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800';
       case 'On Hold':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+        return 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
       case 'In Progress':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
+        return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
       case 'Closed':
       case 'closed':
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -570,7 +587,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
             </div>
 
             <div className="flex flex-row items-center gap-1 md:gap-2">
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Ticket #{formatTicketID(ticketDetails.id)}
               </h1>
             </div>
@@ -593,14 +610,14 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="form-label">Subject</label>
-                  <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{ticketDetails.subject}</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">{ticketDetails.subject}</p>
                 </div>
                 {ticketDetails.orderIds && Array.isArray(ticketDetails.orderIds) && ticketDetails.orderIds.length > 0 && (
                   <div>
                     <label className="form-label">
                       {ticketDetails.orderIds.length === 1 ? 'Order ID' : 'Order IDs'}
                     </label>
-                    <p className="mt-1 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <p className="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
                       {ticketDetails.orderIds.join(', ')}
                     </p>
                   </div>
@@ -616,21 +633,21 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <label className="form-label">Created</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100">
                     {new Date(ticketDetails.createdAt).toLocaleDateString()} at{' '}
                     {new Date(ticketDetails.createdAt).toLocaleTimeString()}
                   </p>
                 </div>
                 <div>
                   <label className="form-label">Last Updated</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100">
                     {new Date(ticketDetails.lastUpdated).toLocaleDateString()} at{' '}
                     {new Date(ticketDetails.lastUpdated).toLocaleTimeString()}
                   </p>
                 </div>
                 <div>
                   <label className="form-label">Time Spent</label>
-                  <p className="mt-1" style={{ color: 'var(--text-primary)' }}>{calculateTimeSpent(ticketDetails.createdAt, ticketDetails.status, ticketDetails.lastUpdated)}</p>
+                  <p className="mt-1 text-gray-900 dark:text-gray-100">{calculateTimeSpent(ticketDetails.createdAt, ticketDetails.status, ticketDetails.lastUpdated)}</p>
                 </div>
               </div>
             </div>
@@ -647,18 +664,18 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
 
                 <div className={`p-4 rounded-lg border-l-4 ${
                   ticketDetails.ticketStatus === 'Processed' 
-                    ? 'bg-green-50 border-green-400 text-green-800' 
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-400 dark:border-green-500 text-green-800 dark:text-green-200' 
                     : ticketDetails.ticketStatus === 'Failed'
-                    ? 'bg-red-50 border-red-400 text-red-800'
-                    : 'bg-yellow-50 border-yellow-400 text-yellow-800'
+                    ? 'bg-red-50 dark:bg-red-900/20 border-red-400 dark:border-red-500 text-red-800 dark:text-red-200'
+                    : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400 dark:border-yellow-500 text-yellow-800 dark:text-yellow-200'
                 }`}>
                   <div className="flex items-start gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${
                       ticketDetails.ticketStatus === 'Processed' 
-                        ? 'bg-green-500' 
+                        ? 'bg-green-500 dark:bg-green-400' 
                         : ticketDetails.ticketStatus === 'Failed'
-                        ? 'bg-red-500'
-                        : 'bg-yellow-500'
+                        ? 'bg-red-500 dark:bg-red-400'
+                        : 'bg-yellow-500 dark:bg-yellow-400'
                     }`}>
                       {ticketDetails.ticketStatus === 'Processed' ? '✓' : 
                        ticketDetails.ticketStatus === 'Failed' ? '✗' : '⏳'}
@@ -717,36 +734,36 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       (message.authorRole === 'admin' || message.type === 'system') ? 'bg-blue-50 dark:bg-blue-900/50' : 'bg-gray-50 dark:bg-gray-800/50'
                     }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                        <span className="font-bold text-gray-900 dark:text-gray-100">
                           {message.author}
                         </span>
                         {message.type === 'system' && message.user?.username && (
-                          <span className="text-xs bg-blue-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-primary)' }}>
+                          <span className="text-xs bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded font-bold text-gray-900 dark:text-gray-100">
                             by {message.user.username}
                           </span>
                         )}
                         {message.authorRole && (
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded font-bold" style={{ color: 'var(--text-muted)' }}>
+                          <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-bold text-gray-600 dark:text-gray-400">
                             {message.authorRole}
                           </span>
                         )}
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
                           {new Date(message.createdAt).toLocaleDateString()} at{' '}
                           {new Date(message.createdAt).toLocaleTimeString()}
                         </span>
                         {message.isEdited && (
-                          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>(edited)</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">(edited)</span>
                         )}
                       </div>
 
                       <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{message.content}</div>
+                        <div className="whitespace-pre-wrap text-gray-900 dark:text-gray-100">{message.content}</div>
                       </div>
 
                       {}
                       {message.attachments && Array.isArray(message.attachments) && message.attachments.length > 0 && (
                         <div className="mt-4 space-y-2">
-                          <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Attachments:</h4>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Attachments:</h4>
                           {message.attachments.map((attachment, index) => {
 
                             const attachmentUrl = typeof attachment === 'string' ? attachment : attachment.url;
@@ -761,15 +778,15 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                               <div key={index} className="flex items-center gap-3 p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                                 {getFileIcon(mimetype)}
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                  <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                                     {filename}
                                   </div>
-                                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                                  <div className="text-xs text-gray-600 dark:text-gray-400">
                                     {typeof attachment === 'object' && attachment.filesize ? `${attachment.filesize} • ` : ''}Attachment
                                   </div>
                                 </div>
                                 <button 
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                                   onClick={() => window.open(attachmentUrl, '_blank')}
                                   title="View attachment"
                                 >
@@ -785,7 +802,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <FaComments className="mx-auto h-12 w-12 mb-4 opacity-50" />
                     <p>No messages found for this ticket.</p>
                   </div>
@@ -812,7 +829,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       rows={6}
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     />
-                    <small className="text-xs text-gray-500 mt-1 block">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                       This reply will be visible to the customer and will update the ticket status.
                     </small>
                   </div>
@@ -828,7 +845,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       onChange={handleFileSelect}
                       className="w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-[var(--primary)] file:to-[var(--secondary)] file:text-white hover:file:from-[#4F0FD8] hover:file:to-[#A121E8] transition-all duration-200"
                     />
-                    <small className="text-xs text-gray-500 mt-1">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       You can upload screenshots or other relevant files (max 10MB each).
                     </small>
 
@@ -836,13 +853,13 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                     {selectedFiles.length > 0 && (
                       <div className="mt-2 space-y-2">
                         {selectedFiles.map((file, index) => (
-                          <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
+                          <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
                             {getFileIcon(file.type)}
-                            <span className="text-sm flex-1" style={{ color: 'var(--text-primary)' }}>{file.name}</span>
-                            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{Math.round(file.size / 1024)} KB</span>
+                            <span className="text-sm flex-1 text-gray-900 dark:text-gray-100">{file.name}</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{Math.round(file.size / 1024)} KB</span>
                             <button
                               onClick={() => removeSelectedFile(index)}
-                              className="text-red-600 hover:text-red-800"
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                             >
                               <FaTimes className="h-3 w-3" />
                             </button>
@@ -887,24 +904,24 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                 <div className="space-y-4">
                   <div>
                     <div className="form-label">Username</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.username || 'N/A'}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{ticketDetails.userInfo?.username || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Full Name</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.fullName || 'N/A'}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{ticketDetails.userInfo?.fullName || 'N/A'}</div>
                   </div>
                   <div>
                     <div className="form-label">Email</div>
-                    <div className="mt-1 text-sm" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.email || 'N/A'}</div>
+                    <div className="mt-1 text-sm text-gray-900 dark:text-gray-100">{ticketDetails.userInfo?.email || 'N/A'}</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                  <div className="grid grid-cols-2 gap-4 pt-2 border-t dark:border-gray-700">
                     <div>
                       <div className="form-label">Total Tickets</div>
-                      <div className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>{ticketDetails.userInfo?.totalTickets || 0}</div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{ticketDetails.userInfo?.totalTickets || 0}</div>
                     </div>
                     <div>
                       <div className="form-label">Open Tickets</div>
-                      <div className="text-lg font-semibold text-orange-600">{ticketDetails.userInfo?.openTickets || 0}</div>
+                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">{ticketDetails.userInfo?.openTickets || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -937,7 +954,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                       rows={3}
                       className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-vertical"
                     />
-                    <small className="text-xs text-gray-500 mt-1 block">
+                    <small className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">
                       Internal notes are only visible to support staff members.
                     </small>
                     <button
@@ -959,11 +976,11 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
                   {}
                   <div className="space-y-3">
                     {ticketDetails.notes?.map((note) => (
-                      <div key={note.id} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                      <div key={note.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <div className="text-xs mb-1 text-gray-600 dark:text-gray-400">
                           {note.author} • {new Date(note.createdAt).toLocaleDateString()}
                         </div>
-                        <div className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>{note.content}</div>
+                        <div className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100">{note.content}</div>
                       </div>
                     ))}
                   </div>
@@ -981,7 +998,7 @@ const SupportTicketDetailsPage = ({ params }: { params: Promise<{ id: string }> 
               </div>
 
               <div className="space-y-4">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Closing this ticket will mark it as resolved and prevent further customer replies.
                 </p>
                 <button

@@ -31,7 +31,7 @@ const TransactionsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 10 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -82,8 +82,8 @@ const TransactionsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -104,15 +104,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface Transaction {
   id: number;
@@ -481,19 +498,19 @@ const AdminAllTransactionsPage = () => {
       case 'Pending':
       case 'pending':
       case 'Processing':
-        return <FaClock className="h-3 w-3 text-yellow-500" />;
+        return <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />;
       case 'Success':
       case 'completed':
       case 'approved':
-        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+        return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
       case 'Cancelled':
       case 'cancelled':
       case 'rejected':
-        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+        return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
       case 'Suspicious':
-        return <FaExclamationCircle className="h-3 w-3 text-purple-500" />;
+        return <FaExclamationCircle className="h-3 w-3 text-purple-500 dark:text-purple-400" />;
       default:
-        return <FaClock className="h-3 w-3 text-gray-500" />;
+        return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -503,43 +520,43 @@ const AdminAllTransactionsPage = () => {
       case 'completed':
       case 'approved':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full w-fit">
-            <FaCheckCircle className="h-3 w-3 text-green-500" />
-            <span className="text-xs font-medium text-green-700">Success</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full w-fit">
+            <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+            <span className="text-xs font-medium text-green-700 dark:text-green-300">Success</span>
           </div>
         );
       case 'Pending':
       case 'pending':
       case 'Processing':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full w-fit">
-            <FaClock className="h-3 w-3 text-yellow-500" />
-            <span className="text-xs font-medium text-yellow-700">Pending</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
+            <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">Pending</span>
           </div>
         );
       case 'Cancelled':
       case 'cancelled':
       case 'rejected':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 rounded-full w-fit">
-            <FaTimesCircle className="h-3 w-3 text-red-500" />
-            <span className="text-xs font-medium text-red-700">Cancel</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full w-fit">
+            <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+            <span className="text-xs font-medium text-red-700 dark:text-red-300">Cancel</span>
           </div>
         );
       case 'Suspicious':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded-full w-fit">
-            <FaExclamationCircle className="h-3 w-3 text-purple-500" />
-            <span className="text-xs font-medium text-purple-700">
+          <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-full w-fit">
+            <FaExclamationCircle className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
               Suspicious
             </span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-            <FaClock className="h-3 w-3 text-gray-500" />
-            <span className="text-xs font-medium text-gray-700">{status}</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{status}</span>
           </div>
         );
     }
@@ -921,8 +938,7 @@ const AdminAllTransactionsPage = () => {
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-auto">
                   <FaSearch
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                   />
                   <input
                     type="text"
@@ -946,7 +962,7 @@ const AdminAllTransactionsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -954,7 +970,7 @@ const AdminAllTransactionsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalTransactions}
@@ -965,7 +981,7 @@ const AdminAllTransactionsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -973,7 +989,7 @@ const AdminAllTransactionsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {stats.pendingTransactions}
@@ -984,7 +1000,7 @@ const AdminAllTransactionsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Success'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Success
@@ -992,7 +1008,7 @@ const AdminAllTransactionsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Success'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.completedTransactions}
@@ -1003,7 +1019,7 @@ const AdminAllTransactionsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Cancelled'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Cancelled
@@ -1011,7 +1027,7 @@ const AdminAllTransactionsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Cancelled'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.statusBreakdown?.cancelled || 0}
@@ -1022,7 +1038,7 @@ const AdminAllTransactionsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'Suspicious'
                       ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Suspicious
@@ -1030,7 +1046,7 @@ const AdminAllTransactionsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'Suspicious'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.statusBreakdown?.Suspicious || 0}
@@ -1048,16 +1064,14 @@ const AdminAllTransactionsPage = () => {
             ) : transactions.length === 0 ? (
               <div className="text-center py-12">
                 <FaCreditCard
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No transactions found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No transactions match your current filters or no transactions
                   exist yet.
                 </p>
@@ -1066,59 +1080,50 @@ const AdminAllTransactionsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Transaction ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Amount
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Phone
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Payment Method
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Date
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -1128,10 +1133,10 @@ const AdminAllTransactionsPage = () => {
                       {transactions.map((transaction) => (
                         <tr
                           key={transaction.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {transaction.id
                                 ? formatID(transaction.id.toString().slice(-8))
                                 : 'null'}
@@ -1139,8 +1144,7 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {transaction.user?.username ||
                                 transaction.user?.email?.split('@')[0] ||
@@ -1153,9 +1157,9 @@ const AdminAllTransactionsPage = () => {
                               <div
                                 className={`text-xs px-2 py-1 rounded ${
                                   transaction.transactionId === 'Deducted by Admin'
-                                    ? 'font-mono bg-red-100 text-red-700'
+                                    ? 'font-mono bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                     : transaction.transactionId === 'Added by Admin'
-                                    ? 'font-mono bg-green-100 text-green-700'
+                                    ? 'font-mono bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                                     : ''
                                 }`}
                               >
@@ -1165,7 +1169,7 @@ const AdminAllTransactionsPage = () => {
                                   : transaction.transactionId}
                               </div>
                             ) : (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-400 dark:text-gray-500">
                                 Not assigned
                               </span>
                             )}
@@ -1179,27 +1183,26 @@ const AdminAllTransactionsPage = () => {
                           </td>
                           <td className="p-3">
                             <span
-                              className="text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-sm text-gray-900 dark:text-gray-100"
                             >
                               {transaction.phone || transaction.sender_number || 'N/A'}
                             </span>
                           </td>
                           <td className="p-3">
-                            <div className="text-xs font-medium text-gray-700">
+                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
                               {displayMethod(transaction)}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {transaction.createdAt
                                   ? new Date(
                                       transaction.createdAt
                                     ).toLocaleDateString()
                                   : 'null'}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {transaction.createdAt
                                   ? new Date(
                                       transaction.createdAt
@@ -1248,7 +1251,7 @@ const AdminAllTransactionsPage = () => {
                                     <FaEllipsisH className="h-3 w-3" />
                                   </button>
 
-                                  <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                  <div className="hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                                     <div className="py-1">
                                       <button
                                         onClick={() => {
@@ -1259,7 +1262,7 @@ const AdminAllTransactionsPage = () => {
                                             ) as HTMLElement;
                                           dropdown?.classList.add('hidden');
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       >
                                         <FaEye className="h-3 w-3" />
                                         View Details
@@ -1276,7 +1279,7 @@ const AdminAllTransactionsPage = () => {
                                             ) as HTMLElement;
                                           dropdown?.classList.add('hidden');
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       >
                                         <FaSync className="h-3 w-3" />
                                         Update Status
@@ -1293,10 +1296,9 @@ const AdminAllTransactionsPage = () => {
                   </table>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {transactionsLoading ? (
                       <div className="flex items-center gap-2">
@@ -1330,8 +1332,7 @@ const AdminAllTransactionsPage = () => {
                         Previous
                       </button>
                       <span
-                        className="text-sm"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="text-sm text-gray-600 dark:text-gray-400"
                       >
                         {transactionsLoading ? (
                           <div className="h-4 w-24 gradient-shimmer rounded" />
@@ -1358,27 +1359,27 @@ const AdminAllTransactionsPage = () => {
                 </div>
                 {viewDetailsDialog.open && viewDetailsDialog.transaction && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Transaction Details
                       </h3>
 
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Transaction ID
                             </label>
-                            <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                            <div className="font-mono text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.transaction.transactionId ||
                                 'Not assigned'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Internal ID
                             </label>
-                            <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                            <div className="font-mono text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {formatID(viewDetailsDialog.transaction.id)}
                             </div>
                           </div>
@@ -1386,20 +1387,20 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               User
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.transaction.user?.username ||
                                 viewDetailsDialog.transaction.user?.email ||
                                 'N/A'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Phone
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.transaction.phone || 'N/A'}
                             </div>
                           </div>
@@ -1407,10 +1408,10 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Amount
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded font-semibold text-gray-900 dark:text-gray-100">
                               <PriceDisplay
                                 amount={viewDetailsDialog.transaction.bdt_amount || viewDetailsDialog.transaction.amount}
                                 originalCurrency={viewDetailsDialog.transaction.currency === 'USD' || viewDetailsDialog.transaction.currency === 'USDT' ? 'USD' : 'BDT'}
@@ -1418,17 +1419,17 @@ const AdminAllTransactionsPage = () => {
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Payment Method
                             </label>
-                            <div className="text-xs font-medium p-2 text-gray-700">
+                            <div className="text-xs font-medium p-2 text-gray-700 dark:text-gray-300">
                               {displayMethod(viewDetailsDialog.transaction)}
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-sm font-medium text-gray-700">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Status
                           </label>
                           <div className="flex items-center gap-2 mt-1">
@@ -1436,7 +1437,7 @@ const AdminAllTransactionsPage = () => {
                               viewDetailsDialog.transaction.admin_status ||
                                 viewDetailsDialog.transaction.status
                             )}
-                            <span className="text-sm font-medium capitalize">
+                            <span className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.transaction.admin_status ||
                                 viewDetailsDialog.transaction.status}
                             </span>
@@ -1445,10 +1446,10 @@ const AdminAllTransactionsPage = () => {
 
                         {viewDetailsDialog.transaction.notes && (
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Notes
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.transaction.notes}
                             </div>
                           </div>
@@ -1456,20 +1457,20 @@ const AdminAllTransactionsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Created
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {new Date(
                                 viewDetailsDialog.transaction.createdAt
                               ).toLocaleString()}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Updated
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {new Date(
                                 viewDetailsDialog.transaction.updatedAt
                               ).toLocaleString()}
@@ -1496,12 +1497,12 @@ const AdminAllTransactionsPage = () => {
                 )}
                 {updateStatusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Update Transaction Status
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">
+                        <label className="form-label mb-2 dark:text-gray-300">
                           Select New Status
                         </label>
                         <select
@@ -1553,31 +1554,31 @@ const AdminAllTransactionsPage = () => {
                 {approveConfirmDialog.open &&
                   approveConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-green-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">
                           Approve Transaction
                         </h3>
 
                         <div className="mb-6">
-                          <p className="text-gray-700 mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 mb-4">
                             Are you sure you want to approve this transaction? This will add funds to the user's account.
                           </p>
 
-                          <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2 mb-4">
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Transaction ID:
                               </span>
-                              <span className="font-mono text-sm">
+                              <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
                                 {approveConfirmDialog.transaction
                                   .transactionId || 'Not assigned'}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 User:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {approveConfirmDialog.transaction.user
                                   ?.username ||
                                   approveConfirmDialog.transaction.user
@@ -1586,10 +1587,10 @@ const AdminAllTransactionsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Amount:
                               </span>
-                              <span className="font-semibold text-lg text-green-600">
+                              <span className="font-semibold text-lg text-green-600 dark:text-green-400">
                                 {formatTransactionCurrency(
                                   approveConfirmDialog.transaction.bdt_amount || approveConfirmDialog.transaction.amount,
                                   approveConfirmDialog.transaction.currency
@@ -1597,26 +1598,26 @@ const AdminAllTransactionsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Payment Method:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {displayMethod(
                                   approveConfirmDialog.transaction
                                 )}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Phone:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {approveConfirmDialog.transaction.phone}
                               </span>
                             </div>
                           </div>
                           <div className="mb-4">
-                            <label className="form-label mb-2">
+                            <label className="form-label mb-2 dark:text-gray-300">
                               Modify Transaction ID *
                             </label>
                             <input
@@ -1629,7 +1630,7 @@ const AdminAllTransactionsPage = () => {
                               className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                               required
                             />
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved transaction.
                             </p>
                           </div>
@@ -1666,35 +1667,35 @@ const AdminAllTransactionsPage = () => {
                 {cancelConfirmDialog.open &&
                   cancelConfirmDialog.transaction && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-red-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">
                           Cancel Transaction
                         </h3>
 
                         <div className="mb-6">
-                          <p className="text-gray-700 mb-2">
+                          <p className="text-gray-700 dark:text-gray-300 mb-2">
                             Are you sure you want to cancel this transaction?
                           </p>
-                          <p className="text-red-600 text-sm font-medium mb-4">
+                          <p className="text-red-600 dark:text-red-400 text-sm font-medium mb-4">
                             This action cannot be undone and will notify the
                             user.
                           </p>
 
-                          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2">
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Transaction ID:
                               </span>
-                              <span className="font-mono text-sm">
+                              <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
                                 {cancelConfirmDialog.transaction
                                   .transactionId || 'Not assigned'}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 User:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {cancelConfirmDialog.transaction.user
                                   ?.username ||
                                   cancelConfirmDialog.transaction.user?.email ||
@@ -1702,10 +1703,10 @@ const AdminAllTransactionsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Amount:
                               </span>
-                              <span className="font-semibold text-lg">
+                              <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
                                 {formatTransactionCurrency(
                                   cancelConfirmDialog.transaction.bdt_amount || cancelConfirmDialog.transaction.amount,
                                   cancelConfirmDialog.transaction.currency
@@ -1713,20 +1714,20 @@ const AdminAllTransactionsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Payment Method:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {displayMethod(
                                   cancelConfirmDialog.transaction
                                 )}
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-300">
                                 Phone:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {cancelConfirmDialog.transaction.phone}
                               </span>
                             </div>
@@ -1761,14 +1762,14 @@ const AdminAllTransactionsPage = () => {
                   )}
                 {addDeductBalanceDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Add/Deduct User Balance
                       </h3>
 
                       <div className="space-y-4 mb-6">
                         <div>
-                          <label className="form-label mb-2">Username <span className="text-red-500">*</span></label>
+                          <label className="form-label mb-2 dark:text-gray-300">Username <span className="text-red-500 dark:text-red-400">*</span></label>
                           <div className="relative">
                             <input
                               type="text"
@@ -1799,20 +1800,20 @@ const AdminAllTransactionsPage = () => {
                             )}
                           </div>
                           {userFound && (
-                            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="mt-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span className="text-sm text-green-700 font-medium">
+                                <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></div>
+                                <span className="text-sm text-green-700 dark:text-green-300 font-medium">
                                   User found: {userFound.username}
                                 </span>
                               </div>
                             </div>
                           )}
                           {balanceForm.username && !usernameSearching && !userFound && (
-                            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                               <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <span className="text-sm text-red-700">
+                                <div className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full"></div>
+                                <span className="text-sm text-red-700 dark:text-red-300">
                                   User not found
                                 </span>
                               </div>
@@ -1821,7 +1822,7 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Action <span className="text-red-500">*</span></label>
+                          <label className="form-label mb-2 dark:text-gray-300">Action <span className="text-red-500 dark:text-red-400">*</span></label>
                           <select
                             value={balanceForm.action}
                             onChange={(e) =>
@@ -1838,7 +1839,7 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Amount ({currency}) <span className="text-red-500">*</span></label>
+                          <label className="form-label mb-2 dark:text-gray-300">Amount ({currency}) <span className="text-red-500 dark:text-red-400">*</span></label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
                               {balanceForm.action === 'deduct' ? '-' : ''}{currentCurrencyData?.symbol || '$'}
@@ -1861,7 +1862,7 @@ const AdminAllTransactionsPage = () => {
                         </div>
 
                         <div>
-                          <label className="form-label mb-2">Notes</label>
+                          <label className="form-label mb-2 dark:text-gray-300">Notes</label>
                           <input
                             type="text"
                             placeholder="Add notes (optional)"
