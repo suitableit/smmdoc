@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
     FaCheckCircle,
     FaClock,
@@ -18,6 +19,11 @@ import {
 
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ChangeRoleModal = dynamic(
+  () => import('@/components/admin/users/role-modal'),
+  { ssr: false }
+);
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }: { size?: string; className?: string }) => (
   <div className={`${size} ${className} relative`}>
@@ -204,15 +210,6 @@ interface UpdateStatusModalProps {
   title: string;
 }
 
-interface ChangeRoleModalProps {
-  isOpen: boolean;
-  currentRole: string;
-  newRole: string;
-  onRoleChange: (value: string) => void;
-  onClose: () => void;
-  onConfirm: () => void;
-  isLoading: boolean;
-}
 
 interface EditModeratorModalProps {
   isOpen: boolean;
@@ -322,6 +319,7 @@ const ModeratorsPage = () => {
     currentRole: '',
   });
   const [newRole, setNewRole] = useState('');
+  const [newRolePermissions, setNewRolePermissions] = useState<string[]>([]);
 
   const [editDialog, setEditDialog] = useState<{
     open: boolean;
@@ -466,9 +464,7 @@ const ModeratorsPage = () => {
         email: moderator.email,
         name: moderator.name,
         status: moderator.status,
-        role: moderator.role,
         password: '',
-        permissions: moderator.permissions || [],
       });
     }
   }, [moderators]);
@@ -538,17 +534,22 @@ const ModeratorsPage = () => {
     );
   }, [handleApiAction]);
 
-  const handleChangeRole = useCallback(async (moderatorId: number, role: string) => {
+  const handleChangeRole = useCallback(async (moderatorId: number, role: string, permissions?: string[]) => {
+    const payload: any = { role };
+    if (role === 'moderator' && permissions) {
+      payload.permissions = permissions;
+    }
     const success = await handleApiAction(
       `/api/admin/users/${moderatorId}/role`,
       'PATCH',
-      { role },
+      payload,
       `Moderator role updated to ${role}`
     );
 
     if (success) {
       setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
       setNewRole('');
+      setNewRolePermissions([]);
     }
     return success;
   }, [handleApiAction]);
@@ -577,6 +578,7 @@ const ModeratorsPage = () => {
   const openChangeRoleDialog = useCallback((moderatorId: number, currentRole: string) => {
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
+    setNewRolePermissions([]);
   }, []);
 
   const handlePageChange = useCallback((newPage: number) => {
@@ -898,16 +900,20 @@ const ModeratorsPage = () => {
           onClose={() => {
             setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
             setNewRole('');
+            setNewRolePermissions([]);
           }}
           onConfirm={() => {
-            handleChangeRole(changeRoleDialog.moderatorId, newRole).then((success) => {
+            handleChangeRole(changeRoleDialog.moderatorId, newRole, newRolePermissions).then((success) => {
               if (success) {
                 setChangeRoleDialog({ open: false, moderatorId: 0, currentRole: '' });
                 setNewRole('');
+                setNewRolePermissions([]);
               }
             });
           }}
           isLoading={actionLoading === `/api/admin/users/${changeRoleDialog.moderatorId}/role`}
+          permissions={newRolePermissions}
+          onPermissionsChange={setNewRolePermissions}
         />
 
         <EditModeratorModal
@@ -920,9 +926,7 @@ const ModeratorsPage = () => {
               email: '',
               name: '',
               status: 'active',
-              role: 'moderator',
               password: '',
-              permissions: [],
             });
           }}
           onSave={handleEditSave}
@@ -1098,41 +1102,6 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ isOpen, currentSt
   );
 };
 
-const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ isOpen, currentRole, newRole, onRoleChange, onClose, onConfirm, isLoading }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Change Moderator Role</h3>
-        <div className="mb-4">
-          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Select New Role</label>
-          <select
-            value={newRole}
-            onChange={(e) => onRoleChange(e.target.value)}
-            className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-            disabled={isLoading}
-          >
-            <option value="admin">Admin</option>
-            <option value="moderator">Moderator</option>
-            <option value="user">User</option>
-          </select>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Current role: <span className="font-medium capitalize text-gray-700 dark:text-gray-300">{currentRole.replace('_', ' ')}</span>
-          </div>
-        </div>
-        <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn btn-secondary" disabled={isLoading}>
-            Cancel
-          </button>
-          <button onClick={onConfirm} className="btn btn-primary" disabled={isLoading}>
-            {isLoading ? 'Updating...' : 'Update Role'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderator, onClose, onSave, isLoading }) => {
   const [formData, setFormData] = useState<Partial<Moderator>>({});
@@ -1144,9 +1113,7 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
         email: moderator.email,
         name: moderator.name || '',
         status: moderator.status,
-        role: moderator.role,
         password: '',
-        permissions: moderator.permissions || [],
       });
     }
   }, [moderator]);
@@ -1163,38 +1130,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
       password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
     setFormData(prev => ({ ...prev, password: password }));
-  };
-
-  const availablePermissions = [
-    { id: 'view_users', label: 'View Users' },
-    { id: 'moderate_content', label: 'Moderate Content' },
-    { id: 'manage_tickets', label: 'Manage Tickets' },
-    { id: 'handle_disputes', label: 'Handle Disputes' },
-    { id: 'view_reports', label: 'View Reports' },
-    { id: 'manage_announcements', label: 'Manage Announcements' },
-  ];
-
-  const handlePermissionChange = (permissionId: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: checked 
-        ? [...(prev.permissions || []), permissionId]
-        : (prev.permissions || []).filter(p => p !== permissionId)
-    }));
-  };
-
-  const handleSelectAllPermissions = (checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: checked ? availablePermissions.map(p => p.id) : []
-    }));
-  };
-
-  const getSelectAllState = () => {
-    const currentPermissions = formData.permissions || [];
-    if (currentPermissions.length === 0) return { checked: false, indeterminate: false };
-    if (currentPermissions.length === availablePermissions.length) return { checked: true, indeterminate: false };
-    return { checked: false, indeterminate: true };
   };
 
   if (!isOpen || !moderator) return null;
@@ -1277,67 +1212,6 @@ const EditModeratorModal: React.FC<EditModeratorModalProps> = ({ isOpen, moderat
               <option value="inactive">Inactive</option>
             </select>
           </div>
-          <div className="mb-4">
-            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Role</label>
-            <select
-              value={formData.role || 'moderator'}
-              onChange={(e) => handleInputChange('role', e.target.value)}
-              className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
-              disabled={isLoading}
-            >
-              <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
-              <option value="user">User</option>
-            </select>
-          </div>
-          {formData.role === 'moderator' && (
-            <div className="mb-4">
-              <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Permissions</label>
-              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={getSelectAllState().checked}
-                      ref={(el) => {
-                        if (el) el.indeterminate = getSelectAllState().indeterminate;
-                      }}
-                      onChange={(e) => handleSelectAllPermissions(e.target.checked)}
-                      className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                      disabled={isLoading}
-                    />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select All Permissions</span>
-                  </label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {availablePermissions.map((permission) => (
-                    <label
-                      key={permission.id}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={(formData.permissions || []).includes(permission.id)}
-                        onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                        className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                        disabled={isLoading}
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{permission.label}</span>
-                    </label>
-                  ))}
-                </div>
-                {formData.permissions && formData.permissions.length === 0 ? (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    No permissions selected. Moderator will have limited access.
-                  </p>
-                ) : (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    {formData.permissions?.length || 0} of {availablePermissions.length} permissions selected.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex gap-2 justify-end pt-6">
