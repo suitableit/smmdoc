@@ -7,7 +7,6 @@ import {
   FaCheckCircle,
   FaGlobe,
   FaHistory,
-  FaSave,
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
@@ -69,7 +68,6 @@ interface PostFormData {
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
-  status: 'draft' | 'published';
   publishDate: string;
   publishTime: string;
   createdAt: string;
@@ -99,7 +97,6 @@ const EditBlogPostPage = () => {
     featuredImage: '',
     metaTitle: '',
     metaDescription: '',
-    status: 'draft',
     publishDate: '',
     publishTime: '',
     createdAt: '',
@@ -115,7 +112,6 @@ const EditBlogPostPage = () => {
     featuredImage: '',
     metaTitle: '',
     metaDescription: '',
-    status: 'draft',
     publishDate: '',
     publishTime: '',
     createdAt: '',
@@ -205,7 +201,6 @@ const EditBlogPostPage = () => {
           featuredImage: postData.featuredImage || '',
           metaTitle: postData.metaTitle || postData.seoTitle || metaTitle,
           metaDescription: postData.metaDescription || postData.seoDescription || metaDescription,
-          status: postData.status || 'draft',
           publishDate: postData.publishedAt ? new Date(postData.publishedAt).toISOString().split('T')[0] : '',
           publishTime: postData.publishedAt ? new Date(postData.publishedAt).toTimeString().slice(0, 5) : '',
           createdAt: postData.createdAt || '',
@@ -358,7 +353,7 @@ const EditBlogPostPage = () => {
     }
   };
 
-  const handleSubmit = async (status: 'draft' | 'published') => {
+  const handleSubmit = async () => {
     try {
       setIsLoading(true);
 
@@ -378,8 +373,8 @@ const EditBlogPostPage = () => {
         excerpt: formData.excerpt,
         content: formData.content,
         featuredImage: formData.featuredImage,
-        status,
-        publishedAt: status === 'published' ? new Date().toISOString() : null,
+        status: 'published',
+        publishedAt: new Date().toISOString(),
         seoTitle: formData.metaTitle,
         seoDescription: formData.metaDescription
       };
@@ -400,18 +395,13 @@ const EditBlogPostPage = () => {
         throw new Error(result.error || 'Failed to update blog post');
       }
 
-      showToast(
-        status === 'draft' ? 'Post saved as draft!' : 'Post updated successfully!',
-        'success'
-      );
+      showToast('Post updated successfully!', 'success');
 
       setOriginalFormData(formData);
 
-      if (status === 'published') {
-        setTimeout(() => {
-          window.location.href = '/admin/blogs';
-        }, 2000);
-      }
+      setTimeout(() => {
+        window.location.href = '/admin/blogs';
+      }, 2000);
 
     } catch (error) {
       showToast('Error updating post', 'error');
@@ -506,15 +496,7 @@ const EditBlogPostPage = () => {
                 </button>
               )}
               <button
-                onClick={() => handleSubmit('draft')}
-                className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
-                disabled={isLoading}
-              >
-                <FaSave className="h-4 w-4" />
-                {isLoading ? 'Saving...' : 'Save Draft'}
-              </button>
-              <button
-                onClick={() => handleSubmit('published')}
+                onClick={handleSubmit}
                 className="btn btn-primary flex items-center gap-2 px-4 py-2.5"
                 disabled={isLoading}
               >
@@ -547,7 +529,7 @@ const EditBlogPostPage = () => {
                   <label className="form-label mb-2">URL Slug</label>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">/blogs/</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/blog/</span>
                       <div className="flex-1">
                         <input
                           type="text"
@@ -559,7 +541,7 @@ const EditBlogPostPage = () => {
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Preview: <span className="font-mono">/blogs/{formData.slug || 'your-post-slug'}</span>
+                      Preview: <span className="font-mono">/blog/{formData.slug || 'your-post-slug'}</span>
                     </div>
                   </div>
                 </div>
@@ -675,18 +657,6 @@ const EditBlogPostPage = () => {
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Status:</span>
-                  <span className={`font-medium capitalize ${
-                    formData.status === 'published' 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : formData.status === 'draft'
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : 'text-blue-600 dark:text-blue-400'
-                  }`}>
-                    {formData.status}
-                  </span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Author:</span>
                   <span className="font-medium">{formData.author}</span>
                 </div>
@@ -702,26 +672,6 @@ const EditBlogPostPage = () => {
                     {new Date(formData.updatedAt).toLocaleDateString()}
                   </span>
                 </div>
-              </div>
-            </div>
-
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                Publish Settings
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="form-label mb-2">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => handleInputChange('status', e.target.value)}
-                    className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer`}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
-                </div>
-
               </div>
             </div>
             <div className="card card-padding">
@@ -774,33 +724,23 @@ const EditBlogPostPage = () => {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
-        <div className="flex flex-1 gap-3">
-          {hasUnsavedChanges && (
-            <button
-              onClick={handleDiscardChanges}
-              className="btn btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 w-full"
-              disabled={isLoading}
-            >
-              <FaHistory className="h-4 w-4" />
-              Discard
-            </button>
-          )}
+        {hasUnsavedChanges && (
           <button
-            onClick={() => handleSubmit('draft')}
-            className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
+            onClick={handleDiscardChanges}
+            className="btn btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 w-full"
             disabled={isLoading}
           >
-            <FaSave className="h-4 w-4" />
-            {isLoading ? 'Saving...' : 'Save Draft'}
+            <FaHistory className="h-4 w-4" />
+            Discard Changes
           </button>
-        </div>
+        )}
         <button
-          onClick={() => handleSubmit('published')}
+          onClick={handleSubmit}
           className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
           disabled={isLoading}
         >
           {!isLoading && <FaGlobe className="h-4 w-4" />}
-          {isLoading ? 'Publishing...' : 'Update & Publish'}
+          {isLoading ? 'Updating...' : 'Update & Publish'}
         </button>
       </div>
     </div>

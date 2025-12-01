@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         title: post.seoTitle || post.title,
         description: post.seoDescription || post.excerpt,
         type: 'article',
-        url: `${siteUrl}/blogs/${post.slug}`,
+        url: `${siteUrl}/blog/${post.slug}`,
         siteName: appName,
         images: post.featuredImage ? [
           {
@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         images: post.featuredImage ? [post.featuredImage] : []
       },
       alternates: {
-        canonical: `${siteUrl}/blogs/${post.slug}`
+        canonical: `${siteUrl}/blog/${post.slug}`
       }
     };
   } catch (error) {

@@ -39,6 +39,15 @@ const nextConfig = {
       pagesBufferLength: 2,
     },
   }),
+
+  async rewrites() {
+    return [
+      {
+        source: '/blog/:slug',
+        destination: '/blogs/:slug',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

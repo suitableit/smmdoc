@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import {
   FaCheckCircle,
   FaGlobe,
-  FaSave,
   FaTimes,
   FaUpload
 } from 'react-icons/fa';
@@ -65,7 +64,6 @@ interface PostFormData {
   featuredImage: string;
   metaTitle: string;
   metaDescription: string;
-  status: 'draft' | 'published';
 }
 
 const NewPostPage = () => {
@@ -99,7 +97,6 @@ const NewPostPage = () => {
     featuredImage: '',
     metaTitle: '',
     metaDescription: '',
-    status: 'draft',
   });
 
   const [toast, setToast] = useState<{
@@ -282,7 +279,7 @@ const NewPostPage = () => {
     }
   };
 
-  const handleSubmit = async (status: 'draft' | 'published') => {
+  const handleSubmit = async () => {
     try {
       setIsLoading(true);
 
@@ -302,8 +299,8 @@ const NewPostPage = () => {
         excerpt: formData.excerpt,
         content: formData.content,
         featuredImage: formData.featuredImage,
-        status,
-        publishedAt: status === 'published' ? new Date().toISOString() : null,
+        status: 'published',
+        publishedAt: new Date().toISOString(),
         seoTitle: formData.metaTitle,
         seoDescription: formData.metaDescription
       };
@@ -324,16 +321,11 @@ const NewPostPage = () => {
         throw new Error(result.error || 'Failed to create blog post');
       }
 
-      showToast(
-        status === 'draft' ? 'Post saved as draft!' : 'Post published successfully!',
-        'success'
-      );
+      showToast('Post published successfully!', 'success');
 
-      if (status === 'published') {
-        setTimeout(() => {
-          window.location.href = '/admin/blogs';
-        }, 2000);
-      }
+      setTimeout(() => {
+        window.location.href = '/admin/blogs';
+      }, 2000);
 
     } catch (error) {
       showToast('Error saving post', 'error');
@@ -367,15 +359,7 @@ const NewPostPage = () => {
             </div>
             <div className="hidden md:flex items-center gap-3">
               <button
-                onClick={() => handleSubmit('draft')}
-                className="btn btn-secondary flex items-center gap-2 px-4 py-2.5"
-                disabled={isLoading}
-              >
-                <FaSave className="h-4 w-4" />
-                {isLoading ? 'Saving...' : 'Save Draft'}
-              </button>
-              <button
-                onClick={() => handleSubmit('published')}
+                onClick={handleSubmit}
                 className="btn btn-primary flex items-center gap-2 px-4 py-2.5"
                 disabled={isLoading}
               >
@@ -417,7 +401,7 @@ const NewPostPage = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">/blogs/</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">/blog/</span>
                       <div className="flex-1 relative">
                         <input
                           type="text"
@@ -451,7 +435,7 @@ const NewPostPage = () => {
                       </div>
                     )}
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Preview: <span className="font-mono">/blogs/{formData.slug || 'your-post-slug'}</span>
+                      Preview: <span className="font-mono">/blog/{formData.slug || 'your-post-slug'}</span>
                     </div>
                   </div>
                 </div>
@@ -529,24 +513,6 @@ const NewPostPage = () => {
           <div className="space-y-6">
             <div className="card card-padding">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                Publish Settings
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="form-label mb-2">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => handleInputChange('status', e.target.value)}
-                    className={`form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer`}
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="card card-padding">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Featured Image
               </h3>
               <div className="space-y-3">
@@ -596,15 +562,7 @@ const NewPostPage = () => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex flex-wrap justify-center gap-3 md:hidden z-50">
         <button
-          onClick={() => handleSubmit('draft')}
-          className="btn btn-secondary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
-          disabled={isLoading}
-        >
-          <FaSave className="h-4 w-4" />
-          {isLoading ? 'Saving...' : 'Save Draft'}
-        </button>
-        <button
-          onClick={() => handleSubmit('published')}
+          onClick={handleSubmit}
           className="btn btn-primary flex items-center justify-center gap-2 px-4 py-2.5 w-full"
           disabled={isLoading}
         >

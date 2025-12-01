@@ -26,7 +26,7 @@ const AffiliatesTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1400px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 11 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -77,8 +77,8 @@ const AffiliatesTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -91,7 +91,7 @@ const AffiliatesTableSkeleton = () => {
   );
 };
 
-const Toast = ({
+const Toast = ({  
   message,
   type = 'success',
   onClose,
@@ -99,15 +99,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface AffiliateReferral {
   id: number;
@@ -403,30 +420,30 @@ const AffiliateReferralsPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+        return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
       case 'inactive':
-        return <FaClock className="h-3 w-3 text-gray-500" />;
+        return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
       case 'suspended':
-        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+        return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
       case 'pending':
-        return <FaClock className="h-3 w-3 text-yellow-500" />;
+        return <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />;
       default:
-        return <FaClock className="h-3 w-3 text-gray-500" />;
+        return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
       case 'inactive':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
       case 'suspended':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -654,8 +671,7 @@ const AffiliateReferralsPage = () => {
             <div className="w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -679,7 +695,7 @@ const AffiliateReferralsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -687,7 +703,7 @@ const AffiliateReferralsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalAffiliates}
@@ -698,7 +714,7 @@ const AffiliateReferralsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -706,7 +722,7 @@ const AffiliateReferralsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.activeAffiliates}
@@ -717,7 +733,7 @@ const AffiliateReferralsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'inactive'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Inactive
@@ -725,7 +741,7 @@ const AffiliateReferralsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'inactive'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.inactiveAffiliates}
@@ -736,7 +752,7 @@ const AffiliateReferralsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'suspended'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Suspended
@@ -744,7 +760,7 @@ const AffiliateReferralsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'suspended'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                     }`}
                   >
                     {stats.suspendedAffiliates}
@@ -757,10 +773,7 @@ const AffiliateReferralsPage = () => {
           <div style={{ padding: '0 24px' }}>
             {selectedAffiliates.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mb-4 pt-4">
-                <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
-                >
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   {selectedAffiliates.length} selected
                 </span>
                 <select
@@ -820,17 +833,11 @@ const AffiliateReferralsPage = () => {
               </div>
             ) : affiliates.length === 0 ? (
               <div className="text-center py-12">
-                <FaNetworkWired
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <FaNetworkWired className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300">
                   No affiliates found.
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No affiliates match your current filters or no affiliates
                   exist yet.
                 </p>
@@ -839,12 +846,9 @@ const AffiliateReferralsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1400px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           <input
                             type="checkbox"
                             checked={
@@ -852,67 +856,37 @@ const AffiliateReferralsPage = () => {
                               affiliates.length > 0
                             }
                             onChange={handleSelectAll}
-                            className="rounded border-gray-300 w-4 h-4"
+                            className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                           />
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           ID
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           User
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Total Visits
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Registrations
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Referrals
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Conversion Rate
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Available Funds
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Total Earned
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Status
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Actions
                         </th>
                       </tr>
@@ -921,7 +895,7 @@ const AffiliateReferralsPage = () => {
                       {affiliates.map((affiliate) => (
                         <tr
                           key={affiliate.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             {affiliate.status !== 'suspended' && (
@@ -933,77 +907,54 @@ const AffiliateReferralsPage = () => {
                                 onChange={() =>
                                   handleSelectAffiliate(affiliate.id.toString())
                                 }
-                                className="rounded border-gray-300 w-4 h-4"
+                                className="rounded border-gray-300 dark:border-gray-600 w-4 h-4"
                               />
                             )}
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">
                               {formatID(affiliate.id.toString())}
                             </div>
                           </td>
                           <td className="p-3">
                             <div>
-                              <div
-                                className="font-medium text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
+                              <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                                 {affiliate.user?.username || 'Unknown'}
                               </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-muted)' }}
-                              >
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {affiliate.user?.email || 'No email'}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                               {formatNumber(affiliate.totalVisits)}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                               {formatNumber(affiliate.signUps)}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                               {formatNumber(affiliate.signUps)}
                             </div>
                           </td>
                           <td className="p-3">
                             <div className="flex items-center">
-                              <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
-                              >
+                              <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                                 {affiliate.conversionRate.toFixed(1)}%
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-semibold text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                               ${formatPrice(affiliate.availableEarnings, 2)}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-semibold text-sm text-green-600"
-                            >
+                            <div className="font-semibold text-sm text-green-600 dark:text-green-400">
                               ${formatPrice(affiliate.totalEarnings, 2)}
                             </div>
                           </td>
@@ -1048,10 +999,10 @@ const AffiliateReferralsPage = () => {
                                 </button>
 
                                 {dropdownOpen === affiliate.id && (
-                                  <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
+                                  <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[160px]">
                                     {affiliate.requestedCommission > 0 && (
                                       <button
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                         onClick={() => {
                                           setDropdownOpen(null);
                                           openPayoutDialog(
@@ -1062,18 +1013,18 @@ const AffiliateReferralsPage = () => {
                                           );
                                         }}
                                       >
-                                        <FaMoneyBillWave className="h-3 w-3 text-green-600" />
+                                        <FaMoneyBillWave className="h-3 w-3 text-green-600 dark:text-green-400" />
                                         Process Payout
                                       </button>
                                     )}
                                     <button
-                                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       onClick={() => {
                                         setDropdownOpen(null);
                                         openStatusDialog(affiliate.id, affiliate.status);
                                       }}
                                     >
-                                      <FaUserCheck className="h-3 w-3 text-blue-600" />
+                                      <FaUserCheck className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                                       Change Status
                                     </button>
                                   </div>
@@ -1086,11 +1037,8 @@ const AffiliateReferralsPage = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-                  <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {affiliatesLoading ? (
                       <div className="flex items-center gap-2">
                         <span>Loading pagination...</span>
@@ -1119,10 +1067,7 @@ const AffiliateReferralsPage = () => {
                     >
                       Previous
                     </button>
-                    <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
-                    >
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {affiliatesLoading ? (
                         <div className="h-4 w-24 gradient-shimmer rounded" />
                       ) : (
@@ -1147,8 +1092,8 @@ const AffiliateReferralsPage = () => {
                 </div>
                 {payoutDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Process Payout
                       </h3>
                       <div className="mb-4">
@@ -1162,7 +1107,7 @@ const AffiliateReferralsPage = () => {
                           step="0.01"
                           max={payoutDialog.availableAmount}
                         />
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Available: ${formatPrice(payoutDialog.availableAmount, 2)}
                         </div>
                       </div>
@@ -1172,7 +1117,7 @@ const AffiliateReferralsPage = () => {
                           type="text"
                           value={payoutMethod}
                           readOnly
-                          className="form-field w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 cursor-not-allowed transition-all duration-200"
+                          className="form-field w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 cursor-not-allowed transition-all duration-200"
                           placeholder="Withdrawal method selected by affiliate"
                         />
                       </div>
@@ -1226,8 +1171,8 @@ const AffiliateReferralsPage = () => {
                 )}
                 {statusDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Change Affiliate Status
                       </h3>
                       <div className="mb-4">
@@ -1235,7 +1180,7 @@ const AffiliateReferralsPage = () => {
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}
-                          className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200"
+                          className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
                         >
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
@@ -1289,63 +1234,63 @@ const AffiliateReferralsPage = () => {
                 )}
                 {viewDialog.open && viewDialog.affiliate && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
                       <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                           Affiliate Details
                         </h3>
                         <button
                           onClick={() =>
                             setViewDialog({ open: false, affiliate: null })
                           }
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                         >
                           <FaTimes className="h-5 w-5" />
                         </button>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Basic Information
                           </h4>
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                   Affiliate ID
                                 </label>
-                                <div className="font-mono text-sm bg-purple-50 text-purple-700 px-2 py-1 rounded w-fit mt-1">
+                                <div className="font-mono text-sm bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-2 py-1 rounded w-fit mt-1">
                                   {formatID(viewDialog.affiliate.id.toString())}
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                   Username
                                 </label>
-                                <div className="text-sm text-gray-900 mt-1">
+                                <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                   {viewDialog.affiliate.user?.username || 'Unknown'}
                                 </div>
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Email
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.affiliate.user?.email || 'No email'}
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                   Referral Code
                                 </label>
-                                <div className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit mt-1">
+                                <div className="font-mono text-sm bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded w-fit mt-1">
                                   {viewDialog.affiliate.referralCode || 'N/A'}
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                   Status
                                 </label>
                                 <div className={`flex items-center gap-1 px-2 py-1 rounded-full w-fit text-xs font-medium mt-1 ${getStatusColor(viewDialog.affiliate.status)}`}>
@@ -1360,41 +1305,41 @@ const AffiliateReferralsPage = () => {
                         </div>
 
                         <div>
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Performance Metrics
                           </h4>
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Total Visits
                               </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">
                                 {formatNumber(viewDialog.affiliate.totalVisits)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Registrations
                               </label>
-                              <div className="text-lg font-semibold text-gray-900 mt-1">
+                              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">
                                 {formatNumber(viewDialog.affiliate.signUps)}
                               </div>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Referrals
                               </label>
-                              <div className="text-lg font-semibold text-blue-600 mt-1">
+                              <div className="text-lg font-semibold text-blue-600 dark:text-blue-400 mt-1">
                                 {formatNumber(viewDialog.affiliate.signUps)}
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                                 Conversion Rate
                               </label>
-                              <div className="text-lg font-semibold text-purple-600 mt-1">
+                              <div className="text-lg font-semibold text-purple-600 dark:text-purple-400 mt-1">
                                 {viewDialog.affiliate.conversionRate.toFixed(2)}%
                               </div>
                             </div>
@@ -1418,28 +1363,28 @@ const AffiliateReferralsPage = () => {
 
                             return (
                               <div className="mb-6">
-                                <h4 className="text-md font-semibold mb-4 text-gray-800">
+                                <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                                   Withdrawal Methods
                                 </h4>
                                 <div className="space-y-3">
                                   {withdrawalMethods.map((wm: any, index: number) => (
-                                    <div key={index} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                    <div key={index} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                                       <div className="flex items-center justify-between mb-2">
-                                        <span className="font-semibold text-gray-900 dark:text-white">
+                                        <span className="font-semibold text-gray-900 dark:text-gray-100">
                                           {getWithdrawalMethodDisplayName(wm.method || '')}
                                         </span>
                                       </div>
                                       {wm.method === 'bank' ? (
                                         <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-                                          {wm.bankName && <div><strong>Bank:</strong> {wm.bankName}</div>}
-                                          {wm.accountHolderName && <div><strong>Account Holder:</strong> {wm.accountHolderName}</div>}
-                                          {wm.bankAccountNumber && <div><strong>Account Number:</strong> {wm.bankAccountNumber}</div>}
-                                          {wm.routingNumber && <div><strong>Routing Number:</strong> {wm.routingNumber}</div>}
-                                          {wm.swiftCode && <div><strong>SWIFT Code:</strong> {wm.swiftCode}</div>}
+                                          {wm.bankName && <div><strong className="dark:text-gray-100">Bank:</strong> {wm.bankName}</div>}
+                                          {wm.accountHolderName && <div><strong className="dark:text-gray-100">Account Holder:</strong> {wm.accountHolderName}</div>}
+                                          {wm.bankAccountNumber && <div><strong className="dark:text-gray-100">Account Number:</strong> {wm.bankAccountNumber}</div>}
+                                          {wm.routingNumber && <div><strong className="dark:text-gray-100">Routing Number:</strong> {wm.routingNumber}</div>}
+                                          {wm.swiftCode && <div><strong className="dark:text-gray-100">SWIFT Code:</strong> {wm.swiftCode}</div>}
                                         </div>
                                       ) : (
                                         <div className="text-sm text-gray-600 dark:text-gray-300">
-                                          {wm.mobileNumber && <div><strong>Mobile Number:</strong> {wm.mobileNumber}</div>}
+                                          {wm.mobileNumber && <div><strong className="dark:text-gray-100">Mobile Number:</strong> {wm.mobileNumber}</div>}
                                         </div>
                                       )}
                                     </div>
@@ -1454,39 +1399,39 @@ const AffiliateReferralsPage = () => {
                         return null;
                       })()}
                       <div className="mb-6">
-                        <h4 className="text-md font-semibold mb-4 text-gray-800">
+                        <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                           Financial Summary
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-blue-600 mb-1">
+                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                            <div className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
                               Total Earnings
                             </div>
-                            <div className="text-xl font-bold text-blue-700">
+                            <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
                               ${formatPrice(viewDialog.affiliate.totalEarnings || viewDialog.affiliate.totalFunds, 2)}
                             </div>
                           </div>
-                          <div className="bg-green-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-green-600 mb-1">
+                          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                            <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">
                               Available Earnings
                             </div>
-                            <div className="text-xl font-bold text-green-700">
+                            <div className="text-xl font-bold text-green-700 dark:text-green-300">
                               ${formatPrice(viewDialog.affiliate.availableEarnings || viewDialog.affiliate.earnedCommission, 2)}
                             </div>
                           </div>
-                          <div className="bg-yellow-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-yellow-600 mb-1">
+                          <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                            <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-1">
                               Withdraw Requested
                             </div>
-                            <div className="text-xl font-bold text-yellow-700">
+                            <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
                               ${formatPrice(viewDialog.affiliate.requestedCommission, 2)}
                             </div>
                           </div>
-                          <div className="bg-purple-50 rounded-lg p-4">
-                            <div className="text-sm font-medium text-purple-600 mb-1">
+                          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                            <div className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">
                               Total Withdrawn
                             </div>
-                            <div className="text-xl font-bold text-purple-700">
+                            <div className="text-xl font-bold text-purple-700 dark:text-purple-300">
                               ${formatPrice(viewDialog.affiliate.totalWithdrawn || 0, 2)}
                             </div>
                           </div>
@@ -1495,18 +1440,18 @@ const AffiliateReferralsPage = () => {
                       {viewDialog.affiliate.payoutHistory && 
                        viewDialog.affiliate.payoutHistory.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Payout History
                           </h4>
-                          <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                             <div className="space-y-3">
                               {viewDialog.affiliate.payoutHistory.map((payout, index) => (
-                                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
+                                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                                   <div>
-                                    <div className="font-medium text-sm">
+                                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                                       ${formatPrice(payout.amount, 2)}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
                                       {payout.method} • {new Date(payout.requestedAt).toLocaleDateString()}
                                     </div>
                                   </div>
@@ -1519,7 +1464,7 @@ const AffiliateReferralsPage = () => {
                           </div>
                         </div>
                       )}
-                      <div className="flex gap-3 justify-end pt-4 border-t">
+                      <div className="flex gap-3 justify-end pt-4 border-t dark:border-gray-700">
                         {viewDialog.affiliate.requestedCommission > 0 && (
                           <button
                             onClick={() => {

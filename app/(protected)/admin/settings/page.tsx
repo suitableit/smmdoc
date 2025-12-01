@@ -128,7 +128,7 @@ const KeywordsInput = ({
           placeholder={keywords.length === 0 ? "Enter keywords and press comma or enter" : "Add more keywords..."}
         />
       </div>
-      <p className="text-xs text-gray-500 mt-1">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
         Press comma (,) or Enter to add keywords. Keywords: {keywords.join(', ')}
       </p>
     </div>
@@ -155,20 +155,34 @@ const Toast = ({
   </div>
 );
 
-const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => (
-  <button
-    onClick={() => onCheckedChange(!checked)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-      checked ? 'bg-indigo-600' : 'bg-gray-200'
-    }`}
-  >
-    <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-        checked ? 'translate-x-6' : 'translate-x-1'
-      }`}
-    />
-  </button>
-);
+const Switch = ({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (checked: boolean) => void }) => {
+  return (
+    <button
+      onClick={() => onCheckedChange(!checked)}
+      type="button"
+      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+      style={{
+        backgroundColor: checked 
+          ? 'var(--primary)' 
+          : undefined
+      }}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+      <style jsx>{`
+        button {
+          background-color: ${checked ? 'var(--primary)' : '#d1d5db'};
+        }
+        :global(.dark) button {
+          background-color: ${checked ? 'var(--primary)' : '#6b7280'} !important;
+        }
+      `}</style>
+    </button>
+  );
+};
 
 const DynamicListItem = ({
   item,
@@ -229,7 +243,7 @@ const DynamicListItem = ({
       ) : (
         <div className="flex items-center gap-2 w-full">
           <span
-            className="flex-1 text-sm cursor-pointer"
+            className="flex-1 text-sm text-gray-900 dark:text-gray-100 cursor-pointer"
             onClick={() => setIsEditing(true)}
           >
             {item.name}
@@ -1013,7 +1027,7 @@ const GeneralSettingsPage = () => {
                     placeholder="Enter site title"
                   />
                   {validationErrors.siteTitle && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteTitle}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.siteTitle}</p>
                   )}
                 </div>
 
@@ -1046,7 +1060,7 @@ const GeneralSettingsPage = () => {
                     placeholder="Enter site tagline"
                   />
                   {validationErrors.tagline && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.tagline}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.tagline}</p>
                   )}
                 </div>
 
@@ -1091,7 +1105,7 @@ const GeneralSettingsPage = () => {
                     </label>
                   </div>
                   {validationErrors.siteIcon && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteIcon}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.siteIcon}</p>
                   )}
                 </div>
 
@@ -1181,10 +1195,10 @@ const GeneralSettingsPage = () => {
                     </div>
                   </div>
                   {validationErrors.siteLogo && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteLogo}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.siteLogo}</p>
                   )}
                   {validationErrors.siteDarkLogo && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.siteDarkLogo}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.siteDarkLogo}</p>
                   )}
                 </div>
 
@@ -1217,7 +1231,7 @@ const GeneralSettingsPage = () => {
                     placeholder="admin@example.com"
                   />
                   {validationErrors.adminEmail && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.adminEmail}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.adminEmail}</p>
                   )}
                 </div>
 
@@ -1250,7 +1264,7 @@ const GeneralSettingsPage = () => {
                     placeholder="support@example.com"
                   />
                   {validationErrors.supportEmail && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.supportEmail}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.supportEmail}</p>
                   )}
                 </div>
 
@@ -1283,7 +1297,7 @@ const GeneralSettingsPage = () => {
                     placeholder="+8801234567890"
                   />
                   {validationErrors.whatsappSupport && (
-                    <p className="text-red-500 text-sm mt-1">{validationErrors.whatsappSupport}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.whatsappSupport}</p>
                   )}
                 </div>
 
@@ -1325,7 +1339,7 @@ const GeneralSettingsPage = () => {
                 <div className="form-group">
                   <label className="form-label">
                     Site Description
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                       ({metaSettings.siteDescription.length} / 160 characters)
                     </span>
                   </label>
@@ -1358,7 +1372,7 @@ const GeneralSettingsPage = () => {
                           alt="SEO Thumbnail"
                           width={80}
                           height={40}
-                          className="w-20 h-10 rounded object-cover border"
+                          className="w-20 h-10 rounded object-cover border border-gray-200 dark:border-gray-700"
                         />
                         <button
                           onClick={async () => {

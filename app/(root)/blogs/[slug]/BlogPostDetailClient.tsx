@@ -101,7 +101,7 @@ const SearchBar: React.FC = () => {
             {searchResults.map((post) => (
               <Link
                 key={post.id}
-                href={`/blogs/${post.slug}`}
+                href={`/blog/${post.slug}`}
                 className="block p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
               >
                 <h4 className="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">
@@ -176,7 +176,7 @@ const RecentPosts: React.FC = () => {
       </h3>
       <div className="space-y-4">
         {recentPosts.map((post) => (
-          <Link key={post.id} href={`/blogs/${post.slug}`} className="block group">
+          <Link key={post.id} href={`/blog/${post.slug}`} className="block group">
             <div className="flex space-x-3">
               <div className="flex-shrink-0">
                 <Image
@@ -276,7 +276,7 @@ const TrendingWidget: React.FC = () => {
         <div>
           {trendingPosts.length > 0 ? (
             trendingPosts.map((post) => (
-              <Link key={post.id} href={`/blogs/${post.slug}`}>
+              <Link key={post.id} href={`/blog/${post.slug}`}>
                 <div className="bg-white dark:bg-gray-800/50 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200 cursor-pointer mb-3">
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1 transition-colors duration-200 line-clamp-2">
                     {post.title}
@@ -461,7 +461,7 @@ const BlogPostDetailClient: React.FC<BlogPostDetailClientProps> = ({ post }) => 
                   </p>
                   <Link
                     href="/"
-                    className="inline-flex items-center gap-2 bg-white text-[var(--primary)] hover:bg-gray-100 font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:-translate-y-1"
+                    className="inline-flex items-center gap-2 bg-white dark:bg-gray-900 text-[var(--primary)] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 font-semibold px-6 py-3 rounded-lg transition-all duration-300 hover:-translate-y-1"
                   >
                     <span>Get Started Today</span>
                     <FaArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />

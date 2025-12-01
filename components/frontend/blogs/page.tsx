@@ -45,13 +45,13 @@ const BlogCard: React.FC<{ post: BlogPost }> = ({ post }) => (
     </div>
     <div className="p-6">
       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 hover:text-[var(--primary)] dark:hover:text-[var(--secondary)] transition-colors duration-200">
-        <Link href={`/blogs/${post.slug}`}>{post.title}</Link>
+        <Link href={`/blog/${post.slug}`}>{post.title}</Link>
       </h3>
       <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3 transition-colors duration-200">
         {post.excerpt}
       </p>
       <Link
-        href={`/blogs/${post.slug}`}
+        href={`/blog/${post.slug}`}
         className="inline-flex items-center gap-2 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white font-semibold px-4 py-2 text-sm rounded-lg hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] dark:shadow-lg dark:shadow-purple-500/20 hover:dark:shadow-purple-500/30 transition-all duration-300 hover:-translate-y-1"
       >
         <span>Read more</span>

@@ -33,7 +33,7 @@ const WithdrawalsTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 8 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -78,8 +78,8 @@ const WithdrawalsTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -100,15 +100,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface Withdrawal {
   id: number;
@@ -338,30 +355,30 @@ const AdminWithdrawalsPage = () => {
     switch (status) {
       case 'Success':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full w-fit">
-            <FaCheckCircle className="h-3 w-3 text-green-500" />
-            <span className="text-xs font-medium text-green-700">Success</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full w-fit">
+            <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+            <span className="text-xs font-medium text-green-700 dark:text-green-300">Success</span>
           </div>
         );
       case 'Pending':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 rounded-full w-fit">
-            <FaClock className="h-3 w-3 text-yellow-500" />
-            <span className="text-xs font-medium text-yellow-700">Pending</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
+            <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">Pending</span>
           </div>
         );
       case 'Cancelled':
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 rounded-full w-fit">
-            <FaTimesCircle className="h-3 w-3 text-red-500" />
-            <span className="text-xs font-medium text-red-700">Cancelled</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full w-fit">
+            <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+            <span className="text-xs font-medium text-red-700 dark:text-red-300">Cancelled</span>
           </div>
         );
       default:
         return (
-          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-            <FaClock className="h-3 w-3 text-gray-500" />
-            <span className="text-xs font-medium text-gray-700">{status}</span>
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{status}</span>
           </div>
         );
     }
@@ -620,8 +637,7 @@ const AdminWithdrawalsPage = () => {
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-auto">
                   <FaSearch
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                   />
                   <input
                     type="text"
@@ -644,7 +660,7 @@ const AdminWithdrawalsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -652,7 +668,7 @@ const AdminWithdrawalsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalWithdrawals}
@@ -663,7 +679,7 @@ const AdminWithdrawalsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -671,7 +687,7 @@ const AdminWithdrawalsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {stats.pendingWithdrawals}
@@ -682,7 +698,7 @@ const AdminWithdrawalsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'success'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Success
@@ -690,7 +706,7 @@ const AdminWithdrawalsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'success'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.completedWithdrawals}
@@ -701,7 +717,7 @@ const AdminWithdrawalsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'cancelled'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Cancelled
@@ -709,7 +725,7 @@ const AdminWithdrawalsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'cancelled'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {stats.cancelledWithdrawals}
@@ -726,17 +742,11 @@ const AdminWithdrawalsPage = () => {
               </div>
             ) : withdrawals.length === 0 ? (
               <div className="text-center py-12">
-                <FaMoneyBillWave
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <FaMoneyBillWave className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300">
                   No withdrawals found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No withdrawals match your current filters or no withdrawals exist yet.
                 </p>
               </div>
@@ -744,54 +754,30 @@ const AdminWithdrawalsPage = () => {
               <React.Fragment>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           ID
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           User
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Transaction ID
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Amount
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Method
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Date
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Status
                         </th>
-                        <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
+                        <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Actions
                         </th>
                       </tr>
@@ -800,20 +786,17 @@ const AdminWithdrawalsPage = () => {
                       {withdrawals.map((withdrawal) => (
                         <tr
                           key={withdrawal.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {withdrawal.id
                                 ? formatID(withdrawal.id.toString().slice(-8))
                                 : 'null'}
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                               {withdrawal.affiliate.user?.username ||
                                 withdrawal.affiliate.user?.email?.split('@')[0] ||
                                 withdrawal.affiliate.user?.name ||
@@ -821,10 +804,7 @@ const AdminWithdrawalsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
-                            >
+                            <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
                               {withdrawal.withdrawalId || '-'}
                             </div>
                           </td>
@@ -837,21 +817,21 @@ const AdminWithdrawalsPage = () => {
                           </td>
                           <td className="p-3">
                             {withdrawal.payment_method ? (
-                              <div className="text-xs font-medium text-gray-700">
+                              <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                 {withdrawal.payment_method}
                               </div>
                             ) : (
-                              <span className="text-xs text-gray-400">-</span>
+                              <span className="text-xs text-gray-400 dark:text-gray-500">-</span>
                             )}
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-900 dark:text-gray-100">
                                 {withdrawal.createdAt
                                   ? new Date(withdrawal.createdAt).toLocaleDateString()
                                   : 'null'}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {withdrawal.createdAt
                                   ? new Date(withdrawal.createdAt).toLocaleTimeString()
                                   : 'null'}
@@ -895,7 +875,7 @@ const AdminWithdrawalsPage = () => {
                                     <FaEllipsisH className="h-3 w-3" />
                                   </button>
 
-                                  <div className="hidden absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                                  <div className="hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
                                     <div className="py-1">
                                       {withdrawal.status === 'Success' && 
                                        !withdrawal.transactionIdEdited && (
@@ -908,7 +888,7 @@ const AdminWithdrawalsPage = () => {
                                               ) as HTMLElement;
                                             dropdown?.classList.add('hidden');
                                           }}
-                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                         >
                                           <FaEdit className="h-3 w-3" />
                                           Edit Transaction ID
@@ -923,7 +903,7 @@ const AdminWithdrawalsPage = () => {
                                             ) as HTMLElement;
                                           dropdown?.classList.add('hidden');
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                                       >
                                         <FaEye className="h-3 w-3" />
                                         View Details
@@ -940,11 +920,8 @@ const AdminWithdrawalsPage = () => {
                   </table>
                 </div>
 
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-                  <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     {withdrawalsLoading ? (
                       <div className="flex items-center gap-2">
                         <span>Loading pagination...</span>
@@ -976,10 +953,7 @@ const AdminWithdrawalsPage = () => {
                       >
                         Previous
                       </button>
-                      <span
-                        className="text-sm"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {withdrawalsLoading ? (
                           <div className="h-4 w-24 gradient-shimmer rounded" />
                         ) : (
@@ -1006,26 +980,26 @@ const AdminWithdrawalsPage = () => {
 
                 {viewDetailsDialog.open && viewDetailsDialog.withdrawal && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[600px] max-w-[90vw] mx-4 max-h-[80vh] overflow-y-auto">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Withdrawal Details
                       </h3>
 
                       <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Transaction ID
                             </label>
-                            <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                            <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.withdrawal.withdrawalId || '-'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Internal ID
                             </label>
-                            <div className="font-mono text-sm bg-gray-50 p-2 rounded">
+                            <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {formatID(viewDetailsDialog.withdrawal.id)}
                             </div>
                           </div>
@@ -1033,20 +1007,20 @@ const AdminWithdrawalsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               User
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.withdrawal.affiliate.user?.username ||
                                 viewDetailsDialog.withdrawal.affiliate.user?.email ||
                                 'N/A'}
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Method
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.withdrawal.payment_method || 'N/A'}
                             </div>
                           </div>
@@ -1054,10 +1028,10 @@ const AdminWithdrawalsPage = () => {
 
                         <div className="grid grid-cols-3 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Amount
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded font-semibold">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded font-semibold text-gray-900 dark:text-gray-100">
                               <PriceDisplay
                                 amount={viewDetailsDialog.withdrawal.amount}
                                 originalCurrency="USD"
@@ -1065,7 +1039,7 @@ const AdminWithdrawalsPage = () => {
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Status
                             </label>
                             <div className="flex items-center gap-2 mt-1">
@@ -1076,10 +1050,10 @@ const AdminWithdrawalsPage = () => {
 
                         {viewDetailsDialog.withdrawal.notes && (
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Notes
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {viewDetailsDialog.withdrawal.notes}
                             </div>
                           </div>
@@ -1087,10 +1061,10 @@ const AdminWithdrawalsPage = () => {
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium text-gray-700">
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Created
                             </label>
-                            <div className="text-sm bg-gray-50 p-2 rounded">
+                            <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                               {new Date(
                                 viewDetailsDialog.withdrawal.createdAt
                               ).toLocaleString()}
@@ -1098,10 +1072,10 @@ const AdminWithdrawalsPage = () => {
                           </div>
                           {viewDetailsDialog.withdrawal.processedAt && (
                             <div>
-                              <label className="text-sm font-medium text-gray-700">
+                              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Processed
                               </label>
-                              <div className="text-sm bg-gray-50 p-2 rounded">
+                              <div className="text-sm bg-gray-50 dark:bg-gray-800/50 p-2 rounded text-gray-900 dark:text-gray-100">
                                 {new Date(
                                   viewDetailsDialog.withdrawal.processedAt
                                 ).toLocaleString()}
@@ -1131,22 +1105,22 @@ const AdminWithdrawalsPage = () => {
                 {approveConfirmDialog.open &&
                   approveConfirmDialog.withdrawal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-green-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">
                           Approve Withdrawal
                         </h3>
 
                         <div className="mb-6">
-                          <p className="text-gray-700 mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 mb-4">
                             Are you sure you want to approve this withdrawal?
                           </p>
 
-                          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 User:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {approveConfirmDialog.withdrawal.affiliate.user
                                   ?.username ||
                                   approveConfirmDialog.withdrawal.affiliate.user
@@ -1155,10 +1129,10 @@ const AdminWithdrawalsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 Amount:
                               </span>
-                              <span className="font-semibold text-lg text-green-600">
+                              <span className="font-semibold text-lg text-green-600 dark:text-green-400">
                                 <PriceDisplay
                                   amount={approveConfirmDialog.withdrawal.amount}
                                   originalCurrency="USD"
@@ -1166,10 +1140,10 @@ const AdminWithdrawalsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 Method:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {approveConfirmDialog.withdrawal.payment_method || '-'}
                               </span>
                             </div>
@@ -1238,25 +1212,25 @@ const AdminWithdrawalsPage = () => {
                 {cancelConfirmDialog.open &&
                   cancelConfirmDialog.withdrawal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-red-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">
                           Cancel Withdrawal
                         </h3>
 
                         <div className="mb-6">
-                          <p className="text-gray-700 mb-2">
+                          <p className="text-gray-700 dark:text-gray-300 mb-2">
                             Are you sure you want to cancel this withdrawal?
                           </p>
-                          <p className="text-red-600 text-sm font-medium mb-4">
+                          <p className="text-red-600 dark:text-red-400 text-sm font-medium mb-4">
                             This action cannot be undone. The amount will be returned to the affiliate's available balance.
                           </p>
 
-                          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2 border border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 User:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {cancelConfirmDialog.withdrawal.affiliate.user
                                   ?.username ||
                                   cancelConfirmDialog.withdrawal.affiliate.user?.email ||
@@ -1264,10 +1238,10 @@ const AdminWithdrawalsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 Amount:
                               </span>
-                              <span className="font-semibold text-lg">
+                              <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
                                 <PriceDisplay
                                   amount={cancelConfirmDialog.withdrawal.amount}
                                   originalCurrency="USD"
@@ -1275,10 +1249,10 @@ const AdminWithdrawalsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 Method:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {cancelConfirmDialog.withdrawal.payment_method || '-'}
                               </span>
                             </div>
@@ -1347,22 +1321,22 @@ const AdminWithdrawalsPage = () => {
                 {editTransactionIdDialog.open &&
                   editTransactionIdDialog.withdrawal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-green-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+                        <h3 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">
                           Edit Transaction ID
                         </h3>
 
                         <div className="mb-6">
-                          <p className="text-gray-700 mb-4 text-sm">
+                          <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
                             You can edit this transaction ID only once. After saving, it cannot be changed again.
                           </p>
 
-                          <div className="bg-gray-50 rounded-lg p-4 space-y-2 mb-4">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2 mb-4 border border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 User:
                               </span>
-                              <span>
+                              <span className="text-gray-900 dark:text-gray-100">
                                 {editTransactionIdDialog.withdrawal.affiliate.user
                                   ?.username ||
                                   editTransactionIdDialog.withdrawal.affiliate.user
@@ -1371,10 +1345,10 @@ const AdminWithdrawalsPage = () => {
                               </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="font-medium text-gray-600">
+                              <span className="font-medium text-gray-600 dark:text-gray-400">
                                 Amount:
                               </span>
-                              <span className="font-semibold text-lg text-green-600">
+                              <span className="font-semibold text-lg text-green-600 dark:text-green-400">
                                 <PriceDisplay
                                   amount={editTransactionIdDialog.withdrawal.amount}
                                   originalCurrency="USD"

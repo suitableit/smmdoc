@@ -996,7 +996,7 @@ const BlogsPage = () => {
                                 className="btn btn-secondary p-2"
                                 title="View Details"
                                 onClick={() => {
-                                  window.open(`/blogs/${blog.slug}`, '_blank');
+                                  window.open(`/blog/${blog.slug}`, '_blank');
                                 }}
                               >
                                 <FaEye className="h-3 w-3" />

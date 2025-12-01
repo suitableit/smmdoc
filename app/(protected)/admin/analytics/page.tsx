@@ -29,10 +29,10 @@ const ChevronDownIcon = ({ className }: { className?: string }) => (
 
 const ChartSkeleton = () => {
   return (
-    <div className="relative h-80 bg-gray-50 rounded-lg p-4">
+    <div className="relative h-80 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+          <div key={i} className="border-t border-gray-200 dark:border-gray-700 border-dashed w-full"></div>
         ))}
       </div>
       <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between">
@@ -66,10 +66,10 @@ const ChartSkeleton = () => {
 
 const PlatformChartSkeleton = () => {
   return (
-    <div className="relative h-64 bg-gray-50 rounded-lg p-4">
+    <div className="relative h-64 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+          <div key={i} className="border-t border-gray-200 dark:border-gray-700 border-dashed w-full"></div>
         ))}
       </div>
       <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between">
@@ -170,13 +170,13 @@ const CustomChart = ({ data, activeTab, maxValue }: {
   };
 
   return (
-    <div className="relative h-80 bg-gray-50 rounded-lg p-4">
+    <div className="relative h-80 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+          <div key={i} className="border-t border-gray-200 dark:border-gray-700 border-dashed w-full"></div>
         ))}
       </div>
-      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600">
+      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600 dark:text-gray-400">
         {[0, 1, 2, 3, 4].map((i) => {
           const value = maxValue - (i * maxValue / 4);
           return (
@@ -195,7 +195,7 @@ const CustomChart = ({ data, activeTab, maxValue }: {
 
           return (
             <div key={index} className="flex flex-col items-center flex-1 group">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 dark:bg-gray-700 text-white dark:text-gray-100 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
                 {item.month}: {activeTab === 'orders' ? value.toLocaleString() : formatValue(value)}
               </div>
               <div 
@@ -206,7 +206,7 @@ const CustomChart = ({ data, activeTab, maxValue }: {
           );
         })}
       </div>
-      <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600">
+      <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600 dark:text-gray-400">
         {data.map((item, index) => (
           <div key={index} className="flex-1 text-center">
             {item.month}
@@ -231,13 +231,13 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
   ));
 
   return (
-    <div className="relative h-64 bg-gray-50 rounded-lg p-4">
+    <div className="relative h-64 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
       <div className="absolute inset-4 flex flex-col justify-between">
         {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="border-t border-gray-200 border-dashed w-full"></div>
+          <div key={i} className="border-t border-gray-200 dark:border-gray-700 border-dashed w-full"></div>
         ))}
       </div>
-      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600">
+      <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-gray-600 dark:text-gray-400">
         {[0, 1, 2, 3, 4].map((i) => {
           const value = maxValue - (i * maxValue / 4);
           return (
@@ -252,7 +252,7 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
 
           return (
             <div key={index} className="flex flex-col justify-end items-center flex-1 group relative">
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute -top-8 bg-gray-800 dark:bg-gray-700 text-white dark:text-gray-100 text-xs px-2 py-1 rounded whitespace-nowrap z-10">
                 {item.month}: {platforms.reduce((sum, platform) => sum + (item[platform.key as keyof AnalyticsData] as number), 0).toLocaleString()}
               </div>
               <div className="w-full flex flex-col-reverse">
@@ -274,7 +274,7 @@ const PlatformChart = ({ data, totalOrders }: { data: AnalyticsData[]; totalOrde
           );
         })}
       </div>
-      <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600">
+      <div className="absolute left-12 right-4 bottom-0 flex justify-between text-xs text-gray-600 dark:text-gray-400">
         {data.map((item, index) => (
           <div key={index} className="flex-1 text-center">
             {item.month}
@@ -355,14 +355,14 @@ export default function AnalyticsPage() {
       switch (id) {
         case 'profit': return isActive 
           ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
         case 'payments': return isActive 
           ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
         case 'orders': return isActive 
           ? 'bg-gradient-to-r from-purple-600 to-purple-400 text-white shadow-lg'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
-        default: return 'bg-gray-100 text-gray-600 hover:bg-gray-200';
+          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
+        default: return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700';
       }
     };
 
@@ -390,21 +390,21 @@ export default function AnalyticsPage() {
                 <FaChartLine />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-                <p className="text-sm text-gray-600">Track your SMM panel performance and growth</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Analytics Dashboard</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Track your SMM panel performance and growth</p>
               </div>
             </div>
             <div className="relative">
               <button
                 onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
-                className="form-field w-full pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent shadow-sm text-gray-900 transition-all duration-200 appearance-none cursor-pointer flex items-center gap-2"
+                className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer flex items-center gap-2"
               >
-                <FaCalendar className="w-4 h-4 text-gray-600" />
+                <FaCalendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <span className="font-medium">{selectedYear}</span>
               </button>
 
               {isYearDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                <div className="absolute right-0 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-10">
                   {availableYears.map((year) => (
                     <button
                       key={year}
@@ -412,8 +412,8 @@ export default function AnalyticsPage() {
                         setSelectedYear(year);
                         setIsYearDropdownOpen(false);
                       }}
-                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 ${
-                        year === selectedYear ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 ${
+                        year === selectedYear ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'
                       } ${year === availableYears[0] ? 'rounded-t-lg' : ''} ${
                         year === availableYears[availableYears.length - 1] ? 'rounded-b-lg' : ''
                       }`}
@@ -453,14 +453,14 @@ export default function AnalyticsPage() {
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition-colors duration-200">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 font-semibold">Total {selectedYear}</p>
+                  <p className="text-blue-600 dark:text-blue-400 font-semibold">Total {selectedYear}</p>
                   {loading ? (
                     <div className="h-8 w-24 gradient-shimmer rounded mt-2" />
                   ) : (
-                    <p className="text-2xl font-bold text-blue-700">
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                       {activeTab === 'orders' 
                         ? metrics.total.toLocaleString()
                         : formatCurrency(metrics.total)
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
                     </p>
                   )}
                 </div>
-                <div className="text-blue-500 w-6 h-6">
+                <div className="text-blue-500 dark:text-blue-400 w-6 h-6">
                   {activeTab === 'profit' && <FaDollarSign className="w-6 h-6" />}
                   {activeTab === 'payments' && <FaChartLine className="w-6 h-6" />}
                   {activeTab === 'orders' && <FaShoppingCart className="w-6 h-6" />}
@@ -476,19 +476,19 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 hover:bg-green-100 transition-colors duration-200">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 font-semibold">Growth Rate</p>
+                  <p className="text-green-600 dark:text-green-400 font-semibold">Growth Rate</p>
                   {loading ? (
                     <div className="h-8 w-20 gradient-shimmer rounded mt-2" />
                   ) : (
-                    <p className={`text-2xl font-bold ${metrics.isPositive ? 'text-green-700' : 'text-red-700'}`}>
+                    <p className={`text-2xl font-bold ${metrics.isPositive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
                       {Math.abs(metrics.trend).toFixed(1)}%
                     </p>
                   )}
                 </div>
-                <div className="text-green-500 w-6 h-6">
+                <div className="text-green-500 dark:text-green-400 w-6 h-6">
                   {metrics.isPositive ? (
                     <TrendingUpIcon className="w-6 h-6" />
                   ) : (
@@ -498,14 +498,14 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 hover:bg-purple-100 transition-colors duration-200">
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 font-semibold">Monthly Average</p>
+                  <p className="text-purple-600 dark:text-purple-400 font-semibold">Monthly Average</p>
                   {loading ? (
                     <div className="h-8 w-24 gradient-shimmer rounded mt-2" />
                   ) : (
-                    <p className="text-2xl font-bold text-purple-700">
+                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
                       {activeTab === 'orders'
                         ? Math.round(metrics.total / 12).toLocaleString()
                         : formatCurrency(metrics.total / 12)
@@ -513,7 +513,7 @@ export default function AnalyticsPage() {
                     </p>
                   )}
                 </div>
-                <FaCog className="text-purple-500 w-6 h-6" />
+                <FaCog className="text-purple-500 dark:text-purple-400 w-6 h-6" />
               </div>
             </div>
           </div>
@@ -541,15 +541,15 @@ export default function AnalyticsPage() {
             <div className="card-header mb-4">
               <h3 className="card-title">Platform Breakdown</h3>
             </div>
-            <p className="text-sm text-gray-600 mb-6">Order distribution across platforms</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Order distribution across platforms</p>
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
               {[
-                { name: 'Instagram', key: 'instagramOrders', color: 'bg-pink-500', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', textColor: 'text-pink-600', hoverColor: 'hover:bg-pink-100' },
-                { name: 'Facebook', key: 'facebookOrders', color: 'bg-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', textColor: 'text-blue-600', hoverColor: 'hover:bg-blue-100' },
-                { name: 'YouTube', key: 'youtubeOrders', color: 'bg-red-500', bgColor: 'bg-red-50', borderColor: 'border-red-200', textColor: 'text-red-600', hoverColor: 'hover:bg-red-100' },
-                { name: 'TikTok', key: 'tiktokOrders', color: 'bg-gray-900', bgColor: 'bg-gray-50', borderColor: 'border-gray-200', textColor: 'text-gray-600', hoverColor: 'hover:bg-gray-100' },
-                { name: 'Twitter', key: 'twitterOrders', color: 'bg-cyan-500', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', textColor: 'text-cyan-600', hoverColor: 'hover:bg-cyan-100' },
+                { name: 'Instagram', key: 'instagramOrders', color: 'bg-pink-500', bgColor: 'bg-pink-50 dark:bg-pink-900/20', borderColor: 'border-pink-200 dark:border-pink-800', textColor: 'text-pink-600 dark:text-pink-400', hoverColor: 'hover:bg-pink-100 dark:hover:bg-pink-900/30' },
+                { name: 'Facebook', key: 'facebookOrders', color: 'bg-blue-600', bgColor: 'bg-blue-50 dark:bg-blue-900/20', borderColor: 'border-blue-200 dark:border-blue-800', textColor: 'text-blue-600 dark:text-blue-400', hoverColor: 'hover:bg-blue-100 dark:hover:bg-blue-900/30' },
+                { name: 'YouTube', key: 'youtubeOrders', color: 'bg-red-500', bgColor: 'bg-red-50 dark:bg-red-900/20', borderColor: 'border-red-200 dark:border-red-800', textColor: 'text-red-600 dark:text-red-400', hoverColor: 'hover:bg-red-100 dark:hover:bg-red-900/30' },
+                { name: 'TikTok', key: 'tiktokOrders', color: 'bg-gray-900', bgColor: 'bg-gray-50 dark:bg-gray-800/50', borderColor: 'border-gray-200 dark:border-gray-700', textColor: 'text-gray-600 dark:text-gray-400', hoverColor: 'hover:bg-gray-100 dark:hover:bg-gray-700/50' },
+                { name: 'Twitter', key: 'twitterOrders', color: 'bg-cyan-500', bgColor: 'bg-cyan-50 dark:bg-cyan-900/20', borderColor: 'border-cyan-200 dark:border-cyan-800', textColor: 'text-cyan-600 dark:text-cyan-400', hoverColor: 'hover:bg-cyan-100 dark:hover:bg-cyan-900/30' },
               ].map((platform) => {
                 const total = analyticsData.reduce((sum, item) => sum + (item[platform.key as keyof AnalyticsData] as number), 0);
                 const percentage = metrics.total > 0 ? ((total / metrics.total) * 100).toFixed(1) : '0.0';
@@ -558,9 +558,9 @@ export default function AnalyticsPage() {
                   <div key={platform.name} className={`${platform.bgColor} border ${platform.borderColor} rounded-lg p-4 ${platform.hoverColor} transition-colors duration-200`}>
                     <div className="flex items-center gap-2 mb-2">
                       <div className={`w-3 h-3 rounded-full ${platform.color}`}></div>
-                      <span className="text-sm font-medium text-gray-700">{platform.name}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{platform.name}</span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">{total.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{total.toLocaleString()}</p>
                     <p className={`text-sm ${platform.textColor}`}>{percentage}% of total</p>
                   </div>
                 );
@@ -568,7 +568,7 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="mb-4">
-              <h4 className="text-md font-semibold text-gray-900 mb-4">Monthly Platform Distribution</h4>
+              <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Monthly Platform Distribution</h4>
               <PlatformChart data={analyticsData} totalOrders={metrics.total} />
             </div>
             <div className="flex flex-wrap gap-4 justify-center mt-4">
@@ -581,7 +581,7 @@ export default function AnalyticsPage() {
               ].map((platform) => (
                 <div key={platform.name} className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${platform.color}`}></div>
-                  <span className="text-sm text-gray-600">{platform.name}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{platform.name}</span>
                 </div>
               ))}
             </div>

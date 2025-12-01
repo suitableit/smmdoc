@@ -44,7 +44,7 @@ interface PaginationProps {
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 animate-spin">
-      <div className="absolute inset-1 rounded-full bg-white"></div>
+      <div className="absolute inset-1 rounded-full bg-white dark:bg-gray-800"></div>
     </div>
   </div>
 );
@@ -80,48 +80,48 @@ const AnnouncementsSkeleton = () => {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm min-w-[1200px]">
-        <thead className="sticky top-0 bg-white border-b z-10">
+        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
           <tr>
-            <th className="text-left py-3 pl-3 pr-1" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left py-3 pl-3 pr-1 text-gray-900 dark:text-gray-100">
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               ID
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Type
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Title
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Action Button
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Audience
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Views
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Start
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               End
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Visibility
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Status
             </th>
-            <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
               Actions
             </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((_, idx) => (
-            <tr key={idx} className="border-t">
+            <tr key={idx} className="border-t dark:border-gray-700">
               <td className="py-3 pl-3 pr-1">
                 <div className="h-4 w-4 gradient-shimmer rounded" />
               </td>
@@ -177,15 +177,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface Announcement {
   id: number;
@@ -718,23 +735,23 @@ const AnnouncementsPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-700 bg-green-100';
-      case 'scheduled': return 'text-blue-700 bg-blue-100';
-      case 'expired': return 'text-gray-700 bg-gray-100';
-      default: return 'text-yellow-700 bg-yellow-100';
+      case 'active': return 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30';
+      case 'scheduled': return 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/30';
+      case 'expired': return 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800';
+      default: return 'text-yellow-700 dark:text-yellow-300 bg-yellow-100 dark:bg-yellow-900/30';
     }
   };
 
   const getTypeBadgeStyle = (type: string) => {
     switch (type) {
       case 'warning':
-        return 'text-yellow-700 bg-yellow-50 border-yellow-300';
+        return 'text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-800';
       case 'success':
-        return 'text-green-700 bg-green-50 border-green-300';
+        return 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-800';
       case 'critical':
-        return 'text-red-700 bg-red-50 border-red-300';
+        return 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-800';
       default:
-        return 'text-blue-700 bg-blue-50 border-blue-300';
+        return 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-800';
     }
   };
 
@@ -755,14 +772,14 @@ const AnnouncementsPage = () => {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
             <div className="py-1">
               <button
                 onClick={() => {
                   handleToggleStatus(announcement.id, announcement.status);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
               >
                 {announcement.status === 'active' ? (
                   <>
@@ -783,12 +800,12 @@ const AnnouncementsPage = () => {
                       startEditing(announcement);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaEdit className="h-3 w-3" />
                     Edit
                   </button>
-                  <hr className="my-1" />
+                  <hr className="my-1 dark:border-gray-700" />
                 </>
               )}
               <button
@@ -796,7 +813,7 @@ const AnnouncementsPage = () => {
                   setShowDeleteConfirm(announcement.id);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
               >
                 <FaTrash className="h-3 w-3" />
                 Delete
@@ -859,7 +876,7 @@ const AnnouncementsPage = () => {
             </div>
             <div className="flex flex-row items-center gap-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-80">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Search announcements..."
@@ -880,7 +897,7 @@ const AnnouncementsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -888,7 +905,7 @@ const AnnouncementsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {announcements.length}
@@ -899,7 +916,7 @@ const AnnouncementsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -907,7 +924,7 @@ const AnnouncementsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {announcements.filter(a => a.status === 'active').length}
@@ -918,7 +935,7 @@ const AnnouncementsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'scheduled'
                       ? 'bg-gradient-to-r from-blue-600 to-blue-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Scheduled
@@ -926,7 +943,7 @@ const AnnouncementsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'scheduled'
                         ? 'bg-white/20'
-                        : 'bg-blue-100 text-blue-700'
+                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                     }`}
                   >
                     {announcements.filter(a => a.status === 'scheduled').length}
@@ -937,7 +954,7 @@ const AnnouncementsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'expired'
                       ? 'bg-gradient-to-r from-gray-600 to-gray-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Expired
@@ -945,7 +962,7 @@ const AnnouncementsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'expired'
                         ? 'bg-white/20'
-                        : 'bg-gray-100 text-gray-700'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {announcements.filter(a => a.status === 'expired').length}
@@ -960,17 +977,11 @@ const AnnouncementsPage = () => {
               <AnnouncementsSkeleton />
             ) : filteredAnnouncements.length === 0 ? (
               <div className="text-center py-12">
-                <FaBullhorn
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
-                />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+                <FaBullhorn className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500" />
+                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300">
                   No announcements found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {announcements.length === 0 
                     ? "You haven't created any announcements yet."
                     : "No announcements match your current filters."
@@ -992,42 +1003,42 @@ const AnnouncementsPage = () => {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
-                <thead className="sticky top-0 bg-white border-b z-10">
+                <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                   <tr>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Order
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       ID
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Type
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Title
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Action Button
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Audience
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Views
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Start
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       End
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Visibility
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Status
                     </th>
-                    <th className="text-left p-3 font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                       Actions
                     </th>
                   </tr>
@@ -1039,7 +1050,7 @@ const AnnouncementsPage = () => {
                         <tr
                           className={`transition-all duration-200 ${
                             dropTargetAnnouncement === announcement.id && dropPosition === 'before'
-                              ? 'h-2 bg-blue-100 border-2 border-dashed border-blue-400'
+                              ? 'h-2 bg-blue-100 dark:bg-blue-900/30 border-2 border-dashed border-blue-400 dark:border-blue-500'
                               : 'h-0'
                           }`}
                           onDragOver={(e) => handleDragOver(e, announcement.id)}
@@ -1050,9 +1061,9 @@ const AnnouncementsPage = () => {
                         </tr>
                       )}
                       <tr
-                        className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
+                        className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200 ${
                           draggedAnnouncement === announcement.id ? 'opacity-50' : ''
-                        } ${announcement.isSticky ? 'bg-blue-50/50' : ''}`}
+                        } ${announcement.isSticky ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
                         onDragOver={(e) => handleDragOver(e, announcement.id)}
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, announcement.id)}
@@ -1069,11 +1080,11 @@ const AnnouncementsPage = () => {
                               WebkitUserSelect: 'none',
                             }}
                           >
-                            <FaGripVertical className="h-4 w-4 text-gray-400" />
+                            <FaGripVertical className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                           </div>
                         </td>
                         <td className="p-3">
-                          <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                          <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                             {announcement.id}
                           </div>
                         </td>
@@ -1084,15 +1095,15 @@ const AnnouncementsPage = () => {
                         </td>
                         <td className="p-3">
                           <div className="max-w-xs">
-                            <div className="font-medium text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                            <div className="font-medium text-sm flex items-center gap-2 text-gray-900 dark:text-gray-100">
                               {announcement.title}
                               {announcement.isSticky && (
-                                <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                <span className="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs rounded-full">
                                   Pinned
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                               {announcement.content}
                             </p>
                           </div>
@@ -1113,8 +1124,8 @@ const AnnouncementsPage = () => {
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-1">
-                            <FaUsers className="h-3 w-3 text-gray-400" />
-                            <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                            <FaUsers className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <span className="text-xs text-gray-900 dark:text-gray-100">
                               {(announcement.targetedAudience === 'all' || announcement.targetedAudience === 'users') 
                                 ? 'Users' 
                                 : announcement.targetedAudience.charAt(0).toUpperCase() + announcement.targetedAudience.slice(1)}
@@ -1122,25 +1133,25 @@ const AnnouncementsPage = () => {
                           </div>
                         </td>
                         <td className="p-3">
-                          <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                          <span className="text-xs font-semibold text-gray-900 dark:text-gray-100">
                             {announcement.views}
                           </span>
                         </td>
                         <td className="p-3">
-                          <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                          <div className="text-xs text-gray-900 dark:text-gray-100">
                             {new Date(announcement.startDate).toLocaleDateString()}
                           </div>
-                          <div className="text-xs text-gray-500 mt-1" style={{ color: 'var(--text-muted)' }}>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {new Date(announcement.startDate).toLocaleTimeString()}
                           </div>
                         </td>
                         <td className="p-3">
                           {announcement.endDate ? (
                             <>
-                              <div className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                              <div className="text-xs text-gray-900 dark:text-gray-100">
                                 {new Date(announcement.endDate).toLocaleDateString()}
                               </div>
-                              <div className="text-xs text-gray-500 mt-1" style={{ color: 'var(--text-muted)' }}>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {new Date(announcement.endDate).toLocaleTimeString()}
                               </div>
                             </>
@@ -1149,7 +1160,7 @@ const AnnouncementsPage = () => {
                           )}
                         </td>
                         <td className="p-3">
-                          <span className="text-xs capitalize" style={{ color: 'var(--text-primary)' }}>
+                          <span className="text-xs capitalize text-gray-900 dark:text-gray-100">
                             {(announcement as any).visibility === 'all_pages' ? 'All Pages' : 'Dashboard'}
                           </span>
                         </td>
@@ -1166,7 +1177,7 @@ const AnnouncementsPage = () => {
                         <tr
                           className={`transition-all duration-200 ${
                             dropTargetAnnouncement === announcement.id && dropPosition === 'after'
-                              ? 'h-2 bg-blue-100 border-2 border-dashed border-blue-400'
+                              ? 'h-2 bg-blue-100 dark:bg-blue-900/30 border-2 border-dashed border-blue-400 dark:border-blue-500'
                               : 'h-0'
                           }`}
                           onDragOver={(e) => handleDragOver(e, announcement.id)}
@@ -1193,10 +1204,10 @@ const AnnouncementsPage = () => {
       </div>
       {(showCreateModal || editingAnnouncement) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   {editingAnnouncement ? 'Edit Announcement' : 'Create New Announcement'}
                 </h2>
                 <button
@@ -1205,7 +1216,7 @@ const AnnouncementsPage = () => {
                     setEditingAnnouncement(null);
                     resetForm();
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <FaTimes className="h-5 w-5" />
                 </button>
@@ -1321,7 +1332,7 @@ const AnnouncementsPage = () => {
                   </label>
 
                   {formData.buttonEnabled && (
-                    <div className="space-y-4 pl-6 border-l-2 border-blue-200">
+                    <div className="space-y-4 pl-6 border-l-2 border-blue-200 dark:border-blue-800">
                       <div>
                         <label className="form-label mb-2">Button Text *</label>
                         <input
@@ -1357,7 +1368,7 @@ const AnnouncementsPage = () => {
                     />
                     <span className="form-label">Pin this announcement</span>
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Pinned announcements will appear at the top of the list
                   </p>
                 </div>
@@ -1389,15 +1400,15 @@ const AnnouncementsPage = () => {
       )}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <FaTrash className="h-5 w-5 text-red-600" />
+                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                  <FaTrash className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
-                <h3 className="text-lg font-semibold">Delete Announcement</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Delete Announcement</h3>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete this announcement? This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
@@ -1430,8 +1441,8 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   isLoading,
 }) => (
-  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-0 border-t">
-    <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-0 border-t dark:border-gray-700">
+    <div className="text-sm text-gray-600 dark:text-gray-400">
       {isLoading ? (
         <div className="flex items-center gap-2">
           <span>Loading pagination...</span>
@@ -1454,7 +1465,7 @@ const Pagination: React.FC<PaginationProps> = ({
       >
         Previous
       </button>
-      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <span className="text-sm text-gray-600 dark:text-gray-400">
         {isLoading ? (
           <GradientSpinner size="w-4 h-4" />
         ) : (
