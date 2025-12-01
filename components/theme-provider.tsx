@@ -22,27 +22,20 @@ function ThemeWatcher() {
     const body = document.body;
     const currentTheme = theme === 'system' ? systemTheme : theme;
     
-    // Remove dark class first to ensure clean state
     const hadDark = root.classList.contains('dark');
     root.classList.remove('dark');
     
-    // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(() => {
-      // Add dark class if needed
       if (currentTheme === 'dark') {
         root.classList.add('dark');
       }
       
-      // Force style recalculation by accessing computed styles
-      // This ensures all CSS variables and dark: variants are recalculated
       void root.offsetHeight;
       void body.offsetHeight;
       
-      // Force recalculation of CSS custom properties
       const computedStyle = window.getComputedStyle(root);
       void computedStyle.getPropertyValue('--primary');
       
-      // Dispatch a custom event to notify components of theme change
       window.dispatchEvent(new CustomEvent('themechange', { 
         detail: { theme: currentTheme, previousTheme: hadDark ? 'dark' : 'light' } 
       }));

@@ -42,7 +42,7 @@ const UsersTableSkeleton = () => {
     <>
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 11 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -97,8 +97,8 @@ const UsersTableSkeleton = () => {
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -119,16 +119,33 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    {type === 'pending' && <FaExclamationCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      {type === 'pending' && <FaExclamationCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface User {
   id: number;
@@ -558,9 +575,9 @@ const UsersListPage = () => {
 
   const getStatusIcon = (status: string) => {
     const icons = {
-      active: <FaCheckCircle className="h-3 w-3 text-green-500" />,
-      suspended: <FaExclamationCircle className="h-3 w-3 text-yellow-500" />,
-      banned: <FaBan className="h-3 w-3 text-red-500" />,
+      active: <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />,
+      suspended: <FaExclamationCircle className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />,
+      banned: <FaBan className="h-3 w-3 text-red-500 dark:text-red-400" />,
     };
     return icons[status as keyof typeof icons] || icons.active;
   };
@@ -999,7 +1016,7 @@ const UsersListPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.totalUsers.toLocaleString()}
                   </p>
                 )}
@@ -1017,7 +1034,7 @@ const UsersListPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {stats.activeUsers.toLocaleString()}
                   </p>
                 )}
@@ -1035,7 +1052,7 @@ const UsersListPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                     {stats.suspendedUsers.toLocaleString()}
                   </p>
                 )}
@@ -1053,7 +1070,7 @@ const UsersListPage = () => {
                 {statsLoading ? (
                   <div className="h-8 w-16 gradient-shimmer rounded" />
                 ) : (
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {stats.bannedUsers.toLocaleString()}
                   </p>
                 )}
@@ -1095,8 +1112,7 @@ const UsersListPage = () => {
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -1120,7 +1136,7 @@ const UsersListPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -1128,7 +1144,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                     }`}
                   >
                     {stats.totalUsers.toLocaleString()}
@@ -1139,7 +1155,7 @@ const UsersListPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -1147,7 +1163,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                     }`}
                   >
                     {stats.activeUsers.toLocaleString()}
@@ -1158,7 +1174,7 @@ const UsersListPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -1166,7 +1182,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                     }`}
                   >
                     {stats.pendingUsers.toLocaleString()}
@@ -1177,7 +1193,7 @@ const UsersListPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'suspended'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Suspended
@@ -1185,7 +1201,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'suspended'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                     }`}
                   >
                     {stats.suspendedUsers.toLocaleString()}
@@ -1196,7 +1212,7 @@ const UsersListPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'banned'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Banned
@@ -1204,7 +1220,7 @@ const UsersListPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'banned'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                     }`}
                   >
                     {stats.bannedUsers.toLocaleString()}
@@ -1220,16 +1236,14 @@ const UsersListPage = () => {
             ) : users.length === 0 ? (
               <div className="text-center py-12">
                 <FaUsers
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No users found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {debouncedSearchTerm && statusFilter !== 'all'
                     ? `No ${statusFilter} users match your search "${debouncedSearchTerm}".`
                     : debouncedSearchTerm
@@ -1243,71 +1257,60 @@ const UsersListPage = () => {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Username
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Email
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Balance
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Spent
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Orders
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Services Discount
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Special Pricing
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Registered Date
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -1317,42 +1320,40 @@ const UsersListPage = () => {
                       {users.map((user) => (
                         <tr
                           key={user.id}
-                          className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
-                            !user.emailVerified ? 'border-l-4 border-l-yellow-400 bg-yellow-50/30' : ''
+                          className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200 ${
+                            !user.emailVerified ? 'border-l-4 border-l-yellow-400 dark:border-l-yellow-500 bg-yellow-50/30 dark:bg-yellow-900/20' : ''
                           }`}
                         >
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {user.id || 'N/A'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {user.username || 'null'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="text-sm text-gray-900 dark:text-gray-100"
                             >
                               {user.email || 'null'}
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               {user.emailVerified ? (
                                 <>
-                                  <FaCheckCircle className="h-3 w-3 text-green-500" />
-                                  <span className="text-xs text-green-600">
+                                  <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                                  <span className="text-xs text-green-600 dark:text-green-400">
                                     Verified
                                   </span>
                                 </>
                               ) : (
                                 <>
-                                  <FaTimesCircle className="h-3 w-3 text-red-500" />
-                                  <span className="text-xs text-red-600">
+                                  <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+                                  <span className="text-xs text-red-600 dark:text-red-400">
                                     Unverified
                                   </span>
                                 </>
@@ -1364,14 +1365,14 @@ const UsersListPage = () => {
                               <span
                                 className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${
                                   !user.emailVerified
-                                    ? 'bg-yellow-100 text-yellow-700'
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                                     : user.status === 'active'
-                                    ? 'bg-green-100 text-green-700'
+                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                                     : user.status === 'suspended'
-                                    ? 'bg-orange-100 text-orange-700'
+                                    ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
                                     : user.status === 'banned'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-green-100 text-green-700'
+                                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                    : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                                 }`}
                               >
                                 {!user.emailVerified ? 'pending' : (user.status || 'active')}
@@ -1381,8 +1382,7 @@ const UsersListPage = () => {
                           <td className="p-3">
                             <div className="text-left">
                               <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                               >
                                 {formatCurrency(user.balance || 0, user.currency)}
                               </div>
@@ -1391,8 +1391,7 @@ const UsersListPage = () => {
                           <td className="p-3">
                             <div className="text-left">
                               <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                               >
                                 {formatCurrency(user.total_spent || 0)}
                               </div>
@@ -1401,8 +1400,7 @@ const UsersListPage = () => {
                           <td className="p-3">
                             <div className="text-center">
                               <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                               >
                                 {(user.totalOrders || 0).toLocaleString()}
                               </div>
@@ -1411,8 +1409,7 @@ const UsersListPage = () => {
                           <td className="p-3">
                             <div className="text-center">
                               <div
-                                className="font-semibold text-sm"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                               >
                                 {user.servicesDiscount || 0}%
                               </div>
@@ -1422,18 +1419,16 @@ const UsersListPage = () => {
                             <div className="text-center">
                               {user.specialPricing ? (
                                 <div className="flex items-center justify-center">
-                                  <FaGift className="h-4 w-4 text-purple-500" />
+                                  <FaGift className="h-4 w-4 text-purple-500 dark:text-purple-400" />
                                   <span
-                                    className="text-sm ml-1"
-                                    style={{ color: 'var(--text-primary)' }}
+                                    className="text-sm ml-1 text-gray-900 dark:text-gray-100"
                                   >
                                     Yes
                                   </span>
                                 </div>
                               ) : (
                                 <span
-                                  className="text-sm"
-                                  style={{ color: 'var(--text-primary)' }}
+                                  className="text-sm text-gray-900 dark:text-gray-100"
                                 >
                                   No
                                 </span>
@@ -1443,8 +1438,7 @@ const UsersListPage = () => {
                           <td className="p-3">
                             <div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-xs text-gray-600 dark:text-gray-400"
                               >
                                 {user.createdAt
                                   ? new Date(
@@ -1453,8 +1447,7 @@ const UsersListPage = () => {
                                   : 'null'}
                               </div>
                               <div
-                                className="text-xs"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-xs text-gray-600 dark:text-gray-400"
                               >
                                 {user.createdAt
                                   ? new Date(
@@ -1711,14 +1704,14 @@ const UserActions: React.FC<UserActionsProps> = ({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
             <div className="py-1">
               <button
                 onClick={() => {
                   onEditUser(user.id);
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
               >
                 <FaEdit className="h-3 w-3" />
                 Edit User
@@ -1729,7 +1722,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                     onUpdateStatus(user.id, user.status);
                     setIsOpen(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                 >
                   <FaUserCheck className="h-3 w-3" />
                   Update User Status
@@ -1737,13 +1730,13 @@ const UserActions: React.FC<UserActionsProps> = ({
               )}
               {!user.emailVerified && (
                 <>
-                  <hr className="my-1" />
+                  <hr className="my-1 dark:border-gray-700" />
                   <button
                     onClick={() => {
                       onDelete(user.id);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
                   >
                     <FaTrash className="h-3 w-3" />
                     Delete User
@@ -1757,7 +1750,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onEditBalance(user.id);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaCoins className="h-3 w-3" />
                     Add/Deduct Balance
@@ -1767,7 +1760,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onEditDiscount(user.id, user.servicesDiscount || 0);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaGift className="h-3 w-3" />
                     Edit Discount
@@ -1777,7 +1770,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onChangeRole(user.id, user.role || 'user');
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaUserCheck className="h-3 w-3" />
                     Change Role
@@ -1787,7 +1780,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onResetSpecialPricing(user.id);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaTimesCircle className="h-3 w-3" />
                     Reset Special Pricing
@@ -1797,7 +1790,7 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onSetNewApiKey(user.id);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaSync className="h-3 w-3" />
                     Set New API Key
@@ -1807,18 +1800,18 @@ const UserActions: React.FC<UserActionsProps> = ({
                       onUpdateStatus(user.id, user.status);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
                   >
                     <FaUserCheck className="h-3 w-3" />
                     Update User Status
                   </button>
-                  <hr className="my-1" />
+                  <hr className="my-1 dark:border-gray-700" />
                   <button
                     onClick={() => {
                       onDelete(user.id);
                       setIsOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
                   >
                     <FaTrash className="h-3 w-3" />
                     Delete User
@@ -1848,10 +1841,10 @@ const UserCard: React.FC<UserCardProps> = ({
   formatCurrency,
   isLoading,
 }) => (
-  <div className="card card-padding border-l-4 border-blue-500 mb-4">
+  <div className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-3">
-        <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+        <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
           {user.id || 'N/A'}
         </div>
       </div>
@@ -1879,35 +1872,32 @@ const UserCard: React.FC<UserCardProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Username
           </div>
           <div
-            className="font-medium text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-medium text-sm text-gray-900 dark:text-gray-100"
           >
             {user.username || 'null'}
           </div>
         </div>
         <div className="text-right">
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Status
           </div>
           <div className="flex items-center justify-end">
             {user.emailVerified ? (
               <>
-                <FaCheckCircle className="h-3 w-3 text-green-500" />
-                <span className="text-xs text-green-600 ml-1">Active</span>
+                <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+                <span className="text-xs text-green-600 dark:text-green-400 ml-1">Active</span>
               </>
             ) : (
               <>
-                <FaTimesCircle className="h-3 w-3 text-yellow-500" />
-                <span className="text-xs text-yellow-600 ml-1">Pending</span>
+                <FaTimesCircle className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
+                <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-1">Pending</span>
               </>
             )}
           </div>
@@ -1917,37 +1907,33 @@ const UserCard: React.FC<UserCardProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Role
           </div>
           <div
-            className="font-medium text-sm capitalize"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-medium text-sm capitalize text-gray-900 dark:text-gray-100"
           >
             {user.role || 'user'}
           </div>
         </div>
         <div className="text-right">
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Special Pricing
           </div>
           {user.specialPricing ? (
             <div className="flex items-center justify-end">
-              <FaGift className="h-4 w-4 text-purple-500" />
+              <FaGift className="h-4 w-4 text-purple-500 dark:text-purple-400" />
               <span
-                className="text-sm ml-1"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-sm ml-1 text-gray-900 dark:text-gray-100"
               >
                 Yes
               </span>
             </div>
           ) : (
-            <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+            <span className="text-sm text-gray-900 dark:text-gray-100">
               No
             </span>
           )}
@@ -1956,24 +1942,23 @@ const UserCard: React.FC<UserCardProps> = ({
 
       <div>
         <div
-          className="text-xs font-medium mb-1"
-          style={{ color: 'var(--text-muted)' }}
+          className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
         >
           Email
         </div>
-        <div className="text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+        <div className="text-sm mb-1 text-gray-900 dark:text-gray-100">
           {user.email || 'null'}
         </div>
         <div className="flex items-center gap-1">
           {user.emailVerified ? (
             <>
-              <FaCheckCircle className="h-3 w-3 text-green-500" />
-              <span className="text-xs text-green-600">Verified</span>
+              <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+              <span className="text-xs text-green-600 dark:text-green-400">Verified</span>
             </>
           ) : (
             <>
-              <FaTimesCircle className="h-3 w-3 text-red-500" />
-              <span className="text-xs text-red-600">Unverified</span>
+              <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+              <span className="text-xs text-red-600 dark:text-red-400">Unverified</span>
             </>
           )}
         </div>
@@ -1982,28 +1967,24 @@ const UserCard: React.FC<UserCardProps> = ({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Balance
           </div>
           <div
-            className="font-semibold text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold text-sm text-gray-900 dark:text-gray-100"
           >
             {formatCurrency(user.balance || 0, user.currency || 'USD')}
           </div>
         </div>
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Total Spent
           </div>
           <div
-            className="font-semibold text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold text-sm text-gray-900 dark:text-gray-100"
           >
             {formatCurrency((user as any).total_spent || 0, user.currency || 'USD')}
           </div>
@@ -2013,28 +1994,24 @@ const UserCard: React.FC<UserCardProps> = ({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Total Orders
           </div>
           <div
-            className="font-semibold text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold text-sm text-gray-900 dark:text-gray-100"
           >
             {(user.totalOrders || 0).toLocaleString()}
           </div>
         </div>
         <div>
           <div
-            className="text-xs font-medium mb-1"
-            style={{ color: 'var(--text-muted)' }}
+            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
           >
             Services Discount
           </div>
           <div
-            className="font-semibold text-sm"
-            style={{ color: 'var(--text-primary)' }}
+            className="font-semibold text-sm text-gray-900 dark:text-gray-100"
           >
             {user.servicesDiscount || 0}%
           </div>
@@ -2042,13 +2019,13 @@ const UserCard: React.FC<UserCardProps> = ({
       </div>
 
       <div>
-        <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+        <div className="text-sm text-gray-900 dark:text-gray-100">
           Registered:{' '}
           {user.createdAt
             ? new Date(user.createdAt).toLocaleDateString()
             : 'null'}
         </div>
-        <div className="text-sm" style={{ color: 'var(--text-primary)' }}>
+        <div className="text-sm text-gray-900 dark:text-gray-100">
           Time:{' '}
           {user.createdAt
             ? new Date(user.createdAt).toLocaleTimeString()
@@ -2056,8 +2033,7 @@ const UserCard: React.FC<UserCardProps> = ({
         </div>
         {user.lastLoginAt && (
           <div
-            className="text-sm mt-1"
-            style={{ color: 'var(--text-primary)' }}
+            className="text-sm mt-1 text-gray-900 dark:text-gray-100"
           >
             Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
           </div>
@@ -2072,8 +2048,8 @@ const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   isLoading,
 }) => (
-  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-    <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+  <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+    <div className="text-sm text-gray-600 dark:text-gray-400">
       {isLoading ? (
         <div className="flex items-center gap-2">
           <span>Loading pagination...</span>
@@ -2096,7 +2072,7 @@ const Pagination: React.FC<PaginationProps> = ({
       >
         Previous
       </button>
-      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <span className="text-sm text-gray-600 dark:text-gray-400">
         {isLoading ? (
           <GradientSpinner size="w-4 h-4" />
         ) : (
@@ -2126,9 +2102,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4 text-red-600">Delete User</h3>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">Delete User</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
           Are you sure you want to delete this user? This action cannot be
           undone and will permanently remove all user data.
         </p>
@@ -2292,12 +2268,12 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
     <>
       {toastPortal}
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-          <h3 className="text-lg font-semibold mb-4">Add/Deduct User Balance</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
+          <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Add/Deduct User Balance</h3>
 
         <div className="space-y-4 mb-6">
           <div>
-            <label className="form-label mb-2">Action <span className="text-red-500">*</span></label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Action <span className="text-red-500 dark:text-red-400">*</span></label>
             <select
               value={balanceForm.action || 'add'}
               onChange={(e) =>
@@ -2314,7 +2290,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label mb-2">Amount ({currency}) <span className="text-red-500">*</span></label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Amount ({currency}) <span className="text-red-500 dark:text-red-400">*</span></label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium">
                 {balanceForm.action === 'deduct' ? '-' : ''}{currentCurrencyData?.symbol || '$'}
@@ -2337,7 +2313,7 @@ const AddDeductBalanceModal: React.FC<AddDeductBalanceModalProps> = ({
           </div>
 
           <div>
-            <label className="form-label mb-2">Notes</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Notes</label>
             <input
               type="text"
               placeholder="Add notes (optional)"
@@ -2411,10 +2387,10 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Update User Status</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Update User Status</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">Select New Status</label>
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Select New Status</label>
           <select
             value={newStatus || ''}
             onChange={(e) => onStatusChange(e.target.value)}
@@ -2429,10 +2405,10 @@ const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({
 
         {(newStatus === 'suspended' || (currentStatus === 'suspended' && newStatus === currentStatus)) && (
           <div className="mb-4">
-            <label className="form-label mb-2">
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
               Suspension Duration
               {currentStatus === 'suspended' && newStatus === currentStatus && (
-                <span className="text-xs text-gray-500 ml-2">(Current Duration)</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Current Duration)</span>
               )}
             </label>
             <select
@@ -2494,10 +2470,10 @@ const EditDiscountModal: React.FC<EditDiscountModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Edit Services Discount</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Edit Services Discount</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">Discount Percentage</label>
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Discount Percentage</label>
           <input
             type="number"
             min="0"
@@ -2509,7 +2485,7 @@ const EditDiscountModal: React.FC<EditDiscountModalProps> = ({
             placeholder="Enter discount percentage (0-100)"
             disabled={isLoading}
           />
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Enter a value between 0 and 100 (percentage)
           </div>
         </div>
@@ -2547,10 +2523,10 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Change User Role</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Change User Role</h3>
         <div className="mb-4">
-          <label className="form-label mb-2">Select New Role</label>
+          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Select New Role</label>
           <select
             value={newRole || ''}
             onChange={(e) => onRoleChange(e.target.value)}
@@ -2561,9 +2537,9 @@ const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({
             <option value="moderator">Moderator</option>
             <option value="admin">Admin</option>
           </select>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             Current role:{' '}
-            <span className="font-medium capitalize">{currentRole}</span>
+            <span className="font-medium capitalize text-gray-700 dark:text-gray-300">{currentRole}</span>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
@@ -2601,12 +2577,12 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Edit User</h3>
 
         <div className="space-y-4">
           <div className="mb-4">
-            <label className="form-label mb-2">Username</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Username</label>
             <input
               type="text"
               value={formData.username || ''}
@@ -2617,7 +2593,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Full Name</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Full Name</label>
             <input
               type="text"
               value={formData.name || ''}
@@ -2628,7 +2604,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">User Email</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">User Email</label>
             <input
               type="email"
               value={formData.email || ''}
@@ -2639,7 +2615,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             />
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Balance Amount (in USD)</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Balance Amount (in USD)</label>
             <input
               type="number"
               step="0.01"
@@ -2670,23 +2646,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
                 disabled={isLoading || Boolean(currentUser.emailVerified)}
                 readOnly={Boolean(currentUser.emailVerified)}
               />
-              <span className="form-label">
+              <span className="form-label text-gray-700 dark:text-gray-300">
                 Email Confirmed
                 {currentUser.emailVerified && (
-                  <span className="ml-2 text-xs text-green-600 font-medium">
+                  <span className="ml-2 text-xs text-green-600 dark:text-green-400 font-medium">
                     (Already Verified)
                   </span>
                 )}
               </span>
             </label>
-            <p className="text-xs text-gray-500 mt-1 ml-7">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-7">
               {currentUser.emailVerified
                 ? 'This user has already verified their email address'
                 : "Check this if the user's email is verified"}
             </p>
           </div>
           <div className="mb-4">
-            <label className="form-label mb-2">Password</label>
+            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Password</label>
             <div className="relative">
               <input
                 type="text"
@@ -2699,14 +2675,14 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
               <button
                 type="button"
                 onClick={onGeneratePassword}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-blue-600 transition-colors duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                 title="Generate random password"
                 disabled={isLoading}
               >
                 <FaSync className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1 mb-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4">
               Leave blank to keep current password, or click the refresh icon to
               generate a new one
             </p>

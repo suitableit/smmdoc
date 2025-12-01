@@ -87,7 +87,7 @@ const ServiceActionsDropdown = React.memo(({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
           <div className="py-1">
             {statusFilter !== 'trash' && (
               <button
@@ -95,7 +95,7 @@ const ServiceActionsDropdown = React.memo(({
                   onToggleStatus();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
               >
                 {service.status === 'active' ? (
                   <FaTimesCircle className="h-3 w-3" />
@@ -111,7 +111,7 @@ const ServiceActionsDropdown = React.memo(({
                   onRestore();
                   setIsOpen(false);
                 }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
               >
                 <FaUndo className="h-3 w-3" />
                 Restore
@@ -122,18 +122,18 @@ const ServiceActionsDropdown = React.memo(({
                 onEdit();
                 setIsOpen(false);
               }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
             >
               <FaEdit className="h-3 w-3" />
               Edit
             </button>
-            <hr className="my-1" />
+            <hr className="my-1 dark:border-gray-700" />
             <button
               onClick={() => {
                 onDelete();
                 setIsOpen(false);
               }}
-              className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
+              className="w-full text-left px-4 py-2 text-sm text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
             >
               <FaTrash className="h-3 w-3" />
               {statusFilter === 'trash' ? 'Delete Permanently' : 'Delete'}
@@ -149,12 +149,12 @@ ServiceActionsDropdown.displayName = 'ServiceActionsDropdown';
 
 const getStatusIcon = (status: string, deletedAt?: string | null) => {
   if (deletedAt) {
-    return <FaTrash className="h-3 w-3 text-red-500" />;
+    return <FaTrash className="h-3 w-3 text-red-500 dark:text-red-400" />;
   }
   if (status === 'inactive') {
-    return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+    return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
   }
-  return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+  return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
 };
 
 const getActualCategoryName = (displayCategoryName: string) => {
@@ -253,11 +253,10 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
   return (
     <div className="lg:block">
       <table className="w-full text-sm min-w-[1200px]">
-        <thead className="sticky top-0 bg-white border-b z-10">
+        <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
           <tr>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               <input
                 type="checkbox"
@@ -271,69 +270,59 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
               />
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               ID
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Service
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Type
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Provider
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Price
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Min/Max
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Refill
             </th>
             <th
-              className="text-left p-3 font-semibold"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
             >
               Cancel
             </th>
             {statusFilter !== 'trash' && (
               <th
-                className="text-left p-3 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
               >
                 Status
               </th>
             )}
             <th
-              className="text-left p-3 font-semibold relative"
-              style={{ color: 'var(--text-primary)' }}
+              className="text-left p-3 font-semibold relative text-gray-900 dark:text-gray-100"
             >
               Actions
               <button
                 onClick={toggleAllCategories}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded transition-colors"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded transition-colors"
                 title={
                   allCategoriesCollapsed
                     ? 'Expand all categories'
@@ -341,9 +330,9 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                 }
               >
                 {allCategoriesCollapsed ? (
-                  <FaChevronDown className="h-3 w-3 text-gray-500 hover:text-gray-700" />
+                  <FaChevronDown className="h-3 w-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
                 ) : (
-                  <FaChevronUp className="h-3 w-3 text-gray-500 hover:text-gray-700" />
+                  <FaChevronUp className="h-3 w-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" />
                 )}
               </button>
             </th>
@@ -403,7 +392,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       className={`transition-all duration-200 ${
                         dropTargetCategory === categoryName &&
                         dropPosition === 'before'
-                          ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
+                          ? 'h-8 bg-blue-100 dark:bg-blue-900/30 border-2 border-dashed border-blue-400 dark:border-blue-500'
                           : 'h-1'
                       }`}
                       onDragOver={(e) =>
@@ -415,7 +404,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       <td colSpan={11}>
                         {dropTargetCategory === categoryName &&
                           dropPosition === 'before' && (
-                            <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
+                            <div className="flex items-center justify-center h-6 text-blue-600 dark:text-blue-400 text-sm font-medium">
                               Drop here
                             </div>
                           )}
@@ -423,13 +412,13 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                     </tr>
                   )}
                 <tr
-                  className={`bg-gray-50 border-t-2 border-gray-200 ${
+                  className={`bg-gray-50 dark:bg-gray-800/50 border-t-2 border-gray-200 dark:border-gray-700 ${
                     draggedCategory === categoryName
                       ? 'opacity-50'
                       : ''
                   } ${
                     !activeCategoryToggles[categoryName]
-                      ? 'bg-gray-300/90 border-l-4 border-l-gray-600'
+                      ? 'bg-gray-300/90 dark:bg-gray-700/90 border-l-4 border-l-gray-600 dark:border-l-gray-500'
                       : ''
                   }`}
                   onDragOver={(e) =>
@@ -448,33 +437,33 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           title={`Select ${categoryName} category`}
                         />
-                        <div
-                          className="cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
-                          title="Drag to reorder category"
-                          draggable={true}
-                          onDragStart={(e) =>
-                            handleDragStart(e, categoryName)
-                          }
-                          onDragEnd={handleDragEnd}
-                          style={{
-                            userSelect: 'none',
-                            WebkitUserSelect: 'none',
-                          }}
-                        >
-                          <FaGripVertical className="h-4 w-4 text-gray-400" />
-                        </div>
+                          <div
+                            className="cursor-grab hover:text-gray-600 dark:hover:text-gray-400 transition-colors active:cursor-grabbing select-none"
+                            title="Drag to reorder category"
+                            draggable={true}
+                            onDragStart={(e) =>
+                              handleDragStart(e, categoryName)
+                            }
+                            onDragEnd={handleDragEnd}
+                            style={{
+                              userSelect: 'none',
+                              WebkitUserSelect: 'none',
+                            }}
+                          >
+                            <FaGripVertical className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                          </div>
                         <button
                           onClick={() =>
                             toggleCategory(categoryName)
                           }
-                          className="flex items-center gap-2 hover:bg-gray-100 rounded p-1 transition-colors"
+                          className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded p-1 transition-colors"
                         >
                           {collapsedCategories.includes(
                             categoryName
                           ) ? (
-                            <FaChevronRight className="h-3 w-3" />
+                            <FaChevronRight className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                           ) : (
-                            <FaChevronDown className="h-3 w-3" />
+                            <FaChevronDown className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                           )}
                         </button>
                         <button
@@ -488,8 +477,8 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           disabled={isUpdating}
                           className={`p-1 rounded transition-colors ${
                             activeCategoryToggles[categoryName]
-                              ? 'text-green-600 hover:bg-green-50'
-                              : 'text-red-600 hover:bg-red-50'
+                              ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                              : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                           } ${
                             isUpdating
                               ? 'opacity-50 cursor-not-allowed'
@@ -512,10 +501,10 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           )}
                         </button>
 
-                        <span className="font-semibold text-md text-gray-800">
+                        <span className="font-semibold text-md text-gray-800 dark:text-gray-100">
                           {categoryName}
                         </span>
-                        <span className="text-sm text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">
                           {services.length} service
                           {services.length !== 1 ? 's' : ''}
                         </span>
@@ -538,7 +527,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                             }
                           }}
                           disabled={isUpdating}
-                          className="p-1 hover:bg-blue-50 hover:text-blue-600 text-gray-400 rounded transition-colors disabled:opacity-50"
+                          className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 text-gray-400 dark:text-gray-500 rounded transition-colors disabled:opacity-50"
                           title={`Edit ${categoryName} category`}
                         >
                           <FaEdit className="h-3 w-3" />
@@ -563,7 +552,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                             }
                           }}
                           disabled={isUpdating}
-                          className="p-1 hover:bg-red-50 hover:text-red-600 text-red-600 rounded transition-colors disabled:opacity-50"
+                          className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 text-red-600 dark:text-red-400 rounded transition-colors disabled:opacity-50"
                           title={`Delete ${categoryName} category`}
                         >
                           <FaTrash className="h-3 w-3" />
@@ -581,7 +570,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           className="rounded border-gray-300 w-4 h-4"
                           title="Select all services in this category"
                         />
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           Select All
                         </span>
                       </div>
@@ -598,7 +587,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                               className={`transition-all duration-200 ${
                                 dropTargetService === service.id &&
                                 dropPositionService === 'before'
-                                  ? 'h-2 bg-blue-100'
+                                  ? 'h-2 bg-blue-100 dark:bg-blue-900/30'
                                   : 'h-0'
                               }`}
                               onDragOver={(e) =>
@@ -617,20 +606,20 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 {dropTargetService === service.id &&
                                   dropPositionService ===
                                     'before' && (
-                                    <div className="h-1 bg-blue-400 rounded"></div>
+                                    <div className="h-1 bg-blue-400 dark:bg-blue-500 rounded"></div>
                                   )}
                               </td>
                             </tr>
                           )}
 
                         <tr
-                          className={`border-t hover:bg-gray-50 transition-all duration-200 animate-in fade-in slide-in-from-left-1 ${
+                          className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-all duration-200 animate-in fade-in slide-in-from-left-1 ${
                             draggedService === service.id
                               ? 'opacity-50'
                               : ''
                           } ${
                             service.status === 'inactive' && statusFilter !== 'trash'
-                              ? 'bg-gray-200/70 border-l-4 border-l-gray-500'
+                              ? 'bg-gray-200/70 dark:bg-gray-700/70 border-l-4 border-l-gray-500 dark:border-l-gray-400'
                               : ''
                           }`}
                           style={{ animationDelay: `${i * 50}ms` }}
@@ -649,7 +638,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           <td className="p-3 pl-8">
                             <div className="flex items-center gap-2">
                               <div
-                                className="cursor-grab hover:text-gray-600 transition-colors active:cursor-grabbing select-none"
+                                className="cursor-grab hover:text-gray-600 dark:hover:text-gray-400 transition-colors active:cursor-grabbing select-none"
                                 title="Drag to reorder service"
                                 draggable={true}
                                 onDragStart={(e) =>
@@ -664,7 +653,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                   WebkitUserSelect: 'none',
                                 }}
                               >
-                                <FaGripVertical className="h-3 w-3 text-gray-400" />
+                                <FaGripVertical className="h-3 w-3 text-gray-400 dark:text-gray-500" />
                               </div>
                               <input
                                 type="checkbox"
@@ -679,7 +668,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {service.id
                                 ? formatID(service.id)
                                 : 'null'}
@@ -688,27 +677,21 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           <td className="p-3">
                             <div>
                               <div
-                                className="font-medium text-sm max-w-44"
-                                style={{
-                                  color: 'var(--text-primary)',
-                                }}
+                                className="font-medium text-sm max-w-44 text-gray-900 dark:text-gray-100"
                               >
                                 {service?.name || 'null'}
                               </div>
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-800 w-fit">
+                            <div className="text-xs font-medium px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 w-fit">
                               {service?.serviceType?.name ||
                                 'Standard'}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="text-sm font-medium"
-                              style={{
-                                color: 'var(--text-primary)',
-                              }}
+                              className="text-sm font-medium text-gray-900 dark:text-gray-100"
                             >
                               {(() => {
                                 try {
@@ -730,10 +713,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           <td className="p-3">
                             <div className="text-left">
                               <div
-                                className="font-semibold text-sm"
-                                style={{
-                                  color: 'var(--text-primary)',
-                                }}
+                                className="font-semibold text-sm text-gray-900 dark:text-gray-100"
                               >
                                 <PriceDisplay
                                   amount={service?.rate}
@@ -741,10 +721,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 />
                               </div>
                               <div
-                                className="text-xs"
-                                style={{
-                                  color: 'var(--text-muted)',
-                                }}
+                                className="text-xs text-gray-500 dark:text-gray-400"
                               >
                                 Cost:{' '}
                                 <PriceDisplay
@@ -763,10 +740,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           <td className="p-3">
                             <div>
                               <div
-                                className="text-sm font-medium"
-                                style={{
-                                  color: 'var(--text-primary)',
-                                }}
+                                className="text-sm font-medium text-gray-900 dark:text-gray-100"
                               >
                                 {(
                                   service?.min_order || 0
@@ -777,10 +751,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 ).toString()}
                               </div>
                               <div
-                                className="text-xs"
-                                style={{
-                                  color: 'var(--text-muted)',
-                                }}
+                                className="text-xs text-gray-500 dark:text-gray-400"
                               >
                                 Min / Max
                               </div>
@@ -794,8 +765,8 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 }
                                 className={`p-1 rounded transition-colors ${
                                   service.refill
-                                    ? 'text-green-600 hover:bg-green-50'
-                                    : 'text-red-600 hover:bg-red-50'
+                                    ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                    : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                                 }`}
                                 title={
                                   service.refill
@@ -810,7 +781,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 )}
                               </button>
                               {service.refill && (
-                                <div className="text-xs text-gray-600 space-y-1">
+                                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                                   {service.refillDays && (
                                     <div>
                                       {service.refillDays}D {service.refillDisplay}H
@@ -825,8 +796,8 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                               onClick={() => toggleCancel(service)}
                               className={`p-1 rounded transition-colors ${
                                 service.cancel
-                                  ? 'text-green-600 hover:bg-green-50'
-                                  : 'text-red-600 hover:bg-red-50'
+                                  ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                  : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
                               }`}
                               title={
                                 service.cancel
@@ -843,9 +814,9 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                           </td>
                           {statusFilter !== 'trash' && (
                             <td className="p-3">
-                              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
                                 {getStatusIcon(service.status, service.deletedAt)}
-                                <span className="text-xs font-medium capitalize">
+                                <span className="text-xs font-medium capitalize text-gray-900 dark:text-gray-100">
                                   {service.deletedAt ? 'trash' : (service.status || 'null')}
                                 </span>
                               </div>
@@ -872,7 +843,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                               className={`transition-all duration-200 ${
                                 dropTargetService === service.id &&
                                 dropPositionService === 'after'
-                                  ? 'h-2 bg-blue-100'
+                                  ? 'h-2 bg-blue-100 dark:bg-blue-900/30'
                                   : 'h-0'
                               }`}
                               onDragOver={(e) =>
@@ -891,7 +862,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                                 {dropTargetService === service.id &&
                                   dropPositionService ===
                                     'after' && (
-                                    <div className="h-1 bg-blue-400 rounded"></div>
+                                    <div className="h-1 bg-blue-400 dark:bg-blue-500 rounded"></div>
                                   )}
                               </td>
                             </tr>
@@ -899,14 +870,14 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       </Fragment>
                     ))
                   ) : (
-                    <tr className="border-t">
+                    <tr className="border-t dark:border-gray-700">
                       <td colSpan={11} className="p-8 text-center">
-                        <div className="flex flex-col items-center justify-center text-gray-500">
-                          <FaBriefcase className="h-8 w-8 mb-2 text-gray-400" />
-                          <p className="text-sm font-medium">
+                        <div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                          <FaBriefcase className="h-8 w-8 mb-2 text-gray-400 dark:text-gray-500" />
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-300">
                             No services in this category
                           </p>
-                          <p className="text-xs">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             Add services to populate this category
                           </p>
                         </div>
@@ -919,7 +890,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       className={`transition-all duration-200 ${
                         dropTargetCategory === categoryName &&
                         dropPosition === 'after'
-                          ? 'h-8 bg-blue-100 border-2 border-dashed border-blue-400'
+                          ? 'h-8 bg-blue-100 dark:bg-blue-900/30 border-2 border-dashed border-blue-400 dark:border-blue-500'
                           : 'h-1'
                       }`}
                       onDragOver={(e) =>
@@ -931,7 +902,7 @@ export const ServicesTable: React.FC<ServicesTableProps> = ({
                       <td colSpan={11}>
                         {dropTargetCategory === categoryName &&
                           dropPosition === 'after' && (
-                            <div className="flex items-center justify-center h-6 text-blue-600 text-sm font-medium">
+                            <div className="flex items-center justify-center h-6 text-blue-600 dark:text-blue-400 text-sm font-medium">
                               Drop here
                             </div>
                           )}

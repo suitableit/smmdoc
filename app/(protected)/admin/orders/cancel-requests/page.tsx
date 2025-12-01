@@ -33,15 +33,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface CancelRequest {
   id: number;
@@ -359,13 +376,13 @@ const CancelRequestsPage = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return <FaClock className="h-3 w-3 text-yellow-500" />;
+        return <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />;
       case 'approved':
-        return <FaCheckCircle className="h-3 w-3 text-green-500" />;
+        return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
       case 'declined':
-        return <FaTimesCircle className="h-3 w-3 text-red-500" />;
+        return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
       default:
-        return <FaClock className="h-3 w-3 text-gray-500" />;
+        return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -571,7 +588,7 @@ const CancelRequestsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                   >
                     All
@@ -579,7 +596,7 @@ const CancelRequestsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
                     }`}
                   >
                     {statsLoading ? 0 : stats.totalRequests}
@@ -590,7 +607,7 @@ const CancelRequestsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'pending'
                       ? 'bg-gradient-to-r from-yellow-600 to-yellow-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Pending
@@ -598,7 +615,7 @@ const CancelRequestsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'pending'
                         ? 'bg-white/20'
-                        : 'bg-yellow-100 text-yellow-700'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                     }`}
                   >
                     {statsLoading ? 0 : stats.pendingRequests}
@@ -609,7 +626,7 @@ const CancelRequestsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'approved'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Approved
@@ -617,7 +634,7 @@ const CancelRequestsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'approved'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                     }`}
                   >
                     {statsLoading ? 0 : stats.approvedRequests}
@@ -628,7 +645,7 @@ const CancelRequestsPage = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'declined'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Declined
@@ -636,7 +653,7 @@ const CancelRequestsPage = () => {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'declined'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                     }`}
                   >
                     {statsLoading ? 0 : stats.declinedRequests}
@@ -700,7 +717,7 @@ const CancelRequestsPage = () => {
               <div style={{ minHeight: '600px' }}>
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1100px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th className="text-left p-3">
                           <div className="h-4 w-4 gradient-shimmer rounded" />
@@ -714,7 +731,7 @@ const CancelRequestsPage = () => {
                     </thead>
                     <tbody>
                       {Array.from({ length: 10 }).map((_, rowIdx) => (
-                        <tr key={rowIdx} className="border-t">
+                        <tr key={rowIdx} className="border-t dark:border-gray-700">
                           <td className="p-3">
                             <div className="h-4 w-4 gradient-shimmer rounded" />
                           </td>
@@ -816,16 +833,14 @@ const CancelRequestsPage = () => {
             ) : cancelRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FaBan
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No cancel requests found.
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No cancel requests match your current filters or no requests
                   exist yet.
                 </p>
@@ -834,11 +849,10 @@ const CancelRequestsPage = () => {
               <React.Fragment>
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1100px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -853,56 +867,47 @@ const CancelRequestsPage = () => {
                         </th>
 
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Order ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           User
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Service
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Seller
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Link
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Quantity
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Amount
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -912,7 +917,7 @@ const CancelRequestsPage = () => {
                       {cancelRequests.map((request) => (
                         <tr
                           key={request.id}
-                          className="border-t hover:bg-gray-50 transition-colors duration-200"
+                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                         >
                           <td className="p-3">
                             {request.status !== 'declined' &&
@@ -985,13 +990,13 @@ const CancelRequestsPage = () => {
                                   href={request.order.link}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs truncate"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 text-xs truncate"
                                 >
                                   <span className="truncate">{cleanLinkDisplay(request.order.link)}</span>
                                   <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
                                 </a>
                               ) : (
-                                <span className="text-gray-400 text-xs">No link</span>
+                                <span className="text-gray-400 dark:text-gray-500 text-xs">No link</span>
                               )}
                             </div>
                           </td>
@@ -1006,9 +1011,9 @@ const CancelRequestsPage = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
                               {getStatusIcon(request.status)}
-                              <span className="text-xs font-medium capitalize">
+                              <span className="text-xs font-medium capitalize text-gray-900 dark:text-gray-100">
                                 {request.status}
                               </span>
                             </div>
@@ -1067,7 +1072,7 @@ const CancelRequestsPage = () => {
                     {cancelRequests.map((request) => (
                       <div
                         key={request.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
+                        className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -1078,9 +1083,9 @@ const CancelRequestsPage = () => {
                               className="rounded border-gray-300 w-4 h-4"
                             />
 
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
                               {getStatusIcon(request.status)}
-                              <span className="text-xs font-medium capitalize">
+                              <span className="text-xs font-medium capitalize text-gray-900 dark:text-gray-100">
                                 {request.status}
                               </span>
                             </div>
@@ -1121,10 +1126,10 @@ const CancelRequestsPage = () => {
                           <div
                             className={`text-xs font-medium px-2 py-1 rounded ${
                               request.order?.seller === 'Auto'
-                                ? 'bg-green-100 text-green-800'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                                 : request.order?.seller === 'Manual'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-gray-100 text-gray-800'
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
                             }`}
                           >
                             {request.order?.seller || 'null'}
@@ -1206,23 +1211,22 @@ const CancelRequestsPage = () => {
                               href={request.order.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 text-xs"
                             >
                               <span className="truncate">{cleanLinkDisplay(request.order.link)}</span>
                               <FaExternalLinkAlt className="h-3 w-3 flex-shrink-0" />
                             </a>
                           ) : (
-                            <span className="text-gray-400 text-xs">No link provided</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-xs">No link provided</span>
                           )}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-300"
                   >
                     {requestsLoading ? (
                       <div className="h-5 w-48 gradient-shimmer rounded" />
@@ -1246,8 +1250,7 @@ const CancelRequestsPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-300"
                     >
                       {requestsLoading ? (
                         <div className="h-5 w-24 gradient-shimmer rounded" />
@@ -1268,12 +1271,12 @@ const CancelRequestsPage = () => {
                 </div>
                 {approveDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Approve Cancel Request
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">Refund Amount</label>
+                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Refund Amount</label>
                         <input
                           type="number"
                           value={newRefundAmount}
@@ -1285,7 +1288,7 @@ const CancelRequestsPage = () => {
                         />
                       </div>
                       <div className="mb-4">
-                        <label className="form-label mb-2">
+                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                           Admin Notes (Optional)
                         </label>
                         <textarea
@@ -1331,16 +1334,16 @@ const CancelRequestsPage = () => {
                   viewDialog.request &&
                   viewDialog.request.order && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-semibold">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             Cancel Request Details
                           </h3>
                           <button
                             onClick={() =>
                               setViewDialog({ open: false, request: null })
                             }
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                           >
                             <FaTimes className="h-5 w-5" />
                           </button>
@@ -1348,12 +1351,12 @@ const CancelRequestsPage = () => {
                         <div className="mb-6">
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 Status
                               </label>
-                              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit mt-1">
+                              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit mt-1">
                                 {getStatusIcon(viewDialog.request.status)}
-                                <span className="text-xs font-medium capitalize">
+                                <span className="text-xs font-medium capitalize text-gray-900 dark:text-gray-100">
                                   {viewDialog.request.status}
                                 </span>
                               </div>
@@ -1361,10 +1364,10 @@ const CancelRequestsPage = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 Requested
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.request.requestedAt ? (
                                   <>
                                     {new Date(
@@ -1381,10 +1384,10 @@ const CancelRequestsPage = () => {
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 User
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.request.user?.username ||
                                   viewDialog.request.user?.email?.split(
                                     '@'
@@ -1396,13 +1399,13 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
                         <div className="mb-6">
-                          <h4 className="text-md font-semibold mb-4 text-gray-800">
+                          <h4 className="text-md font-semibold mb-4 text-gray-800 dark:text-gray-100">
                             Order Summary
                           </h4>
-                          <div className="bg-gray-50 rounded-lg p-4">
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
                             <div className="grid grid-cols-2 gap-4 mb-4">
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                   Order ID
                                 </label>
                                 <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded w-fit mt-1">
@@ -1410,24 +1413,24 @@ const CancelRequestsPage = () => {
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                   Order Status
                                 </label>
-                                <div className="text-sm text-gray-900 mt-1 capitalize">
+                                <div className="text-sm text-gray-900 dark:text-gray-100 mt-1 capitalize">
                                   {viewDialog.request.order?.status ||
                                     'Unknown'}
                                 </div>
                               </div>
                             </div>
                             <div className="mb-4">
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 Service
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.request.order?.service?.name ||
                                   'Unknown Service'}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Category:{' '}
                                 {viewDialog.request.order?.category
                                   ?.category_name || 'Unknown'}{' '}
@@ -1437,20 +1440,20 @@ const CancelRequestsPage = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                   Quantity
                                 </label>
-                                <div className="text-sm text-gray-900 mt-1">
+                                <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                   {formatNumber(
                                     viewDialog.request.order?.qty || 0
                                   )}
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-600">
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                   Amount
                                 </label>
-                                <div className="text-sm text-gray-900 mt-1">
+                                <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                   $
                                   {formatPrice(
                                     viewDialog.request.order?.charge || 0,
@@ -1460,7 +1463,7 @@ const CancelRequestsPage = () => {
                               </div>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 Order Link
                               </label>
                               <div className="text-sm mt-1">
@@ -1469,22 +1472,22 @@ const CancelRequestsPage = () => {
                                     href={viewDialog.request.order.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 break-all"
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 break-all"
                                   >
                                     {cleanLinkDisplay(viewDialog.request.order.link)}
                                   </a>
                                 ) : (
-                                  <span className="text-gray-500">
+                                  <span className="text-gray-500 dark:text-gray-400">
                                     No link provided
                                   </span>
                                 )}
                               </div>
                             </div>
                             <div className="mt-4">
-                              <label className="text-sm font-medium text-gray-600">
+                              <label className="text-sm font-medium text-gray-600 dark:text-gray-300">
                                 Order Created
                               </label>
-                              <div className="text-sm text-gray-900 mt-1">
+                              <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
                                 {viewDialog.request.order?.createdAt ? (
                                   <>
                                     {new Date(
@@ -1503,11 +1506,11 @@ const CancelRequestsPage = () => {
                           </div>
                         </div>
                         <div className="mb-6">
-                          <h4 className="text-md font-semibold mb-3 text-gray-800">
+                          <h4 className="text-md font-semibold mb-3 text-gray-800 dark:text-gray-100">
                             Cancel Reason
                           </h4>
-                          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-                            <div className="text-sm text-gray-900">
+                          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 p-4 rounded">
+                            <div className="text-sm text-gray-900 dark:text-gray-100">
                               {viewDialog.request.reason ||
                                 'No reason provided'}
                             </div>
@@ -1515,15 +1518,15 @@ const CancelRequestsPage = () => {
                         </div>
                         {viewDialog.request.adminNotes && (
                           <div className="mb-6">
-                            <h4 className="text-md font-semibold mb-3 text-gray-800">
+                            <h4 className="text-md font-semibold mb-3 text-gray-800 dark:text-gray-100">
                               Admin Notes
                             </h4>
-                            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-                              <div className="text-sm text-gray-900">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-500 p-4 rounded">
+                              <div className="text-sm text-gray-900 dark:text-gray-100">
                                 {viewDialog.request.adminNotes}
                               </div>
                               {viewDialog.request.processedAt && (
-                                <div className="text-xs text-gray-500 mt-2">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                   Processed on{' '}
                                   {new Date(
                                     viewDialog.request.processedAt
@@ -1572,12 +1575,12 @@ const CancelRequestsPage = () => {
                   )}
                 {declineDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-                      <h3 className="text-lg font-semibold mb-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+                      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                         Decline Cancel Request
                       </h3>
                       <div className="mb-4">
-                        <label className="form-label mb-2">
+                        <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                           Reason for Decline
                         </label>
                         <textarea

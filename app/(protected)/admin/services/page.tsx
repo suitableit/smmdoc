@@ -174,7 +174,7 @@ const ServicesTableSkeleton = ({ pageSize = '25', currentPage = 1, totalPages = 
     <>
       <div className="lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               <th className="text-left p-3">
                 <div className="h-4 w-4 gradient-shimmer rounded" />
@@ -271,8 +271,8 @@ const ServicesTableSkeleton = ({ pageSize = '25', currentPage = 1, totalPages = 
           </tbody>
         </table>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-300">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         {pageSize !== 'all' && (
@@ -295,21 +295,38 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div
-    className={`toast toast-${type} animate-in slide-in-from-top-2 fade-in duration-300`}
-  >
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button
-      onClick={onClose}
-      className="toast-close hover:bg-gray-100 rounded transition-colors duration-200"
-      title="Close notification"
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div
+      className={`toast toast-${type} animate-in slide-in-from-top-2 fade-in duration-300 ${getDarkClasses()}`}
     >
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button
+        onClick={onClose}
+        className="toast-close hover:bg-gray-100 dark:hover:bg-white/10 rounded transition-colors duration-200"
+        title="Close notification"
+      >
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 function AdminServicesPage() {
 
@@ -2313,25 +2330,25 @@ function AdminServicesPage() {
       title: 'Total Services',
       value: countsWithoutTrash.all,
       icon: <FaBriefcase className="h-6 w-6" />,
-      textColor: 'text-blue-600',
+      textColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       title: 'Total Categories',
       value: stats.totalCategories,
       icon: <FaTags className="h-6 w-6" />,
-      textColor: 'text-purple-600',
+      textColor: 'text-purple-600 dark:text-purple-400',
     },
     {
       title: 'Active Services',
       value: countsWithoutTrash.active,
       icon: <FaCheckCircle className="h-6 w-6" />,
-      textColor: 'text-green-600',
+      textColor: 'text-green-600 dark:text-green-400',
     },
     {
       title: 'Inactive Services',
       value: countsWithoutTrash.inactive,
       icon: <FaShieldAlt className="h-6 w-6" />,
-      textColor: 'text-red-600',
+      textColor: 'text-red-600 dark:text-red-400',
     },
   ];
 
@@ -2437,8 +2454,7 @@ function AdminServicesPage() {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -2462,7 +2478,7 @@ function AdminServicesPage() {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'all'
                       ? 'bg-gradient-to-r from-purple-700 to-purple-500 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   All
@@ -2470,7 +2486,7 @@ function AdminServicesPage() {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'all'
                         ? 'bg-white/20'
-                        : 'bg-purple-100 text-purple-700'
+                        : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
                     }`}
                   >
                     {countsWithoutTrash.all.toString()}
@@ -2481,7 +2497,7 @@ function AdminServicesPage() {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'active'
                       ? 'bg-gradient-to-r from-green-600 to-green-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Active
@@ -2489,7 +2505,7 @@ function AdminServicesPage() {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'active'
                         ? 'bg-white/20'
-                        : 'bg-green-100 text-green-700'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                     }`}
                   >
                     {countsWithoutTrash.active.toString()}
@@ -2500,7 +2516,7 @@ function AdminServicesPage() {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'inactive'
                       ? 'bg-gradient-to-r from-red-600 to-red-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Inactive
@@ -2508,7 +2524,7 @@ function AdminServicesPage() {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'inactive'
                         ? 'bg-white/20'
-                        : 'bg-red-100 text-red-700'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                     }`}
                   >
                     {countsWithoutTrash.inactive.toString()}
@@ -2519,7 +2535,7 @@ function AdminServicesPage() {
                   className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
                     statusFilter === 'trash'
                       ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   Trash
@@ -2527,7 +2543,7 @@ function AdminServicesPage() {
                     className={`ml-2 text-xs px-2 py-1 rounded-full ${
                       statusFilter === 'trash'
                         ? 'bg-white/20'
-                        : 'bg-orange-100 text-orange-700'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                     }`}
                   >
                     {trashServicesCount.toString()}
@@ -2545,32 +2561,28 @@ function AdminServicesPage() {
             ) : error ? (
               <div className="text-center py-12">
                 <FaExclamationTriangle
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-red-500 dark:text-red-400"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   Error Loading Services
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {error}
                 </p>
               </div>
             ) : !data || (statusFilter !== 'all' && Object.keys(groupedServices).length === 0) || (statusFilter !== 'all' && Object.values(groupedServices).every(services => services.length === 0)) || (statusFilter === 'all' && Object.keys(groupedServices).length === 0) ? (
               <div className="p-12 text-center">
                 <FaGlobe
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No services found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {searchTerm && providerFilter !== 'all'
                     ? `No ${providerFilter} services match your search "${searchTerm}".`
                     : searchTerm
@@ -2585,8 +2597,7 @@ function AdminServicesPage() {
                 {selectedServices.length > 0 && (
                   <div className="flex items-center gap-2 mb-4">
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-300"
                     >
                       {selectedServices.length} selected
                     </span>
@@ -2687,10 +2698,9 @@ function AdminServicesPage() {
                   handleServiceDrop={handleServiceDrop}
                 />
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-300"
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
@@ -2715,8 +2725,7 @@ function AdminServicesPage() {
                         Previous
                       </button>
                       <span
-                        className="text-sm"
-                        style={{ color: 'var(--text-muted)' }}
+                        className="text-sm text-gray-600 dark:text-gray-300"
                       >
                         {isLoading ? (
                           <GradientSpinner size="w-4 h-4" />
@@ -2748,7 +2757,7 @@ function AdminServicesPage() {
             onClick={handleCloseEditModal}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
                 editServiceModal.closing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2774,7 +2783,7 @@ function AdminServicesPage() {
             onClick={handleCloseCreateModal}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4 ${
                 createServiceModalClosing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2800,7 +2809,7 @@ function AdminServicesPage() {
             onClick={handleCloseCategoryModal}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
                 createCategoryModalClosing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2825,7 +2834,7 @@ function AdminServicesPage() {
             onClick={handleCloseEditCategoryModal}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
                 editCategoryModal.closing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2852,7 +2861,7 @@ function AdminServicesPage() {
             onClick={handleCloseDeleteConfirmation}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
                 deleteConfirmationModalClosing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2877,7 +2886,7 @@ function AdminServicesPage() {
             onClick={handleCloseDeleteServicesAndCategoriesConfirmation}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
                 deleteServicesAndCategoriesModalClosing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'
@@ -2903,7 +2912,7 @@ function AdminServicesPage() {
             onClick={handleCloseDeleteCategoryModal}
           >
             <div
-              className={`bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
+              className={`bg-white dark:bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto mx-4 ${
                 deleteCategoryModal.closing
                   ? 'modal-content-exit'
                   : 'modal-content-enter'

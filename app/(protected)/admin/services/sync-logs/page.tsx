@@ -29,7 +29,7 @@ const SyncLogsTableSkeleton = () => {
     <>
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[1000px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 7 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -72,7 +72,7 @@ const SyncLogsTableSkeleton = () => {
       <div className="lg:hidden">
         <div className="space-y-4" style={{ padding: '24px 0 0 0' }}>
           {rows.map((_, idx) => (
-            <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+            <div key={idx} className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="h-4 w-4 gradient-shimmer rounded" />
@@ -104,8 +104,8 @@ const SyncLogsTableSkeleton = () => {
           ))}
         </div>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -126,15 +126,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface SyncLog {
   id: number;
@@ -189,31 +206,31 @@ const SyncLogsPage = () => {
     switch (changeType) {
       case 'added':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
             Added
           </span>
         );
       case 'updated':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
             Updated
           </span>
         );
       case 'deleted':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
             Deleted
           </span>
         );
       case 'error':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
             Error
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300">
             Unknown
           </span>
         );
@@ -411,8 +428,7 @@ const SyncLogsPage = () => {
             <div className="flex flex-row items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-auto">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -436,8 +452,7 @@ const SyncLogsPage = () => {
             {selectedLogs.length > 0 && (
               <div className="flex items-center gap-2 mt-4">
                 <span
-                  className="text-sm"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="text-sm text-gray-600 dark:text-gray-400"
                 >
                   {selectedLogs.length} selected
                 </span>
@@ -458,16 +473,14 @@ const SyncLogsPage = () => {
             ) : getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No sync logs found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   No sync logs match your search criteria or no sync logs exist
                   yet.
                 </p>
@@ -476,11 +489,10 @@ const SyncLogsPage = () => {
               <React.Fragment>
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1000px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           <input
                             type="checkbox"
@@ -494,38 +506,32 @@ const SyncLogsPage = () => {
                           />
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Sl. No
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           API Provider
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Service Name
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Changes
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           When
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Actions
                         </th>
@@ -535,7 +541,7 @@ const SyncLogsPage = () => {
                     {getPaginatedData().map((log, index) => (
                       <tr
                         key={log.id}
-                        className="border-t hover:bg-gray-50 transition-colors duration-200"
+                        className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
                       >
                           <td className="p-3">
                             <input
@@ -547,24 +553,21 @@ const SyncLogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {log.apiProvider}
                             </div>
                           </td>
                           <td className="p-3">
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {log.serviceName}
                             </div>
@@ -575,8 +578,7 @@ const SyncLogsPage = () => {
                                 {getChangeTypeBadge(log.changeType)}
                               </div>
                               <div
-                                className="text-sm truncate"
-                                style={{ color: 'var(--text-primary)' }}
+                                className="text-sm truncate text-gray-900 dark:text-gray-100"
                                 title={log.changes}
                               >
                                 {log.changes}
@@ -585,10 +587,10 @@ const SyncLogsPage = () => {
                           </td>
                           <td className="p-3">
                             <div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(log.when).toLocaleDateString()}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(log.when).toLocaleTimeString()}
                               </div>
                             </div>
@@ -599,7 +601,7 @@ const SyncLogsPage = () => {
                                 setLogToDelete(log.id);
                                 setDeleteDialogOpen(true);
                               }}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors duration-200"
                               title="Delete Log"
                             >
                               <FaTrash className="h-3 w-3" />
@@ -615,7 +617,7 @@ const SyncLogsPage = () => {
                     {getPaginatedData().map((log, index) => (
                       <div
                         key={log.id}
-                        className="card card-padding border-l-4 border-blue-500 mb-4"
+                        className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -625,7 +627,7 @@ const SyncLogsPage = () => {
                               onChange={() => handleSelectLog(log.id)}
                               className="rounded border-gray-300 w-4 h-4"
                             />
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {(pagination.page - 1) * pagination.limit + index + 1}
                             </div>
                             {getChangeTypeBadge(log.changeType)}
@@ -636,7 +638,7 @@ const SyncLogsPage = () => {
                                 setLogToDelete(log.id);
                                 setDeleteDialogOpen(true);
                               }}
-                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors duration-200"
+                              className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors duration-200"
                               title="Delete Log"
                             >
                               <FaTrash className="h-3 w-3" />
@@ -646,28 +648,24 @@ const SyncLogsPage = () => {
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
                             <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                             >
                               API Provider
                             </div>
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {log.apiProvider}
                             </div>
                           </div>
                           <div>
                             <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: 'var(--text-muted)' }}
+                              className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                             >
                               Service Name
                             </div>
                             <div
-                              className="font-medium text-sm"
-                              style={{ color: 'var(--text-primary)' }}
+                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
                             >
                               {log.serviceName}
                             </div>
@@ -675,34 +673,29 @@ const SyncLogsPage = () => {
                         </div>
                         <div className="mb-4">
                           <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                           >
                             Changes
                           </div>
                           <div
-                            className="text-sm"
-                            style={{ color: 'var(--text-primary)' }}
+                            className="text-sm text-gray-900 dark:text-gray-100"
                           >
                             {log.changes}
                           </div>
                         </div>
                         <div>
                           <div
-                            className="text-xs font-medium mb-1"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-xs font-medium mb-1 text-gray-500 dark:text-gray-400"
                           >
                             When
                           </div>
                           <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-xs text-gray-600 dark:text-gray-400"
                           >
                             Date: {new Date(log.when).toLocaleDateString()}
                           </div>
                           <div
-                            className="text-xs"
-                            style={{ color: 'var(--text-muted)' }}
+                            className="text-xs text-gray-600 dark:text-gray-400"
                           >
                             Time: {new Date(log.when).toLocaleTimeString()}
                           </div>
@@ -711,10 +704,9 @@ const SyncLogsPage = () => {
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {logsLoading ? (
                       <div className="flex items-center gap-2">
@@ -745,8 +737,7 @@ const SyncLogsPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {logsLoading ? (
                         <GradientSpinner size="w-4 h-4" />
@@ -776,9 +767,9 @@ const SyncLogsPage = () => {
         </div>
         {deleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Delete Sync Log</h3>
-              <p className="text-gray-600 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Delete Sync Log</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete this sync log? This action
                 cannot be undone.
               </p>
@@ -817,11 +808,11 @@ const SyncLogsPage = () => {
         )}
         {bulkDeleteDialogOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Delete Selected Sync Logs
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Are you sure you want to delete {selectedLogs.length} selected
                 sync log{selectedLogs.length !== 1 ? 's' : ''}? This action
                 cannot be undone.

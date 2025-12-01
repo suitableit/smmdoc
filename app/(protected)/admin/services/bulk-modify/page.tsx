@@ -36,7 +36,7 @@ const BulkModifyTableSkeleton = () => {
     <>
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-sm min-w-[1200px]">
-          <thead className="sticky top-0 bg-white dark:bg-gray-800 border-b z-10">
+          <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
             <tr>
               {Array.from({ length: 7 }).map((_, idx) => (
                 <th key={idx} className="text-left p-3">
@@ -77,7 +77,7 @@ const BulkModifyTableSkeleton = () => {
       <div className="lg:hidden">
         <div className="space-y-4 pt-6">
           {rows.map((_, idx) => (
-            <div key={idx} className="card card-padding border-l-4 border-blue-500 mb-4">
+            <div key={idx} className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="h-6 w-16 gradient-shimmer rounded" />
                 <div className="h-6 w-20 gradient-shimmer rounded-full" />
@@ -108,8 +108,8 @@ const BulkModifyTableSkeleton = () => {
           ))}
         </div>
       </div>
-      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t">
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           <div className="h-5 w-48 gradient-shimmer rounded" />
         </div>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
@@ -130,15 +130,32 @@ const Toast = ({
   message: string;
   type?: 'success' | 'error' | 'info' | 'pending';
   onClose: () => void;
-}) => (
-  <div className={`toast toast-${type} toast-enter`}>
-    {type === 'success' && <FaCheckCircle className="toast-icon" />}
-    <span className="font-medium">{message}</span>
-    <button onClick={onClose} className="toast-close">
-      <FaTimes className="toast-close-icon" />
-    </button>
-  </div>
-);
+}) => {
+  const getDarkClasses = () => {
+    switch (type) {
+      case 'success':
+        return 'dark:bg-green-900/20 dark:border-green-800 dark:text-green-200';
+      case 'error':
+        return 'dark:bg-red-900/20 dark:border-red-800 dark:text-red-200';
+      case 'info':
+        return 'dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200';
+      case 'pending':
+        return 'dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <div className={`toast toast-${type} toast-enter ${getDarkClasses()}`}>
+      {type === 'success' && <FaCheckCircle className="toast-icon" />}
+      <span className="font-medium">{message}</span>
+      <button onClick={onClose} className="toast-close dark:hover:bg-white/10">
+        <FaTimes className="toast-close-icon" />
+      </button>
+    </div>
+  );
+};
 
 interface Category {
   id: number;
@@ -397,12 +414,12 @@ const BulkModifyPage = () => {
     return (
       <div className="page-container">
         <div className="page-content">
-          <div className="text-center py-12">
-            <FaExclamationTriangle className="h-16 w-16 mx-auto mb-4 text-red-500" />
-            <h3 className="text-lg font-semibold mb-2 text-red-600">
+            <div className="text-center py-12">
+            <FaExclamationTriangle className="h-16 w-16 mx-auto mb-4 text-red-500 dark:text-red-400" />
+            <h3 className="text-lg font-semibold mb-2 text-red-600 dark:text-red-400">
               Error Loading Data
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {categoriesError || servicesError}
             </p>
             <button 
@@ -499,8 +516,7 @@ const BulkModifyPage = () => {
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full">
                 <FaSearch
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400"
                 />
                 <input
                   type="text"
@@ -516,8 +532,8 @@ const BulkModifyPage = () => {
         <div className="card">
           <div className="px-6 py-6">
             {selectedCategory && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
                   <FaTag className="inline mr-2" />
                   Editing services in: <strong>{getSelectedCategoryName()}</strong>
                 </p>
@@ -525,8 +541,8 @@ const BulkModifyPage = () => {
             )}
 
             {hasChanges && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
+              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   <FaEdit className="inline mr-2" />
                   You have unsaved changes. Click "Save Changes" to apply them.
                 </p>
@@ -539,16 +555,14 @@ const BulkModifyPage = () => {
               ) : services.length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No Services Found
                 </h3>
-                <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm mb-4 text-gray-500 dark:text-gray-400">
                   No services match your current filters. Try adjusting your search or category selection.
                 </p>
                 <button
@@ -565,16 +579,14 @@ const BulkModifyPage = () => {
             ) : selectedCategory && getPaginatedData().length === 0 ? (
               <div className="text-center py-12">
                 <FaBox
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="h-16 w-16 mx-auto mb-4 text-gray-400 dark:text-gray-500"
                 />
                 <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-300"
                 >
                   No services found
                 </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {searchTerm ? 'No services match your search criteria.' : 'This category has no services yet.'}
                 </p>
               </div>
@@ -582,47 +594,40 @@ const BulkModifyPage = () => {
               <React.Fragment>
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white border-b z-10">
+                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
                       <tr>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           ID
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Name
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Min
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Max
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Price (USD)
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Description
                         </th>
                         <th
-                          className="text-left p-3 font-semibold"
-                          style={{ color: 'var(--text-primary)' }}
+                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
                           Status
                         </th>
@@ -632,12 +637,12 @@ const BulkModifyPage = () => {
                       {getPaginatedData().map((service) => (
                         <tr
                           key={service.id}
-                          className={`border-t hover:bg-gray-50 transition-colors duration-200 ${
-                            editedServices[service.id] ? 'bg-yellow-50' : ''
+                          className={`border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200 ${
+                            editedServices[service.id] ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
                           }`}
                         >
                           <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded w-fit">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded w-fit">
                               {formatID(service.id)}
                             </div>
                           </td>
@@ -686,9 +691,9 @@ const BulkModifyPage = () => {
                             />
                           </td>
                           <td className="p-3">
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full w-fit">
-                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
-                              <span className="text-xs font-medium capitalize">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} />
+                              <span className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
                                 {service.status}
                               </span>
                             </div>
@@ -703,30 +708,30 @@ const BulkModifyPage = () => {
                     {getPaginatedData().map((service) => (
                       <div
                         key={service.id}
-                        className={`card card-padding border-l-4 border-blue-500 mb-4 ${
-                          editedServices[service.id] ? 'bg-yellow-50' : ''
+                        className={`card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4 ${
+                          editedServices[service.id] ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''
                         }`}
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
                               {formatID(service.id)}
                             </div>
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full">
-                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500' : 'text-red-500'}`} />
-                              <span className="text-xs font-medium capitalize">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                              <FaCheckCircle className={`h-3 w-3 ${service.status === 'active' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} />
+                              <span className="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
                                 {service.status}
                               </span>
                             </div>
                           </div>
                           {editedServices[service.id] && (
-                            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 px-2 py-1 rounded">
                               Modified
                             </span>
                           )}
                         </div>
                         <div className="mb-4">
-                          <label className="form-label mb-2">Service Name</label>
+                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Service Name</label>
                           <input
                             type="text"
                             value={getCurrentValue(service, 'name') as string}
@@ -736,7 +741,7 @@ const BulkModifyPage = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div>
-                            <label className="form-label mb-2">Min Order</label>
+                            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Min Order</label>
                             <input
                               type="number"
                               value={getCurrentValue(service, 'min_order') as number}
@@ -746,7 +751,7 @@ const BulkModifyPage = () => {
                             />
                           </div>
                           <div>
-                            <label className="form-label mb-2">Max Order</label>
+                            <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Max Order</label>
                             <input
                               type="number"
                               value={getCurrentValue(service, 'max_order') as number}
@@ -757,7 +762,7 @@ const BulkModifyPage = () => {
                           </div>
                         </div>
                         <div className="mb-4">
-                          <label className="form-label mb-2">Price (USD)</label>
+                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Price (USD)</label>
                           <input
                             type="number"
                             value={getCurrentValue(service, 'rate') as number}
@@ -768,7 +773,7 @@ const BulkModifyPage = () => {
                           />
                         </div>
                         <div>
-                          <label className="form-label mb-2">Description</label>
+                          <label className="form-label mb-2 text-gray-700 dark:text-gray-300">Description</label>
                           <textarea
                             value={getCurrentValue(service, 'description') as string}
                             onChange={(e) => handleFieldChange(service.id, 'description', e.target.value)}
@@ -780,10 +785,9 @@ const BulkModifyPage = () => {
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t">
+                <div className="flex flex-col md:flex-row items-center justify-between pt-4 border-t dark:border-gray-700">
                   <div
-                    className="text-sm"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-sm text-gray-600 dark:text-gray-400"
                   >
                     {localServicesLoading ? (
                       <div className="flex items-center gap-2">
@@ -814,8 +818,7 @@ const BulkModifyPage = () => {
                       Previous
                     </button>
                     <span
-                      className="text-sm"
-                      style={{ color: 'var(--text-muted)' }}
+                      className="text-sm text-gray-600 dark:text-gray-400"
                     >
                       {localServicesLoading ? (
                         <GradientSpinner size="w-4 h-4" />
@@ -846,12 +849,12 @@ const BulkModifyPage = () => {
         </div>
         {categoryModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96 max-w-md mx-4">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
                 Select Category
               </h3>
               <div className="mb-4">
-                <label className="form-label mb-2">
+                <label className="form-label mb-2 text-gray-700 dark:text-gray-300">
                   Choose a category to modify its services
                 </label>
                 <select
