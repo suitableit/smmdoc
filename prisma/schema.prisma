@@ -438,27 +438,43 @@ model ActivityLogs {
 }
 
 model AddFunds {
-  Id               Int                       @id @default(autoincrement())
+  id               Int                       @id @default(autoincrement())
   userId           Int
   name             String?
   email            String
-  phoneNumber      String?
-  invoiceId        String                    @unique
-  transactionId    String?
-  usdAmount        Float
-  bdtAmount        Float?
+  invoiceId        String                    @unique @map("invoice_id")
+  transactionId    String?                   @map("transaction_id")
+  amount           Float?                    @map("amount")
+  usdAmount        Decimal                   @default(0.00) @db.Decimal(10, 2) @map("usdAmount")
+  originalAmount   Float?                    @map("original_amount")
+  spentAmount      Float?                    @map("spent_amount")
   currency         String?                   @default("USD") @db.VarChar(3)
-  gatewayFee       Float?
+  gatewayFee       Float?                    @map("fee")
   status           String?                   @default("Processing")
-  paymentGateway   String?
-  paymentMethod    String?
-  transactionDate  DateTime                  @default(now())
+  adminStatus      String?                   @default("Pending") @map("admin_status")
+  paymentGateway   String?                   @map("method")
+  paymentMethod    String?                   @map("payment_method")
+  senderNumber     String?                   @map("sender_number")
+  orderId          String?                   @map("order_id")
+  referenceId      String?                   @map("reference_id") @db.VarChar(255)
+  transactionType  AddFundsTransactionType?  @default(deposit) @map("transaction_type")
+  transactionDate  DateTime?                 @map("date")
+  paidAt           DateTime                  @default(now()) @map("paid_at")
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @default(now()) @updatedAt
   user             Users                     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "addfund_userId_fkey")
   @@map("add_funds")
+}
+
+enum AddFundsTransactionType {
+  deposit
+  withdrawal
+  purchase
+  refund
+
+  @@map("add_funds_transaction_type")
 }
 
 model AffiliateCommissions {

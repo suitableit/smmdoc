@@ -34,7 +34,7 @@ export async function PATCH(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { Id: transactionId },
+      where: { id: transactionId },
       include: { user: true }
     });
 
@@ -64,37 +64,47 @@ export async function PATCH(
         };
 
         if (transaction.status !== 'Success' && transaction.status !== 'approved') {
-          balanceChange = transaction.usdAmount;
+          const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+            ? Number(transaction.usdAmount)
+            : Number(transaction.usdAmount || 0);
+          balanceChange = usdAmount;
           await prisma.users.update({
             where: { id: transaction.userId },
             data: {
-              balance: { increment: transaction.usdAmount },
-              total_deposit: { increment: transaction.usdAmount }
+              balance: { increment: usdAmount },
+              total_deposit: { increment: usdAmount }
             }
           });
-          notificationMessage = `Your deposit of $${transaction.usdAmount} has been approved and added to your account.`;
+          notificationMessage = `Your deposit of $${usdAmount} has been approved and added to your account.`;
         }
       } else if (status === 'cancelled' || status === 'Cancelled') {
         updateData = {
           status: 'Cancelled'
         };
-        notificationMessage = `Your deposit of $${transaction.usdAmount} has been cancelled.`;
+        const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+          ? Number(transaction.usdAmount)
+          : Number(transaction.usdAmount || 0);
+        notificationMessage = `Your deposit of $${usdAmount} has been cancelled.`;
       } else if (status === 'Pending' || status === 'pending') {
         updateData = {
           status: 'Processing'
         };
 
+        const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+          ? Number(transaction.usdAmount)
+          : Number(transaction.usdAmount || 0);
+
         if (transaction.status === 'Success') {
-          if (currentUser.balance >= transaction.usdAmount) {
-            balanceChange = -transaction.usdAmount;
+          if (currentUser.balance >= usdAmount) {
+            balanceChange = -usdAmount;
             await prisma.users.update({
               where: { id: transaction.userId },
               data: {
-                balance: { decrement: transaction.usdAmount },
-                total_deposit: { decrement: transaction.usdAmount }
+                balance: { decrement: usdAmount },
+                total_deposit: { decrement: usdAmount }
               }
             });
-            notificationMessage = `Your transaction of $${transaction.usdAmount} has been moved to pending status. Amount has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${usdAmount} has been moved to pending status. Amount has been deducted from your account.`;
           } else {
             const deductAmount = currentUser.balance;
             balanceChange = -deductAmount;
@@ -105,16 +115,19 @@ export async function PATCH(
                 total_deposit: { decrement: deductAmount }
               }
             });
-            notificationMessage = `Your transaction of $${transaction.usdAmount} has been moved to pending status. Available balance of $${deductAmount} has been deducted from your account.`;
+            notificationMessage = `Your transaction of $${usdAmount} has been moved to pending status. Available balance of $${deductAmount} has been deducted from your account.`;
           }
         } else {
-          notificationMessage = `Your deposit of $${transaction.usdAmount} is now pending review.`;
+          notificationMessage = `Your deposit of $${usdAmount} is now pending review.`;
         }
       } else if (status === 'Suspicious') {
         updateData = {
           status: 'Processing'
         };
-        notificationMessage = `Your transaction of $${transaction.usdAmount} is under review for suspicious activity.`;
+        const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+          ? Number(transaction.usdAmount)
+          : Number(transaction.usdAmount || 0);
+        notificationMessage = `Your transaction of $${usdAmount} is under review for suspicious activity.`;
       } else {
         updateData = {
           status: status
@@ -123,7 +136,7 @@ export async function PATCH(
       }
 
       const updatedTransaction = await prisma.addFunds.update({
-        where: { Id: transactionId },
+        where: { id: transactionId },
         data: updateData
       });
 
@@ -136,11 +149,14 @@ export async function PATCH(
         const supportEmail = await getSupportEmail();
         const whatsappNumber = await getWhatsAppNumber();
         
+        const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+          ? Number(transaction.usdAmount)
+          : Number(transaction.usdAmount || 0);
         const emailData = emailTemplates.paymentSuccess({
           userName: result.currentUser.name || 'Customer',
           userEmail: result.currentUser.email,
-          transactionId: (transaction.transactionId || transaction.Id.toString()),
-          amount: transaction.usdAmount.toString(),
+          transactionId: (transaction.transactionId || transaction.id.toString()),
+          amount: usdAmount.toString(),
           currency: transaction.currency || 'BDT',
           date: new Date().toLocaleDateString(),
           userId: transaction.userId.toString(),
@@ -161,11 +177,14 @@ export async function PATCH(
       const supportEmail = await getSupportEmail();
       const whatsappNumber = await getWhatsAppNumber();
       
+      const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+        ? Number(transaction.usdAmount)
+        : Number(transaction.usdAmount || 0);
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: result.currentUser.name || 'Unknown User',
         userEmail: result.currentUser.email || '',
-        transactionId: (transaction.transactionId || transaction.Id.toString()),
-        amount: transaction.usdAmount.toString(),
+        transactionId: (transaction.transactionId || transaction.id.toString()),
+        amount: usdAmount.toString(),
         currency: 'BDT',
         supportEmail: supportEmail,
         whatsappNumber: whatsappNumber,
@@ -219,7 +238,7 @@ export async function GET(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { Id: transactionId },
+      where: { id: transactionId },
       include: {
         user: {
           select: {
@@ -238,17 +257,20 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+      ? Number(transaction.usdAmount)
+      : Number(transaction.usdAmount || 0);
     const transformedTransaction = {
-      id: transaction.Id,
-      invoice_id: transaction.invoiceId || transaction.Id,
-      amount: transaction.usdAmount || 0,
+      id: transaction.id,
+      invoice_id: transaction.invoiceId || transaction.id.toString(),
+      amount: usdAmount,
       status: mapStatus(transaction.status || 'Processing'),
       method: transaction.paymentGateway || 'UddoktaPay',
       payment_method: transaction.paymentMethod || 'UddoktaPay',
-      transaction_id: transaction.transactionId || transaction.Id,
+      transaction_id: transaction.transactionId || transaction.id.toString(),
       createdAt: transaction.createdAt.toISOString(),
-      sender_number: transaction.phoneNumber,
-      phone: transaction.phoneNumber,
+      sender_number: transaction.senderNumber || transaction.phoneNumber,
+      phone: transaction.senderNumber || transaction.phoneNumber,
       currency: transaction.currency || 'USD',
       admin_status: transaction.status,
     };

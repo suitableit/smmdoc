@@ -19,17 +19,30 @@ import {
     FaCog,
     FaCommentDots,
     FaDollarSign,
+    FaEllipsisH,
+    FaExclamationCircle,
     FaEye,
     FaRedo,
     FaShoppingCart,
+    FaSync,
     FaTimes,
     FaTimesCircle,
     FaUserPlus,
     FaUsers,
 } from 'react-icons/fa';
 
-const PendingTransactions = dynamic(
-  () => import('@/components/admin/main/pending-transactions'),
+const TransactionsTable = dynamic(
+  () => import('@/components/admin/transactions/transactions-table'),
+  { ssr: false }
+);
+
+const ApproveTransactionModal = dynamic(
+  () => import('@/components/admin/transactions/approve-transaction-modal'),
+  { ssr: false }
+);
+
+const CancelTransactionModal = dynamic(
+  () => import('@/components/admin/transactions/cancel-transaction-modal'),
   { ssr: false }
 );
 
@@ -441,6 +454,21 @@ export default function AdminDashboardPage() {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
 
+  const [approveConfirmDialog, setApproveConfirmDialog] = useState<{
+    open: boolean;
+    transactionId: number;
+    transaction: PendingTransaction | null;
+  }>({ open: false, transactionId: 0, transaction: null });
+
+  const [cancelConfirmDialog, setCancelConfirmDialog] = useState<{
+    open: boolean;
+    transactionId: number;
+    transaction: PendingTransaction | null;
+  }>({ open: false, transactionId: 0, transaction: null });
+
+  const [approveTransactionId, setApproveTransactionId] = useState('');
+  const [defaultTransactionId, setDefaultTransactionId] = useState('');
+
   const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
     try {
 
@@ -500,9 +528,9 @@ export default function AdminDashboardPage() {
       const transactionsPromise = axiosInstance.get('/api/transactions', {
         params: {
           admin: 'true',
-          status: 'pending',
+          status: 'Pending',
           limit: 10,
-          offset: 0,
+          page: 1,
         },
         timeout: 15000,
       }).catch(error => {
@@ -546,23 +574,34 @@ export default function AdminDashboardPage() {
 
       let transactionsToShow: PendingTransaction[] = [];
       if (transactionsResponse.data) {
-        if (transactionsResponse.data.transactions) {
-          const transactions = transactionsResponse.data.transactions;
-          setTotalTransactionCount(transactions.length);
-          transactionsToShow = transactions.slice(0, 3);
-          setPendingTransactions(transactionsToShow);
-        } else if (Array.isArray(transactionsResponse.data)) {
-          const pending = transactionsResponse.data.filter(
-            (transaction: PendingTransaction) => transaction.status === 'pending'
-          );
-          setTotalTransactionCount(pending.length);
-          transactionsToShow = pending.slice(0, 3);
-          setPendingTransactions(transactionsToShow);
+        // Handle axios response structure: response.data contains the API response
+        const apiResponse = transactionsResponse.data;
+        let transactions: PendingTransaction[] = [];
+        
+        // Extract transactions array from various response structures
+        if (apiResponse.success && Array.isArray(apiResponse.data)) {
+          transactions = apiResponse.data;
+        } else if (Array.isArray(apiResponse)) {
+          transactions = apiResponse;
+        } else if (apiResponse.data && Array.isArray(apiResponse.data)) {
+          transactions = apiResponse.data;
         }
+        
+        // Filter for pending transactions (already filtered by API, but double-check)
+        const pending = transactions.filter(
+          (transaction: PendingTransaction) => 
+            transaction.status === 'pending' || 
+            transaction.status === 'Processing' ||
+            transaction.admin_status === 'Pending' ||
+            transaction.admin_status === 'pending'
+        );
+        
+        setTotalTransactionCount(pending.length);
+        transactionsToShow = pending.slice(0, 3);
+        setPendingTransactions(transactionsToShow);
         setCachedData(CACHE_KEYS.PENDING_TRANSACTIONS, transactionsToShow);
       } else if ('error' in transactionsResponse && transactionsResponse.error) {
         console.warn('Transactions data failed to load:', transactionsResponse.error);
-
       }
 
       setTransactionsLoading(false);
@@ -625,17 +664,140 @@ export default function AdminDashboardPage() {
     );
   }, []);
 
-  const handleApprove = async (transactionId: string | number) => {
+  const formatTransactionCurrency = useCallback((amount: number, currency: string) => {
+    const formatters: Record<string, (amt: number) => string> = {
+      USD: (amt: number) => `$${amt.toFixed(2)}`,
+      USDT: (amt: number) => `$${amt.toFixed(2)}`,
+      BDT: (amt: number) => `৳${amt.toFixed(2)}`,
+    };
+    return (
+      formatters[currency as keyof typeof formatters]?.(amount) ||
+      `${currency} ${amount.toFixed(2)}`
+    );
+  }, []);
+
+  const displayMethod = useCallback((transaction: PendingTransaction) => {
+    const gateway = transaction.method || transaction.paymentGateway || '';
+    const methodName = transaction.payment_method || transaction.paymentMethod || '';
+    
+    if (!gateway && !methodName) {
+      return 'Unknown';
+    }
+    
+    if (gateway && methodName) {
+      return `${gateway} - ${methodName}`;
+    }
+    
+    if (gateway && !methodName) {
+      return `${gateway} - Unknown`;
+    }
+    
+    return gateway || methodName;
+  }, []);
+
+  const formatID = useCallback((id: any) => {
+    if (id === null || id === undefined) return 'null';
+    const idStr = String(id);
+    return idStr.length > 8 ? idStr.slice(-8) : idStr;
+  }, []);
+
+  const getStatusBadge = useCallback((status: string) => {
+    switch (status) {
+      case 'Success':
+      case 'completed':
+      case 'approved':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded-full w-fit">
+            <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />
+            <span className="text-xs font-medium text-green-700 dark:text-green-300">Success</span>
+          </div>
+        );
+      case 'Pending':
+      case 'pending':
+      case 'Processing':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
+            <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">Pending</span>
+          </div>
+        );
+      case 'Cancelled':
+      case 'cancelled':
+      case 'rejected':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-full w-fit">
+            <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />
+            <span className="text-xs font-medium text-red-700 dark:text-red-300">Cancel</span>
+          </div>
+        );
+      case 'Suspicious':
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-full w-fit">
+            <FaExclamationCircle className="h-3 w-3 text-purple-500 dark:text-purple-400" />
+            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+              Suspicious
+            </span>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+            <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{status}</span>
+          </div>
+        );
+    }
+  }, []);
+
+  const openViewDetailsDialog = useCallback((transaction: PendingTransaction) => {
+    // For now, just show a toast. Can be extended later if needed.
+    showToast(`Transaction ID: ${transaction.id}`, 'info');
+  }, [showToast]);
+
+  const openUpdateStatusDialog = useCallback((transactionId: number, currentStatus: string) => {
+    // For now, just show a toast. Can be extended later if needed.
+    showToast(`Update status for transaction ${transactionId}`, 'info');
+  }, [showToast]);
+
+  const handleApprove = useCallback((transactionId: string) => {
+    const numericId = parseInt(transactionId);
+    const transaction = pendingTransactions.find((t) => t.id === numericId);
+
+    let defaultId = transaction?.transactionId?.toString() || transaction?.transaction_id?.toString() || '';
+
+    if (!defaultId) {
+      const timestamp = new Date().getTime();
+      defaultId = `DEP-${transaction?.id || ''}-${timestamp.toString().slice(-6)}`;
+    }
+
+    setDefaultTransactionId(defaultId);
+    setApproveTransactionId(defaultId);
+
+    setApproveConfirmDialog({
+      open: true,
+      transactionId: numericId,
+      transaction: transaction || null,
+    });
+  }, [pendingTransactions]);
+
+  const confirmApprove = useCallback(async (transactionId: number, modifiedTransactionId: string) => {
     try {
-      const response = await axiosInstance.patch(
-        `/api/transactions/${transactionId}`,
+      const response = await fetch(
+        `/api/admin/funds/${transactionId}/approve`,
         {
-          status: 'approved',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            modifiedTransactionId: modifiedTransactionId.trim(),
+          }),
         }
       );
 
-      if (response.status === 200) {
+      const result = await response.json();
 
+      if (result.success) {
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
         setTotalTransactionCount((prev: number) => prev - 1);
@@ -647,32 +809,42 @@ export default function AdminDashboardPage() {
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction approved successfully!', 'success');
+        setApproveConfirmDialog({
+          open: false,
+          transactionId: 0,
+          transaction: null,
+        });
+        setApproveTransactionId('');
+      } else {
+        showToast(result.error || 'Failed to approve transaction', 'error');
       }
     } catch (error) {
       console.error('Error approving transaction:', error);
-      showToast('Failed to approve transaction', 'error');
+      showToast('Error approving transaction', 'error');
     }
-  };
+  }, [pendingTransactions, fetchAllData, showToast]);
 
-  const handleCancel = async (transactionId: string | number) => {
-    if (
-      !confirm(
-        'Are you sure you want to cancel this transaction? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleCancel = useCallback((transactionId: string) => {
+    const transaction = pendingTransactions.find((t) => t.id.toString() === transactionId);
+    setCancelConfirmDialog({
+      open: true,
+      transactionId: parseInt(transactionId),
+      transaction: transaction || null,
+    });
+  }, [pendingTransactions]);
 
+  const confirmCancel = useCallback(async (transactionId: number) => {
     try {
-      const response = await axiosInstance.patch(
-        `/api/transactions/${transactionId}`,
-        {
-          status: 'cancelled',
-        }
-      );
+      const response = await fetch(`/api/admin/funds/${transactionId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (response.status === 200) {
+      const result = await response.json();
 
+      if (result.success) {
         const updatedTransactions = pendingTransactions.filter((t) => t.id !== transactionId);
         setPendingTransactions(updatedTransactions);
         setTotalTransactionCount((prev: number) => prev - 1);
@@ -684,12 +856,19 @@ export default function AdminDashboardPage() {
         setTimeout(() => fetchAllData(true), 100);
 
         showToast('Transaction cancelled successfully!', 'success');
+        setCancelConfirmDialog({
+          open: false,
+          transactionId: 0,
+          transaction: null,
+        });
+      } else {
+        showToast(result.error || 'Failed to cancel transaction', 'error');
       }
     } catch (error) {
       console.error('Error cancelling transaction:', error);
-      showToast('Failed to cancel transaction', 'error');
+      showToast('Error cancelling transaction', 'error');
     }
-  };
+  }, [pendingTransactions, fetchAllData, showToast]);
 
   const handleTransactionUpdate = useCallback((transactionId: number) => {
 
@@ -977,10 +1156,15 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
             ) : (
-              <PendingTransactions
-                pendingTransactions={pendingTransactions}
-                onTransactionUpdate={handleTransactionUpdate}
-                showToast={showToast}
+              <TransactionsTable
+                transactions={pendingTransactions.slice(0, 3) as any}
+                formatID={formatID}
+                displayMethod={displayMethod}
+                getStatusBadge={getStatusBadge}
+                handleApprove={handleApprove}
+                handleCancel={handleCancel}
+                openViewDetailsDialog={openViewDetailsDialog}
+                openUpdateStatusDialog={openUpdateStatusDialog}
               />
             )}
           </div>
@@ -1056,6 +1240,41 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      <ApproveTransactionModal
+        open={approveConfirmDialog.open}
+        transaction={approveConfirmDialog.transaction}
+        transactionId={approveConfirmDialog.transactionId}
+        approveTransactionId={approveTransactionId}
+        defaultTransactionId={defaultTransactionId}
+        onClose={() => {
+          setApproveConfirmDialog({
+            open: false,
+            transactionId: 0,
+            transaction: null,
+          });
+          setApproveTransactionId('');
+        }}
+        onApprove={confirmApprove}
+        formatTransactionCurrency={formatTransactionCurrency}
+        displayMethod={displayMethod}
+      />
+
+      <CancelTransactionModal
+        open={cancelConfirmDialog.open}
+        transaction={cancelConfirmDialog.transaction}
+        transactionId={cancelConfirmDialog.transactionId}
+        onClose={() => {
+          setCancelConfirmDialog({
+            open: false,
+            transactionId: 0,
+            transaction: null,
+          });
+        }}
+        onCancel={confirmCancel}
+        formatTransactionCurrency={formatTransactionCurrency}
+        displayMethod={displayMethod}
+      />
     </div>
   );
 }

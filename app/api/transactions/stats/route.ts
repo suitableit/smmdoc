@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         take: 5,
         select: {
-          Id: true,
+          id: true,
           usdAmount: true,
           status: true,
           createdAt: true,
@@ -117,7 +117,11 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    const totalVolume = totalVolumeResult._sum.usdAmount || 0;
+    const totalVolume = totalVolumeResult._sum.usdAmount 
+      ? (typeof totalVolumeResult._sum.usdAmount === 'object' && totalVolumeResult._sum.usdAmount !== null
+          ? Number(totalVolumeResult._sum.usdAmount)
+          : Number(totalVolumeResult._sum.usdAmount))
+      : 0;
 
     const statusBreakdown = {
       pending: pendingTransactions,
@@ -150,8 +154,10 @@ export async function GET(request: NextRequest) {
         statusBreakdown,
         percentages,
         recentTransactions: recentTransactions.map(t => ({
-          id: t.Id,
-          amount: t.usdAmount,
+          id: t.id,
+          amount: typeof t.usdAmount === 'object' && t.usdAmount !== null 
+            ? Number(t.usdAmount) 
+            : Number(t.usdAmount || 0),
           status: t.status,
           createdAt: t.createdAt.toISOString(),
           user: t.user

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { transactionId: { contains: search, mode: 'insensitive' } },
         { invoiceId: { contains: search, mode: 'insensitive' } },
-        { phoneNumber: { contains: search, mode: 'insensitive' } },
+        { senderNumber: { contains: search, mode: 'insensitive' } },
         { paymentMethod: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -52,15 +52,15 @@ export async function GET(request: NextRequest) {
         take: limit,
         skip: skip,
         select: {
-          Id: true,
+          id: true,
           invoiceId: true,
           usdAmount: true,
-          bdtAmount: true,
+          amount: true,
           status: true,
           paymentGateway: true,
           paymentMethod: true,
           transactionId: true,
-          phoneNumber: true,
+          senderNumber: true,
           currency: true,
           createdAt: true,
           updatedAt: true,
@@ -80,10 +80,10 @@ export async function GET(request: NextRequest) {
       invoiceId: tx.invoiceId,
       status: tx.status,
       statusType: typeof tx.status,
-      Id: tx.Id,
+      id: tx.id,
       transactionId: tx.transactionId,
       paymentMethod: tx.paymentMethod,
-      phoneNumber: tx.phoneNumber,
+      senderNumber: tx.senderNumber,
       paymentGateway: tx.paymentGateway,
       allFields: Object.keys(tx),
       fullTransaction: tx
@@ -175,8 +175,8 @@ export async function GET(request: NextRequest) {
             updateData.paymentMethod = extractedPaymentMethod;
           }
           
-          if (extractedSenderNumber && extractedSenderNumber !== transaction.phoneNumber) {
-            updateData.phoneNumber = extractedSenderNumber;
+          if (extractedSenderNumber && extractedSenderNumber !== transaction.senderNumber) {
+            updateData.senderNumber = extractedSenderNumber;
           }
 
           if (newStatus !== transaction.status) {
@@ -195,8 +195,8 @@ export async function GET(request: NextRequest) {
             if (updateData.paymentMethod) {
               transaction.paymentMethod = updateData.paymentMethod;
             }
-            if (updateData.phoneNumber) {
-              transaction.phoneNumber = updateData.phoneNumber;
+            if (updateData.senderNumber) {
+              transaction.senderNumber = updateData.senderNumber;
             }
             if (updateData.status) {
               transaction.status = updateData.status;
@@ -228,15 +228,15 @@ export async function GET(request: NextRequest) {
           take: limit,
           skip: skip,
           select: {
-            Id: true,
+            id: true,
             invoiceId: true,
             usdAmount: true,
-            bdtAmount: true,
+            amount: true,
             status: true,
             paymentGateway: true,
             paymentMethod: true,
             transactionId: true,
-            phoneNumber: true,
+            senderNumber: true,
             currency: true,
             createdAt: true,
             updatedAt: true,
@@ -280,33 +280,43 @@ export async function GET(request: NextRequest) {
         rawTransactionId: transaction.transactionId,
         finalTransactionId,
         paymentMethod: transaction.paymentMethod,
-        phoneNumber: transaction.phoneNumber,
+        senderNumber: transaction.senderNumber,
         paymentGateway: transaction.paymentGateway,
         dbStatus,
         mappedStatus,
         isTransactionIdValid: finalTransactionId !== null && finalTransactionId !== transaction.invoiceId,
         rawTransaction: {
-          Id: transaction.Id,
+          id: transaction.id,
           status: transaction.status,
           invoiceId: transaction.invoiceId,
           transactionId: transaction.transactionId,
           paymentMethod: transaction.paymentMethod,
           paymentGateway: transaction.paymentGateway,
-          phoneNumber: transaction.phoneNumber,
+          senderNumber: transaction.senderNumber,
         }
       });
       
+      const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+        ? Number(transaction.usdAmount)
+        : Number(transaction.usdAmount || 0);
+      
+      const amount = transaction.amount 
+        ? (typeof transaction.amount === 'object' && transaction.amount !== null
+            ? Number(transaction.amount)
+            : Number(transaction.amount))
+        : usdAmount;
+      
       return {
-        id: transaction.Id,
-        invoice_id: transaction.invoiceId || transaction.Id,
-        amount: transaction.usdAmount || 0,
+        id: transaction.id,
+        invoice_id: transaction.invoiceId || transaction.id,
+        amount: amount,
         status: mappedStatus,
         method: transaction.paymentGateway || 'UddoktaPay',
         payment_method: transaction.paymentMethod || 'UddoktaPay',
         transaction_id: finalTransactionId,
         createdAt: transaction.createdAt.toISOString(),
-        sender_number: transaction.phoneNumber,
-        phone: transaction.phoneNumber,
+        sender_number: transaction.senderNumber || '',
+        phone: transaction.senderNumber || '',
         currency: transaction.currency || 'USD',
       };
     });

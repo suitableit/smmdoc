@@ -32,11 +32,14 @@ export async function GET(request: NextRequest) {
 
     if (search && adminView && session.user.role === 'admin') {
       if (searchType === 'id') {
-        where.OR = [
+        const searchConditions: any[] = [
           { transactionId: { contains: search } },
           { invoiceId: { contains: search } },
-          { Id: isNaN(parseInt(search)) ? undefined : parseInt(search) }
-        ].filter(condition => condition.Id !== undefined || condition.transactionId || condition.invoiceId);
+        ];
+        if (!isNaN(parseInt(search))) {
+          searchConditions.push({ id: parseInt(search) });
+        }
+        where.OR = searchConditions;
       } else if (searchType === 'username') {
         where.OR = [
           { user: { name: { contains: search } } },
@@ -47,7 +50,7 @@ export async function GET(request: NextRequest) {
         where.OR = [
           { transactionId: { contains: search } },
           { invoiceId: { contains: search } },
-          { phoneNumber: { contains: search } },
+          { senderNumber: { contains: search } },
           { user: { name: { contains: search } } },
           { user: { email: { contains: search } } },
         ];
@@ -58,27 +61,42 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { transactionId: { contains: search } },
         { invoiceId: { contains: search } },
-        { phoneNumber: { contains: search } },
+        { senderNumber: { contains: search } },
       ];
     }
 
     if (status && status !== 'all') {
       if (status === 'Success' || status === 'completed') {
         where.status = 'Success';
+        if (adminView && session.user.role === 'admin') {
+          where.adminStatus = 'Success';
+        }
       } else if (status === 'pending' || status === 'Pending') {
         where.status = 'Processing';
+        if (adminView && session.user.role === 'admin') {
+          where.adminStatus = 'Pending';
+        }
       } else if (status === 'cancelled' || status === 'Cancelled') {
         where.status = 'Cancelled';
+        if (adminView && session.user.role === 'admin') {
+          where.adminStatus = 'Cancelled';
+        }
       } else if (status === 'Suspicious') {
         where.status = 'Suspicious';
+        if (adminView && session.user.role === 'admin') {
+          where.adminStatus = 'Suspicious';
+        }
       } else if (status === 'failed') {
         where.status = { in: ['Failed', 'Cancelled'] };
+        if (adminView && session.user.role === 'admin') {
+          where.adminStatus = { in: ['Cancelled'] };
+        }
       }
     }
 
     if (type && type !== 'all') {
       if (type === 'withdrawal') {
-        where.Id = -1;
+        where.id = -1;
       }
     }
 
@@ -109,17 +127,17 @@ export async function GET(request: NextRequest) {
           take: limit > 10000 ? undefined : limit,
           skip: adminView ? skip : offset,
           select: {
-            Id: true,
+            id: true,
             invoiceId: true,
             usdAmount: true,
-            bdtAmount: true,
+            amount: true,
             status: true,
             paymentGateway: true,
             paymentMethod: true,
             transactionId: true,
             createdAt: true,
             updatedAt: true,
-            phoneNumber: true,
+            senderNumber: true,
             currency: true,
             userId: true,
             user: {
@@ -172,32 +190,47 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const transformedTransactions = transactions.map((transaction: any) => ({
-      id: transaction.Id,
-      transactionId: transaction.transactionId || transaction.Id,
-      invoice_id: transaction.invoiceId || transaction.Id,
-      amount: transaction.usdAmount || 0,
-      bdt_amount: transaction.bdtAmount,
-      status: transaction.status || 'Processing',
-      admin_status: transaction.status || 'Processing',
-      method: transaction.paymentGateway || 'UddoktaPay',
-      payment_method: transaction.paymentMethod || 'UddoktaPay',
-      transaction_id: transaction.transactionId || transaction.Id,
-      createdAt: transaction.createdAt?.toISOString() || new Date().toISOString(),
-      updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt?.toISOString() || new Date().toISOString(),
-      type: 'deposit',
-      phone: transaction.phoneNumber || '',
-      currency: transaction.currency || 'BDT',
-      userId: transaction.userId,
-      user: transaction.user ? {
-        id: transaction.user.id,
-        name: transaction.user.name || '',
-        email: transaction.user.email || '',
-        username: transaction.user.username || '',
-      } : null,
-      notes: '',
-      processedAt: transaction.status === 'Success' ? transaction.updatedAt?.toISOString() : null,
-    }));
+    const transformedTransactions = transactions.map((transaction: any) => {
+      // Handle Decimal type for usdAmount
+      const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+        ? Number(transaction.usdAmount)
+        : Number(transaction.usdAmount || 0);
+      
+      // Handle amount field (might be Float or Decimal)
+      const amount = transaction.amount 
+        ? (typeof transaction.amount === 'object' && transaction.amount !== null
+            ? Number(transaction.amount)
+            : Number(transaction.amount))
+        : usdAmount;
+
+      return {
+        id: transaction.id,
+        transactionId: transaction.transactionId || transaction.id?.toString(),
+        invoice_id: transaction.invoiceId || transaction.id?.toString(),
+        amount: amount,
+        bdt_amount: transaction.amount || amount, // Use amount field as bdt_amount if available
+        status: transaction.status || 'Processing',
+        admin_status: transaction.status || 'Processing',
+        method: transaction.paymentGateway || 'UddoktaPay',
+        payment_method: transaction.paymentMethod || 'UddoktaPay',
+        transaction_id: transaction.transactionId || transaction.id?.toString(),
+        createdAt: transaction.createdAt?.toISOString() || new Date().toISOString(),
+        updatedAt: transaction.updatedAt?.toISOString() || transaction.createdAt?.toISOString() || new Date().toISOString(),
+        type: 'deposit',
+        phone: transaction.senderNumber || '',
+        sender_number: transaction.senderNumber || '',
+        currency: transaction.currency || 'BDT',
+        userId: transaction.userId,
+        user: transaction.user ? {
+          id: transaction.user.id,
+          name: transaction.user.name || '',
+          email: transaction.user.email || '',
+          username: transaction.user.username || '',
+        } : null,
+        notes: '',
+        processedAt: transaction.status === 'Success' ? transaction.updatedAt?.toISOString() : null,
+      };
+    });
 
     if (adminView && session.user.role === 'admin') {
       const totalPages = Math.ceil(totalCount / limit);
@@ -219,7 +252,12 @@ export async function GET(request: NextRequest) {
         totalVolume: await db.addFunds.aggregate({
           where: { ...where, status: 'Success' },
           _sum: { usdAmount: true }
-        }).then(result => result._sum.usdAmount || 0),
+        }).then(result => {
+          const sum = result._sum.usdAmount;
+          return sum 
+            ? (typeof sum === 'object' && sum !== null ? Number(sum) : Number(sum))
+            : 0;
+        }),
         todayTransactions: await db.addFunds.count({
           where: {
             ...where,
@@ -287,7 +325,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { Id: Number(transactionId) },
+      where: { id: Number(transactionId) },
       include: { user: true }
     });
 
@@ -299,6 +337,10 @@ export async function PATCH(request: NextRequest) {
       updatedAt: new Date()
     };
 
+    const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
+      ? Number(transaction.usdAmount)
+      : Number(transaction.usdAmount || 0);
+
     if (status === 'approved' || status === 'Success') {
       updateData.status = 'Success';
 
@@ -306,8 +348,8 @@ export async function PATCH(request: NextRequest) {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.usdAmount },
-            total_deposit: { increment: transaction.usdAmount }
+            balance: { increment: usdAmount },
+            total_deposit: { increment: usdAmount }
           }
         });
       }
@@ -318,8 +360,8 @@ export async function PATCH(request: NextRequest) {
         await db.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { decrement: transaction.usdAmount },
-            total_deposit: { decrement: transaction.usdAmount }
+            balance: { decrement: usdAmount },
+            total_deposit: { decrement: usdAmount }
           }
         });
       }
@@ -330,7 +372,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updatedTransaction = await db.addFunds.update({
-      where: { Id: Number(transactionId) },
+      where: { id: Number(transactionId) },
       data: updateData,
       include: {
         user: {
@@ -344,13 +386,17 @@ export async function PATCH(request: NextRequest) {
       }
     });
 
+    const updatedUsdAmount = typeof updatedTransaction.usdAmount === 'object' && updatedTransaction.usdAmount !== null
+      ? Number(updatedTransaction.usdAmount)
+      : Number(updatedTransaction.usdAmount || 0);
+
     return NextResponse.json({
       success: true,
       message: `Transaction ${status} successfully`,
       data: {
-        id: updatedTransaction.Id,
+        id: updatedTransaction.id,
         transactionId: updatedTransaction.transactionId,
-        amount: updatedTransaction.usdAmount,
+        amount: updatedUsdAmount,
         status: updatedTransaction.status,
         admin_status: updatedTransaction.status,
         currency: updatedTransaction.currency,

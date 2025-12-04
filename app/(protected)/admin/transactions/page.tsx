@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
     FaCheckCircle,
     FaClock,
@@ -20,6 +21,21 @@ import { PriceDisplay } from '@/components/PriceDisplay';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+
+const ApproveTransactionModal = dynamic(
+  () => import('@/components/admin/transactions/approve-transaction-modal'),
+  { ssr: false }
+);
+
+const CancelTransactionModal = dynamic(
+  () => import('@/components/admin/transactions/cancel-transaction-modal'),
+  { ssr: false }
+);
+
+const TransactionsTable = dynamic(
+  () => import('../../../../components/admin/transactions/transactions-table'),
+  { ssr: false }
+);
 const formatID = (id: any) => id;
 const formatNumber = (num: number) => num.toLocaleString();
 const formatPrice = (price: number, decimals = 2) => price.toFixed(decimals);
@@ -710,14 +726,7 @@ const AdminAllTransactionsPage = () => {
     });
   };
 
-  const confirmApprove = async (transactionId: number) => {
-    const transaction = approveConfirmDialog.transaction;
-
-    if (!approveTransactionId.trim()) {
-      showToast('Please enter a transaction ID', 'error');
-      return;
-    }
-
+  const confirmApprove = async (transactionId: number, modifiedTransactionId: string) => {
     try {
       const response = await fetch(
         `/api/admin/funds/${transactionId}/approve`,
@@ -727,7 +736,7 @@ const AdminAllTransactionsPage = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            modifiedTransactionId: approveTransactionId.trim(),
+            modifiedTransactionId: modifiedTransactionId.trim(),
           }),
         }
       );
@@ -742,7 +751,7 @@ const AdminAllTransactionsPage = () => {
                   ...transaction,
                   admin_status: 'Success' as const,
                   status: 'completed' as const,
-                  transactionId: approveTransactionId.trim() || transaction.transactionId,
+                  transactionId: modifiedTransactionId.trim() || transaction.transactionId,
                 }
               : transaction
           )
@@ -750,19 +759,18 @@ const AdminAllTransactionsPage = () => {
 
         showToast('Transaction approved successfully!', 'success');
         fetchStats();
+        setApproveConfirmDialog({
+          open: false,
+          transactionId: 0,
+          transaction: null,
+        });
+        setApproveTransactionId('');
       } else {
         showToast(result.error || 'Failed to approve transaction', 'error');
       }
     } catch (error) {
       console.error('Error approving transaction:', error);
       showToast('Error approving transaction', 'error');
-    } finally {
-      setApproveConfirmDialog({
-        open: false,
-        transactionId: 0,
-        transaction: null,
-      });
-      setApproveTransactionId('');
     }
   };
 
@@ -801,18 +809,17 @@ const AdminAllTransactionsPage = () => {
 
         showToast('Transaction cancelled successfully!', 'success');
         fetchStats();
+        setCancelConfirmDialog({
+          open: false,
+          transactionId: 0,
+          transaction: null,
+        });
       } else {
         showToast(result.error || 'Failed to cancel transaction', 'error');
       }
     } catch (error) {
       console.error('Error cancelling transaction:', error);
       showToast('Error cancelling transaction', 'error');
-    } finally {
-      setCancelConfirmDialog({
-        open: false,
-        transactionId: 0,
-        transaction: null,
-      });
     }
   };
 
@@ -1078,223 +1085,16 @@ const AdminAllTransactionsPage = () => {
               </div>
             ) : (
               <React.Fragment>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[1200px]">
-                    <thead className="sticky top-0 bg-white dark:bg-[var(--card-bg)] border-b dark:border-gray-700 z-10">
-                      <tr>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          ID
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          User
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Transaction ID
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Amount
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Phone
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Payment Method
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Date
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Status
-                        </th>
-                        <th
-                          className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((transaction) => (
-                        <tr
-                          key={transaction.id}
-                          className="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[var(--card-bg)] transition-colors duration-200"
-                        >
-                          <td className="p-3">
-                            <div className="font-mono text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded">
-                              {transaction.id
-                                ? formatID(transaction.id.toString().slice(-8))
-                                : 'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div
-                              className="font-medium text-sm text-gray-900 dark:text-gray-100"
-                            >
-                              {transaction.user?.username ||
-                                transaction.user?.email?.split('@')[0] ||
-                                transaction.user?.name ||
-                                'null'}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            {transaction.transactionId ? (
-                              <div
-                                className={`text-xs px-2 py-1 rounded ${
-                                  transaction.transactionId === 'Deducted by Admin'
-                                    ? 'font-mono bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                                    : transaction.transactionId === 'Added by Admin'
-                                    ? 'font-mono bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                    : ''
-                                }`}
-                              >
-                                {transaction.transactionId === 'Added by Admin' ||
-                                transaction.transactionId === 'Deducted by Admin'
-                                  ? transaction.notes || transaction.transactionId
-                                  : transaction.transactionId}
-                              </div>
-                            ) : (
-                              <span className="text-xs text-gray-400 dark:text-gray-500">
-                                Not assigned
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <PriceDisplay
-                              amount={transaction.bdt_amount || transaction.amount}
-                              originalCurrency={transaction.currency === 'USD' || transaction.currency === 'USDT' ? 'USD' : 'BDT'}
-                              className="font-semibold text-sm"
-                            />
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className="text-sm text-gray-900 dark:text-gray-100"
-                            >
-                              {transaction.phone || transaction.sender_number || 'N/A'}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                              {displayMethod(transaction)}
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {transaction.createdAt
-                                  ? new Date(
-                                      transaction.createdAt
-                                    ).toLocaleDateString()
-                                  : 'null'}
-                              </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
-                                {transaction.createdAt
-                                  ? new Date(
-                                      transaction.createdAt
-                                    ).toLocaleTimeString()
-                                  : 'null'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            {getStatusBadge(
-                              transaction.admin_status || transaction.status
-                            )}
-                          </td>
-                          <td className="p-3">
-                            {(transaction.admin_status === 'Pending' || transaction.admin_status === 'pending') ||
-                            (transaction.status === 'pending' || transaction.status === 'Processing') ? (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleApprove(transaction.id.toString())}
-                                  className="btn btn-primary flex items-center gap-1 px-3 py-1.5 text-xs bg-green-500 text-white border border-green-500 hover:bg-green-600"
-                                  title="Approve"
-                                >
-                                  <FaCheckCircle className="h-3 w-3" />
-                                </button>
-                                <button
-                                  onClick={() => handleCancel(transaction.id.toString())}
-                                  className="btn btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs bg-red-500 text-white border border-red-500 hover:bg-red-600"
-                                  title="Cancel"
-                                >
-                                  <FaTimesCircle className="h-3 w-3" />
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <div className="relative">
-                                  <button
-                                    className="btn btn-secondary p-2"
-                                    title="More Actions"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const dropdown = e.currentTarget
-                                        .nextElementSibling as HTMLElement;
-                                      dropdown.classList.toggle('hidden');
-                                    }}
-                                  >
-                                    <FaEllipsisH className="h-3 w-3" />
-                                  </button>
-
-                                  <div className="hidden absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-                                    <div className="py-1">
-                                      <button
-                                        onClick={() => {
-                                          openViewDetailsDialog(transaction);
-                                          const dropdown =
-                                            document.querySelector(
-                                              '.absolute.right-0'
-                                            ) as HTMLElement;
-                                          dropdown?.classList.add('hidden');
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
-                                      >
-                                        <FaEye className="h-3 w-3" />
-                                        View Details
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          openUpdateStatusDialog(
-                                            transaction.id,
-                                            transaction.status
-                                          );
-                                          const dropdown =
-                                            document.querySelector(
-                                              '.absolute.right-0'
-                                            ) as HTMLElement;
-                                          dropdown?.classList.add('hidden');
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
-                                      >
-                                        <FaSync className="h-3 w-3" />
-                                        Update Status
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <TransactionsTable
+                  transactions={transactions}
+                  formatID={formatID}
+                  displayMethod={displayMethod}
+                  getStatusBadge={getStatusBadge}
+                  handleApprove={handleApprove}
+                  handleCancel={handleCancel}
+                  openViewDetailsDialog={openViewDetailsDialog}
+                  openUpdateStatusDialog={openUpdateStatusDialog}
+                />
 
                 <div className="flex flex-col md:flex-row items-center justify-between pt-4 pb-6 border-t dark:border-gray-700">
                   <div
@@ -1551,215 +1351,39 @@ const AdminAllTransactionsPage = () => {
                     </div>
                   </div>
                 )}
-                {approveConfirmDialog.open &&
-                  approveConfirmDialog.transaction && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">
-                          Approve Transaction
-                        </h3>
-
-                        <div className="mb-6">
-                          <p className="text-gray-700 dark:text-gray-300 mb-4">
-                            Are you sure you want to approve this transaction? This will add funds to the user's account.
-                          </p>
-
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2 mb-4">
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Transaction ID:
-                              </span>
-                              <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                                {approveConfirmDialog.transaction
-                                  .transactionId || 'Not assigned'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                User:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {approveConfirmDialog.transaction.user
-                                  ?.username ||
-                                  approveConfirmDialog.transaction.user
-                                    ?.email ||
-                                  'N/A'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Amount:
-                              </span>
-                              <span className="font-semibold text-lg text-green-600 dark:text-green-400">
-                                {formatTransactionCurrency(
-                                  approveConfirmDialog.transaction.bdt_amount || approveConfirmDialog.transaction.amount,
-                                  approveConfirmDialog.transaction.currency
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Payment Method:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {displayMethod(
-                                  approveConfirmDialog.transaction
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Phone:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {approveConfirmDialog.transaction.phone}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mb-4">
-                            <label className="form-label mb-2 dark:text-gray-300">
-                              Modify Transaction ID *
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="Current transaction ID (editable)"
-                              value={approveTransactionId}
-                              onChange={(e) =>
-                                setApproveTransactionId(e.target.value)
-                              }
-                              className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                              required
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              Current transaction ID is shown above. You can edit it if needed. This ID will be assigned to the approved transaction.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
-                          <button
-                            onClick={() => {
-                              setApproveConfirmDialog({
-                                open: false,
-                                transactionId: 0,
-                                transaction: null,
-                              });
-                              setApproveTransactionId('');
-                            }}
-                            className="btn btn-secondary w-full md:w-auto"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() =>
-                              confirmApprove(approveConfirmDialog.transactionId)
-                            }
-                            disabled={!approveTransactionId.trim()}
-                            className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
-                          >
-                            <FaCheckCircle className="h-4 w-4" />
-                            Approve Transaction
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                {cancelConfirmDialog.open &&
-                  cancelConfirmDialog.transaction && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
-                        <h3 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">
-                          Cancel Transaction
-                        </h3>
-
-                        <div className="mb-6">
-                          <p className="text-gray-700 dark:text-gray-300 mb-2">
-                            Are you sure you want to cancel this transaction?
-                          </p>
-                          <p className="text-red-600 dark:text-red-400 text-sm font-medium mb-4">
-                            This action cannot be undone and will notify the
-                            user.
-                          </p>
-
-                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-2">
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Transaction ID:
-                              </span>
-                              <span className="font-mono text-sm text-gray-900 dark:text-gray-100">
-                                {cancelConfirmDialog.transaction
-                                  .transactionId || 'Not assigned'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                User:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {cancelConfirmDialog.transaction.user
-                                  ?.username ||
-                                  cancelConfirmDialog.transaction.user?.email ||
-                                  'N/A'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Amount:
-                              </span>
-                              <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-                                {formatTransactionCurrency(
-                                  cancelConfirmDialog.transaction.bdt_amount || cancelConfirmDialog.transaction.amount,
-                                  cancelConfirmDialog.transaction.currency
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Payment Method:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {displayMethod(
-                                  cancelConfirmDialog.transaction
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-medium text-gray-600 dark:text-gray-300">
-                                Phone:
-                              </span>
-                              <span className="text-gray-900 dark:text-gray-100">
-                                {cancelConfirmDialog.transaction.phone}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col-reverse md:flex-row gap-3 justify-center md:justify-end">
-                          <button
-                            onClick={() =>
-                              setCancelConfirmDialog({
-                                open: false,
-                                transactionId: 0,
-                                transaction: null,
-                              })
-                            }
-                            className="btn btn-secondary w-full md:w-auto"
-                          >
-                            Keep Transaction
-                          </button>
-                          <button
-                            onClick={() =>
-                              confirmCancel(cancelConfirmDialog.transactionId)
-                            }
-                            className="btn btn-primary flex items-center gap-2 w-full md:w-auto justify-center"
-                          >
-                            <FaTimesCircle className="h-4 w-4" />
-                            Cancel Transaction
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <ApproveTransactionModal
+                  open={approveConfirmDialog.open}
+                  transaction={approveConfirmDialog.transaction}
+                  transactionId={approveConfirmDialog.transactionId}
+                  approveTransactionId={approveTransactionId}
+                  defaultTransactionId={defaultTransactionId}
+                  onClose={() => {
+                    setApproveConfirmDialog({
+                      open: false,
+                      transactionId: 0,
+                      transaction: null,
+                    });
+                    setApproveTransactionId('');
+                  }}
+                  onApprove={confirmApprove}
+                  formatTransactionCurrency={formatTransactionCurrency}
+                  displayMethod={displayMethod}
+                />
+                <CancelTransactionModal
+                  open={cancelConfirmDialog.open}
+                  transaction={cancelConfirmDialog.transaction}
+                  transactionId={cancelConfirmDialog.transactionId}
+                  onClose={() => {
+                    setCancelConfirmDialog({
+                      open: false,
+                      transactionId: 0,
+                      transaction: null,
+                    });
+                  }}
+                  onCancel={confirmCancel}
+                  formatTransactionCurrency={formatTransactionCurrency}
+                  displayMethod={displayMethod}
+                />
                 {addDeductBalanceDialog.open && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4">
