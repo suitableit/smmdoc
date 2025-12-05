@@ -33,6 +33,8 @@ export function clearAllSessionData(): void {
       'next-auth.csrf-token',
       '__Secure-next-auth.session-token',
       '__Secure-next-auth.csrf-token',
+      'impersonated-user-id',
+      'original-admin-id',
     ];
 
     cookiesToClear.forEach(cookieName => {

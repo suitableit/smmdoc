@@ -18,6 +18,10 @@ export default function ProtectedLayout({
   const isAdminPage = pathname?.startsWith('/admin');
   const { data: session, status } = useSession();
   const [isValidating, setIsValidating] = useState(true);
+  const [hasImpersonationCookie, setHasImpersonationCookie] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  const [hasRendered, setHasRendered] = useState(false);
 
   const userPages = [
     '/dashboard',
@@ -42,16 +46,55 @@ export default function ProtectedLayout({
   );
 
   useEffect(() => {
-    if (status === 'loading' || isValidating) return;
+    const fetchUserData = async () => {
+      if (status === 'loading') return;
+      
+      try {
+        setUserDataLoading(true);
+        const response = await fetch('/api/user/current', {
+          credentials: 'include',
+          cache: 'no-store'
+        });
+        const userDataResponse = await response.json();
+        
+        if (userDataResponse.success) {
+          setUserData(userDataResponse.data);
+          if (userDataResponse.data.isImpersonating) {
+            setHasImpersonationCookie(true);
+          }
+          console.log('Main Layout - User data fetched:', { 
+            role: userDataResponse.data.role, 
+            isImpersonating: userDataResponse.data.isImpersonating 
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data in main layout:', error);
+      } finally {
+        setUserDataLoading(false);
+      }
+    };
+    
+    if (status !== 'loading' && session?.user) {
+      fetchUserData();
+    }
+  }, [status, session?.user]);
 
-    if (session?.user && isUserPage && !isAdminPage) {
+  useEffect(() => {
+    if (status === 'loading' || isValidating) {
+      const isImpersonating = session?.user?.isImpersonating || hasImpersonationCookie;
+      if (!isImpersonating) return;
+    }
+
+    const isImpersonating = session?.user?.isImpersonating || hasImpersonationCookie;
+    
+    if (session?.user && isUserPage && !isAdminPage && !isImpersonating) {
       const userRole = session.user.role;
       if (userRole === 'admin' || userRole === 'moderator') {
         router.push('/admin');
         return;
       }
     }
-  }, [session, pathname, isUserPage, isAdminPage, router, status, isValidating]);
+  }, [session, pathname, isUserPage, isAdminPage, router, status, isValidating, hasImpersonationCookie]);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -157,17 +200,69 @@ export default function ProtectedLayout({
   }, [session?.user?.id, isValidating]);
 
 
-  if (status === 'unauthenticated' || !session?.user) {
+  const isImpersonating = userData?.isImpersonating || session?.user?.isImpersonating || hasImpersonationCookie || false;
+  
+  if (status === 'unauthenticated' || (!session?.user && !isImpersonating)) {
     if (typeof window !== 'undefined') {
       window.location.href = '/sign-in';
     }
     return null;
   }
 
+  const userRole = userData?.role || session?.user?.role;
+  
+  useEffect(() => {
+    if (session?.user && isUserPage && !isAdminPage) {
+      if (userRole === 'user' || userRole === 'USER' || isImpersonating) {
+        setHasRendered(true);
+      }
+      else if (userData && userData.role !== 'admin' && userData.role !== 'moderator') {
+        setHasRendered(true);
+      }
+    }
+  }, [session?.user, isUserPage, isAdminPage, userRole, isImpersonating, userData]);
+  
+  console.log('Main Layout Check:', { 
+    userRole, 
+    isImpersonating, 
+    isUserPage, 
+    isAdminPage,
+    status,
+    hasSession: !!session?.user,
+    hasUserData: !!userData,
+    userDataLoading,
+    hasRendered
+  });
+  
   if (session?.user && isUserPage && !isAdminPage) {
-    const userRole = session.user.role;
-    if (userRole === 'admin' || userRole === 'moderator') {
+    if (userRole === 'user' || userRole === 'USER') {
+      console.log('Main Layout: Allowing - role is user');
+    }
+    else if (isImpersonating) {
+      console.log('Main Layout: Allowing - impersonating flag is true');
+    }
+    else if (hasRendered) {
+      console.log('Main Layout: Allowing - already rendered (prevent white screen)');
+    }
+    else if (
+      (userRole === 'admin' || userRole === 'moderator') && 
+      isImpersonating === false && 
+      !userDataLoading && 
+      userData &&
+      userData.role === userRole &&
+      !hasRendered
+    ) {
+      console.log('Main Layout: Blocking - admin/moderator not impersonating (confirmed, first render)');
       return null;
+    }
+    else {
+      console.log('Main Layout: Allowing - uncertain state (defensive):', { 
+        userRole, 
+        isImpersonating, 
+        userDataLoading,
+        hasUserData: !!userData,
+        hasRendered
+      });
     }
   }
 
@@ -209,7 +304,8 @@ export default function ProtectedLayout({
             }
           >
             {/* Show announcements for users (non-admin, non-moderator) on non-dashboard pages */}
-            {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR' && !isDashboard && (
+            {/* When impersonating, session.role will be the impersonated user's role ('user'), so announcements will show */}
+            {((session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR') || session?.user?.isImpersonating) && !isDashboard && (
               <Announcements visibility="all_pages" />
             )}
             {/* Show announcements for admin users on admin pages (except admin dashboard) */}
@@ -220,6 +316,7 @@ export default function ProtectedLayout({
             {(session?.user?.role === 'moderator' || session?.user?.role === 'MODERATOR') && isAdminPage && pathname !== '/admin' && (
               <Announcements visibility="all_pages" />
             )}
+            {/* Always render children - don't show spinner during switch */}
             {children}
           </div>
         </main>

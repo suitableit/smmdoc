@@ -28,6 +28,7 @@ import { setPageTitle } from '@/lib/utils/set-page-title';
 import { invalidateUserSessions } from '@/lib/session-invalidation';
 import { convertCurrency, formatCurrencyAmount } from '@/lib/currency-utils';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const ChangeRoleModal = dynamic(
   () => import('@/components/admin/users/role-modal'),
@@ -338,7 +339,8 @@ const useClickOutside = (
 
 const UsersListPage = () => {
   const { appName } = useAppNameWithFallback();
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     setPageTitle('All Users', appName);
@@ -631,10 +633,20 @@ const UsersListPage = () => {
       if (result.success) {
         showToast(result.message || 'Successfully switched to user', 'success');
 
+        try {
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          await updateSession();
+          
+          console.log('Session updated after switch');
+        } catch (error) {
+          console.error('Error updating session:', error);
+        }
 
         setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 800);
+          const dashboardUrl = new URL('/dashboard', window.location.origin).href;
+          window.location.href = dashboardUrl;
+        }, 500);
       } else {
         showToast(result.error || 'Failed to switch user', 'error');
       }

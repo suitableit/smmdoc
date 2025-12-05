@@ -1,18 +1,54 @@
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth();
 
     console.log(`User current API accessed by: ${session.user.email}`);
 
-    const userId = session.user.id;
+    let impersonatedUserId: string | null = null;
+    let originalAdminId: string | null = null;
+    
+    try {
+      if (request.cookies) {
+        impersonatedUserId = request.cookies.get('impersonated-user-id')?.value || null;
+        originalAdminId = request.cookies.get('original-admin-id')?.value || null;
+      }
+      
+      if ((!impersonatedUserId || !originalAdminId)) {
+        const cookieStore = await cookies();
+        if (!impersonatedUserId) {
+          impersonatedUserId = cookieStore.get('impersonated-user-id')?.value || null;
+        }
+        if (!originalAdminId) {
+          originalAdminId = cookieStore.get('original-admin-id')?.value || null;
+        }
+      }
+      
+      console.log('User Current API - Cookie check:', { 
+        impersonatedUserId, 
+        originalAdminId,
+        sessionIsImpersonating: session.user.isImpersonating 
+      });
+    } catch (error) {
+      console.error('Error reading cookies in user current API:', error);
+    }
+
+    let userId = session.user.id;
+    let isImpersonating = session.user.isImpersonating || false;
+    
+    if (impersonatedUserId && originalAdminId) {
+      userId = parseInt(impersonatedUserId);
+      isImpersonating = true;
+      console.log('User Current API - Using impersonated user ID:', userId);
+    }
 
     try {
       const userDetails = await db.users.findUnique({
-        where: { id: parseInt(userId) },
+        where: { id: parseInt(userId.toString()) },
         select: {
           id: true,
           name: true,
@@ -40,7 +76,14 @@ export async function GET() {
       }
 
       return NextResponse.json(
-        { success: true, data: userDetails, error: null },
+        { 
+          success: true, 
+          data: {
+            ...userDetails,
+            isImpersonating
+          }, 
+          error: null 
+        },
         { status: 200 }
       );
     } catch (dbError) {

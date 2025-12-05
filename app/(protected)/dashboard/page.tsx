@@ -213,7 +213,8 @@ const DashboardPage = () => {
       </div>
 
       {/* Show announcements for users only (not admin or moderator) */}
-      {session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR' && (
+      {/* When impersonating, session.role will be the impersonated user's role ('user'), so announcements will show */}
+      {((session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR') || session?.user?.isImpersonating) && (
         <Announcements />
       )}
 

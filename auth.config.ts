@@ -125,27 +125,90 @@ export default {
 
         session.user.isImpersonating = token.isImpersonating || false;
         session.user.originalAdminId = token.originalAdminId || null;
+        (session.user as any).originalAdminRole = token.originalAdminRole || null;
+        
+        if (!token.isImpersonating) {
+          (session.user as any).originalAdminRole = null;
+        }
+        
         if (token.permissions) {
           (session.user as any).permissions = token.permissions;
         }
       }
       return session;
     },
-    async jwt({ token, req }: any) {
+    async jwt({ token, req, trigger }: any) {
       if (!token.sub) return token;
 
+      let impersonatedUserId: string | null = null;
+      let originalAdminId: string | null = null;
 
+      try {
+        
+        if (req?.cookies) {
+          if (typeof req.cookies.get === 'function') {
+            impersonatedUserId = req.cookies.get('impersonated-user-id')?.value || null;
+            originalAdminId = req.cookies.get('original-admin-id')?.value || null;
+          } else {
+            impersonatedUserId = req.cookies['impersonated-user-id'] || null;
+            originalAdminId = req.cookies['original-admin-id'] || null;
+          }
+        }
+        
+        if ((!impersonatedUserId || !originalAdminId) && req?.headers?.cookie) {
+          const cookieHeader = req.headers.cookie;
+          const cookieMap = cookieHeader.split(';').reduce((acc: any, cookie: string) => {
+            const [key, value] = cookie.trim().split('=');
+            if (key && value) {
+              acc[key.trim()] = decodeURIComponent(value.trim());
+            }
+            return acc;
+          }, {});
+          if (!impersonatedUserId) impersonatedUserId = cookieMap['impersonated-user-id'] || null;
+          if (!originalAdminId) originalAdminId = cookieMap['original-admin-id'] || null;
+        }
+        
+        if ((!impersonatedUserId || !originalAdminId)) {
+          try {
+            const { cookies } = await import('next/headers');
+            const cookieStore = await cookies();
+            if (!impersonatedUserId) {
+              const cookie = cookieStore.get('impersonated-user-id');
+              impersonatedUserId = cookie?.value || null;
+            }
+            if (!originalAdminId) {
+              const cookie = cookieStore.get('original-admin-id');
+              originalAdminId = cookie?.value || null;
+            }
+          } catch (e) {
+          }
+        }
+        
+        console.log('JWT Callback - Cookie detection result:', { 
+          impersonatedUserId, 
+          originalAdminId,
+          hasReq: !!req,
+          hasCookies: !!req?.cookies,
+          hasHeaders: !!req?.headers?.cookie
+        });
 
-
-
-      const impersonatedUserId = null;
-      const originalAdminId = null;
+      } catch (error) {
+        console.error('Error reading impersonation cookies:', error);
+      }
 
       if (impersonatedUserId && originalAdminId) {
-
+        console.log('JWT Callback - Impersonation detected, fetching users:', { 
+          impersonatedUserId, 
+          originalAdminId 
+        });
         const impersonatedUser = await getUserById(parseInt(impersonatedUserId));
-        if (impersonatedUser) {
-          token.sub = impersonatedUser.id;
+        const originalAdmin = await getUserById(parseInt(originalAdminId));
+        if (impersonatedUser && originalAdmin) {
+          console.log('JWT Callback - Setting impersonated user token:', { 
+            role: impersonatedUser.role, 
+            id: impersonatedUser.id 
+          });
+          token.sub = impersonatedUser.id.toString();
           token.role = impersonatedUser.role;
           token.isTwoFactorEnabled = impersonatedUser.isTwoFactorEnabled;
           token.currency = impersonatedUser.currency;
@@ -156,12 +219,58 @@ export default {
           token.image = impersonatedUser.image;
           token.isImpersonating = true;
           token.originalAdminId = parseInt(originalAdminId);
+          token.originalAdminRole = originalAdmin.role;
+          return token;
+        } else {
+          console.log('JWT Callback - Users not found:', { 
+            impersonatedUser: !!impersonatedUser, 
+            originalAdmin: !!originalAdmin 
+          });
+        }
+      } else {
+        console.log('JWT Callback - No impersonation cookies found');
+      }
+
+      if (!impersonatedUserId && !originalAdminId && token.originalAdminId) {
+        console.log('JWT Callback - Cookies cleared, restoring original admin session:', {
+          originalAdminId: token.originalAdminId,
+          originalAdminRole: token.originalAdminRole
+        });
+        
+        const originalAdmin = await getUserById(token.originalAdminId);
+        if (originalAdmin) {
+          console.log('JWT Callback - Restoring admin token:', {
+            role: originalAdmin.role,
+            id: originalAdmin.id
+          });
+          token.sub = originalAdmin.id.toString();
+          token.role = originalAdmin.role;
+          token.isTwoFactorEnabled = originalAdmin.isTwoFactorEnabled;
+          token.currency = originalAdmin.currency;
+          token.name = originalAdmin.name;
+          token.username = originalAdmin.username;
+          token.email = originalAdmin.email;
+          token.balance = originalAdmin.balance;
+          token.image = originalAdmin.image;
+          token.isImpersonating = false;
+          if (originalAdmin.permissions) {
+            token.permissions = Array.isArray(originalAdmin.permissions) 
+              ? originalAdmin.permissions 
+              : (typeof originalAdmin.permissions === 'string' ? JSON.parse(originalAdmin.permissions) : []);
+          } else {
+            token.permissions = null;
+          }
+          token.originalAdminId = null;
+          token.originalAdminRole = null;
           return token;
         }
       }
 
-      token.isImpersonating = false;
-      token.originalAdminId = null;
+      if (!impersonatedUserId && !originalAdminId) {
+        token.isImpersonating = false;
+        token.originalAdminId = null;
+        token.originalAdminRole = null;
+      }
 
       const numericId = parseInt(token.sub);
       if (!isNaN(numericId)) {

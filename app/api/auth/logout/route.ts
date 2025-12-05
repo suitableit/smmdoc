@@ -21,10 +21,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Logout activity logged successfully'
     });
+
+    response.cookies.set('impersonated-user-id', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    response.cookies.set('original-admin-id', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Error in logout API:', error);

@@ -18,9 +18,9 @@ export async function POST(request: NextRequest) {
       select: { role: true }
     });
 
-    if (!adminUser || adminUser.role !== 'admin') {
+    if (!adminUser || (adminUser.role !== 'admin' && adminUser.role !== 'moderator')) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
+        { success: false, error: 'Admin or Moderator access required' },
         { status: 403 }
       );
     }
@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (targetUser.role === 'admin') {
+    if (targetUser.role === 'admin' || targetUser.role === 'moderator') {
       return NextResponse.json(
-        { success: false, error: 'Cannot switch to another admin account' },
+        { success: false, error: 'Cannot switch to another admin or moderator account' },
         { status: 403 }
       );
     }
@@ -67,6 +67,13 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set('original-admin-id', session.user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24
+    });
+
+    response.cookies.set('original-admin-role', adminUser.role, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

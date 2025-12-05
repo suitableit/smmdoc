@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { FaCheckCircle, FaTimes } from 'react-icons/fa';
 import UserSwitchIcon from './UserSwitchIcon';
 
@@ -30,6 +31,7 @@ const UserSwitchWrapper = () => {
     type: 'success' | 'error' | 'info' | 'pending';
   } | null>(null);
   const router = useRouter();
+  const { update: updateSession } = useSession();
 
   const showToast = (
     message: string,
@@ -48,21 +50,34 @@ const UserSwitchWrapper = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include'
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         showToast('Successfully switched back to admin account', 'success');
 
-        window.location.href = '/admin';
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        try {
+          await updateSession();
+          console.log('Session updated after switch back');
+        } catch (error) {
+          console.error('Error updating session:', error);
+        }
+
+        setTimeout(() => {
+          const adminUrl = new URL('/admin', window.location.origin).href;
+          window.location.href = adminUrl;
+        }, 500);
       } else {
         showToast(data.error || 'Failed to switch back', 'error');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Switch back error:', error);
       showToast('An error occurred while switching back', 'error');
-    } finally {
       setIsLoading(false);
     }
   };

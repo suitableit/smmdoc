@@ -1,13 +1,35 @@
 import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth();
 
+    let userId = session.user.id;
+    try {
+      let impersonatedUserId: string | null = null;
+      
+      if (request.cookies) {
+        impersonatedUserId = request.cookies.get('impersonated-user-id')?.value || null;
+      }
+      
+      if (!impersonatedUserId) {
+        const cookieStore = await cookies();
+        impersonatedUserId = cookieStore.get('impersonated-user-id')?.value || null;
+      }
+      
+      if (impersonatedUserId) {
+        userId = parseInt(impersonatedUserId);
+        console.log('Dashboard Stats API - Using impersonated user ID:', userId);
+      }
+    } catch (error) {
+      console.error('Error reading cookies in dashboard stats API:', error);
+    }
+
     const user = await db.users.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         balance: true,
         total_deposit: true,
@@ -29,39 +51,39 @@ export async function GET() {
     const totalSpent = user.total_spent || 0;
     
     const totalOrders = await db.newOrders.count({
-      where: { userId: session.user.id }
+      where: { userId: userId }
     });
     
     const pendingOrders = await db.newOrders.count({
       where: { 
-        userId: session.user.id,
+        userId: userId,
         status: 'pending' 
       }
     });
     
     const processingOrders = await db.newOrders.count({
       where: { 
-        userId: session.user.id,
+        userId: userId,
         status: 'processing' 
       }
     });
     
     const completedOrders = await db.newOrders.count({
       where: { 
-        userId: session.user.id,
+        userId: userId,
         status: 'completed' 
       }
     });
     
     const cancelledOrders = await db.newOrders.count({
       where: { 
-        userId: session.user.id,
+        userId: userId,
         status: 'cancelled' 
       }
     });
     
     const recentOrders = await db.newOrders.findMany({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       orderBy: { createdAt: 'desc' },
       take: 5,
       include: {
@@ -84,7 +106,7 @@ export async function GET() {
           some: {
             newOrders: {
               some: {
-                userId: session.user.id
+                userId: userId
               }
             }
           }
@@ -103,7 +125,7 @@ export async function GET() {
     });
 
     const recentTransactions = await db.addFunds.findMany({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       orderBy: { createdAt: 'desc' },
       take: 5
     });

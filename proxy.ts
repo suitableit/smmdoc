@@ -286,12 +286,12 @@ export default auth(async (req) => {
   }
 
   if (nextUrl.pathname.startsWith('/admin')) {
+    const originalAdminRole = (userRole as any)?.originalAdminRole;
+    const hasAdminAccess = !isImpersonating 
+      ? (userRole?.role === 'admin' || userRole?.role === 'moderator')
+      : (originalAdminRole === 'admin' || originalAdminRole === 'moderator');
 
-    if (isImpersonating) {
-      return NextResponse.redirect(new URL('/dashboard', nextUrl));
-    }
-
-    if (userRole?.role !== 'admin' && userRole?.role !== 'moderator') {
+    if (!hasAdminAccess) {
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     }
   }

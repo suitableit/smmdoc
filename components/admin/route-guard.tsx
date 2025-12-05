@@ -44,14 +44,6 @@ export function RouteGuard({ children }: RouteGuardProps) {
     }
   }, [session, pathname, router, status]);
 
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="loading-spinner"></div>
-      </div>
-    );
-  }
-
   if (session?.user) {
     const userRole = session.user.role;
     const userPermissions = (session.user as any)?.permissions as string[] | null | undefined;
