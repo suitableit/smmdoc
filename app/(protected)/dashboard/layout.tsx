@@ -39,7 +39,6 @@ export default function DashboardLayout({
     fetchUser();
   }, []);
 
-  // Redirect admin/moderator to admin dashboard
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -59,7 +58,6 @@ export default function DashboardLayout({
     }
   }, [session, user, loading, router, status]);
 
-  // Show loading while checking
   if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -68,7 +66,6 @@ export default function DashboardLayout({
     );
   }
 
-  // Don't render if admin/moderator (will redirect)
   if (session?.user) {
     const userRole = session.user.role;
     if (userRole === 'admin' || userRole === 'moderator') {

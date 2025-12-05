@@ -49,7 +49,6 @@ export async function PUT(
       );
     }
 
-    // Validate permissions if role is moderator
     if (role === 'moderator' && permissions) {
       if (!Array.isArray(permissions)) {
         return NextResponse.json(
@@ -90,10 +89,8 @@ export async function PUT(
       );
     }
 
-    // Prepare update data
     const updateData: any = { role };
     
-    // Set permissions for moderators, clear for others
     if (role === 'moderator' && permissions) {
       updateData.permissions = permissions;
     } else if (role !== 'moderator') {

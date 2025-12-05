@@ -1,6 +1,7 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ApiRequestBuilder, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 export async function POST(
   req: NextRequest,
@@ -48,12 +49,20 @@ export async function POST(
 
     const order = await db.newOrders.findUnique({
       where: { id: parseInt(id) },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        createdAt: true,
+        price: true,
+        providerOrderId: true,
         service: {
           select: {
             id: true,
             name: true,
             cancel: true,
+            providerId: true,
+            providerServiceId: true
           }
         },
         user: {
@@ -155,13 +164,79 @@ export async function POST(
       }
     });
 
+    let providerCancelSubmitted = false;
+    let providerCancelError: string | null = null;
+
+    if (order.service.providerId && order.providerOrderId) {
+      try {
+        const provider = await db.apiProviders.findUnique({
+          where: { id: order.service.providerId }
+        });
+
+        if (provider && provider.status === 'active') {
+          const providerOrderId = order.providerOrderId;
+          
+          if (providerOrderId) {
+            const apiSpec = createApiSpecFromProvider(provider);
+            const requestBuilder = new ApiRequestBuilder(
+              apiSpec,
+              provider.api_url,
+              provider.api_key,
+              (provider as any).http_method || (provider as any).httpMethod || 'POST'
+            );
+
+            const cancelRequestConfig = requestBuilder.buildCancelRequest([String(providerOrderId)]);
+
+            console.log('Submitting cancel request to provider:', {
+              providerId: provider.id,
+              providerName: provider.name,
+              providerOrderId: providerOrderId,
+              orderId: order.id,
+              cancelRequestId: cancelRequest.id
+            });
+
+            const providerResponse = await fetch(cancelRequestConfig.url, {
+              method: cancelRequestConfig.method,
+              headers: cancelRequestConfig.headers || {},
+              body: cancelRequestConfig.data,
+              signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
+            });
+
+            if (providerResponse.ok) {
+              const providerResult = await providerResponse.json();
+              
+              if (providerResult.error) {
+                providerCancelError = `Provider error: ${providerResult.error}`;
+                console.error('Provider cancel error:', providerCancelError);
+              } else {
+                providerCancelSubmitted = true;
+                console.log('Cancel request submitted to provider successfully:', providerResult);
+              }
+            } else {
+              providerCancelError = `Provider API error: ${providerResponse.status} ${providerResponse.statusText}`;
+              console.error('Provider cancel API error:', providerCancelError);
+            }
+          }
+        }
+      } catch (error) {
+        providerCancelError = error instanceof Error ? error.message : 'Unknown error submitting to provider';
+        console.error('Error submitting cancel request to provider:', error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         cancelRequest,
         estimatedRefund: refundAmount,
-        message: 'Cancellation request submitted successfully. Our team will review it within 24 hours.'
+        providerCancelSubmitted,
+        providerCancelError: providerCancelError || null
       },
+      message: providerCancelSubmitted 
+        ? 'Cancel request submitted successfully and forwarded to provider'
+        : providerCancelError
+        ? `Cancel request stored, but provider submission failed: ${providerCancelError}`
+        : 'Cancellation request submitted successfully. Our team will review it within 24 hours.',
       error: null
     });
 

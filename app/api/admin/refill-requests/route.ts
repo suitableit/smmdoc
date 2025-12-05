@@ -2,6 +2,32 @@ import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
+function convertBigIntToNumber(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+  
+  if (typeof obj === 'bigint') {
+    return Number(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToNumber);
+  }
+  
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        converted[key] = convertBigIntToNumber(obj[key]);
+      }
+    }
+    return converted;
+  }
+  
+  return obj;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -62,6 +88,7 @@ export async function GET(req: NextRequest) {
               select: {
                 id: true,
                 qty: true,
+                remains: true,
                 price: true,
                 usdPrice: true,
                 link: true,
@@ -145,9 +172,11 @@ export async function GET(req: NextRequest) {
 
     const totalPages = Math.ceil(totalRequests / limit);
 
+    const serializedData = convertBigIntToNumber(uniqueRefillRequests);
+
     return NextResponse.json({
       success: true,
-      data: uniqueRefillRequests,
+      data: serializedData,
       pagination: {
         total: totalRequests,
         page,

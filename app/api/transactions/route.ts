@@ -191,12 +191,10 @@ export async function GET(request: NextRequest) {
     }
 
     const transformedTransactions = transactions.map((transaction: any) => {
-      // Handle Decimal type for usdAmount
       const usdAmount = typeof transaction.usdAmount === 'object' && transaction.usdAmount !== null
         ? Number(transaction.usdAmount)
         : Number(transaction.usdAmount || 0);
       
-      // Handle amount field (might be Float or Decimal)
       const amount = transaction.amount 
         ? (typeof transaction.amount === 'object' && transaction.amount !== null
             ? Number(transaction.amount)
@@ -208,7 +206,7 @@ export async function GET(request: NextRequest) {
         transactionId: transaction.transactionId || transaction.id?.toString(),
         invoice_id: transaction.invoiceId || transaction.id?.toString(),
         amount: amount,
-        bdt_amount: transaction.amount || amount, // Use amount field as bdt_amount if available
+        bdt_amount: transaction.amount || amount,
         status: transaction.status || 'Processing',
         admin_status: transaction.status || 'Processing',
         method: transaction.paymentGateway || 'UddoktaPay',

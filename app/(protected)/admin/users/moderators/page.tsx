@@ -579,7 +579,6 @@ const ModeratorsPage = () => {
     const moderator = moderators.find(m => m.id === moderatorId);
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
-    // Load existing permissions if moderator has them
     if (moderator && moderator.permissions && Array.isArray(moderator.permissions)) {
       setNewRolePermissions(moderator.permissions);
     } else {

@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { ApiRequestBuilder, createApiSpecFromProvider } from '@/lib/provider-api-specification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,13 +34,20 @@ export async function POST(req: NextRequest) {
 
     const order = await db.newOrders.findUnique({
       where: { id: parseInt(orderId) },
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        updatedAt: true,
+        providerOrderId: true,
         service: {
           select: {
             id: true,
             name: true,
             refill: true,
-            refillDays: true
+            refillDays: true,
+            providerId: true,
+            providerServiceId: true
           }
         },
         user: {
@@ -154,10 +162,78 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    let providerRefillSubmitted = false;
+    let providerRefillError: string | null = null;
+
+    if (order.service.providerId && order.providerOrderId) {
+      try {
+        const provider = await db.apiProviders.findUnique({
+          where: { id: order.service.providerId }
+        });
+
+        if (provider && provider.status === 'active') {
+          const providerOrderId = order.providerOrderId;
+          
+          if (providerOrderId) {
+            const apiSpec = createApiSpecFromProvider(provider);
+            const requestBuilder = new ApiRequestBuilder(
+              apiSpec,
+              provider.api_url,
+              provider.api_key,
+              (provider as any).http_method || (provider as any).httpMethod || 'POST'
+            );
+
+            const refillRequestConfig = requestBuilder.buildRefillRequest(String(providerOrderId));
+
+            console.log('Submitting refill request to provider:', {
+              providerId: provider.id,
+              providerName: provider.name,
+              providerOrderId: providerOrderId,
+              orderId: order.id,
+              refillRequestId: refillRequest.id
+            });
+
+            const providerResponse = await fetch(refillRequestConfig.url, {
+              method: refillRequestConfig.method,
+              headers: refillRequestConfig.headers || {},
+              body: refillRequestConfig.data,
+              signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
+            });
+
+            if (providerResponse.ok) {
+              const providerResult = await providerResponse.json();
+              
+              if (providerResult.error) {
+                providerRefillError = `Provider error: ${providerResult.error}`;
+                console.error('Provider refill error:', providerRefillError);
+              } else {
+                providerRefillSubmitted = true;
+                console.log('Refill request submitted to provider successfully:', providerResult);
+              }
+            } else {
+              providerRefillError = `Provider API error: ${providerResponse.status} ${providerResponse.statusText}`;
+              console.error('Provider refill API error:', providerRefillError);
+            }
+          }
+        }
+      } catch (error) {
+        providerRefillError = error instanceof Error ? error.message : 'Unknown error submitting to provider';
+        console.error('Error submitting refill request to provider:', error);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      data: refillRequest,
-      message: 'Refill request submitted successfully',
+      data: {
+        ...refillRequest,
+        providerRefillSubmitted,
+        providerRefillError: providerRefillError || null
+      },
+      message: providerRefillSubmitted 
+        ? 'Refill request submitted successfully and forwarded to provider'
+        : providerRefillError
+        ? `Refill request stored, but provider submission failed: ${providerRefillError}`
+        : 'Refill request submitted successfully',
       error: null
     });
 

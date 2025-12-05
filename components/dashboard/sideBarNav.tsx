@@ -189,32 +189,24 @@ export default function SideBarNav({
       );
     }
 
-    // For admin/moderator: filter by permissions
     const userRole = session?.user?.role || 'user';
     const userPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
     
-    // Filter items based on role and permissions
     let filteredItems = adminNavItems.filter((item: NavItem) => {
-      // Admins see everything
       if (userRole === 'admin' || userRole === 'super_admin') {
         return true;
       }
       
-      // Moderators need permissions
       if (userRole === 'moderator') {
-        // Dashboard is always visible
         if (item.href === '/admin' || item.href === '/admin/') {
           return true;
         }
         
-        // If item has a permission requirement, check if user has it
         if (item.permission) {
-          // Ensure permissions is an array and check if it includes the required permission
           const permissionsArray = Array.isArray(userPermissions) ? userPermissions : [];
           return permissionsArray.includes(item.permission);
         }
         
-        // Items without permission field are admin-only (like settings, etc.)
         return false;
       }
       

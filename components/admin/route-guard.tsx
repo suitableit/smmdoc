@@ -29,17 +29,14 @@ export function RouteGuard({ children }: RouteGuardProps) {
     const userRole = session.user.role;
     const userPermissions = (session.user as any)?.permissions as string[] | null | undefined;
 
-    // Normalize pathname for comparison
     const normalizedPath = pathname.endsWith('/') && pathname !== '/' 
       ? pathname.slice(0, -1) 
       : pathname;
 
-    // Don't redirect if already on admin dashboard (moderators should always have access)
     if (normalizedPath === '/admin') {
       return;
     }
 
-    // Check if user has permission to access this route using normalized path
     const hasAccess = hasPermission(userRole, userPermissions, normalizedPath);
     
     if (!hasAccess) {
@@ -47,7 +44,6 @@ export function RouteGuard({ children }: RouteGuardProps) {
     }
   }, [session, pathname, router, status]);
 
-  // Show loading state while checking
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -56,12 +52,10 @@ export function RouteGuard({ children }: RouteGuardProps) {
     );
   }
 
-  // Don't render children if user doesn't have permission (will redirect)
   if (session?.user) {
     const userRole = session.user.role;
     const userPermissions = (session.user as any)?.permissions as string[] | null | undefined;
     
-    // Normalize pathname for permission check
     const normalizedPath = pathname.endsWith('/') && pathname !== '/' 
       ? pathname.slice(0, -1) 
       : pathname;

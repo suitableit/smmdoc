@@ -21,7 +21,6 @@ export default function AdminLayout({
       return;
     }
 
-    // Allow both admin and moderator roles
     if (!session.user || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       router.push('/dashboard');
       return;

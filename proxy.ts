@@ -13,7 +13,6 @@ import { getModuleSettings } from './lib/utils/module-settings';
 
 export const { auth } = NextAuth(authConfig);
 
-// Helper function to check if user is admin or moderator
 const isAdminOrModerator = (role: string | undefined | null): boolean => {
   return role === 'admin' || role === 'moderator';
 };
@@ -292,13 +291,11 @@ export default auth(async (req) => {
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     }
 
-    // Allow both admin and moderator roles to access admin routes
     if (userRole?.role !== 'admin' && userRole?.role !== 'moderator') {
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     }
   }
 
-  // Block admin/moderator access to user pages
   const userPages = [
     '/dashboard',
     '/my-orders',

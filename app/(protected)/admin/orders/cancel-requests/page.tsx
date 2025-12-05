@@ -884,7 +884,7 @@ const CancelRequestsPage = () => {
                         <th
                           className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
                         >
-                          Seller
+                          Provider
                         </th>
                         <th
                           className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100"
@@ -1163,7 +1163,7 @@ const CancelRequestsPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {formatNumber(request.order?.qty || 0)}
+                              {(request.order?.qty || 0).toString()}
                             </div>
                           </div>
                           <div>
@@ -1444,9 +1444,7 @@ const CancelRequestsPage = () => {
                                   Quantity
                                 </label>
                                 <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
-                                  {formatNumber(
-                                    viewDialog.request.order?.qty || 0
-                                  )}
+                                  {(viewDialog.request.order?.qty || 0).toString()}
                                 </div>
                               </div>
                               <div>

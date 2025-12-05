@@ -396,7 +396,6 @@ export default function AdminDashboardPage() {
 
   const { currency, rate } = useCurrency();
 
-  // Check if user has permission to view transactions
   const userRole = session?.user?.role;
   const userPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
   const hasTransactionsPermission = 
@@ -404,13 +403,11 @@ export default function AdminDashboardPage() {
     userRole === 'super_admin' || 
     (userRole === 'moderator' && userPermissions?.includes('all_transactions'));
   
-  // Check if user has permission to view users
   const hasUsersPermission = 
     userRole === 'admin' || 
     userRole === 'super_admin' || 
     (userRole === 'moderator' && userPermissions?.includes('users'));
   
-  // Moderators should not see Quick Actions
   const isModerator = userRole === 'moderator';
 
   const initializeWithCache = () => {
@@ -490,7 +487,6 @@ export default function AdminDashboardPage() {
 
   const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
     try {
-      // Re-check permissions in case they changed
       const currentUserRole = session?.user?.role;
       const currentUserPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
       const currentHasTransactionsPermission = 
@@ -547,7 +543,6 @@ export default function AdminDashboardPage() {
         return { success: false, error: error.message };
       });
 
-      // Only fetch users if user has permission
       const usersQueryParams = new URLSearchParams({
         page: '1',
         limit: '5',
@@ -562,7 +557,6 @@ export default function AdminDashboardPage() {
           })
         : Promise.resolve({ success: false, error: null });
 
-      // Only fetch transactions if user has permission
       const transactionsPromise = currentHasTransactionsPermission
         ? axiosInstance.get('/api/transactions', {
             params: {
@@ -614,11 +608,9 @@ export default function AdminDashboardPage() {
 
       let transactionsToShow: PendingTransaction[] = [];
       if (currentHasTransactionsPermission && transactionsResponse.data) {
-        // Handle axios response structure: response.data contains the API response
         const apiResponse = transactionsResponse.data;
         let transactions: PendingTransaction[] = [];
         
-        // Extract transactions array from various response structures
         if (apiResponse.success && Array.isArray(apiResponse.data)) {
           transactions = apiResponse.data;
         } else if (Array.isArray(apiResponse)) {
@@ -627,7 +619,6 @@ export default function AdminDashboardPage() {
           transactions = apiResponse.data;
         }
         
-        // Filter for pending transactions (already filtered by API, but double-check)
         const pending = transactions.filter(
           (transaction: PendingTransaction) => 
             transaction.status === 'pending' || 
@@ -717,8 +708,8 @@ export default function AdminDashboardPage() {
   }, []);
 
   const displayMethod = useCallback((transaction: PendingTransaction) => {
-    const gateway = transaction.method || transaction.paymentGateway || '';
-    const methodName = transaction.payment_method || transaction.paymentMethod || '';
+    const gateway = transaction.method || '';
+    const methodName = transaction.payment_method || '';
     
     if (!gateway && !methodName) {
       return 'Unknown';
@@ -790,12 +781,10 @@ export default function AdminDashboardPage() {
   }, []);
 
   const openViewDetailsDialog = useCallback((transaction: PendingTransaction) => {
-    // For now, just show a toast. Can be extended later if needed.
     showToast(`Transaction ID: ${transaction.id}`, 'info');
   }, [showToast]);
 
   const openUpdateStatusDialog = useCallback((transactionId: number, currentStatus: string) => {
-    // For now, just show a toast. Can be extended later if needed.
     showToast(`Update status for transaction ${transactionId}`, 'info');
   }, [showToast]);
 
@@ -803,7 +792,7 @@ export default function AdminDashboardPage() {
     const numericId = parseInt(transactionId);
     const transaction = pendingTransactions.find((t) => t.id === numericId);
 
-    let defaultId = transaction?.transactionId?.toString() || transaction?.transaction_id?.toString() || '';
+    let defaultId = transaction?.transaction_id?.toString() || '';
 
     if (!defaultId) {
       const timestamp = new Date().getTime();
@@ -1289,7 +1278,12 @@ export default function AdminDashboardPage() {
 
       <ApproveTransactionModal
         open={approveConfirmDialog.open}
-        transaction={approveConfirmDialog.transaction}
+        transaction={approveConfirmDialog.transaction ? {
+          ...approveConfirmDialog.transaction,
+          currency: approveConfirmDialog.transaction.currency || 'USD',
+          transaction_id: approveConfirmDialog.transaction.transaction_id,
+          transactionId: approveConfirmDialog.transaction.transaction_id,
+        } : null}
         transactionId={approveConfirmDialog.transactionId}
         approveTransactionId={approveTransactionId}
         defaultTransactionId={defaultTransactionId}
@@ -1308,7 +1302,12 @@ export default function AdminDashboardPage() {
 
       <CancelTransactionModal
         open={cancelConfirmDialog.open}
-        transaction={cancelConfirmDialog.transaction}
+        transaction={cancelConfirmDialog.transaction ? {
+          ...cancelConfirmDialog.transaction,
+          currency: cancelConfirmDialog.transaction.currency || 'USD',
+          transaction_id: cancelConfirmDialog.transaction.transaction_id,
+          transactionId: cancelConfirmDialog.transaction.transaction_id,
+        } : null}
         transactionId={cancelConfirmDialog.transactionId}
         onClose={() => {
           setCancelConfirmDialog({

@@ -19,7 +19,6 @@ export default function ProtectedLayout({
   const { data: session, status } = useSession();
   const [isValidating, setIsValidating] = useState(true);
 
-  // User pages that admins/moderators should not access
   const userPages = [
     '/dashboard',
     '/my-orders',
@@ -42,7 +41,6 @@ export default function ProtectedLayout({
     pathname === page || pathname?.startsWith(page + '/')
   );
 
-  // Redirect admin/moderator from user pages
   useEffect(() => {
     if (status === 'loading' || isValidating) return;
 
@@ -166,7 +164,6 @@ export default function ProtectedLayout({
     return null;
   }
 
-  // Don't render user pages for admin/moderator (will redirect)
   if (session?.user && isUserPage && !isAdminPage) {
     const userRole = session.user.role;
     if (userRole === 'admin' || userRole === 'moderator') {

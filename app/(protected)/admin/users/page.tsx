@@ -344,7 +344,6 @@ const UsersListPage = () => {
     setPageTitle('All Users', appName);
   }, [appName]);
 
-  // Check if current user is a moderator
   const isModerator = session?.user?.role === 'moderator';
 
   const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext, availableCurrencies, currencySettings, convertAmount } = useCurrency();
@@ -992,7 +991,6 @@ const UsersListPage = () => {
   const openChangeRoleDialog = useCallback(async (userId: number, currentRole: string) => {
     setChangeRoleDialog({ open: true, userId, currentRole });
     setNewRole(currentRole);
-    // Fetch existing permissions for the user
     try {
       const response = await fetch(`/api/admin/users/${userId}`);
       const result = await response.json();

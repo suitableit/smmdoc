@@ -92,19 +92,23 @@ export async function GET(request: NextRequest) {
           where: { userId: user.id }
         });
         
-        // Parse permissions if it's a JSON field
         let parsedPermissions: string[] | null = null;
         if (user.permissions) {
           if (Array.isArray(user.permissions)) {
-            parsedPermissions = user.permissions;
+            parsedPermissions = user.permissions.filter((p): p is string => typeof p === 'string');
           } else if (typeof user.permissions === 'string') {
             try {
-              parsedPermissions = JSON.parse(user.permissions);
+              const parsed = JSON.parse(user.permissions);
+              if (Array.isArray(parsed)) {
+                parsedPermissions = parsed.filter((p): p is string => typeof p === 'string');
+              } else {
+                parsedPermissions = null;
+              }
             } catch {
               parsedPermissions = null;
             }
           } else {
-            parsedPermissions = user.permissions as any;
+            parsedPermissions = null;
           }
         }
         

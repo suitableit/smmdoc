@@ -61,10 +61,7 @@ interface Order {
     min_order: number;
     max_order: number;
     status: string;
-    seller?: {
-      type: 'Self' | 'Auto';
-      name?: string;
-    };
+    provider?: string;
   };
   category: {
     id: number;
@@ -237,8 +234,8 @@ const RefillOrdersPage = () => {
       const response = await fetch(`/api/admin/refill-requests?${queryParams}`);
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch eligible orders');
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || result.message || 'Failed to fetch eligible orders');
       }
 
       console.log('Refill requests fetched successfully:', result);
@@ -251,12 +248,12 @@ const RefillOrdersPage = () => {
         .map((request: any) => {
           const service = request.order?.service;
           const isSelfService = !service?.providerId && !service?.providerName;
-          const sellerType: 'Self' | 'Auto' = isSelfService ? 'Self' : 'Auto';
-          const sellerName = isSelfService ? undefined : (service?.providerName || 'API Provider');
+          const providerName = isSelfService ? 'Self' : (service?.providerName || 'API Provider');
           
           return {
             id: request.order?.id || 0,
             qty: request.order?.qty || 0,
+            remains: request.order?.remains || 0,
             price: request.order?.price || 0,
             usdPrice: request.order?.usdPrice || 0,
             link: request.order?.link || '',
@@ -271,10 +268,7 @@ const RefillOrdersPage = () => {
               min_order: 0,
               max_order: 0,
               status: 'active',
-              seller: {
-                type: sellerType,
-                name: sellerName
-              }
+              provider: providerName
             },
             category: { category_name: 'Refill Request' },
             refillRequest: request
@@ -439,7 +433,18 @@ const RefillOrdersPage = () => {
   };
 
   const calculateProgress = (qty: number, remains: number) => {
-    return qty > 0 ? Math.round(((qty - remains) / qty) * 100) : 0;
+    const validQty = Number(qty) || 0;
+    const validRemains = Number(remains) || 0;
+    
+    if (validQty <= 0 || isNaN(validQty)) {
+      return 0;
+    }
+    
+    const delivered = validQty - validRemains;
+    const progress = (delivered / validQty) * 100;
+    
+    const result = Math.round(progress);
+    return isNaN(result) ? 0 : Math.max(0, Math.min(100, result));
   };
 
   const handleRefresh = async () => {
@@ -807,7 +812,7 @@ const RefillOrdersPage = () => {
                           Service
                         </th>
                         <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
-                          Seller
+                          Provider
                         </th>
                         <th className="text-left p-3 font-semibold text-gray-900 dark:text-gray-100">
                           Link
@@ -875,13 +880,8 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm capitalize"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.service?.seller?.type || 'Self'}
+                                {order.service?.provider || 'Self'}
                               </div>
-                              {order.service?.seller?.name && (
-                                <div className="text-xs truncate max-w-32" style={{ color: 'var(--text-muted)' }}>
-                                  {order.service.seller.name}
-                                </div>
-                              )}
                             </div>
                           </td>
                           <td className="p-3">
@@ -916,10 +916,10 @@ const RefillOrdersPage = () => {
                                 className="font-semibold text-sm"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {formatNumber(order.qty)}
+                                {order.qty.toString()}
                               </div>
                               <div className="text-xs text-green-600 dark:text-green-400">
-                                {formatNumber(order.qty - order.remains)} delivered
+                                {(order.qty - order.remains).toString()} delivered
                               </div>
                             </div>
                           </td>
@@ -1039,16 +1039,11 @@ const RefillOrdersPage = () => {
                           </div>
                           <div className="flex items-center gap-2 mt-2">
                             <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                              Seller:
+                              Provider:
                             </span>
                             <span className="text-xs font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
-                              {order.service?.seller?.type || 'Self'}
+                              {order.service?.provider || 'Self'}
                             </span>
-                            {order.service?.seller?.name && (
-                              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                                ({order.service.seller.name})
-                              </span>
-                            )}
                           </div>
 
                           <div className="flex items-center gap-1 mt-1">
@@ -1110,10 +1105,10 @@ const RefillOrdersPage = () => {
                               className="font-semibold text-sm"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {formatNumber(order.qty)}
+                              {order.qty.toString()}
                             </div>
                             <div className="text-xs text-green-600 dark:text-green-400">
-                              {formatNumber(order.qty - order.remains)} delivered
+                              {(order.qty - order.remains).toString()} delivered
                             </div>
                           </div>
                           <div>
@@ -1491,10 +1486,9 @@ const RefillOrdersPage = () => {
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     Category: {viewDialog.order.category?.category_name || 'Unknown'}{' '}
-                    {viewDialog.order.service?.seller && (
+                    {viewDialog.order.service?.provider && (
                       <>
-                        • Seller: {viewDialog.order.service.seller.type || 'Self'}
-                        {viewDialog.order.service.seller.name && ` (${viewDialog.order.service.seller.name})`}
+                        • Provider: {viewDialog.order.service.provider || 'Self'}
                       </>
                     )}
                   </div>
@@ -1503,11 +1497,11 @@ const RefillOrdersPage = () => {
                   <div>
                     <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Quantity</label>
                     <div className="text-sm text-gray-900 dark:text-gray-100 mt-1">
-                      {formatNumber(viewDialog.order.qty || 0)}
+                      {(viewDialog.order.qty || 0).toString()}
                     </div>
                     {viewDialog.order.remains !== undefined && (
                       <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        {formatNumber(viewDialog.order.qty - viewDialog.order.remains)} delivered
+                        {(viewDialog.order.qty - viewDialog.order.remains).toString()} delivered
                       </div>
                     )}
                   </div>

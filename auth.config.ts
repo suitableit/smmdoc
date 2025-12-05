@@ -125,7 +125,6 @@ export default {
 
         session.user.isImpersonating = token.isImpersonating || false;
         session.user.originalAdminId = token.originalAdminId || null;
-        // Include permissions in session
         if (token.permissions) {
           (session.user as any).permissions = token.permissions;
         }
@@ -177,7 +176,6 @@ export default {
         token.email = existingUser.email;
         token.balance = existingUser.balance;
         token.image = existingUser.image;
-        // Include permissions for moderators
         if (existingUser.permissions) {
           token.permissions = Array.isArray(existingUser.permissions) 
             ? existingUser.permissions 
@@ -215,7 +213,6 @@ export default {
             token.email = existingUser.email;
             token.balance = existingUser.balance;
             token.image = existingUser.image;
-            // Include permissions for moderators
             if (existingUser.permissions) {
               token.permissions = Array.isArray(existingUser.permissions) 
                 ? existingUser.permissions 
@@ -223,7 +220,6 @@ export default {
             } else {
               token.permissions = null;
             }
-            // Include permissions for moderators
             if (existingUser.permissions) {
               token.permissions = Array.isArray(existingUser.permissions) 
                 ? existingUser.permissions 
