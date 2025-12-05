@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
 import { Session } from 'next-auth';
 import * as FaIcons from 'react-icons/fa';
+import { filterNavItemsByPermissions } from '@/lib/permissions';
 
 interface NavItem {
   title: string;
@@ -15,6 +16,7 @@ interface NavItem {
   icon: string;
   label: string;
   roles: string[];
+  permission?: string;
   badge?: string;
   statusColor?: string;
   disabled?: boolean;
@@ -64,7 +66,7 @@ export default function SideBarNav({
   setOpen = () => {},
 }: SideBarNavProps) {
   const path = usePathname() || '';
-  const isAdmin = session?.user?.role === 'admin';
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'moderator';
   const [ticketSystemEnabled, setTicketSystemEnabled] = useState(true);
   const [contactSystemEnabled, setContactSystemEnabled] = useState(true);
   const [affiliateSystemEnabled, setAffiliateSystemEnabled] = useState(true);
@@ -181,12 +183,46 @@ export default function SideBarNav({
   }, []);
 
   const items = useMemo(() => {
-    return isAdmin
-      ? adminNavItems
-      : userNavItems.filter((item: NavItem) =>
-          item.roles.includes(session?.user?.role || 'user')
-        );
-  }, [isAdmin, session?.user?.role]);
+    if (!isAdmin) {
+      return userNavItems.filter((item: NavItem) =>
+        item.roles.includes(session?.user?.role || 'user')
+      );
+    }
+
+    // For admin/moderator: filter by permissions
+    const userRole = session?.user?.role || 'user';
+    const userPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
+    
+    // Filter items based on role and permissions
+    let filteredItems = adminNavItems.filter((item: NavItem) => {
+      // Admins see everything
+      if (userRole === 'admin' || userRole === 'super_admin') {
+        return true;
+      }
+      
+      // Moderators need permissions
+      if (userRole === 'moderator') {
+        // Dashboard is always visible
+        if (item.href === '/admin' || item.href === '/admin/') {
+          return true;
+        }
+        
+        // If item has a permission requirement, check if user has it
+        if (item.permission) {
+          // Ensure permissions is an array and check if it includes the required permission
+          const permissionsArray = Array.isArray(userPermissions) ? userPermissions : [];
+          return permissionsArray.includes(item.permission);
+        }
+        
+        // Items without permission field are admin-only (like settings, etc.)
+        return false;
+      }
+      
+      return false;
+    });
+
+    return filteredItems;
+  }, [isAdmin, session?.user?.role, (session?.user as any)?.permissions]);
 
   const sections = useMemo<AdminSections | UserSections>(() => {
     if (isAdmin) {

@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
         role: session.user.role,
         username: session.user.username,
         isImpersonating: session.user.isImpersonating || false,
-        originalAdminId: session.user.originalAdminId || null
+        originalAdminId: session.user.originalAdminId || null,
+        permissions: (session.user as any).permissions || null
       },
       expires: session.expires
     });

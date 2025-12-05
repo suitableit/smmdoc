@@ -576,10 +576,16 @@ const ModeratorsPage = () => {
   }, []);
 
   const openChangeRoleDialog = useCallback((moderatorId: number, currentRole: string) => {
+    const moderator = moderators.find(m => m.id === moderatorId);
     setChangeRoleDialog({ open: true, moderatorId, currentRole });
     setNewRole(currentRole);
-    setNewRolePermissions([]);
-  }, []);
+    // Load existing permissions if moderator has them
+    if (moderator && moderator.permissions && Array.isArray(moderator.permissions)) {
+      setNewRolePermissions(moderator.permissions);
+    } else {
+      setNewRolePermissions([]);
+    }
+  }, [moderators]);
 
   const handlePageChange = useCallback((newPage: number) => {
     setPagination(prev => ({ ...prev, page: newPage }));
@@ -793,8 +799,8 @@ const ModeratorsPage = () => {
                                 moderator.role === 'super_admin' 
                                   ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                                   : moderator.role === 'admin'
-                                  ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                  : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                                  ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                  : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                               }`}>
                                 {moderator.role === 'super_admin' ? 'SUPER ADMIN' : moderator.role === 'admin' ? 'Admin' : 'Moderator'}
                               </span>

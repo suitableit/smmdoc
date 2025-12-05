@@ -8,6 +8,7 @@ import moment from 'moment';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
 import Announcements from '@/components/dashboard/announcements';
 import {
     FaAward,
@@ -387,12 +388,30 @@ type DashboardStats = {
 
 export default function AdminDashboardPage() {
   const { appName } = useAppNameWithFallback();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setPageTitle('Admin Dashboard', appName);
   }, [appName]);
 
   const { currency, rate } = useCurrency();
+
+  // Check if user has permission to view transactions
+  const userRole = session?.user?.role;
+  const userPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
+  const hasTransactionsPermission = 
+    userRole === 'admin' || 
+    userRole === 'super_admin' || 
+    (userRole === 'moderator' && userPermissions?.includes('all_transactions'));
+  
+  // Check if user has permission to view users
+  const hasUsersPermission = 
+    userRole === 'admin' || 
+    userRole === 'super_admin' || 
+    (userRole === 'moderator' && userPermissions?.includes('users'));
+  
+  // Moderators should not see Quick Actions
+  const isModerator = userRole === 'moderator';
 
   const initializeWithCache = () => {
 
@@ -471,6 +490,17 @@ export default function AdminDashboardPage() {
 
   const fetchAllData = useCallback(async (isBackgroundRefresh = false) => {
     try {
+      // Re-check permissions in case they changed
+      const currentUserRole = session?.user?.role;
+      const currentUserPermissions = (session?.user as any)?.permissions as string[] | null | undefined;
+      const currentHasTransactionsPermission = 
+        currentUserRole === 'admin' || 
+        currentUserRole === 'super_admin' || 
+        (currentUserRole === 'moderator' && currentUserPermissions?.includes('all_transactions'));
+      const currentHasUsersPermission = 
+        currentUserRole === 'admin' || 
+        currentUserRole === 'super_admin' || 
+        (currentUserRole === 'moderator' && currentUserPermissions?.includes('users'));
 
       const statsValid = isCacheValid(CACHE_KEYS.DASHBOARD_STATS);
       const usersValid = isCacheValid(CACHE_KEYS.LATEST_USERS);
@@ -478,8 +508,12 @@ export default function AdminDashboardPage() {
 
       if (!isBackgroundRefresh) {
         setStatsLoading(true);
-        setLatestUsersLoading(true);
-        setTransactionsLoading(true);
+        if (currentHasUsersPermission) {
+          setLatestUsersLoading(true);
+        }
+        if (currentHasTransactionsPermission) {
+          setTransactionsLoading(true);
+        }
       }
 
       const fetchWithRetry = async (url: string, options: any = {}, retries = 2): Promise<any> => {
@@ -513,6 +547,7 @@ export default function AdminDashboardPage() {
         return { success: false, error: error.message };
       });
 
+      // Only fetch users if user has permission
       const usersQueryParams = new URLSearchParams({
         page: '1',
         limit: '5',
@@ -520,23 +555,28 @@ export default function AdminDashboardPage() {
         sort: 'createdAt',
         order: 'desc',
       });
-      const usersPromise = fetchWithRetry(`/api/admin/users?${usersQueryParams}`).catch(error => {
-        console.error('Users API failed:', error);
-        return { success: false, error: error.message };
-      });
+      const usersPromise = currentHasUsersPermission
+        ? fetchWithRetry(`/api/admin/users?${usersQueryParams}`).catch(error => {
+            console.error('Users API failed:', error);
+            return { success: false, error: error.message };
+          })
+        : Promise.resolve({ success: false, error: null });
 
-      const transactionsPromise = axiosInstance.get('/api/transactions', {
-        params: {
-          admin: 'true',
-          status: 'Pending',
-          limit: 10,
-          page: 1,
-        },
-        timeout: 15000,
-      }).catch(error => {
-        console.error('Transactions API failed:', error);
-        return { data: null, error: error.message };
-      });
+      // Only fetch transactions if user has permission
+      const transactionsPromise = currentHasTransactionsPermission
+        ? axiosInstance.get('/api/transactions', {
+            params: {
+              admin: 'true',
+              status: 'Pending',
+              limit: 10,
+              page: 1,
+            },
+            timeout: 15000,
+          }).catch(error => {
+            console.error('Transactions API failed:', error);
+            return { data: null, error: error.message };
+          })
+        : Promise.resolve({ data: null, error: null });
 
       const results = await Promise.allSettled([
         statsPromise,
@@ -558,22 +598,22 @@ export default function AdminDashboardPage() {
 
       setStatsLoading(false);
 
-      if (usersResult.success && usersResult.data) {
-        const filteredUsers = (usersResult.data || []).filter(
-          (user: User) => user.role === 'user'
-        );
-        const usersToShow = filteredUsers.slice(0, 5);
-        setLatestUsers(usersToShow);
-        setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
-      } else if (usersResult.error) {
-        console.warn('Users data failed to load:', usersResult.error);
-
+      if (currentHasUsersPermission) {
+        if (usersResult.success && usersResult.data) {
+          const filteredUsers = (usersResult.data || []).filter(
+            (user: User) => user.role === 'user'
+          );
+          const usersToShow = filteredUsers.slice(0, 5);
+          setLatestUsers(usersToShow);
+          setCachedData(CACHE_KEYS.LATEST_USERS, usersToShow);
+        } else if (usersResult.error) {
+          console.warn('Users data failed to load:', usersResult.error);
+        }
+        setLatestUsersLoading(false);
       }
 
-      setLatestUsersLoading(false);
-
       let transactionsToShow: PendingTransaction[] = [];
-      if (transactionsResponse.data) {
+      if (currentHasTransactionsPermission && transactionsResponse.data) {
         // Handle axios response structure: response.data contains the API response
         const apiResponse = transactionsResponse.data;
         let transactions: PendingTransaction[] = [];
@@ -618,7 +658,7 @@ export default function AdminDashboardPage() {
         showToast('Some dashboard data failed to load. Please try refreshing.', 'error');
       }
     }
-  }, []);
+  }, [session]);
 
   useEffect(() => {
 
@@ -1074,172 +1114,178 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
-      <div className="mb-6">
-        <div className="card card-padding">
-          <div className="card-header mb-4">
-            <div className="card-icon">
-              <FaCog />
+      {!isModerator && (
+        <div className="mb-6">
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="card-icon">
+                <FaCog />
+              </div>
+              <h3 className="card-title">Quick Actions</h3>
             </div>
-            <h3 className="card-title">Quick Actions</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              href="/admin/transactions"
-              className={`btn btn-primary w-full flex items-center justify-center gap-2`}
-            >
-              <FaDollarSign className="w-4 h-4" />
-              Manage Transactions
-            </Link>
-            <Link
-              href="/admin/users"
-              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-            >
-              <FaUsers className="w-4 h-4" />
-              Manage Users
-            </Link>
-            <Link
-              href="/admin/orders"
-              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-            >
-              <FaShoppingCart className="w-4 h-4" />
-              Manage Orders
-            </Link>
-            <Link
-              href="/admin/services"
-              className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
-            >
-              <FaCog className="w-4 h-4" />
-              Manage Services
-            </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Link
+                href="/admin/transactions"
+                className={`btn btn-primary w-full flex items-center justify-center gap-2`}
+              >
+                <FaDollarSign className="w-4 h-4" />
+                Manage Transactions
+              </Link>
+              <Link
+                href="/admin/users"
+                className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+                <FaUsers className="w-4 h-4" />
+                Manage Users
+              </Link>
+              <Link
+                href="/admin/orders"
+                className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+                <FaShoppingCart className="w-4 h-4" />
+                Manage Orders
+              </Link>
+              <Link
+                href="/admin/services"
+                className={`btn btn-secondary w-full flex items-center justify-center gap-2`}
+              >
+                <FaCog className="w-4 h-4" />
+                Manage Services
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="mb-6">
-        <div className="card">
-          <div className="card-header px-4 pt-4 lg:px-6 lg:pt-6" style={{ paddingBottom: 0 }}>
-            <div className="flex items-center gap-2 lg:justify-between lg:w-full">
-              <div className="flex items-center gap-2 lg:flex-1">
-                <div className="card-icon">
-                  <FaClock />
+      )}
+      {hasTransactionsPermission && (
+        <div className="mb-6">
+          <div className="card">
+            <div className="card-header px-4 pt-4 lg:px-6 lg:pt-6" style={{ paddingBottom: 0 }}>
+              <div className="flex items-center gap-2 lg:justify-between lg:w-full">
+                <div className="flex items-center gap-2 lg:flex-1">
+                  <div className="card-icon">
+                    <FaClock />
+                  </div>
+                  <h3 className="card-title">Pending Transactions</h3>
                 </div>
-                <h3 className="card-title">Pending Transactions</h3>
-              </div>
-              <div className="hidden lg:block">
-                <Link
-                  href="/admin/transactions"
-                  className="btn btn-secondary flex items-center gap-2"
-                >
-                  <FaEye className="w-4 h-4" />
-                  View More
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="px-4 pb-4 lg:px-6 lg:pb-6 min-h-[300px] flex flex-col lg:block">
-            {transactionsLoading ? (
-              <TransactionsTableSkeleton />
-            ) : pendingTransactions.length === 0 ? (
-              <div className="text-center py-12 flex-1 flex flex-col justify-center items-center lg:flex-none lg:block lg:py-12">
-                <FaCheckCircle
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)', opacity: 0.5 }}
-                />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  No pending transactions
-                </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  All transactions are up to date
-                </p>
-              </div>
-            ) : (
-              <TransactionsTable
-                transactions={pendingTransactions.slice(0, 3) as any}
-                formatID={formatID}
-                displayMethod={displayMethod}
-                getStatusBadge={getStatusBadge}
-                handleApprove={handleApprove}
-                handleCancel={handleCancel}
-                openViewDetailsDialog={openViewDetailsDialog}
-                openUpdateStatusDialog={openUpdateStatusDialog}
-              />
-            )}
-          </div>
-          <div className="px-4 pb-4 lg:px-6 lg:pb-6 lg:hidden">
-            <Link
-              href="/admin/transactions"
-              className="btn btn-secondary flex items-center justify-center gap-2 w-full"
-            >
-              <FaEye className="w-4 h-4" />
-              View More
-            </Link>
-          </div>
-        </div>
-      </div>
-      <div className="mb-6">
-        <div className="card card-padding">
-          <div className="card-header mb-4">
-            <div className="flex items-center gap-2 lg:justify-between lg:w-full">
-              <div className="flex items-center gap-2 lg:flex-1">
-                <div className="card-icon">
-                  <FaUsers />
+                <div className="hidden lg:block">
+                  <Link
+                    href="/admin/transactions"
+                    className="btn btn-secondary flex items-center gap-2"
+                  >
+                    <FaEye className="w-4 h-4" />
+                    View More
+                  </Link>
                 </div>
-                <h3 className="card-title">Latest Users</h3>
-              </div>
-              <div className="hidden lg:block">
-                <Link
-                  href="/admin/users"
-                  className="btn btn-secondary flex items-center gap-2"
-                >
-                  <FaUsers className="w-4 h-4" />
-                  View All Users
-                </Link>
               </div>
             </div>
-          </div>
 
-          <div className="min-h-[400px]">
-            {latestUsersLoading ? (
-              <UsersTableSkeleton />
-            ) : latestUsers.length === 0 ? (
-              <div className="text-center py-12">
-                <FaUsers
-                  className="h-16 w-16 mx-auto mb-4"
-                  style={{ color: 'var(--text-muted)' }}
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6 min-h-[300px] flex flex-col lg:block">
+              {transactionsLoading ? (
+                <TransactionsTableSkeleton />
+              ) : pendingTransactions.length === 0 ? (
+                <div className="text-center py-12 flex-1 flex flex-col justify-center items-center lg:flex-none lg:block lg:py-12">
+                  <FaCheckCircle
+                    className="h-16 w-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)', opacity: 0.5 }}
+                  />
+                  <h3
+                    className="text-lg font-semibold mb-2"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    No pending transactions
+                  </h3>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    All transactions are up to date
+                  </p>
+                </div>
+              ) : (
+                <TransactionsTable
+                  transactions={pendingTransactions.slice(0, 3) as any}
+                  formatID={formatID}
+                  displayMethod={displayMethod}
+                  getStatusBadge={getStatusBadge}
+                  handleApprove={handleApprove}
+                  handleCancel={handleCancel}
+                  openViewDetailsDialog={openViewDetailsDialog}
+                  openUpdateStatusDialog={openUpdateStatusDialog}
                 />
-                <h3
-                  className="text-lg font-semibold mb-2"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  No users found
-                </h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {latestUsers.length === 0
-                    ? 'No users exist yet.'
-                    : 'No users match your criteria.'}
-                </p>
-              </div>
-            ) : (
-              <LatestUsers
-                latestUsers={latestUsers}
-                formatCurrency={formatCurrency}
-              />
-            )}
-          </div>
-          <div className="lg:hidden mt-4">
-            <Link
-              href="/admin/users"
-              className="btn btn-secondary flex items-center justify-center gap-2 w-full"
-            >
-              <FaUsers className="w-4 h-4" />
-              View All Users
-            </Link>
+              )}
+            </div>
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6 lg:hidden">
+              <Link
+                href="/admin/transactions"
+                className="btn btn-secondary flex items-center justify-center gap-2 w-full"
+              >
+                <FaEye className="w-4 h-4" />
+                View More
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+      {hasUsersPermission && (
+        <div className="mb-6">
+          <div className="card card-padding">
+            <div className="card-header mb-4">
+              <div className="flex items-center gap-2 lg:justify-between lg:w-full">
+                <div className="flex items-center gap-2 lg:flex-1">
+                  <div className="card-icon">
+                    <FaUsers />
+                  </div>
+                  <h3 className="card-title">Latest Users</h3>
+                </div>
+                <div className="hidden lg:block">
+                  <Link
+                    href="/admin/users"
+                    className="btn btn-secondary flex items-center gap-2"
+                  >
+                    <FaUsers className="w-4 h-4" />
+                    View All Users
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-h-[400px]">
+              {latestUsersLoading ? (
+                <UsersTableSkeleton />
+              ) : latestUsers.length === 0 ? (
+                <div className="text-center py-12">
+                  <FaUsers
+                    className="h-16 w-16 mx-auto mb-4"
+                    style={{ color: 'var(--text-muted)' }}
+                  />
+                  <h3
+                    className="text-lg font-semibold mb-2"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    No users found
+                  </h3>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {latestUsers.length === 0
+                      ? 'No users exist yet.'
+                      : 'No users match your criteria.'}
+                  </p>
+                </div>
+              ) : (
+                <LatestUsers
+                  latestUsers={latestUsers}
+                  formatCurrency={formatCurrency}
+                />
+              )}
+            </div>
+            <div className="lg:hidden mt-4">
+              <Link
+                href="/admin/users"
+                className="btn btn-secondary flex items-center justify-center gap-2 w-full"
+              >
+                <FaUsers className="w-4 h-4" />
+                View All Users
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ApproveTransactionModal
         open={approveConfirmDialog.open}

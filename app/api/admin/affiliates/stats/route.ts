@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdminOrModerator } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 
 export async function GET() {
   try {
-    await requireAdmin()
+    await requireAdminOrModerator()
 
     const aggAff = await db.affiliates.aggregate({
       _sum: { totalVisits: true, totalReferrals: true },

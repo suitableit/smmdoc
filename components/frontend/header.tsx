@@ -76,7 +76,8 @@ const Header: React.FC<HeaderProps> = ({
 
   const userRole = session?.user?.role?.toUpperCase() || '';
   const isAdmin = userRole === 'ADMIN';
-  const dashboardRoute = isAdmin ? '/admin' : '/dashboard';
+  const isModerator = userRole === 'MODERATOR';
+  const dashboardRoute = (isAdmin || isModerator) ? '/admin' : '/dashboard';
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -370,13 +371,19 @@ const Header: React.FC<HeaderProps> = ({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm sm:text-xl font-bold truncate text-gray-900 dark:text-white">{username}</h3>
                     <p className="truncate text-xs sm:text-sm text-gray-600 dark:text-gray-300">{user?.email}</p>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${isAdmin ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'}`}>
-                      {isAdmin ? 'Admin' : 'User'}
+                    <span className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${
+                      isAdmin
+                        ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                        : isModerator
+                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                    }`}>
+                      {isAdmin ? 'Admin' : isModerator ? 'Moderator' : 'User'}
                     </span>
                   </div>
                 </div>
 
-                {!isAdmin && (
+                {!isAdmin && !isModerator && (
                   <div className="rounded-lg p-2.5 sm:p-4 text-white bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-1.5 sm:space-x-2">

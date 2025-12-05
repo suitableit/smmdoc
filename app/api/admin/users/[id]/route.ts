@@ -1,6 +1,6 @@
 ﻿import { auth } from '@/auth';
 import { ActivityLogger, getClientIP } from '@/lib/activity-logger';
-import { requireAdmin } from '@/lib/auth-helpers';
+import { requireAdminOrModerator } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string  }> }
 ) {
   try {
-    const session = await requireAdmin();
+    const session = await requireAdminOrModerator();
 
     console.log(`Admin user details API accessed by: ${session.user.email}`);
 

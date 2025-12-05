@@ -8,10 +8,10 @@ export async function GET(request: Request) {
   try {
     const session = await getCurrentUser();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         {
-          error: 'Unauthorized access. Admin privileges required.',
+          error: 'Unauthorized access. Admin or Moderator privileges required.',
           success: false,
           data: null,
         },

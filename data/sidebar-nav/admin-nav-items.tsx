@@ -14,21 +14,24 @@ export const adminNavItems = [
     href: '/admin/orders',
     icon: 'FaBox',
     label: 'All Orders',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'all_orders',
   },
   {
     title: 'Refill Requests',
     href: '/admin/orders/refill-requests',
     icon: 'FaRedo',
     label: 'Refill Requests',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'refill_requests',
   },
   {
     title: 'Cancel Requests',
     href: '/admin/orders/cancel-requests',
     icon: 'FaTimes',
     label: 'Cancel Requests',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'cancel_requests',
   },
 
   {
@@ -36,7 +39,8 @@ export const adminNavItems = [
     href: '/admin/services',
     icon: 'FaBriefcase',
     label: 'All Services',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'all_services',
   },
   {
     title: 'Import Services',
@@ -64,7 +68,8 @@ export const adminNavItems = [
     href: '/admin/services/sync-logs',
     icon: 'FaSync',
     label: 'API Sync Logs',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'api_sync_logs',
   },
 
   {
@@ -72,7 +77,8 @@ export const adminNavItems = [
     href: '/admin/users',
     icon: 'FaUsers',
     label: 'Users',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'users',
   },
   {
     title: 'Admins',
@@ -93,7 +99,8 @@ export const adminNavItems = [
     href: '/admin/users/logs',
     icon: 'FaChartLine',
     label: 'User Activity Logs',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'user_activity_logs',
   },
 
   {
@@ -101,7 +108,8 @@ export const adminNavItems = [
     href: '/admin/transactions',
     icon: 'FaExchangeAlt',
     label: 'All Transactions',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'all_transactions',
   },
 
   {
@@ -109,14 +117,16 @@ export const adminNavItems = [
     href: '/admin/tickets',
     icon: 'FaTicketAlt',
     label: 'Support Tickets',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'support_tickets',
   },
   {
     title: 'Contact Messages',
     href: '/admin/contact-messages',
     icon: 'FaEnvelope',
     label: 'Human Ticket',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'contact_messages',
   },
 
   {
@@ -124,14 +134,16 @@ export const adminNavItems = [
     href: '/admin/blogs',
     icon: 'FaRegNewspaper',
     label: 'Support Tickets',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'blogs',
   },
   {
     title: 'Announcements',
     href: '/admin/announcements',
     icon: 'FaBullhorn',
     label: 'Announcements',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'announcements',
   },
 
 
@@ -140,21 +152,24 @@ export const adminNavItems = [
     href: '/admin/affiliates',
     icon: 'FaShareAlt',
     label: 'Affiliate Referrals',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'affiliate_users',
   },
   {
     title: 'Withdrawals',
     href: '/admin/affiliates/withdrawals',
     icon: 'FaMoneyBillWave',
     label: 'Withdrawals',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'withdrawals',
   },
   {
     title: 'Analytics & Reports',
     href: '/admin/analytics',
     icon: 'FaChartBar',
     label: 'Analytics & Reports',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'analytics',
   },
 
   {
@@ -162,7 +177,8 @@ export const adminNavItems = [
     href: '/admin/child-panels',
     icon: 'FaSitemap',
     label: 'Child Panels',
-    roles: ['admin'],
+    roles: ['admin', 'moderator'],
+    permission: 'child_panels',
   },
 
   {

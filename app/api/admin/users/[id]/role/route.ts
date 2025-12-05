@@ -36,7 +36,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { role } = body;
+    const { role, permissions } = body;
 
     if (!role || !['user', 'admin', 'moderator'].includes(role)) {
       return NextResponse.json(
@@ -47,6 +47,20 @@ export async function PUT(
         },
         { status: 400 }
       );
+    }
+
+    // Validate permissions if role is moderator
+    if (role === 'moderator' && permissions) {
+      if (!Array.isArray(permissions)) {
+        return NextResponse.json(
+          {
+            error: 'Permissions must be an array',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const existingUser = await db.users.findUnique({
@@ -76,14 +90,25 @@ export async function PUT(
       );
     }
 
+    // Prepare update data
+    const updateData: any = { role };
+    
+    // Set permissions for moderators, clear for others
+    if (role === 'moderator' && permissions) {
+      updateData.permissions = permissions;
+    } else if (role !== 'moderator') {
+      updateData.permissions = null;
+    }
+
     const updatedUser = await db.users.update({
       where: { id: userId },
-      data: { role },
+      data: updateData,
       select: {
         id: true,
         username: true,
         email: true,
         role: true,
+        permissions: true,
         updatedAt: true,
       }
     });

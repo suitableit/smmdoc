@@ -243,6 +243,10 @@ const ProfileCard = ({
     user?.role?.toLowerCase() === 'admin' ||
     user?.userType?.toLowerCase() === 'admin' ||
     user?.isAdmin === true;
+  
+  const isModerator =
+    user?.role?.toLowerCase() === 'moderator' ||
+    user?.userType?.toLowerCase() === 'moderator';
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -474,15 +478,17 @@ const ProfileCard = ({
                       className={`inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium mt-1 ${
                         isAdmin
                           ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                          : isModerator
+                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                           : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                       }`}
                     >
-                      {isAdmin ? 'Admin' : 'User'}
+                      {isAdmin ? 'Admin' : isModerator ? 'Moderator' : 'User'}
                     </span>
                   </div>
                 </div>
 
-                {!isAdmin && (
+                {!isAdmin && !isModerator && (
                   <div
                     className="rounded-lg p-2.5 sm:p-4 text-white"
                     style={{

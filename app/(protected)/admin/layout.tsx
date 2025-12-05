@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { RouteGuard } from '@/components/admin/route-guard';
 
 export default function AdminLayout({
   children,
@@ -20,7 +21,8 @@ export default function AdminLayout({
       return;
     }
 
-    if (!session.user || session.user.role !== 'admin') {
+    // Allow both admin and moderator roles
+    if (!session.user || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       router.push('/dashboard');
       return;
     }
@@ -34,9 +36,13 @@ export default function AdminLayout({
     );
   }
 
-  if (!session || !session.user || session.user.role !== 'admin') {
+  if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
     return null;
   }
 
-  return <>{children}</>;
+  return (
+    <RouteGuard>
+      {children}
+    </RouteGuard>
+  );
 }

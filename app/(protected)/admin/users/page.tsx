@@ -26,6 +26,7 @@ import { useAppNameWithFallback } from '@/contexts/AppNameContext';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { invalidateUserSessions } from '@/lib/session-invalidation';
 import { convertCurrency, formatCurrencyAmount } from '@/lib/currency-utils';
+import { useSession } from 'next-auth/react';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>
@@ -201,6 +202,7 @@ interface UserActionsProps {
   onUpdateStatus: (userId: number, currentStatus: string) => void;
   onDelete: (userId: number) => void;
   isLoading: boolean;
+  isModerator?: boolean;
 }
 
 interface UserCardProps {
@@ -217,6 +219,7 @@ interface UserCardProps {
   onDelete: (userId: number) => void;
   formatCurrency: (amount: number, currency: string) => string;
   isLoading: boolean;
+  isModerator?: boolean;
 }
 
 interface PaginationProps {
@@ -341,10 +344,14 @@ const useClickOutside = (
 
 const UsersListPage = () => {
   const { appName } = useAppNameWithFallback();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setPageTitle('All Users', appName);
   }, [appName]);
+
+  // Check if current user is a moderator
+  const isModerator = session?.user?.role === 'moderator';
 
   const { currency, currentCurrencyData, formatCurrency: formatCurrencyFromContext, availableCurrencies, currencySettings, convertAmount } = useCurrency();
 
@@ -1482,6 +1489,7 @@ const UsersListPage = () => {
                                 setDeleteDialogOpen(true);
                               }}
                               isLoading={actionLoading === user.id.toString()}
+                              isModerator={isModerator}
                             />
                           </td>
                         </tr>
@@ -1619,37 +1627,39 @@ const UsersListPage = () => {
           }
         />
 
-        <ChangeRoleModal
-          isOpen={changeRoleDialog.open}
-          currentRole={changeRoleDialog.currentRole}
-          newRole={newRole}
-          onRoleChange={setNewRole}
-          onClose={() => {
-            setChangeRoleDialog({ open: false, userId: 0, currentRole: '' });
-            setNewRole('');
-            setNewRolePermissions([]);
-          }}
-          onConfirm={() => {
-            handleChangeRole(changeRoleDialog.userId, newRole, newRolePermissions).then(
-              (success) => {
-                if (success) {
-                  setChangeRoleDialog({
-                    open: false,
-                    userId: 0,
-                    currentRole: '',
-                  });
-                  setNewRole('');
-                  setNewRolePermissions([]);
+        {!isModerator && (
+          <ChangeRoleModal
+            isOpen={changeRoleDialog.open}
+            currentRole={changeRoleDialog.currentRole}
+            newRole={newRole}
+            onRoleChange={setNewRole}
+            onClose={() => {
+              setChangeRoleDialog({ open: false, userId: 0, currentRole: '' });
+              setNewRole('');
+              setNewRolePermissions([]);
+            }}
+            onConfirm={() => {
+              handleChangeRole(changeRoleDialog.userId, newRole, newRolePermissions).then(
+                (success) => {
+                  if (success) {
+                    setChangeRoleDialog({
+                      open: false,
+                      userId: 0,
+                      currentRole: '',
+                    });
+                    setNewRole('');
+                    setNewRolePermissions([]);
+                  }
                 }
-              }
-            );
-          }}
-          permissions={newRolePermissions}
-          onPermissionsChange={setNewRolePermissions}
-          isLoading={
-            actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`
-          }
-        />
+              );
+            }}
+            permissions={newRolePermissions}
+            onPermissionsChange={setNewRolePermissions}
+            isLoading={
+              actionLoading === `/api/admin/users/${changeRoleDialog.userId}/role`
+            }
+          />
+        )}
         <EditUserModal
           isOpen={editUserDialog.open}
           currentUser={editUserDialog.currentUser}
@@ -1689,6 +1699,7 @@ const UserActions: React.FC<UserActionsProps> = ({
   onUpdateStatus,
   onDelete,
   isLoading,
+  isModerator = false,
 }) => {
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -1778,16 +1789,18 @@ const UserActions: React.FC<UserActionsProps> = ({
                     <FaGift className="h-3 w-3" />
                     Edit Discount
                   </button>
-                  <button
-                    onClick={() => {
-                      onChangeRole(user.id, user.role || 'user');
-                      setIsOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
-                  >
-                    <FaUserCheck className="h-3 w-3" />
-                    Change Role
-                  </button>
+                  {!isModerator && (
+                    <button
+                      onClick={() => {
+                        onChangeRole(user.id, user.role || 'user');
+                        setIsOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 flex items-center gap-2"
+                    >
+                      <FaUserCheck className="h-3 w-3" />
+                      Change Role
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       onResetSpecialPricing(user.id);
@@ -1853,6 +1866,7 @@ const UserCard: React.FC<UserCardProps> = ({
   onDelete,
   formatCurrency,
   isLoading,
+  isModerator = false,
 }) => (
   <div className="card card-padding border-l-4 border-blue-500 dark:border-blue-400 mb-4">
     <div className="flex items-center justify-between mb-4">
@@ -1878,6 +1892,7 @@ const UserCard: React.FC<UserCardProps> = ({
         onUpdateStatus={onUpdateStatus}
         onDelete={onDelete}
         isLoading={isLoading}
+        isModerator={isModerator}
       />
     </div>
 

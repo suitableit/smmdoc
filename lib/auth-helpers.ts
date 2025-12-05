@@ -7,19 +7,23 @@ export const getCurrentUser = async () => {
 
     if (!session?.user) {
       return null;
-    }
+    }
+
     if (!session.user.id || session.user.id === null) {
       if (session.user.email) {
         const user = await getUserByEmail(session.user.email);
-        if (user) {
+        if (user) {
+
           (session.user as any).id = user.id;
           return session;
         }
       }
       return null;
-    }
+    }
+
     const numericId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
-    if (isNaN(numericId)) {
+    if (isNaN(numericId)) {
+
       if (session.user.email) {
         const user = await getUserByEmail(session.user.email);
         if (user) {
@@ -62,6 +66,20 @@ export const requireAdmin = async () => {
   return session;
 };
 
+export const requireAdminOrModerator = async () => {
+  const session = await getCurrentUser();
+
+  if (!session?.user) {
+    throw new Error('Authentication required');
+  }
+
+  if (session.user.role !== 'admin' && session.user.role !== 'moderator') {
+    throw new Error('Admin or Moderator access required');
+  }
+
+  return session;
+};
+
 export const requireAuth = async () => {
   const session = await getCurrentUser();
 
@@ -77,9 +95,11 @@ export const canAccessUserData = async (targetUserId: number): Promise<boolean> 
 
   if (!session?.user) {
     return false;
-  }
+  }
+
   if (session.user.role === 'admin') {
     return true;
-  }
+  }
+
   return session.user.id === targetUserId;
 };

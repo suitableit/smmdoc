@@ -13,6 +13,11 @@ import { getModuleSettings } from './lib/utils/module-settings';
 
 export const { auth } = NextAuth(authConfig);
 
+// Helper function to check if user is admin or moderator
+const isAdminOrModerator = (role: string | undefined | null): boolean => {
+  return role === 'admin' || role === 'moderator';
+};
+
 export default auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
@@ -90,7 +95,7 @@ export default auth(async (req) => {
     try {
       const ticketSettings = await getTicketSettings(true);
       if (!ticketSettings.ticketSystemEnabled) {
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = (isAdminOrModerator(userRole?.role) && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
@@ -107,8 +112,9 @@ export default auth(async (req) => {
         return NextResponse.redirect(new URL('/dashboard', nextUrl));
       }
 
-      if (userRole?.role === 'admin') {
-        console.log('Admin user detected, redirecting to admin dashboard');
+      if (userRole?.role === 'admin' || userRole?.role === 'moderator') {
+        const roleLabel = userRole?.role === 'admin' ? 'Admin' : 'Moderator';
+        console.log(`${roleLabel} user detected, redirecting to admin dashboard`);
         return NextResponse.redirect(new URL('/admin', nextUrl));
       }
       console.log('Regular user detected, redirecting to user dashboard');
@@ -133,7 +139,7 @@ export default auth(async (req) => {
 
   if (isContactPage && isLoggedIn) {
     const isAdminContactMessages = nextUrl.pathname.startsWith('/admin/contact-messages');
-    const isAdmin = userRole?.role === 'admin' && !isImpersonating;
+    const isAdmin = isAdminOrModerator(userRole?.role) && !isImpersonating;
     
     if (isAdminContactMessages && isAdmin) {
       return NextResponse.next({
@@ -203,7 +209,7 @@ export default auth(async (req) => {
     try {
       const moduleSettings = await getModuleSettings(true);
       if (!moduleSettings.affiliateSystemEnabled) {
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = (isAdminOrModerator(userRole?.role) && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
@@ -226,7 +232,7 @@ export default auth(async (req) => {
     try {
       const moduleSettings = await getModuleSettings(true);
       if (!moduleSettings.childPanelSellingEnabled) {
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = (isAdminOrModerator(userRole?.role) && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
@@ -248,7 +254,7 @@ export default auth(async (req) => {
     try {
       const moduleSettings = await getModuleSettings(true);
       if (!moduleSettings.massOrderEnabled) {
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = (isAdminOrModerator(userRole?.role) && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
@@ -270,7 +276,7 @@ export default auth(async (req) => {
     try {
       const moduleSettings = await getModuleSettings(true);
       if (!moduleSettings.serviceUpdateLogsEnabled) {
-        const redirectPath = (userRole?.role === 'admin' && !isImpersonating) ? '/admin' : '/dashboard';
+        const redirectPath = (isAdminOrModerator(userRole?.role) && !isImpersonating) ? '/admin' : '/dashboard';
         return NextResponse.redirect(new URL(redirectPath, nextUrl));
       }
     } catch (error) {
@@ -286,14 +292,15 @@ export default auth(async (req) => {
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     }
 
-    if (userRole?.role !== 'admin') {
+    // Allow both admin and moderator roles to access admin routes
+    if (userRole?.role !== 'admin' && userRole?.role !== 'moderator') {
       return NextResponse.redirect(new URL('/dashboard', nextUrl));
     }
   }
 
   if (nextUrl.pathname.startsWith('/dashboard')) {
 
-    if (userRole?.role === 'admin' && !isImpersonating) {
+    if ((userRole?.role === 'admin' || userRole?.role === 'moderator') && !isImpersonating) {
       return NextResponse.redirect(new URL('/admin', nextUrl));
     }
   }

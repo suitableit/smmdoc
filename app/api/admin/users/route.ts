@@ -1,11 +1,11 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
-import { requireAdmin } from '@/lib/auth-helpers';
+import { requireAdminOrModerator } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const session = await requireAdminOrModerator();
 
     console.log(`Admin users API accessed by: ${session.user.email}`);
 
@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
         lastLoginAt: true,
         servicesDiscount: true,
         specialPricing: true,
+        permissions: true,
       },
       skip: (page - 1) * limit,
       take: limit,
@@ -90,8 +91,26 @@ export async function GET(request: NextRequest) {
         const orderCount = await db.newOrders.count({
           where: { userId: user.id }
         });
+        
+        // Parse permissions if it's a JSON field
+        let parsedPermissions: string[] | null = null;
+        if (user.permissions) {
+          if (Array.isArray(user.permissions)) {
+            parsedPermissions = user.permissions;
+          } else if (typeof user.permissions === 'string') {
+            try {
+              parsedPermissions = JSON.parse(user.permissions);
+            } catch {
+              parsedPermissions = null;
+            }
+          } else {
+            parsedPermissions = user.permissions as any;
+          }
+        }
+        
         return {
           ...user,
+          permissions: parsedPermissions,
           totalOrders: orderCount,
         };
       })

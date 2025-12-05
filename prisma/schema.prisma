@@ -732,6 +732,7 @@ model Users {
   language                                      String                   @default("en")
   timezone                                      String                   @default("Asia/Dhaka")
   suspendedUntil                                DateTime?
+  permissions                                   Json?
   activityLogs                                  ActivityLogs[]
   addFunds                                      AddFunds[]
   blogPosts                                     BlogPosts[]

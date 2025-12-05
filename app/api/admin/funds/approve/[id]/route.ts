@@ -11,7 +11,7 @@ export async function POST(
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -29,7 +29,7 @@ export async function POST(
     }
 
     const transaction = await db.addFunds.findUnique({
-      where: { Id: transactionId },
+      where: { id: transactionId },
       include: { user: true }
     });
     
@@ -57,7 +57,7 @@ export async function POST(
     try {
       await db.$transaction(async (prisma) => {
         await prisma.addFunds.update({
-          where: { Id: transactionId },
+          where: { id: transactionId },
           data: {
             status: "Success",
             updatedAt: new Date(),

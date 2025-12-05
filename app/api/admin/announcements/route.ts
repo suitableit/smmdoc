@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
+    if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'moderator' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -54,7 +54,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'ADMIN')) {
+    if (!session?.user || (session.user.role !== 'admin' && session.user.role !== 'moderator' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

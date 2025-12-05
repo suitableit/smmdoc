@@ -125,6 +125,10 @@ export default {
 
         session.user.isImpersonating = token.isImpersonating || false;
         session.user.originalAdminId = token.originalAdminId || null;
+        // Include permissions in session
+        if (token.permissions) {
+          (session.user as any).permissions = token.permissions;
+        }
       }
       return session;
     },
@@ -173,6 +177,14 @@ export default {
         token.email = existingUser.email;
         token.balance = existingUser.balance;
         token.image = existingUser.image;
+        // Include permissions for moderators
+        if (existingUser.permissions) {
+          token.permissions = Array.isArray(existingUser.permissions) 
+            ? existingUser.permissions 
+            : (typeof existingUser.permissions === 'string' ? JSON.parse(existingUser.permissions) : []);
+        } else {
+          token.permissions = null;
+        }
       } else {
         if (token.email) {
           let existingUser = await getUserByEmail(token.email);
@@ -203,6 +215,22 @@ export default {
             token.email = existingUser.email;
             token.balance = existingUser.balance;
             token.image = existingUser.image;
+            // Include permissions for moderators
+            if (existingUser.permissions) {
+              token.permissions = Array.isArray(existingUser.permissions) 
+                ? existingUser.permissions 
+                : (typeof existingUser.permissions === 'string' ? JSON.parse(existingUser.permissions) : []);
+            } else {
+              token.permissions = null;
+            }
+            // Include permissions for moderators
+            if (existingUser.permissions) {
+              token.permissions = Array.isArray(existingUser.permissions) 
+                ? existingUser.permissions 
+                : (typeof existingUser.permissions === 'string' ? JSON.parse(existingUser.permissions) : []);
+            } else {
+              token.permissions = null;
+            }
           }
         }
       }

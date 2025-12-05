@@ -9,7 +9,7 @@ export async function DELETE(
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',
@@ -80,7 +80,7 @@ export async function GET(
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         {
           error: 'Unauthorized access. Admin privileges required.',

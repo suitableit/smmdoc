@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/lib/auth-helpers';
+import { requireAdminOrModerator } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
@@ -34,7 +34,7 @@ function convertBigIntToNumber(obj: any): any {
 
 export async function GET() {
   try {
-    const session = await requireAdmin();
+    const session = await requireAdminOrModerator();
 
     const totalOrders = await db.newOrders.count();
 

@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       select: { role: true }
     });
 
-    if (user?.role !== 'admin') {
+    if (user?.role !== 'admin' && user?.role !== 'moderator') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -193,7 +193,7 @@ export async function PATCH(request: NextRequest) {
       select: { role: true }
     });
 
-    if (user?.role !== 'admin') {
+    if (user?.role !== 'admin' && user?.role !== 'moderator') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

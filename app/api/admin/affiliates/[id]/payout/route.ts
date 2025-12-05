@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdminOrModerator } from '@/lib/auth-helpers'
 import { db } from '@/lib/db'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireAdmin()
+    const session = await requireAdminOrModerator()
     const { id: idParam } = await params
     const id = parseInt(idParam)
     const { amount, method, notes } = await request.json()

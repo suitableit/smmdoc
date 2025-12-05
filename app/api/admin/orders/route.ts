@@ -11,10 +11,10 @@ export async function GET(req: NextRequest) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         {
-          error: 'Unauthorized access. Admin privileges required.',
+          error: 'Unauthorized access. Admin or Moderator privileges required.',
           success: false,
           data: null
         },
@@ -172,10 +172,10 @@ export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'moderator')) {
       return NextResponse.json(
         { 
-          error: 'Unauthorized access. Admin privileges required.',
+          error: 'Unauthorized access. Admin or Moderator privileges required.',
           success: false,
           data: null 
         },

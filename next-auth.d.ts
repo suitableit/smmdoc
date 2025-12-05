@@ -11,6 +11,7 @@ export type ExtendedUser = DefaultSession['user'] & {
   username?: string;
   isImpersonating?: boolean;
   originalAdminId?: number;
+  permissions?: string[] | null;
 };
 
 declare module 'next-auth' {
