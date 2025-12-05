@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
           where: {
             userId: session.user.id,
             usdAmount: amountUSD,
-            phoneNumber: body.phone,
+            senderNumber: body.phone,
             createdAt: {
               gte: tenSecondsAgo,
             },
@@ -145,12 +145,12 @@ export async function POST(req: NextRequest) {
           data: {
             invoiceId: invoice_id,
             usdAmount: amountUSD,
-            bdtAmount: amountBDT,
+            amount: amountBDT,
             email: session.user.email || '',
             name: session.user.name || '',
             status: 'Processing',
             paymentGateway: gatewayName,
-            phoneNumber: body.phone,
+            senderNumber: body.phone,
             userId: session.user.id,
             currency: currency,
           },

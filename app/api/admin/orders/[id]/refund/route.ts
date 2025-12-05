@@ -127,7 +127,7 @@ export async function POST(
           userId: existingOrder.user.id,
           invoiceId: `refund_${id}_${Date.now()}`,
           usdAmount: finalRefundAmount,
-          bdtAmount: refundAmountBDT,
+          amount: refundAmountBDT,
           email: existingOrder.user.email || '',
           name: existingOrder.user.name || 'User',
           status: 'Success',

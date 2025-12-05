@@ -1,10 +1,3 @@
-/**
- * Utility functions for logging out and clearing session data
- */
-
-/**
- * Clear all session-related storage (localStorage, sessionStorage, and cookies)
- */
 export function clearAllSessionData(): void {
   if (typeof window === 'undefined') return;
 
@@ -48,9 +41,6 @@ export function clearAllSessionData(): void {
   }
 }
 
-/**
- * Complete logout function that clears all session data and signs out
- */
 export async function performCompleteLogout(
   signOut: any,
   callbackUrl: string = '/sign-in'

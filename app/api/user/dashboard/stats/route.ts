@@ -7,7 +7,10 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth();
 
-    let userId = session.user.id;
+    let userId: number = typeof session.user.id === 'string' 
+      ? parseInt(session.user.id) 
+      : session.user.id;
+    
     try {
       let impersonatedUserId: string | null = null;
       

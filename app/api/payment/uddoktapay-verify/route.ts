@@ -83,11 +83,11 @@ export async function POST(req: NextRequest) {
               data: {
                 status: "Success",
                 transactionId: transaction_id,
-                phoneNumber: phone,
+                senderNumber: phone,
               }
             });
             
-            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+            const originalAmount = payment.amount || Number(payment.usdAmount) || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usdAmount },
+                balanceUSD: { increment: Number(payment.usdAmount) },
                 total_deposit: { increment: originalAmount }
               }
             });
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
           if (phone && payment.user) {
             const smsMessage = smsTemplates.paymentSuccess(
               payment.user.name || 'Customer',
-              payment.usdAmount,
+              Number(payment.usdAmount),
               transaction_id
             );
 
@@ -203,7 +203,7 @@ export async function POST(req: NextRequest) {
           where: { invoiceId: invoice_id },
           data: {
             transactionId: transaction_id,
-            phoneNumber: phone,
+            senderNumber: phone,
             status: "Processing"
           }
         });
@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
           data: {
             status: "Cancelled",
             transactionId: transaction_id,
-            phoneNumber: phone,
+            senderNumber: phone,
           }
         });
         

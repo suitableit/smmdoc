@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         data: {
           invoiceId: invoiceId,
           usdAmount: parseFloat(amountUSD),
-          bdtAmount: parseFloat(amountBDT),
+          amount: parseFloat(amountBDT),
           email: user.email || '',
           name: user.name || '',
           status: status || 'COMPLETED',

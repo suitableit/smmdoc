@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         data: {
           invoiceId: invoice_id,
           usdAmount: amountUSD,
-          bdtAmount: amountBDT,
+          amount: amountBDT,
           email: session.user.email || '',
           name: session.user.name || '',
           status: 'Processing',

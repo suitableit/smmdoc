@@ -53,26 +53,16 @@ export async function getPaymentGatewayConfig(): Promise<PaymentGatewayConfig> {
   }
 }
 
-/**
- * Get the API key for the payment gateway
- */
 export async function getPaymentGatewayApiKey(): Promise<string> {
   const config = await getPaymentGatewayConfig();
   return config.apiKey;
 }
 
-/**
- * Get the base URL for the payment gateway API
- */
 export async function getPaymentGatewayBaseUrl(): Promise<string> {
   const config = await getPaymentGatewayConfig();
   return config.apiUrl;
 }
 
-/**
- * Get the checkout URL for creating payments
- * Constructs the full checkout endpoint URL based on base URL
- */
 export async function getPaymentGatewayCheckoutUrl(): Promise<string> {
   const config = await getPaymentGatewayConfig();
   const baseUrl = config.apiUrl.trim();
@@ -90,12 +80,6 @@ export async function getPaymentGatewayCheckoutUrl(): Promise<string> {
   return `${cleanUrl}/checkout-v2`;
 }
 
-/**
- * Get the verify payment URL
- * Constructs the full verify endpoint URL based on base URL
- * According to UddoktaPay API: {base_URL}/api/verify-payment
- * Matches the pattern used in getPaymentGatewayCheckoutUrl
- */
 export async function getPaymentGatewayVerifyUrl(): Promise<string> {
   const config = await getPaymentGatewayConfig();
   const baseUrl = config.apiUrl.trim();
@@ -121,17 +105,11 @@ export async function getPaymentGatewayVerifyUrl(): Promise<string> {
   return `${cleanUrl}/api/verify-payment`;
 }
 
-/**
- * Get the gateway name from payment gateway settings
- */
 export async function getPaymentGatewayName(): Promise<string> {
   const config = await getPaymentGatewayConfig();
   return config.gatewayName;
 }
 
-/**
- * Clear the cached payment gateway config (useful after settings updates)
- */
 export function clearPaymentGatewayCache(): void {
   cachedConfig = null;
   cacheTimestamp = 0;

@@ -85,18 +85,18 @@ export async function POST(req: NextRequest) {
             status: paymentStatus,
             transactionId: transaction_id || payment.transactionId,
             paymentMethod: payment_method || payment.paymentMethod || null,
-            phoneNumber: sender_number || payment.phoneNumber || null,
+            senderNumber: sender_number || payment.senderNumber || null,
             gatewayFee: fee !== undefined ? fee : payment.gatewayFee,
             name: full_name || payment.name,
             transactionDate: date ? new Date(date) : payment.transactionDate,
-            bdtAmount: charged_amount !== undefined ? charged_amount : payment.bdtAmount,
+            amount: charged_amount !== undefined ? charged_amount : payment.amount,
           }
         });
         
         console.log(`Payment ${invoice_id} status updated to ${paymentStatus}`);
         
         if (paymentStatus === "Success" && payment.user) {
-          const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+          const originalAmount = payment.amount || Number(payment.usdAmount) || 0;
 
           const user = await prisma.users.update({
             where: { id: payment.userId },
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
                 increment: originalAmount
               },
               balanceUSD: {
-                increment: payment.usdAmount
+                increment: Number(payment.usdAmount)
               },
               total_deposit: {
                 increment: originalAmount

@@ -38,6 +38,7 @@ interface PendingTransaction {
   user?: {
     name?: string;
     email?: string;
+    username?: string;
   };
 }
 

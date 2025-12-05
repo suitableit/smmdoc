@@ -2,11 +2,6 @@ import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
 import crypto from 'crypto';
 
-/**
- * Process affiliate referral when a new user registers
- * This function checks for affiliate cookies and creates referral records
- * Only counts the first registration from a unique browser/IP combination
- */
 export async function processAffiliateReferral(userId: number, requestHeaders?: Headers): Promise<void> {
   try {
     const cookieStore = await cookies();

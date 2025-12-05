@@ -54,14 +54,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       valid: true,
       payment: {
-        id: payment.Id,
+        id: payment.id,
         invoice_id: payment.invoiceId,
         amount: payment.usdAmount,
-        bdt_amount: payment.bdtAmount,
+        bdt_amount: payment.amount,
         status: payment.status,
         transaction_id: payment.transactionId,
         payment_method: payment.paymentMethod,
-        sender_number: payment.phoneNumber,
+        sender_number: payment.senderNumber,
         createdAt: payment.createdAt,
         updatedAt: payment.updatedAt,
       },

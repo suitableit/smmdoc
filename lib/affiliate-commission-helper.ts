@@ -1,10 +1,5 @@
 import { db } from '@/lib/db';
 
-/**
- * Update affiliate commission status based on order status
- * - If order is cancelled: commission status = 'cancelled'
- * - If order is completed: commission status = 'approved' and add earnings
- */
 export async function updateAffiliateCommissionForOrder(
   orderId: number,
   orderStatus: string,

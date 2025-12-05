@@ -67,8 +67,8 @@ export async function POST(
         const user = await prisma.users.update({
           where: { id: transaction.userId },
           data: {
-            balance: { increment: transaction.usdAmount },
-            total_deposit: { increment: transaction.usdAmount }
+            balance: { increment: Number(transaction.usdAmount) },
+            total_deposit: { increment: Number(transaction.usdAmount) }
           }
         });
         
@@ -126,7 +126,7 @@ export async function POST(
         success: true,
         message: 'Transaction approved successfully',
         data: {
-          transactionId: transaction.Id,
+          transactionId: transaction.id,
           amount: transaction.usdAmount,
           userId: transaction.userId,
           status: 'Success'

@@ -9,10 +9,6 @@ interface RouteGuardProps {
   children: React.ReactNode;
 }
 
-/**
- * Route guard component that checks if the current user has permission to access the route
- * Redirects to /admin if the user doesn't have permission
- */
 export function RouteGuard({ children }: RouteGuardProps) {
   const { data: session, status } = useSession();
   const pathname = usePathname();

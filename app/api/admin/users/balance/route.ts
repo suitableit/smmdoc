@@ -182,13 +182,13 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           invoiceId: `MANUAL-${Date.now()}`,
           usdAmount: amountToAdd,
-          bdtAmount: amountBDT,
+          amount: amountBDT,
           email: user.email || '',
           name: user.name || '',
           status: 'Success',
           paymentGateway: 'manual_adjustment',
           paymentMethod: `Admin Manual Adjustment (${adminCurrencySymbol}${amount} ${adminCurrency})`,
-          phoneNumber: '',
+          senderNumber: '',
           transactionId: action === 'add' ? 'Added by Admin' : 'Deducted by Admin',
           currency: 'USD'
         }
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         const emailData = emailTemplates.paymentSuccess({
           userName: user.name || 'Customer',
           userEmail: user.email,
-          transactionId: result.transactionRecord.Id.toString(),
+          transactionId: result.transactionRecord.id.toString(),
           amount: amount.toString(),
           currency: transactionCurrency,
           date: new Date().toLocaleDateString(),
@@ -238,7 +238,7 @@ export async function POST(request: NextRequest) {
       const adminEmailData = transactionEmailTemplates.adminAutoApproved({
         userName: user.name || 'Unknown User',
         userEmail: user.email || '',
-        transactionId: result.transactionRecord.Id.toString(),
+        transactionId: result.transactionRecord.id.toString(),
         amount: amount.toString(),
         currency: transactionCurrency,
         date: new Date().toLocaleDateString(),
@@ -299,7 +299,7 @@ export async function POST(request: NextRequest) {
         amountAdded: amountToAdd,
         adminCurrency: transactionCurrency,
         action: action,
-        transactionId: result.transactionRecord.Id
+        transactionId: result.transactionRecord.id
       }
     });
 

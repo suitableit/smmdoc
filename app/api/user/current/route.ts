@@ -37,13 +37,15 @@ export async function GET(request: NextRequest) {
       console.error('Error reading cookies in user current API:', error);
     }
 
-    let userId = session.user.id;
+    let userId: number;
     let isImpersonating = session.user.isImpersonating || false;
     
     if (impersonatedUserId && originalAdminId) {
       userId = parseInt(impersonatedUserId);
       isImpersonating = true;
       console.log('User Current API - Using impersonated user ID:', userId);
+    } else {
+      userId = Number(session.user.id);
     }
 
     try {

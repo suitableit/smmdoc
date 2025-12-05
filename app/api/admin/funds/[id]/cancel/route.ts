@@ -83,7 +83,7 @@ export async function POST(
         success: true,
         message: 'Transaction cancelled successfully',
         data: {
-          id: transaction.Id,
+          id: transaction.id,
           status: 'Cancelled',
           amount: transaction.usdAmount,
           userId: transaction.userId

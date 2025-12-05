@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         message: "Payment already verified",
         status: "COMPLETED",
         payment: {
-          id: payment.Id,
+          id: payment.id,
           invoice_id: payment.invoiceId,
           amount: payment.usdAmount,
           status: payment.status,
@@ -409,9 +409,9 @@ export async function GET(req: NextRequest) {
         verificationData_keys: verificationData ? Object.keys(verificationData) : []
       });
       
-      const phoneNumberToSave = verificationData?.sender_number || payment.phoneNumber || null;
+      const phoneNumberToSave = verificationData?.sender_number || payment.senderNumber || null;
       const gatewayFeeToSave = verificationData?.fee !== undefined ? verificationData.fee : payment.gatewayFee;
-      const bdtAmountToSave = verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.bdtAmount;
+      const bdtAmountToSave = verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.amount;
       const nameToSave = verificationData?.full_name || payment.name || null;
       const emailToSave = verificationData?.email || payment.email || null;
       const transactionDateToSave = verificationData?.date ? new Date(verificationData.date) : payment.transactionDate;
@@ -420,9 +420,9 @@ export async function GET(req: NextRequest) {
         status: paymentStatus,
         transactionId: transactionIdToSave,
         paymentMethod: paymentMethodToSave,
-        phoneNumber: phoneNumberToSave,
+        senderNumber: phoneNumberToSave,
         gatewayFee: gatewayFeeToSave,
-        bdtAmount: bdtAmountToSave,
+        amount: bdtAmountToSave,
         name: nameToSave,
         email: emailToSave,
         transactionDate: transactionDateToSave,
@@ -460,16 +460,16 @@ export async function GET(req: NextRequest) {
                 status: paymentStatus,
                 transactionId: transactionIdToSave,
                 paymentMethod: paymentMethodToSave,
-                phoneNumber: phoneNumberToSave,
+                senderNumber: phoneNumberToSave,
                 gatewayFee: gatewayFeeToSave,
-                bdtAmount: bdtAmountToSave,
+                amount: bdtAmountToSave,
                 name: nameToSave,
                 email: emailToSave,
                 transactionDate: transactionDateToSave,
             }
           });
           
-            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+            const originalAmount = payment.amount || Number(payment.usdAmount) || 0;
           const userSettings = await prisma.userSettings.findFirst();
           let bonusAmount = 0;
 
@@ -483,7 +483,7 @@ export async function GET(req: NextRequest) {
             where: { id: payment.userId },
             data: {
               balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usdAmount },
+                balanceUSD: { increment: Number(payment.usdAmount) },
               total_deposit: { increment: originalAmount }
             }
           });
@@ -497,9 +497,9 @@ export async function GET(req: NextRequest) {
               status: paymentStatus,
               transactionId: transactionIdToSave,
               paymentMethod: paymentMethodToSave,
-              phoneNumber: phoneNumberToSave,
+              senderNumber: phoneNumberToSave,
               gatewayFee: gatewayFeeToSave,
-              bdtAmount: bdtAmountToSave,
+              amount: bdtAmountToSave,
               name: nameToSave,
               email: emailToSave,
               transactionDate: transactionDateToSave,
@@ -563,13 +563,13 @@ export async function GET(req: NextRequest) {
             ? "Payment is pending verification"
             : "Payment verification failed",
           payment: {
-            id: updatedPayment.Id,
+            id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
             status: finalStatus,
             transaction_id: finalTransactionIdToReturn,
             payment_method: updatedPayment.paymentMethod,
-            phone_number: updatedPayment.phoneNumber,
+            phone_number: updatedPayment.senderNumber || null,
           },
         });
       } catch (redirectError) {
@@ -618,9 +618,9 @@ export async function GET(req: NextRequest) {
           status: paymentStatus,
           transactionId: transactionIdToSave,
           paymentMethod: paymentMethodToSave,
-          phoneNumber: verificationData?.sender_number || payment.phoneNumber || null,
+          senderNumber: verificationData?.sender_number || payment.senderNumber || null,
           gatewayFee: verificationData?.fee !== undefined ? verificationData.fee : payment.gatewayFee,
-          bdtAmount: verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.bdtAmount,
+          amount: verificationData?.charged_amount !== undefined ? verificationData.charged_amount : payment.amount,
           name: verificationData?.full_name || payment.name || null,
           email: verificationData?.email || payment.email || null,
           transactionDate: verificationData?.date ? new Date(verificationData.date) : payment.transactionDate,
@@ -648,7 +648,7 @@ export async function GET(req: NextRequest) {
               }
             });
             
-            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+            const originalAmount = payment.amount || Number(payment.usdAmount) || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -663,7 +663,7 @@ export async function GET(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usdAmount },
+                balanceUSD: { increment: Number(payment.usdAmount) },
                 total_deposit: { increment: originalAmount }
               }
             });
@@ -686,13 +686,13 @@ export async function GET(req: NextRequest) {
           status: "COMPLETED",
           message: "Payment verified successfully",
           payment: {
-            id: updatedPayment.Id,
+            id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
             status: updatedPayment.status,
               transaction_id: updatedPayment.transactionId,
               payment_method: updatedPayment.paymentMethod,
-              phone_number: updatedPayment.phoneNumber,
+              phone_number: updatedPayment.senderNumber || null,
           },
         });
       } else {
@@ -709,7 +709,7 @@ export async function GET(req: NextRequest) {
           status: responseStatus,
           message: responseMessage,
           payment: {
-            id: updatedPayment.Id,
+            id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
             status: updatedPayment.status,

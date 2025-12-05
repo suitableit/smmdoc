@@ -119,12 +119,12 @@ export async function POST(req: NextRequest) {
               data: {
                 status: 'Success',
                 transactionId: finalTransactionId || payment.transactionId,
-                phoneNumber: finalPhone || payment.phoneNumber,
+                senderNumber: finalPhone || payment.senderNumber,
                 paymentMethod: verificationData?.payment_method || payment.paymentMethod || 'UddoktaPay',
               },
             });
 
-            const originalAmount = payment.bdtAmount || payment.usdAmount || 0;
+            const originalAmount = payment.amount || Number(payment.usdAmount) || 0;
 
             const userSettings = await prisma.userSettings.findFirst();
             let bonusAmount = 0;
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
               where: { id: payment.userId },
               data: {
                 balance: { increment: totalAmountToAdd },
-                balanceUSD: { increment: payment.usdAmount },
+                balanceUSD: { increment: Number(payment.usdAmount) },
                 total_deposit: { increment: originalAmount },
               },
             });
@@ -222,7 +222,7 @@ export async function POST(req: NextRequest) {
           where: { invoiceId: invoice_id },
           data: {
             transactionId: finalTransactionId,
-            phoneNumber: finalPhone,
+            senderNumber: finalPhone,
           },
         });
 
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
           data: {
             status: 'Cancelled',
             transactionId: finalTransactionId,
-            phoneNumber: finalPhone,
+            senderNumber: finalPhone,
           },
         });
 

@@ -59,11 +59,11 @@ export async function POST(req: NextRequest) {
       data: {
         invoiceId: invoice_id,
         usdAmount: amountUSD,
-        bdtAmount: amountBDT,
+        amount: amountBDT,
         userId: testUser.id,
         status: 'Processing',
         paymentGateway: 'Test Gateway',
-        phoneNumber: phone,
+        senderNumber: phone,
         email: testUser.email || '',
       }
     });
