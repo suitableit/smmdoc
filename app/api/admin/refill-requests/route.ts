@@ -80,6 +80,9 @@ export async function GET(req: NextRequest) {
                     name: true,
                     rate: true,
                     refill: true,
+                    providerId: true,
+                    providerName: true,
+                    mode: true,
                   }
                 });
                 (order as any).service = service;

@@ -298,9 +298,31 @@ export default auth(async (req) => {
     }
   }
 
-  if (nextUrl.pathname.startsWith('/dashboard')) {
+  // Block admin/moderator access to user pages
+  const userPages = [
+    '/dashboard',
+    '/my-orders',
+    '/new-order',
+    '/transactions',
+    '/add-funds',
+    '/transfer-funds',
+    '/account-settings',
+    '/services',
+    '/support-tickets',
+    '/affiliate',
+    '/child-panel',
+    '/api',
+    '/mass-orders',
+    '/contact-support',
+    '/verify-payment',
+  ];
 
-    if ((userRole?.role === 'admin' || userRole?.role === 'moderator') && !isImpersonating) {
+  const isUserPage = userPages.some(page => 
+    nextUrl.pathname === page || nextUrl.pathname.startsWith(page + '/')
+  );
+
+  if (isUserPage && isLoggedIn && !isImpersonating) {
+    if (userRole?.role === 'admin' || userRole?.role === 'moderator') {
       return NextResponse.redirect(new URL('/admin', nextUrl));
     }
   }

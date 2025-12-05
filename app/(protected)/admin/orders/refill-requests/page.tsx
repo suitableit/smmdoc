@@ -62,7 +62,7 @@ interface Order {
     max_order: number;
     status: string;
     seller?: {
-      type: 'manual' | 'auto';
+      type: 'Self' | 'Auto';
       name?: string;
     };
   };
@@ -248,23 +248,38 @@ const RefillOrdersPage = () => {
 
           index === self.findIndex(r => r.order?.id === request.order?.id)
         )
-        .map((request: any) => ({
-        id: request.order?.id || 0,
-        qty: request.order?.qty || 0,
-        price: request.order?.price || 0,
-        usdPrice: request.order?.usdPrice || 0,
-        link: request.order?.link || '',
-        status: request.order?.status || 'unknown',
-        createdAt: request.order?.createdAt || new Date(),
-        user: request.user || {},
-        service: {
-          name: request.order?.service?.name || 'Unknown Service',
-          refill: request.order?.service?.refill || true,
-          rate: request.order?.service?.rate || 0
-        },
-        category: { category_name: 'Refill Request' },
-        refillRequest: request
-      }));
+        .map((request: any) => {
+          const service = request.order?.service;
+          const isSelfService = !service?.providerId && !service?.providerName;
+          const sellerType: 'Self' | 'Auto' = isSelfService ? 'Self' : 'Auto';
+          const sellerName = isSelfService ? undefined : (service?.providerName || 'API Provider');
+          
+          return {
+            id: request.order?.id || 0,
+            qty: request.order?.qty || 0,
+            price: request.order?.price || 0,
+            usdPrice: request.order?.usdPrice || 0,
+            link: request.order?.link || '',
+            status: request.order?.status || 'unknown',
+            createdAt: request.order?.createdAt || new Date(),
+            user: request.user || {},
+            service: {
+              id: service?.id || 0,
+              name: service?.name || 'Unknown Service',
+              refill: service?.refill || true,
+              rate: service?.rate || 0,
+              min_order: 0,
+              max_order: 0,
+              status: 'active',
+              seller: {
+                type: sellerType,
+                name: sellerName
+              }
+            },
+            category: { category_name: 'Refill Request' },
+            refillRequest: request
+          };
+        });
 
       setOrders(transformedOrders);
       setPagination({
@@ -860,7 +875,7 @@ const RefillOrdersPage = () => {
                                 className="font-medium text-sm capitalize"
                                 style={{ color: 'var(--text-primary)' }}
                               >
-                                {order.service?.seller?.type || 'Manual'}
+                                {order.service?.seller?.type || 'Self'}
                               </div>
                               {order.service?.seller?.name && (
                                 <div className="text-xs truncate max-w-32" style={{ color: 'var(--text-muted)' }}>
@@ -1027,7 +1042,7 @@ const RefillOrdersPage = () => {
                               Seller:
                             </span>
                             <span className="text-xs font-medium capitalize" style={{ color: 'var(--text-primary)' }}>
-                              {order.service?.seller?.type || 'Manual'}
+                              {order.service?.seller?.type || 'Self'}
                             </span>
                             {order.service?.seller?.name && (
                               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -1478,7 +1493,7 @@ const RefillOrdersPage = () => {
                     Category: {viewDialog.order.category?.category_name || 'Unknown'}{' '}
                     {viewDialog.order.service?.seller && (
                       <>
-                        • Seller: {viewDialog.order.service.seller.type || 'Unknown'}
+                        • Seller: {viewDialog.order.service.seller.type || 'Self'}
                         {viewDialog.order.service.seller.name && ` (${viewDialog.order.service.seller.name})`}
                       </>
                     )}

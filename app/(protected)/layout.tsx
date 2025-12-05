@@ -5,7 +5,7 @@ import SideBar from '@/components/dashboard/sideBar';
 import Announcements from '@/components/dashboard/announcements';
 import { checkSessionValidity, setupSessionInvalidationListener } from '@/lib/session-invalidation';
 import { signOut, useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ProtectedLayout({
@@ -13,10 +13,47 @@ export default function ProtectedLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const isDashboard = pathname === '/dashboard';
   const isAdminPage = pathname?.startsWith('/admin');
   const { data: session, status } = useSession();
   const [isValidating, setIsValidating] = useState(true);
+
+  // User pages that admins/moderators should not access
+  const userPages = [
+    '/dashboard',
+    '/my-orders',
+    '/new-order',
+    '/transactions',
+    '/add-funds',
+    '/transfer-funds',
+    '/account-settings',
+    '/services',
+    '/support-tickets',
+    '/affiliate',
+    '/child-panel',
+    '/api',
+    '/mass-orders',
+    '/contact-support',
+    '/verify-payment',
+  ];
+
+  const isUserPage = userPages.some(page => 
+    pathname === page || pathname?.startsWith(page + '/')
+  );
+
+  // Redirect admin/moderator from user pages
+  useEffect(() => {
+    if (status === 'loading' || isValidating) return;
+
+    if (session?.user && isUserPage && !isAdminPage) {
+      const userRole = session.user.role;
+      if (userRole === 'admin' || userRole === 'moderator') {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [session, pathname, isUserPage, isAdminPage, router, status, isValidating]);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -127,6 +164,14 @@ export default function ProtectedLayout({
       window.location.href = '/sign-in';
     }
     return null;
+  }
+
+  // Don't render user pages for admin/moderator (will redirect)
+  if (session?.user && isUserPage && !isAdminPage) {
+    const userRole = session.user.role;
+    if (userRole === 'admin' || userRole === 'moderator') {
+      return null;
+    }
   }
 
   return (

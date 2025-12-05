@@ -25,6 +25,7 @@ import {
   FaLock,
   FaTachometerAlt,
   FaUser,
+  FaUserCheck,
   FaUserShield,
 } from 'react-icons/fa';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
@@ -60,6 +61,8 @@ const Hero: React.FC = () => {
   const isLoading = status === 'loading';
   const userRole = session?.user?.role || 'user';
   const isAdmin = userRole === 'admin';
+  const isModerator = userRole === 'moderator';
+  const isAdminOrModerator = isAdmin || isModerator;
 
   const [usersCount, setUsersCount] = useState<number>(0);
   const [completedOrdersCount, setCompletedOrdersCount] = useState<number>(0);
@@ -263,6 +266,8 @@ const Hero: React.FC = () => {
         <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
           {isAdmin ? (
             <FaUserShield className="w-8 h-8 text-white" />
+          ) : isModerator ? (
+            <FaUserCheck className="w-8 h-8 text-white" />
           ) : (
             <FaUser className="w-8 h-8 text-white" />
           )}
@@ -277,13 +282,15 @@ const Hero: React.FC = () => {
           </span>
         </h2>
         <p className="text-gray-600 dark:text-gray-300 mb-6 transition-colors duration-200">
-          {isAdmin
-            ? 'Ready to manage the platform?'
+          {isAdminOrModerator
+            ? isModerator
+              ? 'Ready to moderate the platform?'
+              : 'Ready to manage the platform?'
             : 'Ready to boost your social media presence?'}
         </p>
 
         <div className="space-y-4">
-          {isAdmin ? (
+          {isAdminOrModerator ? (
             <Link
               href="/admin"
               className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white py-3 px-4 rounded-lg text-lg font-semibold hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 inline-flex items-center justify-center gap-2"
@@ -301,7 +308,7 @@ const Hero: React.FC = () => {
             </Link>
           )}
 
-          {!isAdmin && (
+          {!isAdminOrModerator && (
             <Link
               href="/services"
               className="w-full bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white py-3 px-4 rounded-lg text-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-600/50 hover:shadow-lg transition-all duration-300 inline-flex items-center justify-center gap-2"
@@ -315,24 +322,24 @@ const Hero: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin
+                {isAdminOrModerator
                   ? (typeof totalOrdersCount === 'number' ? totalOrdersCount.toString() : '0')
                   : (typeof activeOrdersCountUser === 'number' ? activeOrdersCountUser.toString() : (userStatsLoading ? '0' : '0'))
                 }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                {isAdmin ? 'Total Orders' : 'Active Orders'}
+                {isAdminOrModerator ? 'Total Orders' : 'Active Orders'}
               </div>
             </div>
             <div>
               <div className="text-2xl font-bold text-[var(--primary)] dark:text-[var(--secondary)]">
-                {isAdmin
+                {isAdminOrModerator
                   ? (typeof activeUsersCount === 'number' ? activeUsersCount.toString() : '0')
                   : (typeof userBalance === 'number' ? `$${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : (userStatsLoading ? '0' : '$0.00'))
                 }
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                {isAdmin ? 'Active Users' : 'Account Balance'}
+                {isAdminOrModerator ? 'Active Users' : 'Account Balance'}
               </div>
             </div>
           </div>
@@ -397,12 +404,12 @@ const Hero: React.FC = () => {
 
               {isAuthenticated && (
                 <Link
-                  href={isAdmin ? "/admin" : "/dashboard"}
+                  href={isAdminOrModerator ? "/admin" : "/dashboard"}
                   className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white px-7 py-4 rounded-lg text-lg font-semibold inline-flex items-center justify-center space-x-2 hover:shadow-lg hover:from-[#4F0FD8] hover:to-[#A121E8] transition-all duration-300 mb-4 hover:-translate-y-1"
                   data-aos="fade-down"
                   data-aos-duration="1000"
                 >
-                  {isAdmin ? (
+                  {isAdminOrModerator ? (
                     <>
                       <FaHome className="w-5 h-5" />
                       <span>Go to Admin Panel</span>

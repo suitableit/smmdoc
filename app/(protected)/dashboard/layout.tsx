@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,7 +12,8 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const isDashboard = pathname === '/dashboard';
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,10 +39,46 @@ export default function DashboardLayout({
     fetchUser();
   }, []);
 
-  if (isDashboard && !loading && user) {
-    if (user.role === 'ADMIN' || user.role === 'admin') {
-      const AdminDashboard = require('../admin/page').default;
-      return <AdminDashboard />;
+  // Redirect admin/moderator to admin dashboard
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (session?.user) {
+      const userRole = session.user.role;
+      if (userRole === 'admin' || userRole === 'moderator') {
+        router.push('/admin');
+        return;
+      }
+    }
+
+    if (!loading && user) {
+      if (user.role === 'ADMIN' || user.role === 'admin' || user.role === 'moderator') {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [session, user, loading, router, status]);
+
+  // Show loading while checking
+  if (status === 'loading' || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  // Don't render if admin/moderator (will redirect)
+  if (session?.user) {
+    const userRole = session.user.role;
+    if (userRole === 'admin' || userRole === 'moderator') {
+      return null;
+    }
+  }
+
+  if (!loading && user) {
+    if (user.role === 'ADMIN' || user.role === 'admin' || user.role === 'moderator') {
+      return null;
     }
   }
 
