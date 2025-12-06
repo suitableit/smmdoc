@@ -14,7 +14,7 @@ import {
     FaUser,
     FaYoutube
 } from 'react-icons/fa';
-import { GradientSpinner } from '@/components/ui/GradientSpinner';
+import { GradientSpinner } from '@/components/ui/gradient-spinner';
 import ReCAPTCHA from '@/components/recaptcha';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 

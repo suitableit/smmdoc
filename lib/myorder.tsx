@@ -1,9 +1,9 @@
 "use client";
 
 import { PageContainer } from '@/components/layout/page-container';
-import { GridLayout } from '@/components/ui/GridLayout';
-import { InfoCard } from '@/components/ui/InfoCard';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { GridLayout } from '@/components/ui/grid-layout';
+import { InfoCard } from '@/components/ui/info-card';
+import { PageHeader } from '@/components/ui/page-header';
 import { useEffect, useState } from 'react';
 
 interface Order {
