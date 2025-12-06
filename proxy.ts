@@ -303,7 +303,6 @@ export default auth(async (req) => {
     '/transactions',
     '/add-funds',
     '/transfer-funds',
-    '/account-settings',
     '/services',
     '/support-tickets',
     '/affiliate',

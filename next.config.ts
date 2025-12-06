@@ -16,10 +16,17 @@ const nextConfig = {
 
   webpack: (config: any, { dev, isServer }: { dev: boolean; isServer: boolean }) => {
     if (dev && !isServer) {
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-      };
+      if (process.env.USE_POLLING === 'true') {
+        config.watchOptions = {
+          poll: 2000,
+          aggregateTimeout: 500,
+        };
+      } else {
+        config.watchOptions = {
+          ignored: ['**/node_modules/**', '**/.next/**'],
+          aggregateTimeout: 300,
+        };
+      }
 
       config.resolve.symlinks = false;
     }
@@ -35,8 +42,8 @@ const nextConfig = {
 
   ...(process.env.NODE_ENV === 'development' && {
     onDemandEntries: {
-      maxInactiveAge: 25 * 1000,
-      pagesBufferLength: 2,
+      maxInactiveAge: 60 * 1000,
+      pagesBufferLength: 5,
     },
   }),
 

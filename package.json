@@ -6,7 +6,7 @@
     "dev": "next dev --turbo -p 80",
     "dev:webpack": "next dev --webpack -p 80",
     "dev:turbo": "next dev --turbo -p 80",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start -p 80",
     "lint": "next lint",
     "postinstall": "prisma generate",
