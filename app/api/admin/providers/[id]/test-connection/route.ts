@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { testProviderConnection } from '@/lib/utils/providerValidator';
+import { testProviderConnection } from '@/lib/utils/provider-validator';
 
 export async function POST(
   request: NextRequest,

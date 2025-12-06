@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -561,7 +561,6 @@ export default function WithdrawalsPage() {
         </div>
       </div>
 
-      {/* Cancel Reason Modal */}
       {cancelReasonModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-[500px] max-w-[90vw] mx-4 relative">

@@ -2,11 +2,11 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/axios-instance';
 import {
   FaBell,
   FaCheckCircle,

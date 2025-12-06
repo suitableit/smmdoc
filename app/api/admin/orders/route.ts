@@ -1,8 +1,8 @@
 ﻿import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
-import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/service-types';
+import { ProviderOrderForwarder } from '@/lib/utils/provider-order-forwarder';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

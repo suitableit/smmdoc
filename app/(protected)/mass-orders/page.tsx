@@ -1,6 +1,6 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { 
   validateMassOrders, 
@@ -10,13 +10,13 @@ import {
   ParsedOrder,
   ValidationResult 
 } from '@/lib/mass-order-validation';
-import axiosInstance from '@/lib/axiosInstance';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import axiosInstance from '@/lib/axios-instance';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
     dashboardApi,
     useGetUserStatsQuery,
-} from '@/lib/services/dashboardApi';
+} from '@/lib/services/dashboard-api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import {

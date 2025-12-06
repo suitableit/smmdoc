@@ -24,7 +24,7 @@ import {
   FaUndo
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 
 const ProvidersTableSkeleton = () => {
   const rows = Array.from({ length: 10 });
@@ -1033,7 +1033,7 @@ const APIProvidersPage = () => {
 
       if (currentStatus === 'unknown' || !currentStatus) {
 
-        const { testProviderConnection: validateConnection } = await import('@/lib/utils/providerValidator');
+        const { testProviderConnection: validateConnection } = await import('@/lib/utils/provider-validator');
         const connectionPromise = validateConnection(providerId);
         const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
           setTimeout(() => reject(new Error('Connection test timeout')), 15000)

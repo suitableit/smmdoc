@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import React, { useEffect, useState, useMemo } from 'react';
 import {

@@ -17,9 +17,9 @@ import {
 } from 'react-icons/fa';
 
 import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatNumber } from '@/lib/utils';
 

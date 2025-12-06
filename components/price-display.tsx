@@ -1,6 +1,6 @@
 
 'use client';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { formatPrice } from '@/lib/utils';
 
 interface PriceDisplayProps {

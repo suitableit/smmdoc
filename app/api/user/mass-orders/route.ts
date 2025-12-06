@@ -1,7 +1,7 @@
 ﻿import { requireAuth } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/service-types';
 
 export async function POST(request: Request) {
   try {

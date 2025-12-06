@@ -1,11 +1,11 @@
 'use client';
 
 import Announcements from '@/components/dashboard/announcements';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { useGetUserStatsQuery } from '@/lib/services/dashboard-api';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import moment from 'moment';
 import Link from 'next/link';
@@ -212,8 +212,6 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* Show announcements for users only (not admin or moderator) */}
-      {/* When impersonating, session.role will be the impersonated user's role ('user'), so announcements will show */}
       {((session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR') || session?.user?.isImpersonating) && (
         <Announcements />
       )}

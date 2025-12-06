@@ -3,7 +3,7 @@ import { convertToUSD } from '@/lib/currency-utils';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiRequestBuilder, ApiResponseParser, createApiSpecFromProvider } from '@/lib/provider-api-specification';
-import { validateProvider } from '@/lib/utils/providerValidator';
+import { validateProvider } from '@/lib/utils/provider-validator';
 
 const getValidProviders = async () => {
   try {

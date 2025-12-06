@@ -2,7 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import ActivateAffiliateContent from '@/app/(protected)/affiliate/activate/page';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -156,7 +156,7 @@ function AffiliateStatsCards() {
     if (typeof window === 'undefined') return '';
     const base = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
     const code = (stats as any)?.referralCode || cachedReferralCode;
-    return code ? `${base}/ref/${code}` : '';
+    return code ? `${base}/api/ref/${code}` : '';
   })();
 
   const showToast = (

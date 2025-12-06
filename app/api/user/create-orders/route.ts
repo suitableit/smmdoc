@@ -2,8 +2,8 @@ import { auth } from '@/auth';
 import { ActivityLogger } from '@/lib/activity-logger';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { validateOrderByType, getServiceTypeConfig } from '@/lib/serviceTypes';
-import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import { validateOrderByType, getServiceTypeConfig } from '@/lib/service-types';
+import { ProviderOrderForwarder } from '@/lib/utils/provider-order-forwarder';
 import { convertFromUSD, convertToUSD, fetchCurrencyData } from '@/lib/currency-utils';
 
 export async function POST(request: Request) {

@@ -2,21 +2,21 @@
 
 import React, { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/axios-instance';
 import {
   FaCheckCircle,
   FaClock,
   FaTimesCircle,
 } from 'react-icons/fa';
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 
 const ApproveTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/approve-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/approve-transaction'),
   { ssr: false }
 );
 
 const CancelTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/cancel-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/cancel-transaction'),
   { ssr: false }
 );
 

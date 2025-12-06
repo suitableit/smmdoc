@@ -1,8 +1,9 @@
 ﻿'use client';
 
-import Header from '@/components/dashboard/header/page';
-import SideBar from '@/components/dashboard/sideBar';
+import Header from '@/components/header/page';
+import SideBar from '@/components/dashboard/sidebar';
 import Announcements from '@/components/dashboard/announcements';
+import { RouteGuard } from '@/components/admin/route-guard';
 import { checkSessionValidity, setupSessionInvalidationListener } from '@/lib/session-invalidation';
 import { signOut, useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -79,6 +80,32 @@ export default function ProtectedLayout({
   }, [status, session?.user]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cookies = document.cookie.split(';').reduce((acc: any, cookie: string) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key && value) {
+          acc[key.trim()] = decodeURIComponent(value.trim());
+        }
+        return acc;
+      }, {});
+      const hasCookie = !!(cookies['impersonated-user-id'] && cookies['original-admin-id']);
+      setHasImpersonationCookie(hasCookie);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === 'loading' || isValidating) return;
+
+    if (isAdminPage && session?.user) {
+      const userRole = session.user.role;
+      if (userRole !== 'admin' && userRole !== 'moderator') {
+        router.push('/dashboard');
+        return;
+      }
+    }
+  }, [session, pathname, isAdminPage, router, status, isValidating]);
+
+  useEffect(() => {
     if (status === 'loading' || isValidating) {
       const isImpersonating = session?.user?.isImpersonating || hasImpersonationCookie;
       if (!isImpersonating) return;
@@ -86,14 +113,22 @@ export default function ProtectedLayout({
 
     const isImpersonating = session?.user?.isImpersonating || hasImpersonationCookie;
     
-    if (session?.user && isUserPage && !isAdminPage && !isImpersonating) {
+    if (isDashboard && session?.user && !isImpersonating) {
       const userRole = session.user.role;
       if (userRole === 'admin' || userRole === 'moderator') {
         router.push('/admin');
         return;
       }
     }
-  }, [session, pathname, isUserPage, isAdminPage, router, status, isValidating, hasImpersonationCookie]);
+
+    if (isDashboard && !userDataLoading && userData && !isImpersonating) {
+      const userRole = userData.role;
+      if (userRole === 'admin' || userRole === 'ADMIN' || userRole === 'moderator') {
+        router.push('/admin');
+        return;
+      }
+    }
+  }, [session, pathname, isDashboard, router, status, isValidating, hasImpersonationCookie, userData, userDataLoading]);
 
   useEffect(() => {
     if (status === 'loading') {
@@ -200,6 +235,7 @@ export default function ProtectedLayout({
 
 
   const isImpersonating = userData?.isImpersonating || session?.user?.isImpersonating || hasImpersonationCookie || false;
+  const userRole = userData?.role || session?.user?.role;
   
   if (status === 'unauthenticated' || (!session?.user && !isImpersonating)) {
     if (typeof window !== 'undefined') {
@@ -208,60 +244,17 @@ export default function ProtectedLayout({
     return null;
   }
 
-  const userRole = userData?.role || session?.user?.role;
-  
-  useEffect(() => {
-    if (session?.user && isUserPage && !isAdminPage) {
-      if (userRole === 'user' || userRole === 'USER' || isImpersonating) {
-        setHasRendered(true);
-      }
-      else if (userData && userData.role !== 'admin' && userData.role !== 'moderator') {
-        setHasRendered(true);
+  if (isDashboard && session?.user && !isImpersonating) {
+    if (userRole === 'admin' || userRole === 'ADMIN' || userRole === 'moderator') {
+      if (!userDataLoading && userData) {
+        return null;
       }
     }
-  }, [session?.user, isUserPage, isAdminPage, userRole, isImpersonating, userData]);
-  
-  console.log('Main Layout Check:', { 
-    userRole, 
-    isImpersonating, 
-    isUserPage, 
-    isAdminPage,
-    status,
-    hasSession: !!session?.user,
-    hasUserData: !!userData,
-    userDataLoading,
-    hasRendered
-  });
-  
-  if (session?.user && isUserPage && !isAdminPage) {
-    if (userRole === 'user' || userRole === 'USER') {
-      console.log('Main Layout: Allowing - role is user');
-    }
-    else if (isImpersonating) {
-      console.log('Main Layout: Allowing - impersonating flag is true');
-    }
-    else if (hasRendered) {
-      console.log('Main Layout: Allowing - already rendered (prevent white screen)');
-    }
-    else if (
-      (userRole === 'admin' || userRole === 'moderator') && 
-      isImpersonating === false && 
-      !userDataLoading && 
-      userData &&
-      userData.role === userRole &&
-      !hasRendered
-    ) {
-      console.log('Main Layout: Blocking - admin/moderator not impersonating (confirmed, first render)');
+  }
+
+  if (isAdminPage && session?.user) {
+    if (userRole !== 'admin' && userRole !== 'ADMIN' && userRole !== 'moderator') {
       return null;
-    }
-    else {
-      console.log('Main Layout: Allowing - uncertain state (defensive):', { 
-        userRole, 
-        isImpersonating, 
-        userDataLoading,
-        hasUserData: !!userData,
-        hasRendered
-      });
     }
   }
 
@@ -302,21 +295,22 @@ export default function ProtectedLayout({
                 : 'px-4 sm:px-8 py-4 sm:py-8 bg-[var(--page-bg)] dark:bg-[var(--page-bg)]'
             }
           >
-            {/* Show announcements for users (non-admin, non-moderator) on non-dashboard pages */}
-            {/* When impersonating, session.role will be the impersonated user's role ('user'), so announcements will show */}
             {((session?.user?.role !== 'admin' && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'moderator' && session?.user?.role !== 'MODERATOR') || session?.user?.isImpersonating) && !isDashboard && (
               <Announcements visibility="all_pages" />
             )}
-            {/* Show announcements for admin users on admin pages (except admin dashboard) */}
             {(session?.user?.role === 'admin' || session?.user?.role === 'ADMIN') && isAdminPage && pathname !== '/admin' && (
               <Announcements visibility="all_pages" />
             )}
-            {/* Show announcements for moderators on admin pages (except admin dashboard) */}
             {(session?.user?.role === 'moderator' || session?.user?.role === 'MODERATOR') && isAdminPage && pathname !== '/admin' && (
               <Announcements visibility="all_pages" />
             )}
-            {/* Always render children - don't show spinner during switch */}
-            {children}
+            {isAdminPage ? (
+              <RouteGuard>
+                {children}
+              </RouteGuard>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>

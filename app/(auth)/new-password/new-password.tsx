@@ -1,7 +1,7 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import { newPasswordValues } from '@/lib/actions/newPassword';
+import { newPasswordValues } from '@/lib/actions/new-password';
 import {
   newPasswordDefaultValues,
   newPasswordSchema,

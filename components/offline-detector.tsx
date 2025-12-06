@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import OfflineBanner from './OfflineBanner';
+import OfflineBanner from './offline-banner';
 
 export default function OfflineDetector({ children }: { children: React.ReactNode }) {
   const [isOnline, setIsOnline] = useState(true);
@@ -11,15 +11,15 @@ export default function OfflineDetector({ children }: { children: React.ReactNod
     try {
       setIsCheckingConnection(true);
 
-      const response = await fetch('/api/manifest', {
-        method: 'HEAD',
+      const response = await fetch('/api/health', {
+        method: 'GET',
         cache: 'no-cache',
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(3000),
       });
 
       return response.ok;
     } catch (error) {
-      console.log('Connectivity check failed:', error);
+      console.log('Internet connectivity check failed:', error);
       return false;
     } finally {
       setIsCheckingConnection(false);

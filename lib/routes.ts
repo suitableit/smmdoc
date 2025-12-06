@@ -25,7 +25,7 @@ export const publicRoutes = [
   '/api/ticket-system-status',
   '/api/contact-system-status',
   '/api/test-db',
-  '/ref',
+  '/api/ref',
 ];
 export const apiAuthPrefixes = ['/api/auth', '/api/currency', '/api/user', '/api/admin'];
 export const DEFAULT_SIGN_IN_REDIRECT = '/dashboard';

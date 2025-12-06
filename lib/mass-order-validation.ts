@@ -1,5 +1,5 @@
 
-import axiosInstance from './axiosInstance';
+import axiosInstance from './axios-instance';
 import { convertCurrency, formatCurrencyAmount, Currency, CurrencySettings } from './currency-utils';
 
 export interface ParsedOrder {

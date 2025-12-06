@@ -1,8 +1,9 @@
-import { PageContainer } from '@/components/layout/PageContainer';
+import { PageContainer } from '@/components/layout/page-container';
 import { GridLayout } from '@/components/ui/GridLayout';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { ServiceTile } from '@/components/ui/ServiceTile';
+import { ServiceTile } from '@/components/ui/ServiceTile';
+
 const popularServices = [
   { id: '1', title: 'Facebook Page Likes', description: 'High quality Facebook page likes from real users', price: 5.99, badge: 'Popular' },
   { id: '2', title: 'Instagram Followers', description: 'Organic Instagram followers for your profile', price: 7.99, badge: 'Hot' },

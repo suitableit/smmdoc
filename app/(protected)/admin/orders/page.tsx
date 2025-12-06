@@ -19,13 +19,13 @@ import {
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useCurrency } from '@/contexts/currency-context';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
-import axiosInstance from '@/lib/axiosInstance';
-import { userOrderApi } from '@/lib/services/userOrderApi';
+import axiosInstance from '@/lib/axios-instance';
+import { userOrderApi } from '@/lib/services/user-order-api';
 import { useAppDispatch } from '@/lib/store';
 
 const fetcher = (url: string) => axiosInstance.get(url).then((res) => res.data);

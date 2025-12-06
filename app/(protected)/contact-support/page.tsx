@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -17,9 +17,9 @@ import {
     FaTicketAlt,
     FaTimes
 } from 'react-icons/fa';
-import ReCAPTCHA from '@/components/ReCAPTCHA';
+import ReCAPTCHA from '@/components/recaptcha';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
-import ContactSystemGuard from '@/components/ContactSystemGuard';
+import ContactSystemGuard from '@/components/contact-system-guard';
 
 const Toast = ({
   message,

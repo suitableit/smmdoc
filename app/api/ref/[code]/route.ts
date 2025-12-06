@@ -84,3 +84,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.redirect(new URL('/', request.url))
   }
 }
+

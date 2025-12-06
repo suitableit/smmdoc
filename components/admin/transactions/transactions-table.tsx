@@ -10,7 +10,7 @@ import {
   FaSync,
   FaTimesCircle,
 } from 'react-icons/fa';
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 
 interface Transaction {
   id: number;

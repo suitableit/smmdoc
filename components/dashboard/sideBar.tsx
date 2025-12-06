@@ -6,7 +6,7 @@ import { Session } from 'next-auth';
 const Image = dynamic(() => import('next/image'), { ssr: false });
 const Link = dynamic(() => import('next/link'), { ssr: false });
 
-import SideBarNav from './sideBarNav';
+import SideBarNav from './sidebar-nav';
 
 interface SideBarProps {
   collapsed?: boolean;

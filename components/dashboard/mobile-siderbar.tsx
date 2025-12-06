@@ -9,7 +9,7 @@ import {
 import { MenuIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import SideBarNav from './sideBarNav';
+import SideBarNav from './sidebar-nav';
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 

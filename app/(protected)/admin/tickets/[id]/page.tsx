@@ -26,10 +26,10 @@ import {
     FaVideo
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import useTicketPolling from '@/hooks/useTicketPolling';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
+import TicketSystemGuard from '@/components/ticket-system-guard';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
   <div className={`${size} ${className} relative`}>

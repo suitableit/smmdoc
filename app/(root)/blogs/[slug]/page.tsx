@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import BlogPostDetailClient from './BlogPostDetailClient';
+import BlogPostDetailClient from '../blog-details/page';
 import { getAppName, getSiteDescription, getGeneralSettings } from '@/lib/utils/general-settings';
 
 interface BlogPostPageProps {

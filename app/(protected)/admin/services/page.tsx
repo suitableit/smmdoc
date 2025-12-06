@@ -32,12 +32,12 @@ import {
 } from 'react-icons/fa';
 import useSWR from 'swr';
 
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useGetServicesId } from '@/hooks/service-fetch-id';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import axiosInstance from '@/lib/axiosInstance';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import axiosInstance from '@/lib/axios-instance';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { formatID } from '@/lib/utils';
 import {

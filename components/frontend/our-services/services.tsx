@@ -11,7 +11,7 @@ import {
   FaTimes,
 } from 'react-icons/fa';
 
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import ServiceViewModal from '@/app/(protected)/services/serviceViewModal';
 

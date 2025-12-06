@@ -1,24 +1,25 @@
 import '@/assets/styles/globals.css';
 import { auth } from '@/auth';
-import { CustomCodesInjector } from '@/components/CustomCodesInjector';
+import { CustomCodesInjector } from '@/components/custom-codes-injector';
 import AnalyticsInjector from '@/components/analytics-injector';
 import { ThemeProvider } from '@/components/theme-provider';
-import OfflineDetector from '@/components/OfflineDetector';
-import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
+import OfflineDetector from '@/components/offline-detector';
+import DatabaseConnectionDetector from '@/components/database-connection-detector';
+import ServiceWorkerRegistration from '@/components/service-worker-registration';
 import { APP_DESCRIPTION, APP_URL } from '@/lib/constants';
 import { getAppName } from '@/lib/utils/general-settings';
 import type { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 
-import { AppNameProvider } from '@/contexts/AppNameContext';
-import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { AppNameProvider } from '@/contexts/app-name-context';
+import { CurrencyProvider } from '@/contexts/currency-context';
 import { getUserCurrency } from '@/lib/actions/currency';
 import { Nunito } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from 'sonner';
-import StoreProvider from './StoreProvider';
-import UserSwitchWrapper from '@/components/admin/UserSwitchWrapper';
-import FaviconUpdater from '@/components/FaviconUpdater';
+import StoreProvider from './store-provider';
+import UserSwitchWrapper from '@/components/admin/user-switch-wrapper';
+import FaviconUpdater from '@/components/favicon-updater';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -81,10 +82,12 @@ export default async function RootLayout({
               <AppNameProvider initialAppName={appName}>
                 <CurrencyProvider serverCurrency={serverCurrency}>
                   <OfflineDetector>
-                    <div className="non-sidebar-content font-nunito text-black">
-                      {children}
-                      <UserSwitchWrapper />
-                    </div>
+                    <DatabaseConnectionDetector>
+                      <div className="non-sidebar-content font-nunito text-black">
+                        {children}
+                        <UserSwitchWrapper />
+                      </div>
+                    </DatabaseConnectionDetector>
                   </OfflineDetector>
                 </CurrencyProvider>
               </AppNameProvider>

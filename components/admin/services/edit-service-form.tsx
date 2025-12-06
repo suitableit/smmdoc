@@ -9,7 +9,7 @@ import {
 import useSWR from 'swr';
 import { useGetCategories } from '@/hooks/categories-fetch';
 import { useGetServicesId } from '@/hooks/service-fetch-id';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/axios-instance';
 import {
   createServiceDefaultValues,
   CreateServiceSchema,

@@ -26,7 +26,7 @@ import {
     FaVideo
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (
@@ -1033,7 +1033,7 @@ const ContactDetailsPage = () => {
     </div>
   );
 };
-import ContactSystemGuard from '@/components/ContactSystemGuard';
+import ContactSystemGuard from '@/components/contact-system-guard';
 
 const ProtectedContactDetailsPage = () => (
   <ContactSystemGuard>

@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { ProviderOrderForwarder } from '@/lib/utils/providerOrderForwarder';
+import { ProviderOrderForwarder } from '@/lib/utils/provider-order-forwarder';
 import axios from 'axios';
 
 const API_TIMEOUT = 15000;

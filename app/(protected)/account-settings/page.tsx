@@ -2,7 +2,7 @@
 
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import React, { useEffect, useState } from 'react';

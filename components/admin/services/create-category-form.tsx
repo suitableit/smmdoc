@@ -2,7 +2,7 @@
 import React, { useTransition } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axiosInstance from "@/lib/axiosInstance";
+import axiosInstance from "@/lib/axios-instance";
 import { mutate } from "swr";
 import {
   createCategoryDefaultValues,

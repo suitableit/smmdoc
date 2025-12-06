@@ -1,4 +1,4 @@
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 import { formatNumber } from '@/lib/utils';
 import Link from 'next/link';
 import {

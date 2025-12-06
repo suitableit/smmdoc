@@ -17,9 +17,9 @@ import {
     FaTimesCircle,
 } from 'react-icons/fa';
 
-import { PriceDisplay } from '@/components/PriceDisplay';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { PriceDisplay } from '@/components/price-display';
+import { useCurrency } from '@/contexts/currency-context';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 const formatID = (id: any) => id;
@@ -1317,7 +1317,6 @@ const AdminWithdrawalsPage = () => {
                     </div>
                   )}
 
-                {/* Edit Transaction ID Modal */}
                 {editTransactionIdDialog.open &&
                   editTransactionIdDialog.withdrawal && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

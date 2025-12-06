@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { FaCheckCircle, FaTimes } from 'react-icons/fa';
-import UserSwitchIcon from './UserSwitchIcon';
+import UserSwitchIcon from './user-switch-icon';
 
 const Toast = ({
   message,

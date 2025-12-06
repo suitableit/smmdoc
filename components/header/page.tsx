@@ -1,10 +1,10 @@
 'use client';
 
-import { PriceDisplay } from '@/components/PriceDisplay';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { PriceDisplay } from '@/components/price-display';
+import { useCurrency } from '@/contexts/currency-context';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { useGetUserStatsQuery } from '@/lib/services/dashboard-api';
 import { setUserDetails } from '@/lib/slice/userDetails';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -34,18 +34,18 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger
-} from '../../ui/dropdown-menu';
-import MobileSidebar from '../mobile-siderbar';
+} from '../ui/dropdown-menu';
+import MobileSidebar from '../dashboard/mobile-siderbar';
 
-const HeaderNotificationBox = dynamic(() => import('@/components/dashboard/header/notification-box'), {
+const HeaderNotificationBox = dynamic(() => import('@/components/header/notification-box'), {
   ssr: false,
 });
 
-const ProfileCard = dynamic(() => import('@/components/dashboard/header/profile-card'), {
+const ProfileCard = dynamic(() => import('@/components/header/profile-card'), {
   ssr: false,
 });
 
-const DropdownMenuContentComponent = dynamic(() => import('@/components/dashboard/header/dropdown-menu-content'), {
+const DropdownMenuContentComponent = dynamic(() => import('@/components/header/dropdown-menu-content'), {
   ssr: false,
 });
 

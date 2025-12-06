@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
@@ -21,7 +21,8 @@ export default function ModernOrderForm({
   const [selectedService, setSelectedService] = useState('');
   const [link, setLink] = useState('');
   const [quantity, setQuantity] = useState<number>(0);
-  const [price, setPrice] = useState<number>(0);
+  const [price, setPrice] = useState<number>(0);
+
   const categories = [
     { id: '1', name: 'Facebook - Live Stream Views', icon: '👤' },
     { id: '2', name: 'Instagram - Followers', icon: '📸' },
@@ -48,24 +49,30 @@ export default function ModernOrderForm({
       maxQuantity: 5000,
       averageTime: '30 minutes',
     },
-  ];
+  ];
+
   const filteredServices = services.filter(
     (service) => service.categoryId === selectedCategory
-  );
+  );
+
   const currentService = services.find(
     (service) => service.id === selectedService
-  );
+  );
+
   useEffect(() => {
     if (currentService && quantity) {
-      const basePrice = (currentService.price * quantity) / 1000;
+      const basePrice = (currentService.price * quantity) / 1000;
+
       const convertedPrice = convertAmount(basePrice, 'USD', currency);
       setPrice(convertedPrice);
     } else {
       setPrice(0);
     }
-  }, [currentService, quantity, currency, convertAmount]);
+  }, [currentService, quantity, currency, convertAmount]);
+
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault();
+
     if (!selectedService || !link || !quantity) {
       alert('Please fill in all required fields');
       return;
@@ -80,11 +87,13 @@ export default function ModernOrderForm({
         `Quantity must be between ${currentService.minQuantity} and ${currentService.maxQuantity}`
       );
       return;
-    }
+    }
+
     alert(
       `Order submitted: Service ID ${selectedService}, Link: ${link}, Quantity: ${quantity}`
     );
-  };
+  };
+
   const [massOrderText, setMassOrderText] = useState('');
 
   const handleMassOrderSubmit = (e: React.FormEvent) => {
@@ -93,7 +102,8 @@ export default function ModernOrderForm({
     if (!massOrderText.trim()) {
       alert('Please enter at least one order');
       return;
-    }
+    }
+
     const lines = massOrderText.trim().split('\n');
     alert(`${lines.length} orders submitted`);
   };
@@ -146,7 +156,8 @@ export default function ModernOrderForm({
         </form>
       </motion.div>
     );
-  }
+  }
+
   if (type === 'custom') {
     return (
       <motion.div
@@ -228,7 +239,8 @@ export default function ModernOrderForm({
         </form>
       </motion.div>
     );
-  }
+  }
+
   if (type === 'subscription') {
     return (
       <motion.div

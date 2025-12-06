@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/auth';
-import { SERVICE_TYPE_CONFIGS } from '@/lib/serviceTypes';
+import { SERVICE_TYPE_CONFIGS } from '@/lib/service-types';
 
 export async function GET(request: NextRequest) {
   try {

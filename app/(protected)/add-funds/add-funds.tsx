@@ -1,16 +1,16 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import axiosInstance from '@/lib/axiosInstance';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import axiosInstance from '@/lib/axios-instance';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import {
     addFundDefaultValues,
     addFundSchema,
     AddFundSchema,
-} from '@/lib/validators/user/addFundValidator';
+} from '@/lib/validators/user/add-fund-validator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState, useTransition } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';

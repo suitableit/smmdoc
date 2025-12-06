@@ -6,7 +6,7 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { FaSave, FaTimes } from 'react-icons/fa';
 import { mutate } from 'swr';
 import { useGetCategories } from '@/hooks/categories-fetch';
-import axiosInstance from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/axios-instance';
 import {
   createCategoryDefaultValues,
   createCategorySchema,

@@ -1,8 +1,8 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
-import axiosInstance from '@/lib/axiosInstance';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useCurrency } from '@/contexts/currency-context';
+import axiosInstance from '@/lib/axios-instance';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
 import Link from 'next/link';
@@ -38,12 +38,12 @@ const TransactionsTable = dynamic(
 );
 
 const ApproveTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/approve-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/approve-transaction'),
   { ssr: false }
 );
 
 const CancelTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/cancel-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/cancel-transaction'),
   { ssr: false }
 );
 

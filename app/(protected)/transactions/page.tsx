@@ -1,7 +1,7 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useCurrency } from '@/contexts/currency-context';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';

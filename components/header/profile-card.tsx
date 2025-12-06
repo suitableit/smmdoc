@@ -13,10 +13,10 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { getUserDetails } from '@/lib/actions/getUser';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { useGetUserStatsQuery } from '@/lib/services/dashboard-api';
 import { setUserDetails } from '@/lib/slice/userDetails';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { useCurrency } from '@/contexts/currency-context';
+import { PriceDisplay } from '@/components/price-display';
 import { useTheme } from 'next-themes';
 import {
   DropdownMenu,

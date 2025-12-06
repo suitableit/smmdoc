@@ -1,5 +1,5 @@
 
-import { AddFundForm } from '@/app/(protected)/add-funds/addFunds';
+import { AddFundForm } from '@/app/(protected)/add-funds/add-funds';
 import { FaWallet, FaCreditCard, FaShieldAlt } from 'react-icons/fa';
 
 export default function AddFundsPage() {

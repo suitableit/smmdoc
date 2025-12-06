@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,9 +14,9 @@ import {
     FaTicketAlt,
     FaTimes,
 } from 'react-icons/fa';
-import ReCAPTCHA from '@/components/ReCAPTCHA';
+import ReCAPTCHA from '@/components/recaptcha';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
+import TicketSystemGuard from '@/components/ticket-system-guard';
 
 const Toast = ({
   message,

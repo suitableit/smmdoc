@@ -1,10 +1,11 @@
 "use client";
 
-import { PageContainer } from '@/components/layout/PageContainer';
+import { PageContainer } from '@/components/layout/page-container';
 import { GridLayout } from '@/components/ui/GridLayout';
 import { InfoCard } from '@/components/ui/InfoCard';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
 interface Order {
   id: number;
   date: string;
@@ -13,7 +14,8 @@ interface Order {
   quantity: number;
   price: number;
   status: 'pending' | 'processing' | 'completed' | 'canceled' | 'refunded';
-}
+}
+
 interface OrderStats {
   total: number;
   completed: number;
@@ -29,11 +31,19 @@ export default function MyOrdersPage() {
     pending: 0,
     canceled: 0
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function loadOrders() {
       try {
-        setLoading(true);
+        setLoading(true);
+
+
+
+
+
+
+
         setTimeout(() => {
           setOrders([]);
           setStats({
@@ -51,9 +61,11 @@ export default function MyOrdersPage() {
     }
 
     loadOrders();
-  }, []);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault();
+
   };
 
   return (

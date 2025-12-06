@@ -22,8 +22,8 @@ import {
     FaUsers,
 } from 'react-icons/fa';
 
-import useCurrency from '@/hooks/useCurrency';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import useCurrency from '@/hooks/use-currency';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { invalidateUserSessions } from '@/lib/session-invalidation';
 import { convertCurrency, formatCurrencyAmount } from '@/lib/currency-utils';

@@ -197,7 +197,7 @@ export default auth(async (req) => {
   const affiliatePages = [
     '/admin/affiliates',
     '/affiliate',
-    '/ref',
+    '/api/ref',
   ];
 
   const isAffiliatePage = affiliatePages.some(page => 

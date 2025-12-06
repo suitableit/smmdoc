@@ -1,8 +1,8 @@
 'use client';
 
-import { useCurrency } from '@/contexts/CurrencyContext';
+import { useCurrency } from '@/contexts/currency-context';
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { clearCurrencyCache } from '@/lib/currency-utils';
 import { useEffect, useState } from 'react';

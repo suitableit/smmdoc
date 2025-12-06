@@ -1,7 +1,7 @@
 'use client';
 
 import { useCurrentUser } from '@/hooks/use-current-user';
-import { useAppNameWithFallback, updateGlobalAppName } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback, updateGlobalAppName } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';

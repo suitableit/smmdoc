@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import { ChevronDown } from 'lucide-react';
 import React, { useEffect, useState } from 'react';

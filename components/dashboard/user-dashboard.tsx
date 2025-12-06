@@ -3,8 +3,8 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useGetUserStatsQuery } from '@/lib/services/dashboardApi';
+import { useCurrency } from '@/contexts/currency-context';
+import { useGetUserStatsQuery } from '@/lib/services/dashboard-api';
 import { Clock } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';

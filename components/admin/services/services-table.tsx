@@ -16,7 +16,7 @@ import {
   FaCheckCircle,
   FaUndo,
 } from 'react-icons/fa';
-import { PriceDisplay } from '@/components/PriceDisplay';
+import { PriceDisplay } from '@/components/price-display';
 import { formatID } from '@/lib/utils';
 
 const useClickOutside = (

@@ -41,7 +41,7 @@ export default function OfflineBanner({ isOnline, onRetry, isRetrying = false }:
     };
   }, [isOnline]);
 
-  if ((isOnline && !showOnlineMessage) || (isDismissed && !showOnlineMessage)) return null;
+  if (isDismissed || (isOnline && !showOnlineMessage)) return null;
 
   const isOnlineMode = showOnlineMessage && isOnline;
   const bgColor = isOnlineMode ? 'bg-green-600' : 'bg-red-600';
@@ -84,6 +84,7 @@ export default function OfflineBanner({ isOnline, onRetry, isRetrying = false }:
         <button
           onClick={() => {
             setIsDismissed(true);
+            setShowOnlineMessage(false);
             if (timeoutRef.current) {
               clearTimeout(timeoutRef.current);
             }

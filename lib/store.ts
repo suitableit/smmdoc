@@ -1,10 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
-import { dashboardApi } from './services/dashboardApi';
-import { newOrderApi } from './services/newOrderApi';
-import { userOrderApi } from './services/userOrderApi';
-import newOrderSlice from './slice/newOrderSlice';
+import { dashboardApi } from './services/dashboard-api';
+import { newOrderApi } from './services/new-order-api';
+import { userOrderApi } from './services/user-order-api';
+import newOrderSlice from './slice/new-order-slice';
 import userDetailsSlice from './slice/userDetails';
 
 export const store = configureStore({

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import PublicContactSystemGuard from '@/components/PublicContactSystemGuard';
+import PublicContactSystemGuard from '@/components/public-contact-system-guard';
 
 const Hero = dynamic(() => import('@/components/frontend/contact/hero'), {
   loading: () => null,

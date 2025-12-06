@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ import {
     FaTimes,
     FaUser,
 } from 'react-icons/fa';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
+import TicketSystemGuard from '@/components/ticket-system-guard';
 
 type Ticket = {
   id: number;

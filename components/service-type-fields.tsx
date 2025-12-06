@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { getServiceTypeConfig } from '@/lib/serviceTypes';
+import { getServiceTypeConfig } from '@/lib/service-types';
 
 interface ServiceTypeFieldsProps {
   serviceType: number;

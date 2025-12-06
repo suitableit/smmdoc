@@ -13,7 +13,7 @@ import {
 import JoditEditor from 'jodit-react';
 import { useTheme } from 'next-themes';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 const GradientSpinner = ({ size = 'w-16 h-16', className = '' }) => (

@@ -14,9 +14,9 @@ import {
     FaTrash
 } from 'react-icons/fa';
 
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
-import TicketSystemGuard from '@/components/TicketSystemGuard';
+import TicketSystemGuard from '@/components/ticket-system-guard';
 
 const TicketsTableSkeleton = () => {
   const rows = Array.from({ length: 10 });

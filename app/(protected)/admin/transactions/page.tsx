@@ -17,18 +17,18 @@ import {
     FaTimesCircle,
 } from 'react-icons/fa';
 
-import { PriceDisplay } from '@/components/PriceDisplay';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAppNameWithFallback } from '@/contexts/AppNameContext';
+import { PriceDisplay } from '@/components/price-display';
+import { useCurrency } from '@/contexts/currency-context';
+import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
 
 const ApproveTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/approve-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/approve-transaction'),
   { ssr: false }
 );
 
 const CancelTransactionModal = dynamic(
-  () => import('@/components/admin/transactions/cancel-transaction-modal'),
+  () => import('@/components/admin/transactions/modals/cancel-transaction'),
   { ssr: false }
 );
 
