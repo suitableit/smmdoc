@@ -31,6 +31,8 @@ const nunito = Nunito({
 export async function generateMetadata(): Promise<Metadata> {
   const appName = await getAppName();
   
+  const faviconUrl = '/api/favicon';
+  
   return {
     title: {
       template: `%s — ${appName}`,
@@ -39,9 +41,17 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `${APP_DESCRIPTION}`,
     metadataBase: new URL(APP_URL || process.env.NEXT_PUBLIC_APP_URL!),
     icons: {
-      icon: [],
-      shortcut: [],
-      apple: [],
+      icon: [
+        { url: faviconUrl, type: 'image/png', sizes: 'any' },
+        { url: faviconUrl, type: 'image/png', sizes: '32x32' },
+        { url: faviconUrl, type: 'image/png', sizes: '16x16' },
+      ],
+      shortcut: [
+        { url: faviconUrl, type: 'image/png' },
+      ],
+      apple: [
+        { url: faviconUrl, type: 'image/png' },
+      ],
     },
     manifest: '/api/manifest',
   };
@@ -60,6 +70,9 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/api/manifest" />
+        <link rel="icon" href="/api/favicon" type="image/png" />
+        <link rel="shortcut icon" href="/api/favicon" type="image/png" />
+        <link rel="apple-touch-icon" href="/api/favicon" />
         <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet" />
       </head>
       <body

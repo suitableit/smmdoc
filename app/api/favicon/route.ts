@@ -70,6 +70,17 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    const defaultFaviconPath = path.join(process.cwd(), 'public', 'favicon.png');
+    if (fs.existsSync(defaultFaviconPath)) {
+      const fileBuffer = fs.readFileSync(defaultFaviconPath);
+      return new NextResponse(fileBuffer, {
+        headers: {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=300, s-maxage=300, must-revalidate',
+        },
+      });
+    }
+    
     return new NextResponse('Favicon not found', { status: 404 });
     
   } catch (error) {
