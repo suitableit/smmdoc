@@ -260,7 +260,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const typeConfig = getServiceTypeConfig(service.packageType || 1);
+    const serviceTypeId = service.packageType || 1;
+    const typeConfig = getServiceTypeConfig(serviceTypeId);
     const orderData = {
       link,
       qty,
@@ -277,12 +278,13 @@ export async function POST(req: NextRequest) {
     };
 
     const errors = typeConfig
-      ? validateOrderByType(typeConfig, orderData)
-      : ['Invalid service type'];
-    if (errors.length > 0) {
+      ? validateOrderByType(serviceTypeId, orderData)
+      : { general: 'Invalid service type' };
+    if (errors && Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).join(', ');
       return NextResponse.json(
         {
-          error: errors.join(', '),
+          error: errorMessages,
           success: false,
           data: null
         },

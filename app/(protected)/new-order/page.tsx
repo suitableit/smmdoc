@@ -941,20 +941,17 @@ function NewOrder() {
     };
 
     const errors = typeConfig 
-      ? validateOrderByType(typeConfig, validationData) 
-      : ['Unsupported or unknown service type'];
+      ? validateOrderByType(serviceTypeId, validationData) 
+      : { general: 'Unsupported or unknown service type' };
 
-    if (errors && errors.length > 0) {
-
+    if (errors && Object.keys(errors).length > 0) {
       const fieldErrors: Record<string, string> = {};
-      errors.forEach(error => {
-
-        const fieldMatch = error.match(/^(\w+):/);
-        if (fieldMatch) {
-          fieldErrors[fieldMatch[1]] = error.substring(fieldMatch[1].length + 2);
+      
+      Object.entries(errors).forEach(([field, message]) => {
+        if (field === 'general') {
+          showToast(`Service type validation failed: ${message}`, 'error');
         } else {
-
-          showToast(`Service type validation failed: ${error}`, 'error');
+          fieldErrors[field] = message;
         }
       });
 
