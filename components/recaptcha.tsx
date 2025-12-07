@@ -135,7 +135,6 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
             try {
               container.removeChild(container.firstChild);
             } catch (error) {
-              // Element may have already been removed
               break;
             }
           }
@@ -171,7 +170,6 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
               try {
                 container.removeChild(container.firstChild);
               } catch (error) {
-                // Element may have already been removed
                 break;
               }
             }

@@ -78,24 +78,20 @@ const ThemeToggle = ({
         try {
           document.body.removeChild(overlayRef.current);
         } catch (error) {
-          // Element may have already been removed
         }
       }
     };
   }, []);
 
   const createFadeTransition = () => {
-    // Clear any existing timeout
     if (overlayTimeoutRef.current) {
       clearTimeout(overlayTimeoutRef.current);
     }
 
-    // Remove any existing overlay
     if (overlayRef.current && document.body.contains(overlayRef.current)) {
       try {
         document.body.removeChild(overlayRef.current);
       } catch (error) {
-        // Element may have already been removed
       }
     }
 
@@ -152,7 +148,6 @@ const ThemeToggle = ({
           document.body.removeChild(overlayRef.current);
           overlayRef.current = null;
         } catch (error) {
-          // Element may have already been removed
         }
       }
       overlayTimeoutRef.current = null;
