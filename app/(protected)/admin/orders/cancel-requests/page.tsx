@@ -518,6 +518,8 @@ const CancelRequestsPage = () => {
   const handleResendRequest = async (requestId: number) => {
     setResendingRequestId(requestId);
     try {
+      showToast('Resending cancel request to provider...', 'pending');
+      
       const response = await fetch(`/api/admin/cancel-requests/${requestId}/resend`, {
         method: 'POST',
         headers: {
@@ -528,14 +530,24 @@ const CancelRequestsPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        showToast(result.message || 'Cancel request resent successfully', 'success');
-        await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+        if (result.data?.providerCancelSubmitted) {
+          showToast(result.message || 'Cancel request resent to provider successfully', 'success');
+        } else {
+          showToast(result.message || `Resend completed but provider submission failed: ${result.data?.providerCancelError || 'Unknown error'}`, 'error');
+        }
+        
+        // Refresh the cancel requests list to show updated status
+        await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
       } else {
         showToast(result.error || 'Failed to resend cancel request', 'error');
+        // Still refresh to show any status changes
+        await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
       }
     } catch (error) {
       console.error('Error resending cancel request:', error);
       showToast('Error resending cancel request. Please try again.', 'error');
+      // Still refresh to show any status changes
+      await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
     } finally {
       setResendingRequestId(null);
     }

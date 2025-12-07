@@ -140,17 +140,6 @@ export async function POST(
         );
       }
       
-      if (existingRequest.status === 'declined') {
-        return NextResponse.json(
-          { 
-            error: 'Your previous cancellation request for this order was declined. You cannot request cancellation again.',
-            success: false,
-            data: null 
-          },
-          { status: 400 }
-        );
-      }
-      
       if (existingRequest.status === 'approved') {
         return NextResponse.json(
           { 
@@ -161,26 +150,49 @@ export async function POST(
           { status: 400 }
         );
       }
+      
+      // If there's a failed or declined request, we'll update it instead of creating a new one
+      // This will be handled after the provider call
     }
 
     const refundAmount = order.price;
 
-    console.log('Creating cancel request:', {
+    console.log('Creating or updating cancel request:', {
       orderId: parseInt(id),
       userId: parseInt(session.user.id),
       reasonLength: reason.trim().length,
-      refundAmount
+      refundAmount,
+      existingRequestId: existingRequest?.id
     });
 
-    const cancelRequest = await db.cancelRequests.create({
-      data: {
-        orderId: parseInt(id),
-        userId: parseInt(session.user.id),
-        reason: reason.trim(),
-        status: 'pending',
-        refundAmount: refundAmount,
-      }
-    });
+    let cancelRequest;
+    
+    // If there's an existing failed/declined request, update it instead of creating a new one
+    if (existingRequest && (existingRequest.status === 'failed' || existingRequest.status === 'declined')) {
+      cancelRequest = await db.cancelRequests.update({
+        where: { id: existingRequest.id },
+        data: {
+          reason: reason.trim(),
+          status: 'pending',
+          refundAmount: refundAmount,
+          adminNotes: null, // Clear previous admin notes
+          processedBy: null,
+          processedAt: null,
+          updatedAt: new Date()
+        }
+      });
+    } else {
+      // Create new cancel request
+      cancelRequest = await db.cancelRequests.create({
+        data: {
+          orderId: parseInt(id),
+          userId: parseInt(session.user.id),
+          reason: reason.trim(),
+          status: 'pending',
+          refundAmount: refundAmount,
+        }
+      });
+    }
 
     console.log('Cancel request created successfully:', {
       id: cancelRequest.id,
@@ -258,7 +270,8 @@ export async function POST(
         where: { id: cancelRequest.id },
         data: { 
           status: 'failed',
-          adminNotes: `Provider submission failed: ${providerCancelError}`
+          adminNotes: `Provider submission failed: ${providerCancelError}`,
+          updatedAt: new Date()
         }
       });
       cancelRequest.status = 'failed';

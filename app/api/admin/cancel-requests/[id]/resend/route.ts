@@ -51,6 +51,20 @@ export async function POST(
       );
     }
 
+    if (!cancelRequest.order) {
+      return NextResponse.json(
+        { error: 'Order not found for this cancel request', success: false },
+        { status: 404 }
+      );
+    }
+
+    if (!cancelRequest.order.service) {
+      return NextResponse.json(
+        { error: 'Service not found for this order', success: false },
+        { status: 404 }
+      );
+    }
+
     if (cancelRequest.status !== 'failed') {
       return NextResponse.json(
         { error: 'Only failed cancel requests can be resent', success: false },
@@ -97,22 +111,42 @@ export async function POST(
             cancelRequestId: cancelRequest.id
           });
 
-          const providerResponse = await fetch(cancelRequestConfig.url, {
+          // Ensure body is properly formatted
+          const fetchOptions: RequestInit = {
             method: cancelRequestConfig.method,
             headers: cancelRequestConfig.headers || {},
-            body: cancelRequestConfig.data,
             signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
-          });
+          };
+
+          // Only add body if data exists and method is not GET
+          if (cancelRequestConfig.data && cancelRequestConfig.method !== 'GET') {
+            fetchOptions.body = cancelRequestConfig.data;
+          }
+
+          const providerResponse = await fetch(cancelRequestConfig.url, fetchOptions);
 
           if (providerResponse.ok) {
-            const providerResult = await providerResponse.json();
-            
-            if (providerResult.error) {
-              providerCancelError = `Provider error: ${providerResult.error}`;
-              console.error('Provider cancel error:', providerCancelError);
-            } else {
-              providerCancelSubmitted = true;
-              console.log('Cancel request resent to provider successfully:', providerResult);
+            try {
+              const providerResult = await providerResponse.json();
+              
+              if (providerResult.error) {
+                providerCancelError = `Provider error: ${providerResult.error}`;
+                console.error('Provider cancel error:', providerCancelError);
+              } else {
+                providerCancelSubmitted = true;
+                console.log('Cancel request resent to provider successfully:', providerResult);
+              }
+            } catch (jsonError) {
+              // If response is not JSON, try to get text
+              try {
+                const textResponse = await providerResponse.text();
+                console.log('Provider cancel response (non-JSON):', textResponse);
+                // If we got a 200 OK but non-JSON response, consider it success
+                providerCancelSubmitted = true;
+              } catch (textError) {
+                providerCancelError = 'Provider returned non-JSON response and could not read text';
+                console.error('Error reading provider response:', textError);
+              }
             }
           } else {
             providerCancelError = `Provider API error: ${providerResponse.status} ${providerResponse.statusText}`;
@@ -139,12 +173,16 @@ export async function POST(
         : `Resend failed: ${providerCancelError}`;
     }
 
+    // Update cancel request - don't include providerCancelError if field doesn't exist in schema
+    const updateData: any = {
+      status: updatedStatus,
+      adminNotes: updatedNotes,
+      updatedAt: new Date()
+    };
+
     const updatedRequest = await db.cancelRequests.update({
       where: { id: requestId },
-      data: {
-        status: updatedStatus,
-        adminNotes: updatedNotes
-      }
+      data: updateData
     });
 
     return NextResponse.json({

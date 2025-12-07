@@ -67,6 +67,19 @@ export async function POST(
       );
     }
 
+    // Check order status first - if already cancelled, don't allow
+    const orderStatus = order.status?.toLowerCase();
+    if (['cancelled', 'canceled'].includes(orderStatus)) {
+      return NextResponse.json(
+        {
+          error: 'This order has already been cancelled',
+          success: false,
+          data: null
+        },
+        { status: 400 }
+      );
+    }
+
     if (order.status !== 'pending') {
       return NextResponse.json(
         {
@@ -76,6 +89,45 @@ export async function POST(
         },
         { status: 400 }
       );
+    }
+
+    // Check for existing cancel request
+    // If there's a pending one, block it
+    // If there's a failed/declined one, we'll update it instead of creating a new one
+    const existingRequest = await db.cancelRequests.findFirst({
+      where: {
+        orderId: orderId
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (existingRequest) {
+      if (existingRequest.status === 'pending') {
+        return NextResponse.json(
+          {
+            error: 'A cancellation request for this order is already pending',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+      
+      if (existingRequest.status === 'approved') {
+        return NextResponse.json(
+          {
+            error: 'This order has already been cancelled',
+            success: false,
+            data: null
+          },
+          { status: 400 }
+        );
+      }
+      
+      // If there's a failed or declined request, we'll update it instead of creating a new one
+      // This will be handled after the provider call
     }
 
     if (!order.providerOrderId) {
@@ -150,12 +202,20 @@ export async function POST(
     let providerError: string | null = null;
 
     try {
-      const response = await fetch(cancelRequestConfig.url, {
+      // buildRequest returns data as string (JSON) or FormData, so use it directly
+      // But ensure we don't pass undefined - only pass body if data exists
+      const fetchOptions: RequestInit = {
         method: cancelRequestConfig.method,
         headers: cancelRequestConfig.headers || {},
-        body: cancelRequestConfig.data,
         signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
-      });
+      };
+
+      // Only add body if data exists and method is not GET
+      if (cancelRequestConfig.data && cancelRequestConfig.method !== 'GET') {
+        fetchOptions.body = cancelRequestConfig.data;
+      }
+
+      const response = await fetch(cancelRequestConfig.url, fetchOptions);
 
       providerResponse = response;
 
@@ -183,6 +243,47 @@ export async function POST(
       console.error('Error submitting cancel request to provider:', error);
     }
 
+    // Create or update cancel request record
+    const refundAmount = order.price || 0;
+    const finalStatus = providerError ? 'failed' : 'pending';
+    const adminReason = `Admin requested cancellation (Admin: ${session.user.email || session.user.id})`;
+    const adminNotes = providerError 
+      ? `Provider cancellation failed: ${providerError}` 
+      : `Cancel request forwarded to provider by admin ${session.user.email || session.user.id}`;
+
+    let cancelRequest;
+    
+    // If there's an existing failed/declined request, update it instead of creating a new one
+    if (existingRequest && (existingRequest.status === 'failed' || existingRequest.status === 'declined')) {
+      cancelRequest = await db.cancelRequests.update({
+        where: { id: existingRequest.id },
+        data: {
+          reason: adminReason,
+          status: finalStatus,
+          refundAmount: refundAmount,
+          adminNotes: adminNotes,
+          processedBy: parseInt(session.user.id),
+          processedAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+    } else {
+      // Create new cancel request
+      cancelRequest = await db.cancelRequests.create({
+        data: {
+          orderId: order.id,
+          userId: order.userId,
+          reason: adminReason,
+          status: finalStatus,
+          refundAmount: refundAmount,
+          adminNotes: adminNotes,
+          processedBy: parseInt(session.user.id),
+          processedAt: new Date()
+        }
+      });
+    }
+
+    // Log provider action
     await db.providerOrderLogs.create({
       data: {
         orderId: order.id,
@@ -198,8 +299,11 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: `Failed to request cancellation from provider: ${providerError}`,
-          data: null
+          error: `Failed to request cancellation from provider: ${providerError}. Cancel request has been saved with 'failed' status.`,
+          data: {
+            cancelRequestId: cancelRequest.id,
+            status: 'failed'
+          }
         },
         { status: 500 }
       );
@@ -207,12 +311,14 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Cancel request sent to provider successfully. If the provider cancels the order, the user balance will be automatically refunded.',
+      message: 'Cancel request sent to provider successfully and saved. If the provider cancels the order, the user balance will be automatically refunded.',
       data: {
+        cancelRequestId: cancelRequest.id,
         orderId: order.id,
         providerOrderId: order.providerOrderId,
         providerName: provider.name,
-        providerResponse: providerResult
+        providerResponse: providerResult,
+        status: 'pending'
       }
     });
 
