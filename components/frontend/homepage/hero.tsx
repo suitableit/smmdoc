@@ -1,7 +1,7 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import ReCAPTCHA from '@/components/recaptcha';
+import ReCAPTCHA from '@/components/google-recaptcha';
 import ErrorBoundary from '@/components/error-boundary';
 import { login } from '@/lib/actions/login';
 import { DEFAULT_SIGN_IN_REDIRECT } from '@/lib/routes';

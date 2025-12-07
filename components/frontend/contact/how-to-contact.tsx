@@ -15,7 +15,7 @@ import {
     FaYoutube
 } from 'react-icons/fa';
 import { GradientSpinner } from '@/components/ui/gradient-spinner';
-import ReCAPTCHA from '@/components/recaptcha';
+import ReCAPTCHA from '@/components/google-recaptcha';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 
 interface ContactFormProps {
