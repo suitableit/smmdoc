@@ -3,6 +3,7 @@
 import { useCurrentUser } from '@/hooks/use-current-user';
 import { useAppNameWithFallback } from '@/contexts/app-name-context';
 import { setPageTitle } from '@/lib/utils/set-page-title';
+import { getUserDetails } from '@/lib/actions/getUser';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
@@ -96,44 +97,59 @@ export default function ApiIntegrationPage() {
   };
 
   useEffect(() => {
-
     const fetchApiKey = async () => {
       try {
         setIsLoading(true);
 
-        setTimeout(() => {
-          setApiKey(
-            'smmdoc_51NxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-          );
-          setIsLoading(false);
-        }, 1000);
+        const userData = await getUserDetails();
+
+        if (userData && (userData as any).apiKey) {
+          setApiKey((userData as any).apiKey);
+        } else {
+          setApiKey(null);
+        }
       } catch (error) {
         console.error('Error fetching API key:', error);
+        setApiKey(null);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    fetchApiKey();
-  }, []);
+    if (user?.id) {
+      fetchApiKey();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
 
   const generateNewApiKey = async () => {
     setIsGeneratingKey(true);
 
     try {
+      const response = await fetch('/api/user/generate-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const result = await response.json();
 
-      const newApiKey =
-        'smmdoc_' +
-        Math.random().toString(36).substring(2, 15) +
-        Math.random().toString(36).substring(2, 15);
-      setApiKey(newApiKey);
-      setShowApiKey(true);
+      if (response.ok && result.success) {
+        setApiKey(result.data.apiKey);
+        setShowApiKey(true);
 
-      showToast(
-        'New API key generated successfully! Your previous API key is no longer valid.',
-        'success'
-      );
+        showToast(
+          'New API key generated successfully! Your previous API key is no longer valid.',
+          'success'
+        );
+      } else {
+        showToast(
+          result.error || 'Failed to generate new API key. Please try again later.',
+          'error'
+        );
+      }
     } catch (error) {
       console.error('Error generating new API key:', error);
       showToast(

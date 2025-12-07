@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const apiKey = `smm_${crypto.randomBytes(32).toString('hex')}`;
+    const apiKey = `${crypto.randomBytes(16).toString('hex')}`;
 
     const updatedUser = await db.users.update({
       where: { id: parseInt(session.user.id) },
