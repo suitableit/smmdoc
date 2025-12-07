@@ -72,9 +72,9 @@ export async function PATCH(req: NextRequest) {
       updatedAt: new Date()
     };
 
-          if (status === 'completed') {
-            updateData.remains = BigInt(0);
-          }
+    if (status === 'completed') {
+      updateData.remains = BigInt(0);
+    }
 
     if (status === 'cancelled') {
       const orders = await db.newOrders.findMany({
@@ -166,12 +166,34 @@ export async function PATCH(req: NextRequest) {
       });
     } else {
       await db.$transaction(async (prisma) => {
-        await prisma.newOrders.updateMany({
-          where: {
-            id: { in: orderIdNumbers }
-          },
-          data: updateData
-        });
+        if (status === 'completed') {
+          const orders = await prisma.newOrders.findMany({
+            where: {
+              id: { in: orderIdNumbers }
+            },
+            select: {
+              id: true,
+              qty: true
+            }
+          });
+          
+          for (const order of orders) {
+            await prisma.newOrders.update({
+              where: { id: order.id },
+              data: {
+                ...updateData,
+                startCount: order.qty || BigInt(0)
+              }
+            });
+          }
+        } else {
+          await prisma.newOrders.updateMany({
+            where: {
+              id: { in: orderIdNumbers }
+            },
+            data: updateData
+          });
+        }
 
         if (status === 'completed') {
           const commissions = await prisma.affiliateCommissions.findMany({

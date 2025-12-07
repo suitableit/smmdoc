@@ -47,6 +47,9 @@ export const login = async (
     }
   }
 
+  const { getMaintenanceMode } = await import('@/lib/utils/general-settings');
+  const maintenanceMode = await getMaintenanceMode();
+  
   const validedFields = signInSchema.safeParse(values);
   if (!validedFields.success) {
     return { success: false, error: 'Invalid Fields!' };
@@ -60,6 +63,12 @@ export const login = async (
     : await getUserByUsername(email);
   if (!existingUser || !existingUser.password || !existingUser.email) {
     return { success: false, error: 'User does not exist!' };
+  }
+
+  if (maintenanceMode === 'active') {
+    if (existingUser.role !== 'admin' && existingUser.role !== 'moderator') {
+      return { success: false, error: 'Login is restricted during maintenance mode. Only administrators can access the site.' };
+    }
   }
 
   const passwordsMatch = await bcrypt.compare(password, existingUser.password);

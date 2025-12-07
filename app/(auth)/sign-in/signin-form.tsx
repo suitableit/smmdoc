@@ -30,6 +30,7 @@ export default function SignInForm() {
   const messageParam = searchParams?.get('message');
   const reasonParam = searchParams?.get('reason');
   const [showServicesWarning, setShowServicesWarning] = useState<boolean>(false);
+  const [maintenanceMode, setMaintenanceMode] = useState<'inactive' | 'active'>('inactive');
 
   if (errorParam === 'OAuthAccountNotLinked') {
     urlError = 'Email already in use with different provider!';
@@ -44,6 +45,24 @@ export default function SignInForm() {
       setShowServicesWarning(true);
     }
   }, [reasonParam]);
+
+  useEffect(() => {
+    const fetchMaintenanceMode = async () => {
+      try {
+        const response = await fetch('/api/public/general-settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.generalSettings?.maintenanceMode) {
+            setMaintenanceMode(data.generalSettings.maintenanceMode);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching maintenance mode:', error);
+      }
+    };
+
+    fetchMaintenanceMode();
+  }, []);
   const [showTwoFactor, setShowTwoFactor] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>('');
@@ -128,6 +147,14 @@ export default function SignInForm() {
           Enter your details below to sign in.
         </p>
       </div>
+
+      {maintenanceMode === 'active' && (
+        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p className="text-amber-800 dark:text-amber-200 text-sm font-medium">
+            <strong>Maintenance Mode Active:</strong> Only administrators and moderators can sign in during maintenance.
+          </p>
+        </div>
+      )}
 
       {showServicesWarning && (
         <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">

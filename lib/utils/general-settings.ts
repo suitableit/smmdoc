@@ -287,6 +287,19 @@ export function clearAppNameCache(): void {
   clearGeneralSettingsCache();
 }
 
+export async function getMaintenanceMode(): Promise<'inactive' | 'active'> {
+  try {
+    const { db } = await import('@/lib/db');
+    const settings = await db.generalSettings.findFirst({
+      select: { maintenanceMode: true }
+    });
+    return (settings?.maintenanceMode as 'inactive' | 'active') || 'inactive';
+  } catch (error) {
+    console.warn('Failed to fetch maintenance mode:', error);
+    return 'inactive';
+  }
+}
+
 export {
   getAppName as getSiteTitle,
   getAppNameSync as getSiteTitleSync

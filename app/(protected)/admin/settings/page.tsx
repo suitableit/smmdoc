@@ -267,6 +267,7 @@ interface GeneralSettings {
   siteIcon: string;
   siteLogo: string;
   siteDarkLogo: string;
+  maintenanceMode: 'inactive' | 'active';
   adminEmail: string;
   supportEmail: string;
   whatsappSupport: string;
@@ -358,6 +359,7 @@ const GeneralSettingsPage = () => {
     siteIcon: '',
     siteLogo: '',
     siteDarkLogo: '',
+    maintenanceMode: 'inactive',
     adminEmail: '',
     supportEmail: '',
     whatsappSupport: '',
@@ -454,7 +456,10 @@ const GeneralSettingsPage = () => {
         if (generalResponse.ok) {
           const data = await generalResponse.json();
           if (data.generalSettings) {
-            setGeneralSettings(data.generalSettings);
+            setGeneralSettings({
+              ...data.generalSettings,
+              maintenanceMode: data.generalSettings.maintenanceMode || 'inactive'
+            });
             const filled = new Set<keyof GeneralSettings>();
             Object.keys(data.generalSettings).forEach((key) => {
               const value = data.generalSettings[key as keyof GeneralSettings];
@@ -1200,6 +1205,23 @@ const GeneralSettingsPage = () => {
                   {validationErrors.siteDarkLogo && (
                     <p className="text-red-500 dark:text-red-400 text-sm mt-1">{validationErrors.siteDarkLogo}</p>
                   )}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Maintenance Mode</label>
+                  <select
+                    value={generalSettings.maintenanceMode}
+                    onChange={(e) => {
+                      setGeneralSettings(prev => ({ 
+                        ...prev, 
+                        maintenanceMode: e.target.value as 'inactive' | 'active' 
+                      }));
+                    }}
+                    className="form-field w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white transition-all duration-200 appearance-none cursor-pointer"
+                  >
+                    <option value="inactive">Inactive</option>
+                    <option value="active">Active</option>
+                  </select>
                 </div>
 
                 <div className="form-group">

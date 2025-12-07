@@ -617,9 +617,26 @@ export default function OrdersList() {
   };
 
   const getStatusCount = (statusKey: string) => {
-    const allOrders = data?.data || [];
-    if (statusKey === 'all') return allOrders.length;
-    return allOrders.filter((order: any) => order.status === statusKey).length;
+    const statusBreakdown = data?.stats?.statusBreakdown || {};
+    
+    if (statusKey === 'all') {
+      return pagination.total || 0;
+    }
+    
+    const statusKeyMap: Record<string, string> = {
+      'in_progress': 'in_progress',
+      'processing': 'processing',
+      'pending': 'pending',
+      'completed': 'completed',
+      'partial': 'partial',
+      'cancelled': 'cancelled',
+      'canceled': 'cancelled',
+      'failed': 'failed',
+      'refunded': 'refunded'
+    };
+    
+    const dbStatusKey = statusKeyMap[statusKey] || statusKey;
+    return statusBreakdown[dbStatusKey] || statusBreakdown[statusKey] || 0;
   };
 
   const statusFilters = [
@@ -1024,31 +1041,44 @@ export default function OrdersList() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {order.status === 'completed' && order.service?.refill && (() => {
-                              const refillDays = order.service?.refillDays;
-                              let isRefillTimeValid = true;
-                              
-                              if (refillDays) {
-                                const daysSinceCompletion = Math.floor(
-                                  (new Date().getTime() - new Date(order.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
-                                );
-                                isRefillTimeValid = daysSinceCompletion <= refillDays;
-                              }
-                              
-                              return isRefillTimeValid ? (
-                                <button
-                                  onClick={() => setRefillModal({
-                                    isOpen: true,
-                                    orderId: order.id,
-                                    reason: ''
-                                  })}
-                                  className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
-                                  title="Refill Order"
-                                >
-                                  Refill
-                                </button>
-                              ) : null;
-                            })()}
+                            {order.status === 'completed' && (
+                              <>
+                                {order.service?.refill && (() => {
+                                  const refillDays = order.service?.refillDays;
+                                  let isRefillTimeValid = true;
+                                  
+                                  if (refillDays) {
+                                    const daysSinceCompletion = Math.floor(
+                                      (new Date().getTime() - new Date(order.updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+                                    );
+                                    isRefillTimeValid = daysSinceCompletion <= refillDays;
+                                  }
+                                  
+                                  return isRefillTimeValid ? (
+                                    <button
+                                      onClick={() => setRefillModal({
+                                        isOpen: true,
+                                        orderId: order.id,
+                                        reason: ''
+                                      })}
+                                      className="text-green-600 hover:text-green-800 text-xs px-2 py-1 border border-green-300 rounded hover:bg-green-50"
+                                      title="Refill Order"
+                                    >
+                                      Refill
+                                    </button>
+                                  ) : null;
+                                })()}
+                                {order.service?.id && (
+                                  <button
+                                    onClick={() => router.push(`/new-order?sId=${order.service.id}`)}
+                                    className="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                                    title="Order Again"
+                                  >
+                                    Order Again
+                                  </button>
+                                )}
+                              </>
+                            )}
                             {order.status === 'pending' && order.service?.cancel && (() => {
                               const hasPendingCancelRequest = 
                                 (order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'pending')) ||

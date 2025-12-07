@@ -10,6 +10,7 @@ export async function GET() {
         siteDarkLogo: true,
         supportEmail: true,
         whatsappSupport: true,
+        maintenanceMode: true,
       },
     });
 
@@ -21,6 +22,7 @@ export async function GET() {
         siteDarkLogo: settings?.siteDarkLogo || '',
         supportEmail: settings?.supportEmail || '',
         whatsappNumber: settings?.whatsappSupport || '',
+        maintenanceMode: (settings as any)?.maintenanceMode || 'inactive',
       },
     });
   } catch (error) {

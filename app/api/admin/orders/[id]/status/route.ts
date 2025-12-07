@@ -166,16 +166,17 @@ export async function PUT(
       updatedAt: new Date()
     };
     
-    if (startCount !== undefined) {
-      updateData.startCount = BigInt(startCount.toString());
-    }
-
-    if (remains !== undefined) {
-      updateData.remains = BigInt(remains.toString());
-    }
-    
     if (status === 'completed') {
       updateData.remains = BigInt(0);
+      updateData.startCount = currentOrder.qty || BigInt(0);
+    } else {
+      if (startCount !== undefined) {
+        updateData.startCount = BigInt(startCount.toString());
+      }
+      
+      if (remains !== undefined) {
+        updateData.remains = BigInt(remains.toString());
+      }
     }
     
     const result = await db.$transaction(async (prisma) => {
@@ -319,12 +320,24 @@ export async function PATCH(
     }
 
     const updatedOrder = await db.$transaction(async (prisma) => {
+      const currentOrder = await prisma.newOrders.findUnique({
+        where: { id: orderId },
+        select: { qty: true }
+      });
+
+      const updateData: any = {
+        status,
+        updatedAt: new Date()
+      };
+
+      if (status === 'completed') {
+        updateData.remains = BigInt(0);
+        updateData.startCount = currentOrder?.qty || BigInt(0);
+      }
+
       const order = await prisma.newOrders.update({
         where: { id: orderId },
-        data: {
-          status,
-          updatedAt: new Date()
-        },
+        data: updateData,
         include: {
           user: {
             select: {

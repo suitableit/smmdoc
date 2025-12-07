@@ -10,6 +10,7 @@ import {
 } from './lib/routes';
 import { getTicketSettings } from './lib/utils/ticket-settings';
 import { getModuleSettings } from './lib/utils/module-settings';
+import { getMaintenanceMode } from './lib/utils/general-settings';
 
 export const { auth } = NextAuth(authConfig);
 
@@ -47,12 +48,79 @@ export default auth(async (req) => {
 
   const isApiRoute = nextUrl.pathname.startsWith('/api');
   const isPaymentWebhook = nextUrl.pathname.startsWith('/api/payment/webhook');
+  const isMaintenancePage = nextUrl.pathname === '/maintenance';
+  const isSignInPage = nextUrl.pathname === '/sign-in';
+  const isAdminRoute = nextUrl.pathname.startsWith('/admin');
+  
   if (isApiRoute || isPaymentWebhook || isApiAuthRoute) {
     return NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     });
+  }
+
+  try {
+    const maintenanceMode = await getMaintenanceMode();
+    const userRoleType = userRole?.role;
+    const isAdmin = userRoleType === 'admin' || userRoleType === 'super_admin';
+    const isModerator = userRoleType === 'moderator';
+    const isAdminOrMod = isAdmin || isModerator;
+    
+    if (maintenanceMode === 'active') {
+      if (isAdminRoute && !isAdminOrMod) {
+        return NextResponse.redirect(new URL('/sign-in', nextUrl));
+      }
+      
+      if (isAdmin) {
+        if (isMaintenancePage) {
+          return NextResponse.redirect(new URL('/admin', nextUrl));
+        }
+      } 
+      else if (isModerator && isLoggedIn) {
+        if (isMaintenancePage) {
+          return NextResponse.redirect(new URL('/admin', nextUrl));
+        }
+        
+        const isPublic = publicRoutes.some((route) =>
+          nextUrl.pathname === route || nextUrl.pathname.startsWith(route + '/')
+        );
+        
+        if (isPublic) {
+        } else if (isAdminRoute) {
+          const { hasPermission } = await import('@/lib/permissions');
+          const userPermissions = (userRole as any)?.permissions as string[] | null | undefined;
+          const normalizedPath = nextUrl.pathname.endsWith('/') && nextUrl.pathname !== '/' 
+            ? nextUrl.pathname.slice(0, -1) 
+            : nextUrl.pathname;
+          
+          if (!hasPermission(userRoleType, userPermissions, normalizedPath)) {
+            return NextResponse.redirect(new URL('/sign-in', nextUrl));
+          }
+        } else {
+          return NextResponse.redirect(new URL('/maintenance', nextUrl));
+        }
+      }
+      else if (isSignInPage) {
+        if (isLoggedIn && isAdminOrMod) {
+          return NextResponse.redirect(new URL('/admin', nextUrl));
+        }
+      }
+      else {
+        if (!isMaintenancePage) {
+          return NextResponse.redirect(new URL('/maintenance', nextUrl));
+        }
+      }
+    } else if (maintenanceMode === 'inactive' && isMaintenancePage) {
+      if (isLoggedIn) {
+        const redirectPath = isAdminOrMod ? '/admin' : '/dashboard';
+        return NextResponse.redirect(new URL(redirectPath, nextUrl));
+      } else {
+        return NextResponse.redirect(new URL('/', nextUrl));
+      }
+    }
+  } catch (error) {
+    console.error('Error checking maintenance mode:', error);
   }
 
   const ourServicesPage = '/our-services';

@@ -191,6 +191,7 @@ export async function POST(
 
     let providerCancelSubmitted = false;
     let providerCancelError: string | null = null;
+    let shouldMarkAsFailed = false;
 
     if (order.service.providerId && order.providerOrderId) {
       try {
@@ -232,6 +233,7 @@ export async function POST(
               
               if (providerResult.error) {
                 providerCancelError = `Provider error: ${providerResult.error}`;
+                shouldMarkAsFailed = true;
                 console.error('Provider cancel error:', providerCancelError);
               } else {
                 providerCancelSubmitted = true;
@@ -239,14 +241,27 @@ export async function POST(
               }
             } else {
               providerCancelError = `Provider API error: ${providerResponse.status} ${providerResponse.statusText}`;
+              shouldMarkAsFailed = true;
               console.error('Provider cancel API error:', providerCancelError);
             }
           }
         }
       } catch (error) {
         providerCancelError = error instanceof Error ? error.message : 'Unknown error submitting to provider';
+        shouldMarkAsFailed = true;
         console.error('Error submitting cancel request to provider:', error);
       }
+    }
+
+    if (shouldMarkAsFailed) {
+      await db.cancelRequests.update({
+        where: { id: cancelRequest.id },
+        data: { 
+          status: 'failed',
+          adminNotes: `Provider submission failed: ${providerCancelError}`
+        }
+      });
+      cancelRequest.status = 'failed';
     }
 
     return NextResponse.json({

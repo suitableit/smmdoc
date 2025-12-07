@@ -207,6 +207,11 @@ export async function PUT(
     
     updateData.updatedAt = new Date();
     
+    if (body.status === 'completed') {
+      updateData.remains = BigInt(0);
+      updateData.startCount = currentOrder.qty || BigInt(0);
+    }
+    
     if (body.status && body.status !== currentOrder.status) {
       const user = currentOrder.user;
       const orderPrice = user.currency === 'USD' ? currentOrder.usdPrice : currentOrder.usdPrice * (user.dollarRate || 121.52);

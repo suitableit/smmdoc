@@ -9,6 +9,7 @@ const defaultGeneralSettings = {
   siteIcon: '',
   siteLogo: '',
   siteDarkLogo: '',
+  maintenanceMode: 'inactive',
   adminEmail: 'admin@example.com',
   supportEmail: '',
   whatsappSupport: '',
@@ -31,6 +32,7 @@ export async function GET() {
           siteIcon: '',
           siteLogo: '',
           siteDarkLogo: '',
+          maintenanceMode: defaultGeneralSettings.maintenanceMode,
           adminEmail: defaultGeneralSettings.adminEmail,
           supportEmail: '',
           whatsappSupport: '',
@@ -54,6 +56,7 @@ export async function GET() {
         siteIcon: settings.siteIcon || '',
         siteLogo: settings.siteLogo || '',
         siteDarkLogo: settings.siteDarkLogo || '',
+        maintenanceMode: (settings as any).maintenanceMode || defaultGeneralSettings.maintenanceMode,
         adminEmail: settings.adminEmail || defaultGeneralSettings.adminEmail,
         supportEmail: settings.supportEmail || '',
         whatsappSupport: settings.whatsappSupport || '',
@@ -114,6 +117,7 @@ export async function POST(request: NextRequest) {
       siteIcon: generalSettings.siteIcon || '',
       siteLogo: generalSettings.siteLogo || '',
       siteDarkLogo: generalSettings.siteDarkLogo || '',
+      maintenanceMode: generalSettings.maintenanceMode || defaultGeneralSettings.maintenanceMode,
       adminEmail: generalSettings.adminEmail.trim(),
       updatedAt: new Date()
     };
@@ -133,6 +137,7 @@ export async function POST(request: NextRequest) {
     } else {
       const createData: any = {
         ...updateData,
+        maintenanceMode: generalSettings.maintenanceMode || defaultGeneralSettings.maintenanceMode,
         googleTitle: '',
         metaKeywords: '',
         metaSiteTitle: '',

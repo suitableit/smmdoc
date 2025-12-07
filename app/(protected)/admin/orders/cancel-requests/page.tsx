@@ -7,6 +7,7 @@ import {
   FaClock,
   FaExternalLinkAlt,
   FaEye,
+  FaRedo,
   FaSearch,
   FaSync,
   FaTimes,
@@ -89,7 +90,7 @@ interface CancelRequest {
     currency: string;
   };
   reason: string;
-  status: 'pending' | 'approved' | 'declined';
+  status: 'pending' | 'approved' | 'declined' | 'failed';
   requestedAt: string;
   processedAt?: string;
   processedBy?: string;
@@ -102,6 +103,7 @@ interface CancelRequestStats {
   pendingRequests: number;
   approvedRequests: number;
   declinedRequests: number;
+  failedRequests: number;
   totalRefundAmount: number;
   todayRequests: number;
   statusBreakdown: Record<string, number>;
@@ -129,6 +131,7 @@ const CancelRequestsPage = () => {
     pendingRequests: 0,
     approvedRequests: 0,
     declinedRequests: 0,
+    failedRequests: 0,
     totalRefundAmount: 0,
     todayRequests: 0,
     statusBreakdown: {},
@@ -187,6 +190,7 @@ const CancelRequestsPage = () => {
     request: null,
   });
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
+  const [resendingRequestId, setResendingRequestId] = useState<number | null>(null);
 
   const fetchCancelRequests = async (page = 1, status = 'all', search = '') => {
     setRequestsLoading(true);
@@ -218,6 +222,7 @@ const CancelRequestsPage = () => {
         const pending = data.filter((r: CancelRequest) => r.status === 'pending').length;
         const approved = data.filter((r: CancelRequest) => r.status === 'approved').length;
         const declined = data.filter((r: CancelRequest) => r.status === 'declined').length;
+        const failed = data.filter((r: CancelRequest) => r.status === 'failed').length;
         const totalRefund = data
           .filter((r: CancelRequest) => r.status === 'approved')
           .reduce((sum: number, r: CancelRequest) => sum + (r.refundAmount || 0), 0);
@@ -227,12 +232,14 @@ const CancelRequestsPage = () => {
           pendingRequests: pending,
           approvedRequests: approved,
           declinedRequests: declined,
+          failedRequests: failed,
           totalRefundAmount: totalRefund,
           todayRequests: Math.floor(data.length * 0.3),
           statusBreakdown: {
             pending,
             approved,
-            declined
+            declined,
+            failed
           }
         });
       } else {
@@ -280,6 +287,8 @@ const CancelRequestsPage = () => {
         return <FaCheckCircle className="h-3 w-3 text-green-500 dark:text-green-400" />;
       case 'declined':
         return <FaTimesCircle className="h-3 w-3 text-red-500 dark:text-red-400" />;
+      case 'failed':
+        return <FaTimesCircle className="h-3 w-3 text-orange-500 dark:text-orange-400" />;
       default:
         return <FaClock className="h-3 w-3 text-gray-500 dark:text-gray-400" />;
     }
@@ -291,6 +300,7 @@ const CancelRequestsPage = () => {
       (request) =>
         request.status !== 'declined' &&
         request.status !== 'approved' &&
+        request.status !== 'failed' &&
         request.order?.seller === 'Self'
     );
 
@@ -456,6 +466,32 @@ const CancelRequestsPage = () => {
     setDeclineReason('');
   };
 
+  const handleResendRequest = async (requestId: number) => {
+    setResendingRequestId(requestId);
+    try {
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/resend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast(result.message || 'Cancel request resent successfully', 'success');
+        await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+      } else {
+        showToast(result.error || 'Failed to resend cancel request', 'error');
+      }
+    } catch (error) {
+      console.error('Error resending cancel request:', error);
+      showToast('Error resending cancel request. Please try again.', 'error');
+    } finally {
+      setResendingRequestId(null);
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="toast-container">
@@ -602,6 +638,25 @@ const CancelRequestsPage = () => {
                     }`}
                   >
                     {statsLoading ? 0 : stats.declinedRequests}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('failed')}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 mr-2 mb-2 ${
+                    statusFilter === 'failed'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-400 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Failed
+                  <span
+                    className={`ml-2 text-xs px-2 py-1 rounded-full ${
+                      statusFilter === 'failed'
+                        ? 'bg-white/20'
+                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                    }`}
+                  >
+                    {statsLoading ? 0 : stats.failedRequests}
                   </span>
                 </button>
               </div>
@@ -867,6 +922,7 @@ const CancelRequestsPage = () => {
                           <td className="p-3">
                             {request.status !== 'declined' &&
                               request.status !== 'approved' &&
+                              request.status !== 'failed' &&
                               request.order?.seller === 'Self' && (
                                 <input
                                   type="checkbox"
@@ -978,8 +1034,20 @@ const CancelRequestsPage = () => {
                                 <FaEye className="h-3 w-3" />
                               </button>
 
+                              {request.status === 'failed' && (
+                                <button
+                                  className="btn btn-primary p-2"
+                                  title="Resend to Provider"
+                                  onClick={() => handleResendRequest(request.id)}
+                                  disabled={resendingRequestId === request.id}
+                                >
+                                  <FaRedo className={`h-3 w-3 ${resendingRequestId === request.id ? 'animate-spin' : ''}`} />
+                                </button>
+                              )}
+
                               {request.status !== 'declined' &&
                                 request.status !== 'approved' &&
+                                request.status !== 'failed' &&
                                 request.order?.seller === 'Self' && (
                                   <>
                                     <button
@@ -1487,6 +1555,21 @@ const CancelRequestsPage = () => {
                                 </div>
                               )}
                             </div>
+                          </div>
+                        )}
+                        {viewDialog.request.status === 'failed' && (
+                          <div className="flex gap-3 justify-end pt-4 border-t">
+                            <button
+                              onClick={() => {
+                                setViewDialog({ open: false, request: null });
+                                handleResendRequest(viewDialog.request!.id);
+                              }}
+                              className="btn btn-primary flex items-center gap-2"
+                              disabled={resendingRequestId === viewDialog.request!.id}
+                            >
+                              <FaRedo className={resendingRequestId === viewDialog.request!.id ? 'animate-spin' : ''} />
+                              Resend to Provider
+                            </button>
                           </div>
                         )}
                         {viewDialog.request.status === 'pending' &&

@@ -875,6 +875,7 @@ model GeneralSettings {
   siteIcon        String   @default("")
   siteLogo        String   @default("")
   siteDarkLogo    String   @default("")
+  maintenanceMode String   @default("inactive")
   adminEmail      String   @default("admin@example.com")
   supportEmail    String?  @default("")
   whatsappSupport String?  @default("")

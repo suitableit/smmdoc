@@ -702,10 +702,17 @@ const AdminOrdersPage = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
+    const selectableOrders = orders.filter((order) => {
+      const status = order.status?.toLowerCase();
+      return !['cancelled', 'canceled', 'completed'].includes(status);
+    });
+    
+    const selectableIds = selectableOrders.map((order) => order.id);
+    
+    if (selectedOrders.length === selectableIds.length && selectableIds.length > 0) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(orders.map((order) => order.id));
+      setSelectedOrders(selectableIds);
     }
   };
 
@@ -744,6 +751,15 @@ const AdminOrdersPage = () => {
 
   const handleRefresh = useCallback(async () => {
     try {
+      showToast('Refreshing orders...', 'pending');
+      
+      await Promise.all([
+        refreshOrders(undefined, { revalidate: true }),
+        refreshStats(undefined, { revalidate: true })
+      ]);
+      
+      dispatch(userOrderApi.util.invalidateTags(['UserOrders']));
+
       showToast('Syncing provider orders...', 'pending');
 
       const syncPromise = fetch('/api/admin/provider-sync', {
