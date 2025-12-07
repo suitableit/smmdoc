@@ -484,6 +484,49 @@ export default function OrdersList() {
     setRefreshing(true);
     try {
       await refetch();
+
+      try {
+        const syncPromise = fetch('/api/user/orders/sync-provider', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ syncAll: true }),
+        }).then(res => res.json()).catch(err => {
+          console.error('Error syncing provider orders on refresh:', err);
+          return { success: false, error: err.message };
+        });
+
+        const syncTimeout = new Promise((resolve) => {
+          setTimeout(() => resolve({ success: false, timeout: true }), 30000);
+        });
+
+        const syncResult: any = await Promise.race([syncPromise, syncTimeout]);
+
+        if (syncResult.timeout) {
+          console.log('Sync is taking longer than expected, refreshing orders...');
+        } else if (syncResult.success) {
+          const syncedCount = syncResult.data?.synced || 0;
+          const totalProcessed = syncResult.data?.processed || 0;
+          if (syncedCount > 0) {
+            console.log(`Synced ${syncedCount} of ${totalProcessed} provider order(s) on refresh`);
+          } else if (totalProcessed > 0) {
+            console.log(`Checked ${totalProcessed} provider order(s) - all up to date`);
+          } else {
+            console.log('No provider orders to sync');
+          }
+        } else {
+          console.warn('Provider sync had issues:', syncResult.error);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        await refetch();
+      } catch (syncError) {
+        console.error('Error during provider sync:', syncError);
+        await refetch();
+      }
+
       showToast('Orders refreshed successfully!', 'success');
     } catch (error) {
       console.error('Error refreshing orders:', error);

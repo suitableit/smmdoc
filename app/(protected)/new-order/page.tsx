@@ -1070,8 +1070,6 @@ function NewOrder() {
 
     if (selected) {
       setServicesData([]);
-      setQty(0);
-      setLink('');
       setSearch(selected.name);
       setShowDropdown(false);
       resetServiceTypeFields();
@@ -1257,8 +1255,6 @@ function NewOrder() {
                       onChange={(e) => {
                         setSelectedCategory(e.target.value);
                         setSelectedService('');
-                        setQty(0);
-                        setLink('');
                       }}
                     >
                       <option value="" disabled>
@@ -1302,8 +1298,6 @@ function NewOrder() {
                       value={selectedService}
                       onChange={(e) => {
                         setSelectedService(e.target.value);
-                        setQty(0);
-                        setLink('');
                         resetServiceTypeFields();
                       }}
                       disabled={!selectedCategory || services.length === 0}

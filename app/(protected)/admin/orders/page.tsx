@@ -787,9 +787,7 @@ const AdminOrdersPage = () => {
         if (syncedCount > 0) {
           showToast(`Synced ${syncedCount} of ${totalProcessed} provider order(s)`, 'success');
         } else if (totalProcessed > 0) {
-          showToast(`Checked ${totalProcessed} provider order(s) - all up to date`, 'info');
         } else {
-          showToast('No provider orders to sync', 'info');
         }
       } else {
         console.warn('Provider sync had issues:', syncResult.error);

@@ -173,6 +173,15 @@ export async function GET(req: NextRequest) {
         const order = request.order!;
         const user = request.user!;
         
+        const isSelfService = !order.service.providerId && !order.service.providerName;
+        const seller = isSelfService ? 'Self' : (order.service.providerName || 'Unknown');
+        
+        const orderStatus = order.status?.toLowerCase() || '';
+        const isOrderCancelled = orderStatus === 'cancelled' || orderStatus === 'canceled';
+        const cancelRequestStatus = isOrderCancelled && request.status === 'pending' 
+          ? 'approved' 
+          : request.status;
+        
         return {
           id: request.id,
           order: {
@@ -180,7 +189,9 @@ export async function GET(req: NextRequest) {
             service: {
               id: order.service.id,
               name: order.service.name,
-              rate: Number(order.service.rate)
+              rate: Number(order.service.rate),
+              providerName: order.service.providerName || null,
+              providerId: order.service.providerId || null
             },
             category: {
               id: order.category.id,
@@ -192,7 +203,7 @@ export async function GET(req: NextRequest) {
             link: order.link,
             status: order.status,
             createdAt: order.createdAt.toISOString(),
-            seller: 'Self'
+            seller: seller
           },
           user: {
             id: user.id,
@@ -202,7 +213,7 @@ export async function GET(req: NextRequest) {
             currency: user.currency || 'USD'
           },
           reason: request.reason,
-          status: request.status,
+          status: cancelRequestStatus,
           requestedAt: request.createdAt.toISOString(),
           processedAt: request.processedAt?.toISOString(),
           processedBy: request.processedBy,

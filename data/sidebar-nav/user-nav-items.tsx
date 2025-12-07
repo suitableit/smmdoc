@@ -145,7 +145,7 @@ export const userNavItems = [
   {
     title: 'Account Settings',
     href: '/account-settings',
-    icon: 'FaUserCog',
+    icon: 'FaUser',
     label: 'Account Settings',
     roles: ['user'],
   },

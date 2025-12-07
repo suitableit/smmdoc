@@ -248,7 +248,7 @@ export const adminNavItems = [
   {
     title: 'Account Settings',
     href: '/account-settings',
-    icon: 'FaUserCog',
+    icon: 'FaUser',
     label: 'Account Settings',
     roles: ['admin'],
   },

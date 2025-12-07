@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   FaBan,
   FaCheckCircle,
@@ -69,6 +69,8 @@ interface CancelRequest {
       id: number;
       name: string;
       rate: number;
+      providerName?: string | null;
+      providerId?: number | null;
     };
     category: {
       id: number;
@@ -192,7 +194,7 @@ const CancelRequestsPage = () => {
   const [selectedBulkAction, setSelectedBulkAction] = useState('');
   const [resendingRequestId, setResendingRequestId] = useState<number | null>(null);
 
-  const fetchCancelRequests = async (page = 1, status = 'all', search = '') => {
+  const fetchCancelRequests = async (page: number = 1, status: string = 'all', search: string = '', forceRefresh: boolean = false) => {
     setRequestsLoading(true);
     setStatsLoading(true);
 
@@ -326,15 +328,62 @@ const CancelRequestsPage = () => {
     );
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     try {
+      showToast('Refreshing cancel requests...', 'pending');
+      
       await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
-      showToast('Cancel requests refreshed successfully!', 'success');
+
+      showToast('Syncing provider orders...', 'pending');
+
+      const syncPromise = fetch('/api/admin/provider-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ syncAll: true }),
+      }).then(res => res.json()).catch(err => {
+        console.error('Error syncing provider orders on refresh:', err);
+        return { success: false, error: err.message };
+      });
+
+      const syncTimeout = new Promise((resolve) => {
+        setTimeout(() => resolve({ success: false, timeout: true }), 30000);
+      });
+
+      const syncResult: any = await Promise.race([syncPromise, syncTimeout]);
+
+      if (syncResult.timeout) {
+        showToast('Sync is taking longer than expected, refreshing cancel requests...', 'info');
+      } else if (syncResult.success) {
+        const syncedCount = syncResult.data?.syncedCount || 0;
+        const totalProcessed = syncResult.data?.totalProcessed || 0;
+        if (syncedCount > 0) {
+          showToast(`Synced ${syncedCount} of ${totalProcessed} provider order(s)`, 'success');
+        } else if (totalProcessed > 0) {
+        } else {
+        }
+      } else {
+        console.warn('Provider sync had issues:', syncResult.error);
+        showToast('Some provider orders may not have synced', 'info');
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
+
+      showToast('All cancel requests synced and refreshed successfully', 'success');
     } catch (error) {
-      console.error('Error refreshing data:', error);
-      showToast('Error refreshing data. Please try again.', 'error');
+      console.error('Error refreshing cancel requests:', error);
+      showToast('Error refreshing cancel requests', 'error');
+      
+      try {
+        await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
+      } catch (refreshError) {
+        console.error('Error refreshing after sync failure:', refreshError);
+      }
     }
-  };
+  }, [pagination.page, statusFilter, searchTerm]);
 
   const handleApproveRequest = async (
     requestId: string | number,
@@ -981,7 +1030,9 @@ const CancelRequestsPage = () => {
                               className="text-sm font-medium"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {request.order?.seller || 'Unknown'}
+                              {request.order?.seller === 'Self' 
+                                ? 'Self' 
+                                : (request.order?.service?.providerName || request.order?.seller || 'Unknown')}
                             </div>
                           </td>
                           <td className="p-3">
@@ -1145,7 +1196,9 @@ const CancelRequestsPage = () => {
                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'
                             }`}
                           >
-                            {request.order?.seller || 'null'}
+                            {request.order?.seller === 'Self' 
+                              ? 'Self' 
+                              : (request.order?.service?.providerName || request.order?.seller || 'Unknown')}
                           </div>
                         </div>
                         <div className="mb-4">
@@ -1161,7 +1214,9 @@ const CancelRequestsPage = () => {
                           >
                             {request.order?.category?.category_name ||
                               'Unknown Category'}{' '}
-                            • Seller: {request.order?.seller || 'Unknown'}
+                            • Provider: {request.order?.seller === 'Self' 
+                              ? 'Self' 
+                              : (request.order?.service?.providerName || request.order?.seller || 'Unknown')}
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-4 mb-4">
@@ -1452,7 +1507,9 @@ const CancelRequestsPage = () => {
                                 {viewDialog.request.order?.category
                                   ?.category_name || 'Unknown'}{' '}
                                 • Seller:{' '}
-                                {viewDialog.request.order?.seller || 'Unknown'}
+                                {viewDialog.request.order?.seller === 'Self' 
+                                  ? 'Self' 
+                                  : (viewDialog.request.order?.service?.providerName || viewDialog.request.order?.seller || 'Unknown')}
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-4">
