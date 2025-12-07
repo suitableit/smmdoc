@@ -1,7 +1,7 @@
 'use client';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
-import ReCAPTCHA from '@/components/google-recaptcha';
+import ReCAPTCHA from '@/components/recaptcha';
 import { useUserSettings } from '@/hooks/use-user-settings';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import { register } from '@/lib/actions/register';

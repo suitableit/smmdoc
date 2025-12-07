@@ -14,7 +14,7 @@ import {
     FaTicketAlt,
     FaTimes,
 } from 'react-icons/fa';
-import ReCAPTCHA from '@/components/google-recaptcha';
+import ReCAPTCHA from '@/components/recaptcha';
 import useReCAPTCHA from '@/hooks/useReCAPTCHA';
 import TicketSystemGuard from '@/components/ticket-system-guard';
 
