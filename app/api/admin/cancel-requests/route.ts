@@ -170,7 +170,6 @@ export async function GET(req: NextRequest) {
         return true;
       })
       .map((request) => {
-        // TypeScript now knows order and user are non-null after the filter
         const order = request.order!;
         const user = request.user!;
         

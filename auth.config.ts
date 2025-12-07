@@ -144,7 +144,6 @@ export default {
       let originalAdminId: string | null = null;
 
       try {
-        
         if (req?.cookies) {
           if (typeof req.cookies.get === 'function') {
             impersonatedUserId = req.cookies.get('impersonated-user-id')?.value || null;
@@ -157,15 +156,17 @@ export default {
         
         if ((!impersonatedUserId || !originalAdminId) && req?.headers?.cookie) {
           const cookieHeader = req.headers.cookie;
-          const cookieMap = cookieHeader.split(';').reduce((acc: any, cookie: string) => {
-            const [key, value] = cookie.trim().split('=');
-            if (key && value) {
-              acc[key.trim()] = decodeURIComponent(value.trim());
-            }
-            return acc;
-          }, {});
-          if (!impersonatedUserId) impersonatedUserId = cookieMap['impersonated-user-id'] || null;
-          if (!originalAdminId) originalAdminId = cookieMap['original-admin-id'] || null;
+          if (cookieHeader.includes('impersonated-user-id') || cookieHeader.includes('original-admin-id')) {
+            const cookieMap = cookieHeader.split(';').reduce((acc: any, cookie: string) => {
+              const [key, value] = cookie.trim().split('=');
+              if (key && value) {
+                acc[key.trim()] = decodeURIComponent(value.trim());
+              }
+              return acc;
+            }, {});
+            if (!impersonatedUserId) impersonatedUserId = cookieMap['impersonated-user-id'] || null;
+            if (!originalAdminId) originalAdminId = cookieMap['original-admin-id'] || null;
+          }
         }
         
         if ((!impersonatedUserId || !originalAdminId)) {
@@ -183,17 +184,7 @@ export default {
           } catch (e) {
           }
         }
-        
-        console.log('JWT Callback - Cookie detection result:', { 
-          impersonatedUserId, 
-          originalAdminId,
-          hasReq: !!req,
-          hasCookies: !!req?.cookies,
-          hasHeaders: !!req?.headers?.cookie
-        });
-
       } catch (error) {
-        console.error('Error reading impersonation cookies:', error);
       }
 
       if (impersonatedUserId && originalAdminId) {
@@ -227,8 +218,6 @@ export default {
             originalAdmin: !!originalAdmin 
           });
         }
-      } else {
-        console.log('JWT Callback - No impersonation cookies found');
       }
 
       if (!impersonatedUserId && !originalAdminId && token.originalAdminId) {

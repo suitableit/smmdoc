@@ -456,7 +456,6 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                           
                           const showEditStartCount = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
                           const showMarkPartial = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
-                          // Hide Update Order Status when showing Request Cancel Order
                           const showUpdateStatus = (pendingOrInProgress || failed || cancelledOrCompleted) && !showRequestCancelOrder;
                           
                           return (

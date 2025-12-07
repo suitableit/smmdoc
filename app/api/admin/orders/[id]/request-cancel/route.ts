@@ -67,7 +67,6 @@ export async function POST(
       );
     }
 
-    // Check if order is pending
     if (order.status !== 'pending') {
       return NextResponse.json(
         {
@@ -79,7 +78,6 @@ export async function POST(
       );
     }
 
-    // Check if order has been forwarded to provider
     if (!order.providerOrderId) {
       return NextResponse.json(
         {
@@ -91,7 +89,6 @@ export async function POST(
       );
     }
 
-    // Check if service has a provider
     if (!order.service.providerId) {
       return NextResponse.json(
         {
@@ -103,7 +100,6 @@ export async function POST(
       );
     }
 
-    // Get the provider
     const provider = await db.apiProviders.findUnique({
       where: { id: order.service.providerId }
     });
@@ -130,7 +126,6 @@ export async function POST(
       );
     }
 
-    // Build cancel request to provider
     const apiSpec = createApiSpecFromProvider(provider);
     const requestBuilder = new ApiRequestBuilder(
       apiSpec,
@@ -175,7 +170,6 @@ export async function POST(
             console.log('Cancel request submitted to provider successfully:', providerResult);
           }
         } catch (jsonError) {
-          // Provider might return non-JSON response
           const textResponse = await response.text();
           console.log('Provider cancel response (non-JSON):', textResponse);
           providerResult = { message: textResponse };
@@ -189,7 +183,6 @@ export async function POST(
       console.error('Error submitting cancel request to provider:', error);
     }
 
-    // Log the provider cancel request
     await db.providerOrderLogs.create({
       data: {
         orderId: order.id,
