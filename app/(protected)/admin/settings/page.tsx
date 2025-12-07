@@ -548,6 +548,7 @@ const GeneralSettingsPage = () => {
       siteIcon: 'Site Icon',
       siteLogo: 'Site Logo',
       siteDarkLogo: 'Site Dark Logo',
+      maintenanceMode: 'Maintenance Mode',
       adminEmail: 'Administration Email Address',
       supportEmail: 'Support Email Address',
       whatsappSupport: 'WhatsApp Number',
