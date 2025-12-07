@@ -316,69 +316,6 @@ export default function TransactionsPage() {
     setIsSearching(hasSearchTerm);
   }, [searchTerm]);
 
-  const mockTransactions = [
-    {
-      id: 1,
-      invoice_id: 123456789,
-      amount: 500,
-      status: 'Success' as const,
-      method: 'UddoktaPay',
-      payment_method: 'bKash',
-      transaction_id: 'TRX-123456',
-      createdAt: new Date().toISOString(),
-      sender_number: '01712345678',
-      phone: '01712345678',
-    },
-    {
-      id: 2,
-      invoice_id: 987654321,
-      amount: 1000,
-      status: 'Success' as const,
-      method: 'UddoktaPay',
-      payment_method: 'Nagad',
-      transaction_id: 'TRX-987654',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      sender_number: '01823456789',
-      phone: '01823456789',
-    },
-    {
-      id: 3,
-      invoice_id: 456789123,
-      amount: 750,
-      status: 'Processing' as const,
-      method: 'UddoktaPay',
-      payment_method: 'Rocket',
-      transaction_id: 'TRX-456789',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-      sender_number: '01934567890',
-      phone: '01934567890',
-    },
-    {
-      id: 4,
-      invoice_id: 111222333,
-      amount: 300,
-      status: 'Failed' as const,
-      method: 'UddoktaPay',
-      payment_method: 'bKash',
-      transaction_id: 'TRX-111222',
-      createdAt: new Date(Date.now() - 259200000).toISOString(),
-      sender_number: '01645678901',
-      phone: '01645678901',
-    },
-    {
-      id: 5,
-      invoice_id: 444555666,
-      amount: 1200,
-      status: 'Cancelled' as const,
-      method: 'UddoktaPay',
-      payment_method: 'Nagad',
-      transaction_id: 'TRX-444555',
-      createdAt: new Date(Date.now() - 345600000).toISOString(),
-      sender_number: '01756789012',
-      phone: '01756789012',
-    },
-  ];
-
   const fetchTransactions = async (isRefresh = false) => {
     try {
       if (isInitialLoad) {
@@ -476,7 +413,7 @@ export default function TransactionsPage() {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transactions');
 
-      const fallbackTransactions: Transaction[] = [...mockTransactions];
+      const fallbackTransactions: Transaction[] = [];
 
       const urlParams = new URLSearchParams(window.location.search);
       const invoiceId = urlParams.get('invoice_id');
@@ -502,11 +439,11 @@ export default function TransactionsPage() {
           sender_number: phone || 'N/A',
           phone: phone || 'N/A',
         };
-        fallbackTransactions.unshift(newTransaction);
+        fallbackTransactions.push(newTransaction);
       }
 
       setTransactions(fallbackTransactions);
-      showToast('Please check your connection and try again', 'error');
+      showToast('Failed to load transactions. Please check your connection and try again', 'error');
     } finally {
       if (isInitialLoad) {
         setLoading(false);

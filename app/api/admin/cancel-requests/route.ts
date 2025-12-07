@@ -54,21 +54,9 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma where condition:', JSON.stringify(whereCondition, null, 2));
 
-    whereCondition.order = {
-      isNot: null
-    };
-
+    // First, get cancel requests without relations to avoid Prisma errors
     const cancelRequestsResult = await db.cancelRequests.findMany({
       where: whereCondition,
-      include: {
-        order: {
-          include: {
-            service: true,
-            category: true
-          }
-        },
-        user: true
-      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -76,15 +64,119 @@ export async function GET(req: NextRequest) {
       take: limit
     });
 
-    console.log('Prisma result sample:', JSON.stringify(cancelRequestsResult[0], null, 2));
+    // Then fetch relations separately for each request to handle missing relations gracefully
+    const cancelRequestsWithRelations = await Promise.all(
+      cancelRequestsResult.map(async (request) => {
+        try {
+          const [order, user] = await Promise.all([
+            db.newOrders.findUnique({
+              where: { id: request.orderId },
+              include: {
+                service: true,
+                category: true
+              }
+            }).catch((err) => {
+              console.error(`Error loading order ${request.orderId} for cancel request ${request.id}:`, err);
+              return null;
+            }),
+            db.users.findUnique({
+              where: { id: request.userId }
+            }).catch((err) => {
+              console.error(`Error loading user ${request.userId} for cancel request ${request.id}:`, err);
+              return null;
+            })
+          ]);
+
+          // Check if order has required relations
+          if (order && (!order.service || !order.category)) {
+            console.warn(`Order ${order.id} is missing service or category relation for cancel request ${request.id}`);
+          }
+
+          return {
+            ...request,
+            order,
+            user
+          };
+        } catch (error) {
+          console.error(`Error loading relations for cancel request ${request.id}:`, error);
+          return {
+            ...request,
+            order: null,
+            user: null
+          };
+        }
+      })
+    );
+
+    console.log(`Found ${cancelRequestsWithRelations.length} cancel requests from database`);
+    
+    // Log details about each request to debug
+    if (cancelRequestsWithRelations.length > 0) {
+      cancelRequestsWithRelations.forEach((req, index) => {
+        console.log(`Request ${index + 1}:`, {
+          id: req.id,
+          orderId: req.orderId,
+          userId: req.userId,
+          status: req.status,
+          hasOrder: !!req.order,
+          hasUser: !!req.user,
+          orderIdFromRelation: req.order?.id,
+          userIdFromRelation: req.user?.id,
+          createdAt: req.createdAt
+        });
+      });
+    } else {
+      // If no results, let's check if there are any cancel requests at all
+      const totalAllRequests = await db.cancelRequests.count({});
+      console.log(`Total cancel requests in database (no filters): ${totalAllRequests}`);
+      
+      if (totalAllRequests > 0) {
+        // Get a sample of all requests to see what's in the DB
+        const sampleRequests = await db.cancelRequests.findMany({
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            orderId: true,
+            userId: true,
+            status: true,
+            createdAt: true
+          }
+        });
+        console.log('Sample of all cancel requests in DB:', sampleRequests);
+      }
+    }
 
     const total = await db.cancelRequests.count({
       where: whereCondition
     });
 
+    console.log(`Total cancel requests matching criteria: ${total}`);
 
+    // Check for requests with missing relations
+    const requestsWithMissingRelations = cancelRequestsWithRelations.filter(
+      (request) => !request.order || !request.user
+    );
+    
+    if (requestsWithMissingRelations.length > 0) {
+      console.warn(`Warning: ${requestsWithMissingRelations.length} requests have missing relations:`, 
+        requestsWithMissingRelations.map(r => ({ id: r.id, orderId: r.orderId, userId: r.userId }))
+      );
+    }
 
-    const transformedRequests = cancelRequestsResult.map((request) => ({
+    const transformedRequests = cancelRequestsWithRelations
+      .filter((request) => {
+        if (!request.order) {
+          console.error(`Request ${request.id} has no order relation (orderId: ${request.orderId})`);
+          return false;
+        }
+        if (!request.user) {
+          console.error(`Request ${request.id} has no user relation (userId: ${request.userId})`);
+          return false;
+        }
+        return true;
+      })
+      .map((request) => ({
       id: request.id,
       order: {
         id: request.order.id,
@@ -121,13 +213,17 @@ export async function GET(req: NextRequest) {
       adminNotes: request.adminNotes
     }));
 
-    console.log('Transformed requests sample:', JSON.stringify(transformedRequests[0], null, 2));
+    if (transformedRequests.length > 0) {
+      console.log('Transformed requests sample:', JSON.stringify(transformedRequests[0], null, 2));
+    } else {
+      console.log('No cancel requests found after transformation');
+    }
 
     const totalPages = Math.ceil(total / limit);
     const hasNext = page < totalPages;
     const hasPrev = page > 1;
 
-    console.log(`Found ${transformedRequests.length} cancel requests, total: ${total}`);
+    console.log(`Returning ${transformedRequests.length} transformed cancel requests, total in DB: ${total}`);
 
     return NextResponse.json({
       success: true,
@@ -145,159 +241,21 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching cancel requests:', error);
-
-    const mockData = [
+    return NextResponse.json(
       {
-        id: 'CR001',
-        order: {
-          id: 1,
-          service: {
-            id: 'SRV001',
-            name: 'Instagram Followers',
-            rate: 0.50
-          },
-          category: {
-            id: 'CAT001',
-            category_name: 'Instagram'
-          },
-          qty: 1000,
-          price: 10.00,
-          charge: 10.00,
-          link: 'https://instagram.com/test',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          seller: 'Self'
-        },
-        user: {
-          id: 'USR001',
-          email: 'user@example.com',
-          name: 'Test User',
-          username: 'testuser',
-          currency: 'USD'
-        },
-        reason: 'Changed my mind about this service.',
-        status: 'pending',
-        requestedAt: new Date().toISOString(),
-        refundAmount: 10.00
+        error: 'Failed to fetch cancel requests: ' + (error instanceof Error ? error.message : 'Unknown error'),
+        success: false,
+        data: [],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        }
       },
-      {
-        id: 'CR002',
-        order: {
-          id: 2,
-          service: {
-            id: 'SRV002',
-            name: 'Facebook Page Likes',
-            rate: 1.20
-          },
-          category: {
-            id: 'CAT002',
-            category_name: 'Facebook'
-          },
-          qty: 500,
-          price: 15.00,
-          charge: 15.00,
-          link: 'https://facebook.com/test',
-          status: 'processing',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          seller: 'Self'
-        },
-        user: {
-          id: 'USR002',
-          email: 'john.doe@example.com',
-          name: 'John Doe',
-          username: 'johndoe',
-          currency: 'USD'
-        },
-        reason: 'Found a better service provider.',
-        status: 'pending',
-        requestedAt: new Date(Date.now() - 3600000).toISOString(),
-        refundAmount: 15.00
-      },
-      {
-        id: 'CR003',
-        order: {
-          id: 3,
-          service: {
-            id: 'SRV003',
-            name: 'YouTube Views',
-            rate: 0.80
-          },
-          category: {
-            id: 'CAT003',
-            category_name: 'YouTube'
-          },
-          qty: 2000,
-          price: 25.00,
-          charge: 25.00,
-          link: 'https://youtube.com/watch?v=test',
-          status: 'completed',
-          createdAt: new Date(Date.now() - 172800000).toISOString(),
-          seller: 'Self'
-        },
-        user: {
-          id: 'USR003',
-          email: 'jane.smith@example.com',
-          name: 'Jane Smith',
-          username: 'janesmith',
-          currency: 'USD'
-        },
-        reason: 'Service quality was not satisfactory.',
-        status: 'approved',
-        requestedAt: new Date(Date.now() - 86400000).toISOString(),
-        processedAt: new Date(Date.now() - 3600000).toISOString(),
-        processedBy: 'admin',
-        refundAmount: 25.00,
-        adminNotes: 'Refund approved due to quality issues.'
-      },
-      {
-        id: 'CR004',
-        order: {
-          id: 4,
-          service: {
-            id: 'SRV004',
-            name: 'Twitter Followers',
-            rate: 2.00
-          },
-          category: {
-            id: 'CAT004',
-            category_name: 'Twitter'
-          },
-          qty: 750,
-          price: 18.00,
-          charge: 18.00,
-          link: 'https://twitter.com/test',
-          status: 'in_progress',
-          createdAt: new Date(Date.now() - 259200000).toISOString(),
-          seller: 'Self'
-        },
-        user: {
-          id: 'USR004',
-          email: 'mike.wilson@example.com',
-          name: 'Mike Wilson',
-          username: 'mikewilson',
-          currency: 'USD'
-        },
-        reason: 'Order taking too long to complete.',
-        status: 'declined',
-        requestedAt: new Date(Date.now() - 172800000).toISOString(),
-        processedAt: new Date(Date.now() - 86400000).toISOString(),
-        processedBy: 'admin',
-        refundAmount: 0,
-        adminNotes: 'Request declined. Order is already in progress and cannot be cancelled.'
-      }
-    ];
-
-    return NextResponse.json({
-      success: true,
-      data: mockData,
-      pagination: {
-        page: 1,
-        limit: 20,
-        total: mockData.length,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false
-      }
-    });
+      { status: 500 }
+    );
   }
 }

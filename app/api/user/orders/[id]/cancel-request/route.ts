@@ -119,21 +119,6 @@ export async function POST(
       );
     }
 
-    const orderDate = new Date(order.createdAt);
-    const currentDate = new Date();
-    const hoursDifference = Math.floor((currentDate.getTime() - orderDate.getTime()) / (1000 * 3600));
-
-    if (hoursDifference > 24) {
-      return NextResponse.json(
-        { 
-          error: 'Cancellation period has expired. Orders can only be cancelled within 24 hours of placement.',
-          success: false,
-          data: null 
-        },
-        { status: 400 }
-      );
-    }
-
     const existingRequest = await db.cancelRequests.findFirst({
       where: {
         orderId: parseInt(id),
@@ -154,6 +139,13 @@ export async function POST(
 
     const refundAmount = order.price;
 
+    console.log('Creating cancel request:', {
+      orderId: parseInt(id),
+      userId: parseInt(session.user.id),
+      reasonLength: reason.trim().length,
+      refundAmount
+    });
+
     const cancelRequest = await db.cancelRequests.create({
       data: {
         orderId: parseInt(id),
@@ -162,6 +154,13 @@ export async function POST(
         status: 'pending',
         refundAmount: refundAmount,
       }
+    });
+
+    console.log('Cancel request created successfully:', {
+      id: cancelRequest.id,
+      orderId: cancelRequest.orderId,
+      userId: cancelRequest.userId,
+      status: cancelRequest.status
     });
 
     let providerCancelSubmitted = false;

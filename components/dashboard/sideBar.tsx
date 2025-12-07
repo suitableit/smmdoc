@@ -6,7 +6,7 @@ import { Session } from 'next-auth';
 const Image = dynamic(() => import('next/image'), { ssr: false });
 const Link = dynamic(() => import('next/link'), { ssr: false });
 
-import SideBarNav from './sidebar-nav';
+import SideBarNav, { SidebarFooter } from './sidebar-nav';
 
 interface SideBarProps {
   collapsed?: boolean;
@@ -40,7 +40,7 @@ function SideBarContent({
 
   return (
     <div
-      className={`h-full bg-slate-800 text-white transition-all duration-300 ${
+      className={`h-full bg-slate-800 text-white transition-all duration-300 flex flex-col ${
         collapsed ? 'w-[80px]' : 'w-[280px]'
       } overflow-hidden`}
     >
@@ -114,9 +114,10 @@ function SideBarContent({
           </>
         )}
       </div>
-      <div className="sidebar-nav overflow-y-auto overflow-x-hidden h-[calc(100%-6rem)]">
+      <div className="sidebar-nav overflow-y-auto overflow-x-hidden flex-1">
         <SideBarNav collapsed={collapsed} session={session} setOpen={() => {}} />
       </div>
+      <SidebarFooter collapsed={collapsed} session={session} setOpen={() => {}} />
     </div>
   );
 }

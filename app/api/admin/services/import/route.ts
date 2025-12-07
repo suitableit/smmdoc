@@ -541,30 +541,14 @@ export async function GET(req: NextRequest) {
             isArray: Array.isArray(providerServices)
           });
           
-          const mockCategories = [
-            { id: 'cat_1', name: 'Instagram Followers', servicesCount: 15, selected: false },
-            { id: 'cat_2', name: 'Instagram Likes', servicesCount: 12, selected: false },
-            { id: 'cat_3', name: 'Instagram Views', servicesCount: 8, selected: false },
-            { id: 'cat_4', name: 'Facebook Likes', servicesCount: 10, selected: false },
-            { id: 'cat_5', name: 'Facebook Followers', servicesCount: 7, selected: false },
-            { id: 'cat_6', name: 'Twitter Followers', servicesCount: 9, selected: false },
-            { id: 'cat_7', name: 'YouTube Views', servicesCount: 11, selected: false },
-            { id: 'cat_8', name: 'YouTube Subscribers', servicesCount: 6, selected: false },
-            { id: 'cat_9', name: 'TikTok Followers', servicesCount: 13, selected: false },
-            { id: 'cat_10', name: 'TikTok Likes', servicesCount: 14, selected: false }
-          ];
-          
-          console.log('ðŸ”„ Returning mock categories for testing');
-          return NextResponse.json({
-            success: true,
-            data: {
-              categories: mockCategories,
-              total: mockCategories.length,
-              provider: provider.name,
-              note: 'Mock data - API endpoint not accessible'
+          return NextResponse.json(
+            { 
+              error: 'Failed to fetch services from provider. Please check the provider API configuration and ensure the endpoint is accessible.', 
+              success: false, 
+              data: null 
             },
-            error: null
-          });
+            { status: 500 }
+          );
         }
 
         const categoryMap = new Map();

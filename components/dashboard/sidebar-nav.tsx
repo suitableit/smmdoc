@@ -73,6 +73,34 @@ export default function SideBarNav({
   const [childPanelSellingEnabled, setChildPanelSellingEnabled] = useState(true);
   const [massOrderEnabled, setMassOrderEnabled] = useState(true);
   const [serviceUpdateLogsEnabled, setServiceUpdateLogsEnabled] = useState(true);
+  
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  
+  const sectionIcons: Record<string, string> = {
+    'Orders': 'FaBox',
+    'Services': 'FaBriefcase',
+    'Managements': 'FaUsers',
+    'Funds': 'FaDollarSign',
+    'Transactions': 'FaExchangeAlt',
+    'Support': 'FaTicketAlt',
+    'Posts': 'FaRegNewspaper',
+    'Affiliates': 'FaShareAlt',
+    'Additional': 'FaChartBar',
+    'Reseller Panels': 'FaSitemap',
+    'Settings': 'FaCog',
+    'Security': 'FaLock',
+    'Account': 'FaUserCog',
+    'Integrations': 'FaPlug',
+    'Affiliate': 'FaShareAlt',
+    'More': 'FaEllipsisH',
+  };
+  
+  const toggleSection = (sectionTitle: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
+  };
 
   useEffect(() => {
     const fetchTicketSettings = async () => {
@@ -369,6 +397,7 @@ export default function SideBarNav({
     }
   }, [isAdmin, items, ticketSystemEnabled, contactSystemEnabled, affiliateSystemEnabled, childPanelSellingEnabled, massOrderEnabled, serviceUpdateLogsEnabled]);
 
+
   const isActive = (itemPath: string) => {
 
     if (path === itemPath) return true;
@@ -403,10 +432,34 @@ export default function SideBarNav({
   const renderNavSection = (title: string, sectionItems: NavItem[]) => {
     if (!sectionItems || !sectionItems.length) return null;
 
-    if (collapsed) {
+    const isSingleItem = sectionItems.length === 1;
+    const sectionIcon = title ? sectionIcons[title] : null;
+    const isExpanded = title ? (expandedSections[title] === true) : true;
 
+    if (collapsed) {
+      const hasActiveSubmenu = !isSingleItem && title && sectionItems.some(item => isActive(item.href));
+      
       return (
         <ul className="nav-links space-y-0">
+          {title && !isSingleItem && sectionIcon && hasActiveSubmenu && (
+            <li className="nav-item relative group">
+              <div
+                className={cn(
+                  'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                  'opacity-100'
+                )}
+              ></div>
+              <button
+                className="w-full flex items-center justify-center py-3 px-0 transition-all duration-200 relative group bg-slate-700/50 text-white"
+                title={title}
+              >
+                <span className="flex items-center justify-center transition-colors duration-200 text-lg text-white">
+                  {renderIcon(sectionIcon)}
+                </span>
+              </button>
+            </li>
+          )}
+          
           {sectionItems.map((item, index) => {
             const active = isActive(item.href);
 
@@ -488,139 +541,229 @@ export default function SideBarNav({
       );
     }
 
+    const hasActiveSubmenu = sectionItems.some(item => isActive(item.href));
+    
     return (
-      <div className="nav-section mb-4 px-0">
-        {title && (
-          <p className="text-xs text-white/50 uppercase tracking-wide mx-4 mt-6 mb-2 ml-6 transition-all duration-300 ease-out whitespace-nowrap">
-            {title}
-          </p>
-        )}
-        <ul className="nav-links space-y-0">
-          {sectionItems.map((item, index) => {
-            const active = isActive(item.href);
-
-            const handleClick = async () => {
-              if (item.isLogout) {
-                try {
-                  const { performCompleteLogout } = await import('@/lib/logout-helper');
-                  await performCompleteLogout(signOut, '/');
-                } catch (error) {
-                  console.error('Logout failed:', error);
-                  const { clearAllSessionData } = await import('@/lib/logout-helper');
-                  clearAllSessionData();
-                  window.location.href = '/';
-                }
-              } else {
-                setOpen();
-              }
-            };
-
-            return (
-              <li key={index} className="nav-item relative group">
-                <div
-                  className={cn(
-                    'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
-                    active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  )}
-                ></div>
-
-                {item.isLogout ? (
-                  <button
-                    onClick={handleClick}
-                    className={cn(
-                      'flex items-center px-8 py-3 transition-all duration-200 relative group w-full text-left',
-                      'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                      item.disabled &&
-                        'opacity-50 pointer-events-none cursor-not-allowed'
-                    )}
-                    title={collapsed ? item.title : undefined}
-                  >
-                    <span
-                      className={cn(
-                        'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
-                        'text-slate-400 group-hover:text-white'
-                      )}
-                    >
-                      {renderIcon(item.icon)}
-                    </span>
-                    <span
-                      className={cn(
-                        'text-sm font-medium transition-all duration-200 opacity-100',
-                        'text-slate-300 group-hover:text-white'
-                      )}
-                    >
-                      {item.title}
-                    </span>
-                  </button>
-                ) : (
-                  <Link
-                    href={item.disabled ? '/' : item.href}
-                    className={cn(
-                      'flex items-center px-8 py-3 transition-all duration-200 relative group',
-                      active
-                        ? 'bg-slate-700/50 text-white'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
-                      item.disabled &&
-                        'opacity-50 pointer-events-none cursor-not-allowed'
-                    )}
-                    onClick={handleClick}
-                    title={collapsed ? item.title : undefined}
-                  >
-                    <span
-                      className={cn(
-                        'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
-                        active
-                          ? 'text-white'
-                          : 'text-slate-400 group-hover:text-white'
-                      )}
-                    >
-                      {renderIcon(item.icon)}
-                    </span>
-                    <span
-                      className={cn(
-                        'text-sm font-medium transition-all duration-200 opacity-100',
-                        active
-                          ? 'text-white'
-                          : 'text-slate-300 group-hover:text-white'
-                      )}
-                    >
-                      {item.title}
-                    </span>
-                    {item.badge && (
-                      <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                        {item.badge}
-                      </div>
-                    )}
-                    {item.statusColor && (
-                      <div className="ml-auto">
-                        <div
-                          className={cn(
-                            'w-2 h-2 rounded-full',
-                            item.statusColor === 'green' &&
-                              'bg-green-400 shadow-green-400/50',
-                            item.statusColor === 'red' &&
-                              'bg-red-400 shadow-red-400/50',
-                            item.statusColor === 'yellow' &&
-                              'bg-yellow-400 shadow-yellow-400/50'
-                          )}
-                          style={{
-                            boxShadow: `0 0 8px ${
-                              item.statusColor === 'green'
-                                ? 'rgba(34, 197, 94, 0.6)'
-                                : item.statusColor === 'red'
-                                ? 'rgba(239, 68, 68, 0.6)'
-                                : 'rgba(245, 158, 11, 0.6)'
-                            }`,
-                          }}
-                        />
-                      </div>
-                    )}
-                  </Link>
+      <div className="nav-section px-0">
+        {title && !isSingleItem ? (
+          <button
+            onClick={() => toggleSection(title)}
+            className={cn(
+              "w-full flex items-center px-6 py-3 text-sm font-medium transition-all duration-200 group relative",
+              hasActiveSubmenu && !isExpanded
+                ? "text-white bg-slate-700/50"
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+            )}
+          >
+            {!isExpanded && (
+              <div
+                className={cn(
+                  'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                  hasActiveSubmenu ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                 )}
-              </li>
-            );
-          })}
-        </ul>
+              ></div>
+            )}
+            {isExpanded && (
+              <div
+                className={cn(
+                  'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                  'opacity-0 group-hover:opacity-100'
+                )}
+              ></div>
+            )}
+            {sectionIcon && (
+              <span className={cn(
+                "flex items-center justify-center text-lg mr-3 transition-colors duration-200",
+                hasActiveSubmenu && !isExpanded
+                  ? "text-white"
+                  : "text-slate-400 group-hover:text-white"
+              )}>
+                {renderIcon(sectionIcon)}
+              </span>
+            )}
+            <span className="flex-1 text-left capitalize tracking-wide">{title}</span>
+            <span className={cn(
+              "text-xs text-white/50 transition-transform duration-150 flex items-center",
+              isExpanded ? "rotate-90" : "rotate-0"
+            )}>
+              {renderIcon('FaChevronRight')}
+            </span>
+          </button>
+        ) : title && isSingleItem ? (
+          null
+        ) : null}
+        
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-300 ease-in-out",
+            isSingleItem || isExpanded 
+              ? "max-h-[5000px] opacity-100" 
+              : "max-h-0 opacity-0"
+          )}
+          style={{
+            transitionProperty: 'max-height, opacity',
+          }}
+        >
+          <ul className="nav-links space-y-0">
+            {sectionItems.map((item, index) => {
+              const active = isActive(item.href);
+
+              const handleClick = async () => {
+                if (item.isLogout) {
+                  try {
+                    const { performCompleteLogout } = await import('@/lib/logout-helper');
+                    await performCompleteLogout(signOut, '/');
+                  } catch (error) {
+                    console.error('Logout failed:', error);
+                    const { clearAllSessionData } = await import('@/lib/logout-helper');
+                    clearAllSessionData();
+                    window.location.href = '/';
+                  }
+                } else {
+                  setOpen();
+                }
+              };
+
+              const useDiscIcon = !isSingleItem && title;
+              const iconToUse = useDiscIcon ? 'FaCircle' : item.icon;
+              const isSubmenuItem = !isSingleItem && title;
+
+              return (
+                <li key={index} className="nav-item relative group">
+                  {isSubmenuItem && (
+                    <>
+                      <div className="absolute left-8 top-0 bottom-0 w-px bg-slate-500/20"></div>
+                      <div 
+                        className={cn(
+                          "absolute left-[29.5px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full transition-colors duration-200 z-20",
+                          active ? "bg-white" : "bg-slate-400/40 group-hover:bg-white"
+                        )}
+                        style={active ? { backgroundColor: 'rgb(255, 255, 255)' } : undefined}
+                      ></div>
+                    </>
+                  )}
+                  
+                  {!isSubmenuItem && (
+                    <div
+                      className={cn(
+                        'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+                        active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                      )}
+                    ></div>
+                  )}
+
+                  {item.isLogout ? (
+                    <button
+                      onClick={handleClick}
+                      className={cn(
+                        isSubmenuItem
+                          ? 'flex items-center pl-12 pr-4 py-2.5 ml-2 mr-2 transition-all duration-200 relative group w-full text-left rounded-md'
+                          : 'flex items-center px-6 py-3 transition-all duration-200 relative group w-full text-left',
+                        'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                        item.disabled &&
+                          'opacity-50 pointer-events-none cursor-not-allowed'
+                      )}
+                      title={collapsed ? item.title : undefined}
+                    >
+                      {!isSubmenuItem && (
+                        <span
+                          className={cn(
+                            'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
+                            'text-slate-400 group-hover:text-white'
+                          )}
+                        >
+                          {renderIcon(item.icon)}
+                        </span>
+                      )}
+                      <span
+                        className={cn(
+                          isSubmenuItem
+                            ? 'text-sm font-medium transition-all duration-200 capitalize'
+                            : 'text-sm font-medium transition-all duration-200 opacity-100',
+                          'text-slate-300 group-hover:text-white'
+                        )}
+                      >
+                        {item.title}
+                      </span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.disabled ? '/' : item.href}
+                      className={cn(
+                        isSubmenuItem
+                          ? 'flex items-center pl-12 pr-4 py-2.5 ml-2 mr-2 transition-all duration-200 relative group rounded-md'
+                          : 'flex items-center px-6 py-3 transition-all duration-200 relative group',
+                        active
+                          ? isSubmenuItem
+                            ? 'bg-slate-700/70 text-white shadow-sm'
+                            : 'bg-slate-700/50 text-white'
+                          : 'text-slate-300 hover:text-white hover:bg-slate-700/50',
+                        item.disabled &&
+                          'opacity-50 pointer-events-none cursor-not-allowed'
+                      )}
+                      onClick={handleClick}
+                      title={collapsed ? item.title : undefined}
+                    >
+                      {!isSubmenuItem && (
+                        <span
+                          className={cn(
+                            'flex items-center justify-center transition-colors duration-200 text-lg mr-3',
+                            active
+                              ? 'text-white'
+                              : 'text-slate-400 group-hover:text-white'
+                          )}
+                        >
+                          {renderIcon(item.icon)}
+                        </span>
+                      )}
+                      <span
+                        className={cn(
+                          isSubmenuItem
+                            ? 'text-sm font-medium transition-all duration-200 capitalize'
+                            : 'text-sm font-medium transition-all duration-200 opacity-100',
+                          active
+                            ? 'text-white'
+                            : 'text-slate-300 group-hover:text-white'
+                        )}
+                      >
+                        {item.title}
+                      </span>
+                      {item.badge && (
+                        <div className="badge ml-auto py-1 px-2 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                          {item.badge}
+                        </div>
+                      )}
+                      {item.statusColor && (
+                        <div className="ml-auto">
+                          <div
+                            className={cn(
+                              'w-2 h-2 rounded-full',
+                              item.statusColor === 'green' &&
+                                'bg-green-400 shadow-green-400/50',
+                              item.statusColor === 'red' &&
+                                'bg-red-400 shadow-red-400/50',
+                              item.statusColor === 'yellow' &&
+                                'bg-yellow-400 shadow-yellow-400/50'
+                            )}
+                            style={{
+                              boxShadow: `0 0 8px ${
+                                item.statusColor === 'green'
+                                  ? 'rgba(34, 197, 94, 0.6)'
+                                  : item.statusColor === 'red'
+                                  ? 'rgba(239, 68, 68, 0.6)'
+                                  : 'rgba(245, 158, 11, 0.6)'
+                              }`,
+                            }}
+                          />
+                        </div>
+                      )}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
     );
   };
@@ -666,6 +809,108 @@ export default function SideBarNav({
     return sections[sectionKey] || [];
   };
 
+  // Separate logout and account settings items from account section
+  const accountItems = getSectionItems('account');
+  const logoutItem = accountItems.find(item => item.isLogout);
+  const accountSettingsItem = accountItems.find(item => item.title === 'Account Settings');
+  const accountItemsWithoutLogoutAndSettings = accountItems.filter(item => !item.isLogout && item.title !== 'Account Settings');
+
+  const renderBottomMenuItem = (item: NavItem, isLogout: boolean = false) => {
+    const active = isActive(item.href);
+
+    const handleClick = async () => {
+      if (isLogout) {
+        try {
+          const { performCompleteLogout } = await import('@/lib/logout-helper');
+          await performCompleteLogout(signOut, '/');
+        } catch (error) {
+          console.error('Logout failed:', error);
+          const { clearAllSessionData } = await import('@/lib/logout-helper');
+          clearAllSessionData();
+          window.location.href = '/';
+        }
+      } else {
+        setOpen();
+      }
+    };
+
+    const displayTitle = item.title === 'Account Settings' ? 'Profile' : item.title;
+
+    if (collapsed) {
+      return (
+        <button
+          onClick={handleClick}
+          className="flex items-center transition-all duration-200 relative group justify-center py-3 px-0 w-full text-slate-300 hover:text-white hover:bg-slate-700/50"
+          title={displayTitle}
+        >
+          <span className="flex items-center justify-center transition-colors duration-200 text-lg text-slate-400 group-hover:text-white">
+            {renderIcon(item.icon)}
+          </span>
+        </button>
+      );
+    }
+
+    if (isLogout) {
+      return (
+        <button
+          onClick={handleClick}
+          className="flex items-center px-6 py-3 transition-all duration-200 relative group w-full text-left text-slate-300 hover:text-white hover:bg-slate-700/50"
+          title={displayTitle}
+        >
+          <div
+            className={cn(
+              'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+              'opacity-0 group-hover:opacity-100'
+            )}
+          ></div>
+          <span className="flex items-center justify-center transition-colors duration-200 text-lg mr-3 text-slate-400 group-hover:text-white">
+            {renderIcon(item.icon)}
+          </span>
+          <span className="text-sm font-medium transition-all duration-200 opacity-100 text-slate-300 group-hover:text-white">
+            {displayTitle}
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        href={item.href}
+        onClick={handleClick}
+        className={cn(
+          "flex items-center px-6 py-3 transition-all duration-200 relative group w-full text-left",
+          active
+            ? "bg-slate-700/50 text-white"
+            : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+        )}
+        title={displayTitle}
+      >
+        <div
+          className={cn(
+            'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+        ></div>
+        <span className={cn(
+          "flex items-center justify-center transition-colors duration-200 text-lg mr-3",
+          active
+            ? "text-white"
+            : "text-slate-400 group-hover:text-white"
+        )}>
+          {renderIcon(item.icon)}
+        </span>
+        <span className={cn(
+          "text-sm font-medium transition-all duration-200 opacity-100",
+          active
+            ? "text-white"
+            : "text-slate-300 group-hover:text-white"
+        )}>
+          {displayTitle}
+        </span>
+      </Link>
+    );
+  };
+
   return (
     <div className="sidebar-nav-container">
       <div className="py-2">
@@ -684,7 +929,7 @@ export default function SideBarNav({
             {renderNavSection('Reseller Panels', getSectionItems('reseller'))}
             {renderNavSection('Settings', getSectionItems('settings'))}
             {renderNavSection('Security', getSectionItems('security'))}
-            {renderNavSection('Account', getSectionItems('account'))}
+            {renderNavSection('Account', accountItemsWithoutLogoutAndSettings)}
           </>
         ) : (
           <>
@@ -696,10 +941,178 @@ export default function SideBarNav({
             {renderNavSection('Integrations', getSectionItems('integrations'))}
             {renderNavSection('Affiliate', getSectionItems('affiliate'))}
             {renderNavSection('More', getSectionItems('more'))}
-            {renderNavSection('Account', getSectionItems('account'))}
+            {renderNavSection('Account', accountItemsWithoutLogoutAndSettings)}
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// Export footer items separately
+export function SidebarFooter({
+  collapsed = false,
+  session,
+  setOpen = () => {},
+}: {
+  collapsed?: boolean;
+  session?: Session | null;
+  setOpen?: () => void;
+}) {
+  const path = usePathname() || '';
+  
+  const renderIcon = useMemo(() => {
+    return (iconName: string) => {
+      const Icon = (FaIcons as Record<string, React.ComponentType>)[iconName];
+      return Icon ? <Icon /> : null;
+    };
+  }, []);
+
+  const isActive = (itemPath: string) => {
+    if (path === itemPath) return true;
+    if (itemPath === '/' && path === '/') return true;
+    return false;
+  };
+
+  // Get account items
+  const accountItems = useMemo(() => {
+    const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'moderator';
+    const items = isAdmin ? adminNavItems : userNavItems;
+    return items.filter((item: NavItem) => 
+      item.title === 'Account Settings' || item.isLogout
+    );
+  }, [session?.user?.role]);
+
+  const accountSettingsItem = accountItems.find(item => item.title === 'Account Settings');
+  const logoutItem = accountItems.find(item => item.isLogout);
+
+  const renderBottomMenuItem = (item: NavItem, isLogout: boolean = false) => {
+    const active = isActive(item.href);
+
+    const handleClick = async () => {
+      if (isLogout) {
+        try {
+          const { performCompleteLogout } = await import('@/lib/logout-helper');
+          await performCompleteLogout(signOut, '/');
+        } catch (error) {
+          console.error('Logout failed:', error);
+          const { clearAllSessionData } = await import('@/lib/logout-helper');
+          clearAllSessionData();
+          window.location.href = '/';
+        }
+      } else {
+        setOpen();
+      }
+    };
+
+    const displayTitle = item.title === 'Account Settings' ? 'Profile' : item.title;
+
+    if (collapsed) {
+      return (
+        <button
+          onClick={handleClick}
+          className="flex items-center transition-all duration-200 relative group justify-center py-3 px-0 w-full text-slate-300 hover:text-white hover:bg-slate-700/50"
+          title={displayTitle}
+        >
+          <span className="flex items-center justify-center transition-colors duration-200 text-lg text-slate-400 group-hover:text-white">
+            {renderIcon(item.icon)}
+          </span>
+        </button>
+      );
+    }
+
+    if (isLogout) {
+      return (
+        <button
+          onClick={handleClick}
+          className="flex items-center px-6 py-3 transition-all duration-200 relative group w-full text-left text-slate-300 hover:text-white hover:bg-slate-700/50"
+          title={displayTitle}
+        >
+          <div
+            className={cn(
+              'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+              'opacity-0 group-hover:opacity-100'
+            )}
+          ></div>
+          <span className="flex items-center justify-center transition-colors duration-200 text-lg mr-3 text-slate-400 group-hover:text-white">
+            {renderIcon(item.icon)}
+          </span>
+          <span className="text-sm font-medium transition-all duration-200 opacity-100 text-slate-300 group-hover:text-white">
+            {displayTitle}
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <Link
+        href={item.href}
+        onClick={handleClick}
+        className={cn(
+          "flex items-center px-6 py-3 transition-all duration-200 relative group w-full text-left",
+          active
+            ? "bg-slate-700/50 text-white"
+            : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+        )}
+        title={displayTitle}
+      >
+        <div
+          className={cn(
+            'absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] z-10 transition-opacity duration-200',
+            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+        ></div>
+        <span className={cn(
+          "flex items-center justify-center transition-colors duration-200 text-lg mr-3",
+          active
+            ? "text-white"
+            : "text-slate-400 group-hover:text-white"
+        )}>
+          {renderIcon(item.icon)}
+        </span>
+        <span className={cn(
+          "text-sm font-medium transition-all duration-200 opacity-100",
+          active
+            ? "text-white"
+            : "text-slate-300 group-hover:text-white"
+        )}>
+          {displayTitle}
+        </span>
+      </Link>
+    );
+  };
+
+  if (!accountSettingsItem && !logoutItem) return null;
+
+  return (
+    <div className={`sidebar-footer ${
+      collapsed ? 'py-1 flex-col space-y-2' : 'py-1'
+    } flex items-center border-t border-slate-700/50`}>
+      {collapsed ? (
+        <>
+          {accountSettingsItem && (
+            <div className="w-full">
+              {renderBottomMenuItem(accountSettingsItem)}
+            </div>
+          )}
+          {logoutItem && (
+            <div className="w-full">
+              {renderBottomMenuItem(logoutItem, true)}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col w-full space-y-0">
+            {accountSettingsItem && renderBottomMenuItem(accountSettingsItem)}
+            {logoutItem && (
+              <div className="border-t border-slate-700/50">
+                {renderBottomMenuItem(logoutItem, true)}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

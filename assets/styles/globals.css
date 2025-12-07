@@ -1106,7 +1106,7 @@ li:not(.sidebar li):not(.bg-\[\#1B1E2F\] li) {
 }
 
 .nav-section {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .sidebar.collapsed .nav-section {

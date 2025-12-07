@@ -328,22 +328,27 @@ const CancelRequestsPage = () => {
     notes: string
   ) => {
     try {
-      setCancelRequests(prev => 
-        prev.map(req => 
-          req.id === requestId 
-            ? { 
-                ...req, 
-                status: 'approved' as const,
-                refundAmount,
-                adminNotes: notes,
-                processedAt: new Date().toISOString(),
-                processedBy: 'Admin'
-              }
-            : req
-        )
-      );
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/approve`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refundAmount,
+          adminNotes: notes
+        })
+      });
 
-      showToast('Cancel request approved successfully', 'success');
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to approve cancel request');
+      }
+
+      // Refresh the data to get the updated state from the database
+      await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+
+      showToast(result.message || 'Cancel request approved successfully', 'success');
       setApproveDialog({ open: false, requestId: 0, refundAmount: 0 });
       setNewRefundAmount('');
       setAdminNotes('');
@@ -360,21 +365,26 @@ const CancelRequestsPage = () => {
 
   const handleDeclineRequest = async (requestId: number, reason: string) => {
     try {
-      setCancelRequests(prev => 
-        prev.map(req => 
-          req.id === requestId 
-            ? { 
-                ...req, 
-                status: 'declined' as const,
-                adminNotes: reason,
-                processedAt: new Date().toISOString(),
-                processedBy: 'Admin'
-              }
-            : req
-        )
-      );
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/decline`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          adminNotes: reason
+        })
+      });
 
-      showToast('Cancel request declined successfully', 'success');
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to decline cancel request');
+      }
+
+      // Refresh the data to get the updated state from the database
+      await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+
+      showToast(result.message || 'Cancel request declined successfully', 'success');
       setDeclineDialog({ open: false, requestId: 0 });
       setDeclineReason('');
     } catch (error) {

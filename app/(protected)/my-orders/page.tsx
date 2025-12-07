@@ -49,6 +49,7 @@ const CancelModal = ({
   orderId,
   reason,
   setReason,
+  isLoading = false,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -56,6 +57,7 @@ const CancelModal = ({
   orderId: number | null;
   reason: string;
   setReason: (reason: string) => void;
+  isLoading?: boolean;
 }) => {
   if (!isOpen) return null;
 
@@ -77,6 +79,7 @@ const CancelModal = ({
             className="form-field w-full px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 resize-none"
             rows={4}
             required
+            disabled={isLoading}
           />
         </div>
 
@@ -84,15 +87,16 @@ const CancelModal = ({
           <button
             onClick={onClose}
             className="btn btn-secondary"
+            disabled={isLoading}
           >
             Keep Order
           </button>
           <button
             onClick={onConfirm}
-            disabled={!reason.trim()}
+            disabled={!reason.trim() || isLoading}
             className="btn btn-primary"
           >
-            Cancel Order
+            {isLoading ? 'Cancelling...' : 'Cancel Order'}
           </button>
         </div>
       </div>
@@ -219,10 +223,12 @@ export default function OrdersList() {
     isOpen: boolean;
     orderId: number | null;
     reason: string;
+    isLoading?: boolean;
   }>({
     isOpen: false,
     orderId: null,
-    reason: ''
+    reason: '',
+    isLoading: false
   });
 
   const [refillModal, setRefillModal] = useState<{
@@ -493,6 +499,9 @@ export default function OrdersList() {
       return;
     }
 
+    // Set loading state
+    setCancelModal(prev => ({ ...prev, isLoading: true }));
+
     try {
       const response = await fetch(`/api/user/orders/${cancelModal.orderId}/cancel-request`, {
         method: 'POST',
@@ -520,6 +529,7 @@ export default function OrdersList() {
           message: result.error || 'Failed to submit cancel request',
           type: 'error'
         });
+        setCancelModal(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
       console.error('Error submitting cancel request:', error);
@@ -527,6 +537,7 @@ export default function OrdersList() {
         message: 'Failed to submit cancel request',
         type: 'error'
       });
+      setCancelModal(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -534,7 +545,8 @@ export default function OrdersList() {
     setCancelModal({
       isOpen: false,
       orderId: null,
-      reason: ''
+      reason: '',
+      isLoading: false
     });
   };
 
@@ -693,6 +705,7 @@ export default function OrdersList() {
         orderId={cancelModal.orderId}
         reason={cancelModal.reason}
         setReason={(reason) => setCancelModal(prev => ({ ...prev, reason }))}
+        isLoading={cancelModal.isLoading || false}
       />
       <RefillModal
         isOpen={refillModal.isOpen}
@@ -1034,7 +1047,8 @@ export default function OrdersList() {
                                   onClick={() => setCancelModal({
                                     isOpen: true,
                                     orderId: order.id,
-                                    reason: ''
+                                    reason: '',
+                                    isLoading: false
                                   })}
                                   className="text-red-600 hover:text-red-800 text-xs px-2 py-1 border border-red-300 rounded hover:bg-red-50"
                                   title="Cancel Order"
