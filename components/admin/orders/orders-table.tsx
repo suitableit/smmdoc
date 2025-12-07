@@ -89,6 +89,7 @@ interface OrdersTableContentProps {
   onUpdateStatus: (orderId: number, status: string) => void;
   onViewOrderErrors?: (orderId: number) => void;
   onEditOrderUrl?: (orderId: number) => void;
+  onRequestCancelOrder?: (orderId: number) => void;
   formatID: (id: number) => string;
   formatNumber: (num: number) => string;
   formatPrice: (price: number, decimals?: number) => string;
@@ -102,6 +103,7 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
   onSelectOrder,
   onSelectAll,
   onResendOrder,
+  onRequestCancelOrder,
   onEditStartCount,
   onMarkPartial,
   onUpdateStatus,
@@ -448,11 +450,14 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                           const showResendOrder = failed;
                           
                           const isAutoMode = !!order.providerOrderId;
+                          const isPending = status === 'pending';
+                          const showRequestCancelOrder = isPending && isAutoMode && onRequestCancelOrder;
                           const showEditOrderUrl = (pendingOrInProgress || failed) && !isAutoMode;
                           
                           const showEditStartCount = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
                           const showMarkPartial = (pendingOrInProgress || failed || cancelledOrCompleted) && !isAutoMode;
-                          const showUpdateStatus = pendingOrInProgress || failed || cancelledOrCompleted;
+                          // Hide Update Order Status when showing Request Cancel Order
+                          const showUpdateStatus = (pendingOrInProgress || failed || cancelledOrCompleted) && !showRequestCancelOrder;
                           
                           return (
                             <>
@@ -469,6 +474,21 @@ const OrdersTableContent: React.FC<OrdersTableContentProps> = ({
                                 >
                                   <FaSync className="h-3 w-3" />
                                   Resend Order
+                                </button>
+                              )}
+                              {showRequestCancelOrder && (
+                                <button
+                                  onClick={() => {
+                                    onRequestCancelOrder(order.id);
+                                    const dropdown = document.querySelector(
+                                      '.absolute.right-0'
+                                    ) as HTMLElement;
+                                    dropdown?.classList.add('hidden');
+                                  }}
+                                  className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
+                                >
+                                  <FaExclamationCircle className="h-3 w-3" />
+                                  Request Cancel Order
                                 </button>
                               )}
                               {showEditOrderUrl && onEditOrderUrl && (

@@ -92,9 +92,14 @@ export async function PUT(
     });
 
     return NextResponse.json({
-      message: 'Cancel request declined successfully',
       success: true,
-      data: updatedRequest
+      message: 'Cancel request declined successfully',
+      data: {
+        id: updatedRequest.id,
+        status: updatedRequest.status,
+        orderId: updatedRequest.orderId,
+        userId: updatedRequest.userId
+      }
     });
 
   } catch (error) {

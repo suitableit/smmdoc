@@ -54,7 +54,6 @@ export async function GET(req: NextRequest) {
 
     console.log('Prisma where condition:', JSON.stringify(whereCondition, null, 2));
 
-    // First, get cancel requests without relations to avoid Prisma errors
     const cancelRequestsResult = await db.cancelRequests.findMany({
       where: whereCondition,
       orderBy: {
@@ -64,7 +63,6 @@ export async function GET(req: NextRequest) {
       take: limit
     });
 
-    // Then fetch relations separately for each request to handle missing relations gracefully
     const cancelRequestsWithRelations = await Promise.all(
       cancelRequestsResult.map(async (request) => {
         try {
@@ -87,7 +85,6 @@ export async function GET(req: NextRequest) {
             })
           ]);
 
-          // Check if order has required relations
           if (order && (!order.service || !order.category)) {
             console.warn(`Order ${order.id} is missing service or category relation for cancel request ${request.id}`);
           }
@@ -110,7 +107,6 @@ export async function GET(req: NextRequest) {
 
     console.log(`Found ${cancelRequestsWithRelations.length} cancel requests from database`);
     
-    // Log details about each request to debug
     if (cancelRequestsWithRelations.length > 0) {
       cancelRequestsWithRelations.forEach((req, index) => {
         console.log(`Request ${index + 1}:`, {
@@ -126,12 +122,10 @@ export async function GET(req: NextRequest) {
         });
       });
     } else {
-      // If no results, let's check if there are any cancel requests at all
       const totalAllRequests = await db.cancelRequests.count({});
       console.log(`Total cancel requests in database (no filters): ${totalAllRequests}`);
       
       if (totalAllRequests > 0) {
-        // Get a sample of all requests to see what's in the DB
         const sampleRequests = await db.cancelRequests.findMany({
           take: 5,
           orderBy: { createdAt: 'desc' },
@@ -153,7 +147,6 @@ export async function GET(req: NextRequest) {
 
     console.log(`Total cancel requests matching criteria: ${total}`);
 
-    // Check for requests with missing relations
     const requestsWithMissingRelations = cancelRequestsWithRelations.filter(
       (request) => !request.order || !request.user
     );
@@ -165,7 +158,7 @@ export async function GET(req: NextRequest) {
     }
 
     const transformedRequests = cancelRequestsWithRelations
-      .filter((request) => {
+      .filter((request): request is typeof request & { order: NonNullable<typeof request.order>, user: NonNullable<typeof request.user> } => {
         if (!request.order) {
           console.error(`Request ${request.id} has no order relation (orderId: ${request.orderId})`);
           return false;
@@ -176,42 +169,48 @@ export async function GET(req: NextRequest) {
         }
         return true;
       })
-      .map((request) => ({
-      id: request.id,
-      order: {
-        id: request.order.id,
-        service: {
-          id: request.order.service.id,
-          name: request.order.service.name,
-          rate: Number(request.order.service.rate)
-        },
-        category: {
-          id: request.order.category.id,
-          category_name: request.order.category.category_name
-        },
-        qty: Number(request.order.qty),
-        price: Number(request.order.price),
-        charge: Number(request.order.charge || request.order.price),
-        link: request.order.link,
-        status: request.order.status,
-        createdAt: request.order.createdAt.toISOString(),
-        seller: 'Self'
-      },
-      user: {
-        id: request.user.id,
-        email: request.user.email,
-        name: request.user.name || request.user.email,
-        username: request.user.email?.split('@')[0],
-        currency: request.user.currency || 'USD'
-      },
-      reason: request.reason,
-      status: request.status,
-      requestedAt: request.createdAt.toISOString(),
-      processedAt: request.processedAt?.toISOString(),
-      processedBy: request.processedBy,
-      refundAmount: Number(request.refundAmount || request.order.price),
-      adminNotes: request.adminNotes
-    }));
+      .map((request) => {
+        // TypeScript now knows order and user are non-null after the filter
+        const order = request.order!;
+        const user = request.user!;
+        
+        return {
+          id: request.id,
+          order: {
+            id: order.id,
+            service: {
+              id: order.service.id,
+              name: order.service.name,
+              rate: Number(order.service.rate)
+            },
+            category: {
+              id: order.category.id,
+              category_name: order.category.category_name
+            },
+            qty: Number(order.qty),
+            price: Number(order.price),
+            charge: Number(order.charge || order.price),
+            link: order.link,
+            status: order.status,
+            createdAt: order.createdAt.toISOString(),
+            seller: 'Self'
+          },
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name || user.email,
+            username: user.email?.split('@')[0],
+            currency: user.currency || 'USD'
+          },
+          reason: request.reason,
+          status: request.status,
+          requestedAt: request.createdAt.toISOString(),
+          processedAt: request.processedAt?.toISOString(),
+          processedBy: request.processedBy,
+          refundAmount: Number(request.refundAmount || order.price),
+          adminNotes: request.adminNotes
+        };
+      });
 
     if (transformedRequests.length > 0) {
       console.log('Transformed requests sample:', JSON.stringify(transformedRequests[0], null, 2));

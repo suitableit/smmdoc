@@ -160,19 +160,23 @@ const CancelRequestsPage = () => {
     open: boolean;
     requestId: string | number;
     refundAmount: number;
+    isLoading?: boolean;
   }>({
     open: false,
     requestId: '',
     refundAmount: 0,
+    isLoading: false,
   });
   const [newRefundAmount, setNewRefundAmount] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [declineDialog, setDeclineDialog] = useState<{
     open: boolean;
     requestId: number;
+    isLoading?: boolean;
   }>({
     open: false,
     requestId: 0,
+    isLoading: false,
   });
   const [declineReason, setDeclineReason] = useState('');
   const [viewDialog, setViewDialog] = useState<{
@@ -327,6 +331,8 @@ const CancelRequestsPage = () => {
     refundAmount: number,
     notes: string
   ) => {
+    setApproveDialog(prev => ({ ...prev, isLoading: true }));
+
     try {
       const response = await fetch(`/api/admin/cancel-requests/${requestId}/approve`, {
         method: 'PUT',
@@ -339,19 +345,34 @@ const CancelRequestsPage = () => {
         })
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to approve cancel request');
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        throw new Error('Invalid response from server');
       }
 
-      // Refresh the data to get the updated state from the database
-      await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+      console.log('Approve response:', { status: response.status, ok: response.ok, result });
 
-      showToast(result.message || 'Cancel request approved successfully', 'success');
-      setApproveDialog({ open: false, requestId: 0, refundAmount: 0 });
-      setNewRefundAmount('');
-      setAdminNotes('');
+      if (response.ok) {
+        if (result.success === false) {
+          throw new Error(result.error || result.message || 'Failed to approve cancel request');
+        }
+
+        showToast(result.message || 'Cancel request approved successfully', 'success');
+        setApproveDialog({ open: false, requestId: 0, refundAmount: 0, isLoading: false });
+        setNewRefundAmount('');
+        setAdminNotes('');
+
+        try {
+          await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+        } catch (refreshError) {
+          console.error('Error refreshing cancel requests after approve:', refreshError);
+        }
+      } else {
+        throw new Error(result.error || result.message || `Server returned ${response.status}: Failed to approve cancel request`);
+      }
     } catch (error) {
       console.error('Error approving cancel request:', error);
       showToast(
@@ -360,10 +381,13 @@ const CancelRequestsPage = () => {
           : 'Error approving cancel request',
         'error'
       );
+      setApproveDialog(prev => ({ ...prev, isLoading: false }));
     }
   };
 
   const handleDeclineRequest = async (requestId: number, reason: string) => {
+    setDeclineDialog(prev => ({ ...prev, isLoading: true }));
+
     try {
       const response = await fetch(`/api/admin/cancel-requests/${requestId}/decline`, {
         method: 'PUT',
@@ -375,18 +399,33 @@ const CancelRequestsPage = () => {
         })
       });
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to decline cancel request');
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        throw new Error('Invalid response from server');
       }
 
-      // Refresh the data to get the updated state from the database
-      await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+      console.log('Decline response:', { status: response.status, ok: response.ok, result });
 
-      showToast(result.message || 'Cancel request declined successfully', 'success');
-      setDeclineDialog({ open: false, requestId: 0 });
-      setDeclineReason('');
+      if (response.ok) {
+        if (result.success === false) {
+          throw new Error(result.error || result.message || 'Failed to decline cancel request');
+        }
+
+        showToast(result.message || 'Cancel request declined successfully', 'success');
+        setDeclineDialog({ open: false, requestId: 0, isLoading: false });
+        setDeclineReason('');
+
+        try {
+          await fetchCancelRequests(pagination.page, statusFilter, searchTerm);
+        } catch (refreshError) {
+          console.error('Error refreshing cancel requests after decline:', refreshError);
+        }
+      } else {
+        throw new Error(result.error || result.message || `Server returned ${response.status}: Failed to decline cancel request`);
+      }
     } catch (error) {
       console.error('Error declining cancel request:', error);
       showToast(
@@ -395,6 +434,7 @@ const CancelRequestsPage = () => {
           : 'Error declining cancel request',
         'error'
       );
+      setDeclineDialog(prev => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -1202,6 +1242,7 @@ const CancelRequestsPage = () => {
                           className="form-field w-full min-h-[120px] resize-y px-4 py-3 bg-white dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary)] dark:focus:ring-[var(--secondary)] focus:border-transparent shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
                           placeholder="Add any notes about the approval..."
                           rows={3}
+                          disabled={approveDialog.isLoading}
                         />
                       </div>
                       <div className="flex gap-2 justify-end">
@@ -1211,11 +1252,13 @@ const CancelRequestsPage = () => {
                               open: false,
                               requestId: 0,
                               refundAmount: 0,
+                              isLoading: false,
                             });
                             setNewRefundAmount('');
                             setAdminNotes('');
                           }}
                           className="btn btn-secondary"
+                          disabled={approveDialog.isLoading}
                         >
                           Cancel
                         </button>
@@ -1228,8 +1271,9 @@ const CancelRequestsPage = () => {
                             )
                           }
                           className="btn btn-primary"
+                          disabled={approveDialog.isLoading || !newRefundAmount || parseFloat(newRefundAmount) <= 0}
                         >
-                          Approve & Process Refund
+                          {approveDialog.isLoading ? 'Processing...' : 'Approve & Process Refund'}
                         </button>
                       </div>
                     </div>
@@ -1493,15 +1537,17 @@ const CancelRequestsPage = () => {
                           placeholder="Explain why this cancel request is being declined..."
                           rows={4}
                           required
+                          disabled={declineDialog.isLoading}
                         />
                       </div>
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => {
-                            setDeclineDialog({ open: false, requestId: 0 });
+                            setDeclineDialog({ open: false, requestId: 0, isLoading: false });
                             setDeclineReason('');
                           }}
                           className="btn btn-secondary"
+                          disabled={declineDialog.isLoading}
                         >
                           Cancel
                         </button>
@@ -1513,9 +1559,9 @@ const CancelRequestsPage = () => {
                             )
                           }
                           className="btn btn-primary"
-                          disabled={!declineReason.trim()}
+                          disabled={!declineReason.trim() || declineDialog.isLoading}
                         >
-                          Decline Request
+                          {declineDialog.isLoading ? 'Processing...' : 'Decline Request'}
                         </button>
                       </div>
                     </div>

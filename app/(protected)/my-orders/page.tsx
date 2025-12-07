@@ -21,6 +21,7 @@ import {
     FaRss,
     FaSearch,
     FaSpinner,
+    FaSync,
     FaTimes
 } from 'react-icons/fa';
 
@@ -215,6 +216,7 @@ export default function OrdersList() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<{
     message: string;
     type: 'success' | 'error' | 'info' | 'pending';
@@ -478,6 +480,19 @@ export default function OrdersList() {
     setPage(1);
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+      showToast('Orders refreshed successfully!', 'success');
+    } catch (error) {
+      console.error('Error refreshing orders:', error);
+      showToast('Error refreshing orders. Please try again.', 'error');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleRefill = (orderId: number) => {
     showToast(`Refill request submitted for order #${formatID(orderId)}`, 'success');
   };
@@ -499,7 +514,6 @@ export default function OrdersList() {
       return;
     }
 
-    // Set loading state
     setCancelModal(prev => ({ ...prev, isLoading: true }));
 
     try {
@@ -750,6 +764,14 @@ export default function OrdersList() {
                     )}
                   </select>
                 </div>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing || isLoading}
+                  className="btn btn-primary flex items-center gap-2 px-3 py-2.5 h-12"
+                >
+                  <FaSync className={refreshing || isLoading ? 'animate-spin' : ''} />
+                  Refresh
+                </button>
               </div>
               <div className="flex-1 h-12 items-center">
                 <div className="form-group mb-0 w-full">
@@ -1028,11 +1050,24 @@ export default function OrdersList() {
                               ) : null;
                             })()}
                             {order.status === 'pending' && order.service?.cancel && (() => {
-
-
                               const hasPendingCancelRequest = 
                                 (order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'pending')) ||
                                 localPendingCancelRequests.has(order.id);
+
+                              const hasDeclinedCancelRequest = 
+                                order.cancelRequests && order.cancelRequests.some((req: CancelRequest) => req.status === 'declined');
+
+                              if (hasDeclinedCancelRequest) {
+                                return (
+                                  <button
+                                    disabled
+                                    className="text-gray-500 text-xs px-2 py-1 border border-gray-400 rounded bg-gray-100 opacity-70 cursor-not-allowed"
+                                    title="Cancel request was declined"
+                                  >
+                                    Cancel Declined
+                                  </button>
+                                );
+                              }
 
                               return hasPendingCancelRequest ? (
                                 <button

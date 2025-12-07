@@ -809,7 +809,6 @@ export default function SideBarNav({
     return sections[sectionKey] || [];
   };
 
-  // Separate logout and account settings items from account section
   const accountItems = getSectionItems('account');
   const logoutItem = accountItems.find(item => item.isLogout);
   const accountSettingsItem = accountItems.find(item => item.title === 'Account Settings');
@@ -949,15 +948,14 @@ export default function SideBarNav({
   );
 }
 
-// Export footer items separately
 export function SidebarFooter({
   collapsed = false,
   session,
-  setOpen = () => {},
+  setOpenAction = () => {},
 }: {
   collapsed?: boolean;
   session?: Session | null;
-  setOpen?: () => void;
+  setOpenAction?: () => void;
 }) {
   const path = usePathname() || '';
   
@@ -974,7 +972,6 @@ export function SidebarFooter({
     return false;
   };
 
-  // Get account items
   const accountItems = useMemo(() => {
     const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'moderator';
     const items = isAdmin ? adminNavItems : userNavItems;
@@ -1001,7 +998,7 @@ export function SidebarFooter({
           window.location.href = '/';
         }
       } else {
-        setOpen();
+        setOpenAction();
       }
     };
 

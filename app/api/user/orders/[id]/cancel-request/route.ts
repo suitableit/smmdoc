@@ -121,20 +121,46 @@ export async function POST(
 
     const existingRequest = await db.cancelRequests.findFirst({
       where: {
-        orderId: parseInt(id),
-        status: 'pending'
+        orderId: parseInt(id)
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
     if (existingRequest) {
-      return NextResponse.json(
-        { 
-          error: 'A cancellation request for this order is already pending',
-          success: false,
-          data: null 
-        },
-        { status: 400 }
-      );
+      if (existingRequest.status === 'pending') {
+        return NextResponse.json(
+          { 
+            error: 'A cancellation request for this order is already pending',
+            success: false,
+            data: null 
+          },
+          { status: 400 }
+        );
+      }
+      
+      if (existingRequest.status === 'declined') {
+        return NextResponse.json(
+          { 
+            error: 'Your previous cancellation request for this order was declined. You cannot request cancellation again.',
+            success: false,
+            data: null 
+          },
+          { status: 400 }
+        );
+      }
+      
+      if (existingRequest.status === 'approved') {
+        return NextResponse.json(
+          { 
+            error: 'This order has already been cancelled',
+            success: false,
+            data: null 
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const refundAmount = order.price;

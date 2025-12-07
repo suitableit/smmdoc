@@ -50,6 +50,10 @@ const EditOrderUrlModal = dynamic(() => import('@/components/admin/orders/modals
   ssr: false,
 });
 
+const RequestCancelOrderModal = dynamic(() => import('@/components/admin/orders/modals/request-cancel-order'), {
+  ssr: false,
+});
+
 const OrdersTableContent = dynamic(() => import('@/components/admin/orders/orders-table'), {
   ssr: false,
 });
@@ -281,6 +285,16 @@ const AdminOrdersPage = () => {
     open: false,
     orderId: '',
     currentLink: '',
+  });
+
+  const [requestCancelOrderDialog, setRequestCancelOrderDialog] = useState<{
+    open: boolean;
+    orderId: number;
+    orderPrice: number;
+  }>({
+    open: false,
+    orderId: 0,
+    orderPrice: 0,
   });
 
   const [bulkStatusDialog, setBulkStatusDialog] = useState<{
@@ -859,6 +873,42 @@ const AdminOrdersPage = () => {
     setUpdateStatusDialog({ open: true, orderId, currentStatus });
   };
 
+  const openRequestCancelOrderDialog = (orderId: number) => {
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setRequestCancelOrderDialog({
+        open: true,
+        orderId: order.id,
+        orderPrice: order.charge || order.price || 0,
+      });
+    }
+  };
+
+  const handleRequestCancelOrder = async (orderId: number) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/request-cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showToast('Cancel request sent to provider successfully', 'success');
+        refreshOrders();
+        refreshStats();
+        setRequestCancelOrderDialog({ open: false, orderId: 0, orderPrice: 0 });
+      } else {
+        showToast(result.error || 'Failed to request order cancellation', 'error');
+      }
+    } catch (error) {
+      console.error('Error requesting cancel order:', error);
+      showToast('Error requesting order cancellation', 'error');
+    }
+  };
+
   const openOrderErrorsDialog = (orderId: string | number) => {
     setOrderErrorsDialog({ open: true, orderId });
   };
@@ -1259,6 +1309,9 @@ const AdminOrdersPage = () => {
                   onEditOrderUrl={(orderId: number) => {
                     handleEditOrderUrl(orderId);
                   }}
+                  onRequestCancelOrder={(orderId: number) => {
+                    openRequestCancelOrderDialog(orderId);
+                  }}
                   formatID={formatID}
                   formatNumber={formatNumber}
                   formatPrice={formatPrice}
@@ -1380,6 +1433,14 @@ const AdminOrdersPage = () => {
           refreshStats();
           showToast('Order link updated successfully');
         }}
+        showToast={showToast}
+      />
+      <RequestCancelOrderModal
+        isOpen={requestCancelOrderDialog.open}
+        onClose={() => setRequestCancelOrderDialog({ open: false, orderId: 0, orderPrice: 0 })}
+        orderId={requestCancelOrderDialog.orderId}
+        orderPrice={requestCancelOrderDialog.orderPrice}
+        onConfirm={handleRequestCancelOrder}
         showToast={showToast}
       />
     </div>

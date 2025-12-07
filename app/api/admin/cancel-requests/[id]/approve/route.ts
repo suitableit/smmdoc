@@ -125,7 +125,13 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: 'Cancel request approved successfully. User balance has been refunded.',
-      data: result
+      data: {
+        id: result.id,
+        status: result.status,
+        refundAmount: result.refundAmount,
+        orderId: result.orderId,
+        userId: result.userId
+      }
     });
 
   } catch (error) {

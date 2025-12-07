@@ -117,7 +117,7 @@ function SideBarContent({
       <div className="sidebar-nav overflow-y-auto overflow-x-hidden flex-1">
         <SideBarNav collapsed={collapsed} session={session} setOpen={() => {}} />
       </div>
-      <SidebarFooter collapsed={collapsed} session={session} setOpen={() => {}} />
+      <SidebarFooter collapsed={collapsed} session={session} setOpenAction={() => {}} />
     </div>
   );
 }
