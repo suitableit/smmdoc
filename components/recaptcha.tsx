@@ -132,7 +132,12 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
         try {
 
           while (container.firstChild) {
-            container.removeChild(container.firstChild);
+            try {
+              container.removeChild(container.firstChild);
+            } catch (error) {
+              // Element may have already been removed
+              break;
+            }
           }
 
           const newWidgetId = window.grecaptcha.render(container, {
@@ -163,7 +168,12 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
           if (container && document.contains(container)) {
 
             while (container.firstChild) {
-              container.removeChild(container.firstChild);
+              try {
+                container.removeChild(container.firstChild);
+              } catch (error) {
+                // Element may have already been removed
+                break;
+              }
             }
           }
         } catch (error) {

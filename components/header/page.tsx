@@ -66,7 +66,39 @@ const ThemeToggle = ({
     setMounted(true);
   }, []);
 
+  const overlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (overlayTimeoutRef.current) {
+        clearTimeout(overlayTimeoutRef.current);
+      }
+      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+        try {
+          document.body.removeChild(overlayRef.current);
+        } catch (error) {
+          // Element may have already been removed
+        }
+      }
+    };
+  }, []);
+
   const createFadeTransition = () => {
+    // Clear any existing timeout
+    if (overlayTimeoutRef.current) {
+      clearTimeout(overlayTimeoutRef.current);
+    }
+
+    // Remove any existing overlay
+    if (overlayRef.current && document.body.contains(overlayRef.current)) {
+      try {
+        document.body.removeChild(overlayRef.current);
+      } catch (error) {
+        // Element may have already been removed
+      }
+    }
+
     const overlay = document.createElement('div');
     overlay.className = 'theme-fade-overlay';
     overlay.style.cssText = `
@@ -111,12 +143,19 @@ const ThemeToggle = ({
       document.head.appendChild(style);
     }
 
+    overlayRef.current = overlay;
     document.body.appendChild(overlay);
 
-    setTimeout(() => {
-      if (document.body.contains(overlay)) {
-        document.body.removeChild(overlay);
+    overlayTimeoutRef.current = setTimeout(() => {
+      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+        try {
+          document.body.removeChild(overlayRef.current);
+          overlayRef.current = null;
+        } catch (error) {
+          // Element may have already been removed
+        }
       }
+      overlayTimeoutRef.current = null;
     }, 600);
   };
 
