@@ -185,9 +185,9 @@ const Header: React.FC<HeaderProps> = ({
         clearTimeout(overlayTimeoutRef.current);
       }
 
-      if (overlayRef.current && overlayRef.current.parentNode) {
+      if (overlayRef.current) {
         try {
-          overlayRef.current.parentNode.removeChild(overlayRef.current);
+          overlayRef.current.remove();
         } catch (error) {
         }
       }
@@ -240,9 +240,9 @@ const Header: React.FC<HeaderProps> = ({
       document.body.appendChild(overlay);
 
       overlayTimeoutRef.current = setTimeout(() => {
-        if (overlayRef.current && overlayRef.current.parentNode) {
+        if (overlayRef.current) {
           try {
-            overlayRef.current.parentNode.removeChild(overlayRef.current);
+            overlayRef.current.remove();
             overlayRef.current = null;
           } catch (error) {
           }

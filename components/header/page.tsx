@@ -88,9 +88,9 @@ const ThemeToggle = ({
       clearTimeout(overlayTimeoutRef.current);
     }
 
-    if (overlayRef.current && overlayRef.current.parentNode) {
+    if (overlayRef.current) {
       try {
-        overlayRef.current.parentNode.removeChild(overlayRef.current);
+        overlayRef.current.remove();
       } catch (error) {
       }
     }
@@ -142,16 +142,16 @@ const ThemeToggle = ({
     overlayRef.current = overlay;
     document.body.appendChild(overlay);
 
-    overlayTimeoutRef.current = setTimeout(() => {
-      if (overlayRef.current && overlayRef.current.parentNode) {
-        try {
-          overlayRef.current.parentNode.removeChild(overlayRef.current);
-          overlayRef.current = null;
-        } catch (error) {
+      overlayTimeoutRef.current = setTimeout(() => {
+        if (overlayRef.current) {
+          try {
+            overlayRef.current.remove();
+            overlayRef.current = null;
+          } catch (error) {
+          }
         }
-      }
-      overlayTimeoutRef.current = null;
-    }, 600);
+        overlayTimeoutRef.current = null;
+      }, 600);
   };
 
   const handleThemeChange = (newTheme: string) => {

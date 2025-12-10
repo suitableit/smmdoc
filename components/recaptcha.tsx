@@ -133,7 +133,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
 
           while (container.firstChild) {
             try {
-              container.removeChild(container.firstChild);
+              container.firstChild.remove();
             } catch (error) {
               break;
             }
@@ -168,7 +168,7 @@ const ReCAPTCHA: React.FC<ReCAPTCHAProps> = ({
 
             while (container.firstChild) {
               try {
-                container.removeChild(container.firstChild);
+                container.firstChild.remove();
               } catch (error) {
                 break;
               }

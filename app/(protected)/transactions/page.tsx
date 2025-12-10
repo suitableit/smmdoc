@@ -194,7 +194,8 @@ export default function TransactionsPage() {
             const paymentName = paymentData.name;
             const paymentEmail = paymentData.email;
 
-            console.log('Payment verification response (GET method) - All data from gateway invoice_id:', {
+            console.log('Payment verification response (GET method) - All data fetched using invoice_id URL parameter:', {
+              invoice_id_from_url: invoiceId,
               gateway_invoice_id: gatewayInvoiceId,
               paymentStatus: paymentStatusFromApi,
               topLevelStatus,
@@ -208,7 +209,8 @@ export default function TransactionsPage() {
               name: paymentName,
               email: paymentEmail,
               fullPaymentData: paymentData,
-              fullResponse: verifyData
+              fullResponse: verifyData,
+              note: 'All payment data (transaction_id, payment_method, etc.) fetched from Verify Payment API using invoice_id URL parameter'
             });
 
             if (apiTransactionId) {

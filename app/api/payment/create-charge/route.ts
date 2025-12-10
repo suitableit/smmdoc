@@ -158,6 +158,45 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Check for duplicate payment BEFORE calling gateway API
+      try {
+        const thirtySecondsAgo = new Date(Date.now() - 30000);
+        const recentPayment = await db.addFunds.findFirst({
+          where: {
+            userId: session.user.id,
+            usdAmount: amountUSD,
+            senderNumber: body.phone,
+            createdAt: {
+              gte: thirtySecondsAgo,
+            },
+            status: 'Processing',
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+
+        if (recentPayment) {
+          console.log('Duplicate payment attempt detected (BEFORE gateway call):', {
+            userId: session.user.id,
+            amount: amountUSD,
+            existingInvoiceId: recentPayment.invoiceId,
+            timeDiff: Date.now() - recentPayment.createdAt.getTime(),
+            requestId: body.requestId,
+          });
+          return NextResponse.json(
+            { 
+              error: 'Duplicate payment request detected. Please wait a moment and try again.',
+              existingInvoiceId: recentPayment.invoiceId,
+            },
+            { status: 429, headers: corsHeaders }
+          );
+        }
+      } catch (duplicateCheckError) {
+        console.error('Error checking for duplicate payment:', duplicateCheckError);
+        // Continue with payment creation if duplicate check fails
+      }
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -200,80 +239,54 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('Parsed response data:', data);
-      console.log('Response status check:', {
+      console.log('Gateway response check:', {
         hasStatus: !!data.status,
         statusValue: data.status,
-        hasInvoiceId: !!(data.invoice_id || data.invoiceId),
-        invoiceId: data.invoice_id || data.invoiceId,
         hasPaymentUrl: !!data.payment_url,
         allKeys: Object.keys(data),
+        note: 'invoice_id will be in payment_url path and added to redirect URL by gateway when user returns'
       });
 
         if (data.status || data.payment_url) {
           let gatewayInvoiceId: string | null = null;
           
           if (data.payment_url) {
-            console.log('=== Extracting invoice_id from payment_url ===');
-            console.log('Payment URL:', data.payment_url);
+            console.log('=== Extracting invoice_id from payment_url (for payment record creation) ===');
+            console.log('Payment URL from gateway:', data.payment_url);
+            console.log('Note: invoice_id is embedded in payment_url path. Gateway will add it to redirect URL when user returns.');
+            
             try {
               const url = new URL(data.payment_url);
-              console.log('Parsed URL components:', {
-                hostname: url.hostname,
-                pathname: url.pathname,
-                search: url.search,
-              });
-              
               const pathParts = url.pathname.split('/').filter(part => part.length > 0);
-              console.log('Path parts:', pathParts);
-              
               const paymentIndex = pathParts.findIndex(part => part === 'payment');
-              console.log('Payment index in path:', paymentIndex);
               
               if (paymentIndex >= 0 && paymentIndex < pathParts.length - 1) {
                 gatewayInvoiceId = pathParts[paymentIndex + 1];
-                console.log(`✓ SUCCESS: Extracted invoice_id from payment_url path: ${gatewayInvoiceId}`);
-              } else {
-                if (pathParts.length > 0) {
-                  gatewayInvoiceId = pathParts[pathParts.length - 1];
-                  console.log(`✓ SUCCESS: Extracted invoice_id from payment_url (last segment): ${gatewayInvoiceId}`);
-                } else {
-                  console.warn('⚠ No path parts found in payment_url');
-                }
+                console.log(`✓ Extracted invoice_id from payment_url path: ${gatewayInvoiceId}`);
+              } else if (pathParts.length > 0) {
+                gatewayInvoiceId = pathParts[pathParts.length - 1];
+                console.log(`✓ Extracted invoice_id from payment_url (last segment): ${gatewayInvoiceId}`);
               }
               
               if (!gatewayInvoiceId) {
                 gatewayInvoiceId = url.searchParams.get('invoice_id') || 
                                    url.searchParams.get('invoiceId') ||
                                    url.searchParams.get('invoice');
-                if (gatewayInvoiceId) {
-                  console.log(`✓ SUCCESS: Extracted invoice_id from query params: ${gatewayInvoiceId}`);
-                }
               }
             } catch (urlError) {
-              console.error('✗ ERROR: Failed to parse payment_url:', urlError);
-              console.error('Payment URL that failed:', data.payment_url);
+              console.error('Error parsing payment_url:', urlError);
             }
-          } else {
-            console.warn('⚠ No payment_url in gateway response');
-          }
-          
-          console.log('Final extracted gatewayInvoiceId:', gatewayInvoiceId);
-          
-          if (!gatewayInvoiceId) {
-            gatewayInvoiceId = data.invoice_id || data.invoiceId || data.invoice || 
-                              data.id || data.payment_id || data.order_id || null;
           }
           
           if (!gatewayInvoiceId) {
             console.error('Could not extract invoice_id from payment_url:', {
               paymentUrl: data.payment_url,
               response: data,
-              allKeys: Object.keys(data),
             });
             return NextResponse.json(
               {
                 error: 'Gateway did not return invoice_id in payment_url',
-                details: 'Unable to extract invoice_id from payment gateway response. Please try again.',
+                details: 'Unable to extract invoice_id from payment gateway response. The gateway will add invoice_id to the redirect URL when user returns from payment.',
                 gatewayResponse: data
               },
               { status: 500, headers: corsHeaders }
@@ -281,14 +294,15 @@ export async function POST(req: NextRequest) {
           }
 
           try {
-            const tenSecondsAgo = new Date(Date.now() - 10000);
+            // Double-check for duplicate payment AFTER gateway call (race condition protection)
+            const thirtySecondsAgo = new Date(Date.now() - 30000);
             const recentPayment = await db.addFunds.findFirst({
               where: {
                 userId: session.user.id,
                 usdAmount: amountUSD,
                 senderNumber: body.phone,
                 createdAt: {
-                  gte: tenSecondsAgo,
+                  gte: thirtySecondsAgo,
                 },
                 status: 'Processing',
               },
@@ -297,18 +311,45 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            if (recentPayment) {
-              console.log('Duplicate payment attempt detected:', {
+            if (recentPayment && recentPayment.invoiceId !== gatewayInvoiceId) {
+              console.log('Duplicate payment attempt detected (AFTER gateway call - race condition):', {
                 userId: session.user.id,
                 amount: amountUSD,
                 existingInvoiceId: recentPayment.invoiceId,
+                newInvoiceId: gatewayInvoiceId,
                 timeDiff: Date.now() - recentPayment.createdAt.getTime(),
+                requestId: body.requestId,
               });
               return NextResponse.json(
                 { 
                   error: 'Duplicate payment request detected. Please wait a moment and try again.',
+                  existingInvoiceId: recentPayment.invoiceId,
                 },
                 { status: 429, headers: corsHeaders }
+              );
+            }
+
+            // Check if invoice_id already exists (race condition protection)
+            const existingPayment = await db.addFunds.findUnique({
+              where: {
+                invoiceId: gatewayInvoiceId,
+              },
+            });
+
+            if (existingPayment) {
+              console.log('Invoice ID already exists in database (race condition):', {
+                invoiceId: gatewayInvoiceId,
+                existingPaymentId: existingPayment.id,
+                requestId: body.requestId,
+              });
+              // Return the existing payment URL instead of creating a new one
+              return NextResponse.json(
+                {
+                  payment_url: data.payment_url,
+                  invoice_id: gatewayInvoiceId,
+                  note: 'Payment record already exists',
+                },
+                { status: 200, headers: corsHeaders }
               );
             }
 

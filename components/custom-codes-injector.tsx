@@ -47,7 +47,11 @@ export function CustomCodesInjector() {
         newScript.setAttribute(attr.name, attr.value);
       });
       newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-      oldScript.parentNode?.replaceChild(newScript, oldScript);
+      if (oldScript.parentNode) {
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      } else {
+        oldScript.replaceWith(newScript);
+      }
     });
   };
 

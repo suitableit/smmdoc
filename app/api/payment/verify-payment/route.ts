@@ -7,15 +7,8 @@ export async function GET(req: NextRequest) {
     const invoice_id = searchParams.get("invoice_id");
     const from_redirect = searchParams.get("from_redirect") === "true";
     
-    const transaction_id = searchParams.get("transaction_id") || 
-                          searchParams.get("trx_id") || 
-                          searchParams.get("transactionId") ||
-                          searchParams.get("transactionID") ||
-                          searchParams.get("trxId") ||
-                          searchParams.get("trxID");
-    
-    console.log("Verifying payment for invoice_id:", invoice_id, "from_redirect:", from_redirect, "transaction_id:", transaction_id);
-    console.log("All URL parameters:", Object.fromEntries(searchParams.entries()));
+    console.log("Verifying payment for invoice_id:", invoice_id, "from_redirect:", from_redirect);
+    console.log("Note: invoice_id is the URL parameter that contains all payment data. All payment data (transaction_id, payment_method, etc.) will be fetched from Verify Payment API using invoice_id only");
 
     if (!invoice_id) {
       return NextResponse.json(
@@ -168,34 +161,44 @@ export async function GET(req: NextRequest) {
           const responseInvoiceId = responseData.invoice_id;
           const responseTransactionId = responseData.transaction_id;
           const responsePaymentMethod = responseData.payment_method;
+          const responseSenderNumber = responseData.sender_number;
+          const responseFee = responseData.fee;
+          const responseChargedAmount = responseData.charged_amount;
+          const responseDate = responseData.date;
+          const responseFullName = responseData.full_name;
+          const responseEmail = responseData.email;
+          const responseAmount = responseData.amount;
           
-          console.log('Direct extraction from API response (same pattern as invoice_id):', {
-            invoice_id: responseInvoiceId,
-            transaction_id: responseTransactionId,
-            payment_method: responsePaymentMethod,
-            status: responseData.status,
-            allResponseKeys: Object.keys(responseData),
-          });
+          console.log('=== UddoktaPay Verify Payment API Response Fields ===');
+          console.log('According to API docs (https://uddoktapay.readme.io/reference/verify-payment-api-guideline):');
+          console.log('  - invoice_id:', responseInvoiceId);
+          console.log('  - transaction_id:', responseTransactionId);
+          console.log('  - payment_method:', responsePaymentMethod);
+          console.log('  - sender_number:', responseSenderNumber);
+          console.log('  - fee:', responseFee);
+          console.log('  - charged_amount:', responseChargedAmount);
+          console.log('  - amount:', responseAmount);
+          console.log('  - full_name:', responseFullName);
+          console.log('  - email:', responseEmail);
+          console.log('  - date:', responseDate);
+          console.log('  - status:', responseData.status);
+          console.log('  - metadata:', responseData.metadata);
+          console.log('====================================================');
           
           if (responseTransactionId && responseTransactionId !== invoice_id) {
             apiTransactionId = responseTransactionId;
-            console.log(`✓ Transaction ID extracted from API (same way as invoice_id): ${apiTransactionId}`);
+            console.log(`✓ Transaction ID extracted from API response.transaction_id: ${apiTransactionId}`);
           } else if (responseTransactionId === invoice_id) {
             console.log('⚠ WARNING: API returned transaction_id matching invoice_id - ignoring');
           } else if (!responseTransactionId) {
-            console.log('⚠ Transaction ID not found in API response (may be PENDING payment)');
+            console.log('⚠ Transaction ID not found in API response (payment may be PENDING)');
           }
           
           if (responsePaymentMethod) {
             apiPaymentMethod = responsePaymentMethod;
-            console.log(`✓ Payment Method extracted from API (same way as invoice_id): ${apiPaymentMethod}`);
+            console.log(`✓ Payment Method extracted from API response.payment_method: ${apiPaymentMethod}`);
           } else {
-            console.log('⚠ Payment Method not found in API response (may be PENDING payment)');
-          }
-          
-          if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
-            apiTransactionId = transaction_id;
-            console.log(`✓ Transaction ID from URL parameter: ${apiTransactionId}`);
+            console.log('⚠ Payment Method not found in API response (payment may be PENDING)');
           }
           
           console.log('Expected fields from Verify Payment API (same structure as webhook):');
@@ -340,11 +343,7 @@ export async function GET(req: NextRequest) {
           }
           
           verificationData = verificationData || {};
-          if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
-            apiTransactionId = transaction_id;
-            console.log(`✓ Transaction ID from URL (API failed): ${apiTransactionId}`);
-          }
-          verificationData.transaction_id = apiTransactionId || verificationData.transaction_id || transaction_id || null;
+          verificationData.transaction_id = apiTransactionId || verificationData.transaction_id || null;
           verificationData.payment_method = apiPaymentMethod || verificationData.payment_method || null;
           verificationData.sender_number = verificationData.sender_number || null;
         } else {
@@ -382,12 +381,8 @@ export async function GET(req: NextRequest) {
           console.log('Setting payment status to Processing (sandbox pending payment)');
         }
         
-        if (!apiTransactionId && transaction_id && transaction_id !== invoice_id) {
-          apiTransactionId = transaction_id;
-          console.log(`✓ Transaction ID from URL (API error): ${apiTransactionId}`);
-        }
         verificationData = { 
-          transaction_id: apiTransactionId || transaction_id || null,
+          transaction_id: apiTransactionId || null,
           payment_method: apiPaymentMethod || null,
           phone_number: null,
         };
@@ -410,18 +405,17 @@ export async function GET(req: NextRequest) {
     }
     
     if (from_redirect && payment.user) {
-      console.log('Payment redirected - updating with fetched transaction details');
+      console.log('Payment redirected - updating with fetched transaction details from Verify Payment API');
       console.log('Verification data available:', {
         hasVerificationData: !!verificationData,
         transaction_id_from_api: verificationData?.transaction_id,
-        transaction_id_from_url: transaction_id,
         transaction_id_from_db: payment.transactionId,
         paymentStatus: paymentStatus,
+        note: 'All data fetched from Verify Payment API using invoice_id only'
       });
       
       let transactionIdToSave = apiTransactionId || 
                                  verificationData?.transaction_id || 
-                                 transaction_id || 
                                  payment.transactionId || 
                                  null;
       
@@ -430,14 +424,13 @@ export async function GET(req: NextRequest) {
         transactionIdToSave = null;
       }
       
-      console.log('Transaction ID extraction (same pattern as invoice_id):', {
+      console.log('Transaction ID extraction from Verify Payment API (using invoice_id only):', {
         from_api_direct: apiTransactionId,
         from_api_verificationData: verificationData?.transaction_id,
-        from_url: transaction_id,
         from_db: payment.transactionId,
         final_transactionId: transactionIdToSave,
-        invoice_id_for_comparison: invoice_id,
-        extraction_pattern: 'Same as invoice_id - direct from responseData.transaction_id'
+        invoice_id_used: invoice_id,
+        extraction_pattern: 'Fetched from Verify Payment API response.transaction_id using invoice_id'
       });
       
       const paymentMethodToSave = apiPaymentMethod || 
@@ -474,7 +467,7 @@ export async function GET(req: NextRequest) {
           apiPaymentMethod: apiPaymentMethod || 'null',
           verificationData_transaction_id: verificationData?.transaction_id || 'null',
           verificationData_payment_method: verificationData?.payment_method || 'null',
-          url_transaction_id: transaction_id || 'null',
+          note: 'All data fetched from Verify Payment API using invoice_id only'
         }
       });
       
@@ -482,8 +475,8 @@ export async function GET(req: NextRequest) {
         console.log('⚠ WARNING: transactionIdToSave is NULL - checking sources:', {
           apiTransactionId: apiTransactionId || 'null',
           verificationData_transaction_id: verificationData?.transaction_id || 'null',
-          url_transaction_id: transaction_id || 'null',
           payment_transactionId: payment.transactionId || 'null',
+          note: 'All data should come from Verify Payment API response using invoice_id'
         });
       }
       if (!paymentMethodToSave) {
@@ -649,7 +642,6 @@ export async function GET(req: NextRequest) {
       
       let transactionIdToSave = apiTransactionId || 
                                  verificationData?.transaction_id || 
-                                 transaction_id || 
                                  existingPayment?.transactionId || 
                                  payment.transactionId || 
                                  null;
@@ -668,13 +660,13 @@ export async function GET(req: NextRequest) {
                                    payment.paymentMethod || 
                                    null;
       
-      console.log('Saving payment (extraction same as invoice_id):', {
+      console.log('Saving payment data from Verify Payment API (using invoice_id only):', {
         invoice_id,
         transactionId: transactionIdToSave,
         paymentMethod: paymentMethodToSave,
         from_api_direct_transactionId: apiTransactionId,
         from_api_direct_paymentMethod: apiPaymentMethod,
-        extraction_pattern: 'Same as invoice_id - direct from responseData.transaction_id'
+        extraction_pattern: 'Fetched from Verify Payment API using invoice_id only - response.transaction_id and response.payment_method'
       });
       
       const updatedPayment = await db.addFunds.update({
