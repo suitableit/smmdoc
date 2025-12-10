@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const payment = await db.addFunds.findUnique({
+    let payment = await db.addFunds.findUnique({
       where: {
         invoiceId: invoice_id,
       },
@@ -33,7 +33,39 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    console.log("Payment record found:", payment);
+    console.log("Payment record found by gateway invoice_id:", payment);
+    
+    if (!payment) {
+      console.log("Payment not found by gateway invoice_id. Trying alternative lookups...");
+      
+      payment = await db.addFunds.findFirst({
+        where: {
+          OR: [
+            { referenceId: invoice_id },
+            { transactionId: invoice_id },
+          ],
+        },
+        include: {
+          user: true,
+        },
+      });
+      
+      if (payment) {
+        console.log("Found payment by referenceId/transactionId. Updating invoiceId to gateway invoice_id...");
+        try {
+          await db.addFunds.update({
+            where: { id: payment.id },
+            data: { invoiceId: invoice_id }
+          });
+          payment = await db.addFunds.findUnique({
+            where: { invoiceId: invoice_id },
+            include: { user: true },
+          });
+        } catch (updateError) {
+          console.error("Error updating payment invoice_id:", updateError);
+        }
+      }
+    }
     
     if (payment && payment.transactionId && payment.transactionId === invoice_id) {
       console.log('CRITICAL: Found corrupted data - transaction_id equals invoice_id! Fixing...');
@@ -51,10 +83,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (!payment) {
+      console.error("Payment record not found for invoice_id:", invoice_id);
       return NextResponse.json({ 
         error: "Payment record not found", 
         status: "FAILED",
-        message: "No payment record found with this invoice ID" 
+        message: `No payment record found with invoice ID: ${invoice_id}`,
+        invoice_id: invoice_id
       }, { status: 404 });
     }
 
@@ -65,9 +99,20 @@ export async function GET(req: NextRequest) {
         payment: {
           id: payment.id,
           invoice_id: payment.invoiceId,
-          amount: payment.usdAmount,
+          amount: payment.amount,
+          usdAmount: payment.usdAmount,
           status: payment.status,
           transaction_id: payment.transactionId,
+          payment_method: payment.paymentMethod,
+          phone_number: payment.senderNumber,
+          sender_number: payment.senderNumber,
+          gatewayFee: payment.gatewayFee,
+          name: payment.name,
+          email: payment.email,
+          transactionDate: payment.transactionDate,
+          createdAt: payment.createdAt,
+          updatedAt: payment.updatedAt,
+          userId: payment.userId,
         }
       });
     }
@@ -121,9 +166,7 @@ export async function GET(req: NextRequest) {
           console.log('Response status:', responseData.status);
           
           const responseInvoiceId = responseData.invoice_id;
-          
           const responseTransactionId = responseData.transaction_id;
-          
           const responsePaymentMethod = responseData.payment_method;
           
           console.log('Direct extraction from API response (same pattern as invoice_id):', {
@@ -555,6 +598,11 @@ export async function GET(req: NextRequest) {
           transaction_id: finalTransactionIdToReturn
         });
         
+        const completePayment = await db.addFunds.findUnique({
+          where: { invoiceId: invoice_id },
+          include: { user: true }
+        });
+
         return NextResponse.json({
           status: finalStatus === "Success" ? "COMPLETED" : finalStatus === "Processing" ? "PENDING" : "FAILED",
           message: finalStatus === "Success" 
@@ -562,7 +610,24 @@ export async function GET(req: NextRequest) {
             : finalStatus === "Processing"
             ? "Payment is pending verification"
             : "Payment verification failed",
-          payment: {
+          payment: completePayment ? {
+            id: completePayment.id,
+            invoice_id: completePayment.invoiceId,
+            amount: completePayment.amount,
+            usdAmount: completePayment.usdAmount,
+            status: completePayment.status,
+            transaction_id: completePayment.transactionId,
+            payment_method: completePayment.paymentMethod,
+            phone_number: completePayment.senderNumber,
+            sender_number: completePayment.senderNumber,
+            gatewayFee: completePayment.gatewayFee,
+            name: completePayment.name,
+            email: completePayment.email,
+            transactionDate: completePayment.transactionDate,
+            createdAt: completePayment.createdAt,
+            updatedAt: completePayment.updatedAt,
+            userId: completePayment.userId,
+          } : {
             id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
@@ -681,18 +746,40 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      const finalPaymentData = await db.addFunds.findUnique({
+        where: { invoiceId: invoice_id },
+        include: { user: true }
+      });
+
       if (isSuccessful) {
         return NextResponse.json({
           status: "COMPLETED",
           message: "Payment verified successfully",
-          payment: {
+          payment: finalPaymentData ? {
+            id: finalPaymentData.id,
+            invoice_id: finalPaymentData.invoiceId,
+            amount: finalPaymentData.amount,
+            usdAmount: finalPaymentData.usdAmount,
+            status: finalPaymentData.status,
+            transaction_id: finalPaymentData.transactionId,
+            payment_method: finalPaymentData.paymentMethod,
+            phone_number: finalPaymentData.senderNumber,
+            sender_number: finalPaymentData.senderNumber,
+            gatewayFee: finalPaymentData.gatewayFee,
+            name: finalPaymentData.name,
+            email: finalPaymentData.email,
+            transactionDate: finalPaymentData.transactionDate,
+            createdAt: finalPaymentData.createdAt,
+            updatedAt: finalPaymentData.updatedAt,
+            userId: finalPaymentData.userId,
+          } : {
             id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
             status: updatedPayment.status,
-              transaction_id: updatedPayment.transactionId,
-              payment_method: updatedPayment.paymentMethod,
-              phone_number: updatedPayment.senderNumber || null,
+            transaction_id: updatedPayment.transactionId,
+            payment_method: updatedPayment.paymentMethod,
+            phone_number: updatedPayment.senderNumber || null,
           },
         });
       } else {
@@ -708,12 +795,29 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
           status: responseStatus,
           message: responseMessage,
-          payment: {
+          payment: finalPaymentData ? {
+            id: finalPaymentData.id,
+            invoice_id: finalPaymentData.invoiceId,
+            amount: finalPaymentData.amount,
+            usdAmount: finalPaymentData.usdAmount,
+            status: finalPaymentData.status,
+            transaction_id: finalPaymentData.transactionId,
+            payment_method: finalPaymentData.paymentMethod,
+            phone_number: finalPaymentData.senderNumber,
+            sender_number: finalPaymentData.senderNumber,
+            gatewayFee: finalPaymentData.gatewayFee,
+            name: finalPaymentData.name,
+            email: finalPaymentData.email,
+            transactionDate: finalPaymentData.transactionDate,
+            createdAt: finalPaymentData.createdAt,
+            updatedAt: finalPaymentData.updatedAt,
+            userId: finalPaymentData.userId,
+          } : {
             id: updatedPayment.id,
             invoice_id: updatedPayment.invoiceId,
             amount: updatedPayment.usdAmount,
             status: updatedPayment.status,
-              transaction_id: updatedPayment.transactionId,
+            transaction_id: updatedPayment.transactionId,
           }
         });
       }

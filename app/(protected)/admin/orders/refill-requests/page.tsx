@@ -21,7 +21,7 @@ import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const cleanLinkDisplay = (link: string): string => {
   if (!link) return link;
   let cleaned = link;
-  cleaned = cleaned.replace(/^https?:\/\//, '');
+  cleaned = cleaned.replace(/^https?:\/\
   cleaned = cleaned.replace(/^www\./i, '');
   return cleaned;
 };

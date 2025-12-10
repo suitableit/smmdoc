@@ -151,8 +151,6 @@ export async function POST(
         );
       }
       
-      // If there's a failed or declined request, we'll update it instead of creating a new one
-      // This will be handled after the provider call
     }
 
     const refundAmount = order.price;
@@ -167,7 +165,6 @@ export async function POST(
 
     let cancelRequest;
     
-    // If there's an existing failed/declined request, update it instead of creating a new one
     if (existingRequest && (existingRequest.status === 'failed' || existingRequest.status === 'declined')) {
       cancelRequest = await db.cancelRequests.update({
         where: { id: existingRequest.id },
@@ -175,14 +172,13 @@ export async function POST(
           reason: reason.trim(),
           status: 'pending',
           refundAmount: refundAmount,
-          adminNotes: null, // Clear previous admin notes
+          adminNotes: null,
           processedBy: null,
           processedAt: null,
           updatedAt: new Date()
         }
       });
     } else {
-      // Create new cancel request
       cancelRequest = await db.cancelRequests.create({
         data: {
           orderId: parseInt(id),

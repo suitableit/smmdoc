@@ -149,141 +149,113 @@ export default function TransactionsPage() {
   useEffect(() => {
     if (typeof window === 'undefined' || hasShownPaymentToast) return;
 
-    const paymentStatus = searchParams.get('payment');
     const invoiceId = searchParams.get('invoice_id');
-    const transactionId = searchParams.get('transaction_id') ||
-      searchParams.get('trx_id') ||
-      searchParams.get('transactionId') ||
-      searchParams.get('transactionID') ||
-      searchParams.get('trxId') ||
-      searchParams.get('trxID');
+    const paymentStatus = searchParams.get('payment');
 
-    if (paymentStatus) {
+    if (invoiceId) {
       setHasShownPaymentToast(true);
 
-      if (paymentStatus === 'success') {
-        if (invoiceId) {
-          setTimeout(async () => {
-            try {
-              let transactionIdParam = '';
-              if (transactionId) {
-                transactionIdParam = `&transaction_id=${transactionId}`;
-              } else if (typeof window !== 'undefined') {
-                const storedTransactionId = sessionStorage.getItem('payment_transaction_id');
-                if (storedTransactionId) {
-                  transactionIdParam = `&transaction_id=${storedTransactionId}`;
-                }
-              }
-              const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoiceId}&from_redirect=true${transactionIdParam}`;
+      setTimeout(async () => {
+        try {
+          const verifyUrl = `/api/payment/verify-payment?invoice_id=${invoiceId}&from_redirect=true`;
 
-              try {
-                const verifyResponse = await fetch(verifyUrl);
+          try {
+            const verifyResponse = await fetch(verifyUrl, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
 
-                if (!verifyResponse.ok) {
-                  console.warn(`Verify-payment API returned ${verifyResponse.status}. Showing invoice info only.`);
-                  showToast(
-                    `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
-                    'info'
-                  );
-                  fetchTransactions(true);
-                  return;
-                }
-
-                const verifyData = await verifyResponse.json();
-
-                const paymentStatus = verifyData.payment?.status;
-                const topLevelStatus = verifyData.status;
-                const actualStatus = paymentStatus || topLevelStatus;
-
-                const apiTransactionId = verifyData.payment?.transaction_id;
-                const apiPaymentMethod = verifyData.payment?.payment_method;
-
-                console.log('Payment verification response:', {
-                  paymentStatus,
-                  topLevelStatus,
-                  actualStatus,
-                  transaction_id: apiTransactionId,
-                  payment_method: apiPaymentMethod,
-                  fullResponse: verifyData
-                });
-
-                if (apiTransactionId) {
-                  sessionStorage.setItem('payment_transaction_id', apiTransactionId);
-                }
-                if (apiPaymentMethod) {
-                  sessionStorage.setItem('payment_method', apiPaymentMethod);
-                }
-
-                if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
-                  const successMessage = apiTransactionId && apiPaymentMethod
-                    ? `Payment completed successfully! Transaction ID: ${apiTransactionId} | Method: ${apiPaymentMethod}`
-                    : invoiceId
-                      ? `Payment completed successfully! Invoice ID: ${invoiceId}`
-                      : 'Payment completed successfully!';
-                  showToast(successMessage, 'success');
-                } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
-                  const pendingMessage = apiTransactionId
-                    ? `Payment is pending verification. Transaction ID: ${apiTransactionId}`
-                    : invoiceId
-                      ? `Payment is pending verification. Invoice ID: ${invoiceId}`
-                      : 'Payment is pending verification.';
-                  showToast(pendingMessage, 'pending');
-                } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
-                  showToast(
-                    invoiceId
-                      ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
-                      : `Payment status: ${actualStatus}`,
-                    'warning'
-                  );
-                } else {
-                  showToast(
-                    invoiceId
-                      ? `Payment status: ${actualStatus}. Invoice ID: ${invoiceId}`
-                      : `Payment status: ${actualStatus}`,
-                    'info'
-                  );
-                }
-
-                fetchTransactions(true);
-              } catch (fetchError) {
-                console.error('Error calling verify-payment API:', fetchError);
-                showToast(
-                  `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
-                  'info'
-                );
-                fetchTransactions(true);
-              }
-            } catch (error) {
-              console.error('Payment verification error:', error);
+            if (!verifyResponse.ok) {
+              console.warn(`Verify-payment API returned ${verifyResponse.status}. Showing invoice info only.`);
               showToast(
-                invoiceId
-                  ? `Payment submitted! Invoice ID: ${invoiceId}`
-                  : 'Payment submitted!',
+                `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
                 'info'
               );
               fetchTransactions(true);
+              return;
             }
-          }, 1000);
-        } else {
-          showToast('Payment completed successfully!', 'success');
+
+            const verifyData = await verifyResponse.json();
+
+            const paymentStatusFromApi = verifyData.payment?.status;
+            const topLevelStatus = verifyData.status;
+            const actualStatus = paymentStatusFromApi || topLevelStatus;
+
+            const paymentData = verifyData.payment || {};
+            const gatewayInvoiceId = paymentData.invoice_id || invoiceId;
+            const apiTransactionId = paymentData.transaction_id;
+            const apiPaymentMethod = paymentData.payment_method;
+            const paymentAmount = paymentData.amount || paymentData.usdAmount;
+            const paymentPhone = paymentData.phone_number || paymentData.sender_number;
+            const paymentDate = paymentData.transactionDate || paymentData.createdAt;
+            const paymentFee = paymentData.gatewayFee;
+            const paymentName = paymentData.name;
+            const paymentEmail = paymentData.email;
+
+            console.log('Payment verification response (GET method) - All data from gateway invoice_id:', {
+              gateway_invoice_id: gatewayInvoiceId,
+              paymentStatus: paymentStatusFromApi,
+              topLevelStatus,
+              actualStatus,
+              transaction_id: apiTransactionId,
+              payment_method: apiPaymentMethod,
+              amount: paymentAmount,
+              phone_number: paymentPhone,
+              date: paymentDate,
+              fee: paymentFee,
+              name: paymentName,
+              email: paymentEmail,
+              fullPaymentData: paymentData,
+              fullResponse: verifyData
+            });
+
+            if (apiTransactionId) {
+              sessionStorage.setItem('payment_transaction_id', apiTransactionId);
+            }
+            if (apiPaymentMethod) {
+              sessionStorage.setItem('payment_method', apiPaymentMethod);
+            }
+
+            if (actualStatus === 'Success' || actualStatus === 'COMPLETED' || topLevelStatus === 'COMPLETED') {
+              const successMessage = `Payment completed successfully! Invoice ID: ${gatewayInvoiceId}`;
+              showToast(successMessage, 'success');
+            } else if (actualStatus === 'Processing' || actualStatus === 'PENDING' || topLevelStatus === 'PENDING') {
+              const pendingMessage = `Payment submitted! Invoice ID: ${gatewayInvoiceId}. Please check your transaction list.`;
+              showToast(pendingMessage, 'info');
+            } else if (actualStatus === 'Failed' || actualStatus === 'FAILED' || topLevelStatus === 'FAILED') {
+              showToast(
+                `Payment status: ${actualStatus}. Invoice ID: ${gatewayInvoiceId}`,
+                'warning'
+              );
+            } else {
+              showToast(
+                `Payment submitted! Invoice ID: ${gatewayInvoiceId}. Please check your transaction list.`,
+                'info'
+              );
+            }
+
+            fetchTransactions(true);
+          } catch (fetchError) {
+            console.error('Error calling verify-payment API (GET method):', fetchError);
+            showToast(
+              `Payment submitted! Invoice ID: ${invoiceId}. Please check your transaction list.`,
+              'info'
+            );
+            fetchTransactions(true);
+          }
+        } catch (error) {
+          console.error('Payment verification error:', error);
+          showToast(
+            invoiceId
+              ? `Payment submitted! Invoice ID: ${invoiceId}`
+              : 'Payment submitted!',
+            'info'
+          );
+          fetchTransactions(true);
         }
-      } else if (paymentStatus === 'pending') {
-        showToast(
-          invoiceId
-            ? `Payment is pending verification. Invoice ID: ${invoiceId}`
-            : 'Payment is pending verification.',
-          'pending'
-        );
-      } else if (paymentStatus === 'cancelled') {
-        showToast('Payment was cancelled.', 'info');
-      } else if (paymentStatus === 'failed') {
-        showToast(
-          invoiceId
-            ? `Payment failed. Invoice ID: ${invoiceId}`
-            : 'Payment failed.',
-          'error'
-        );
-      }
+      }, 1000);
 
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.history) {
@@ -291,6 +263,26 @@ export default function TransactionsPage() {
           url.searchParams.delete('payment');
           url.searchParams.delete('invoice_id');
           url.searchParams.delete('transaction_id');
+          const newUrl = url.pathname + (url.search ? url.search : '');
+          window.history.replaceState({}, '', newUrl);
+        }
+      }, 500);
+    } else if (paymentStatus) {
+      setHasShownPaymentToast(true);
+      if (paymentStatus === 'success') {
+        showToast('Payment completed successfully!', 'success');
+      } else if (paymentStatus === 'pending') {
+        showToast('Payment is pending verification.', 'pending');
+      } else if (paymentStatus === 'cancelled') {
+        showToast('Payment was cancelled.', 'info');
+      } else if (paymentStatus === 'failed') {
+        showToast('Payment failed.', 'error');
+      }
+
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && window.history) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('payment');
           const newUrl = url.pathname + (url.search ? url.search : '');
           window.history.replaceState({}, '', newUrl);
         }

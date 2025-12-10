@@ -21,7 +21,7 @@ import { formatID, formatNumber, formatPrice } from '@/lib/utils';
 const cleanLinkDisplay = (link: string): string => {
   if (!link) return link;
   let cleaned = link;
-  cleaned = cleaned.replace(/^https?:\/\//, '');
+  cleaned = cleaned.replace(/^https?:\/\
   cleaned = cleaned.replace(/^www\./i, '');
   return cleaned;
 };
@@ -536,17 +536,14 @@ const CancelRequestsPage = () => {
           showToast(result.message || `Resend completed but provider submission failed: ${result.data?.providerCancelError || 'Unknown error'}`, 'error');
         }
         
-        // Refresh the cancel requests list to show updated status
         await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
       } else {
         showToast(result.error || 'Failed to resend cancel request', 'error');
-        // Still refresh to show any status changes
         await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
       }
     } catch (error) {
       console.error('Error resending cancel request:', error);
       showToast('Error resending cancel request. Please try again.', 'error');
-      // Still refresh to show any status changes
       await fetchCancelRequests(pagination.page, statusFilter, searchTerm, true);
     } finally {
       setResendingRequestId(null);

@@ -111,14 +111,12 @@ export async function POST(
             cancelRequestId: cancelRequest.id
           });
 
-          // Ensure body is properly formatted
           const fetchOptions: RequestInit = {
             method: cancelRequestConfig.method,
             headers: cancelRequestConfig.headers || {},
             signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
           };
 
-          // Only add body if data exists and method is not GET
           if (cancelRequestConfig.data && cancelRequestConfig.method !== 'GET') {
             fetchOptions.body = cancelRequestConfig.data;
           }
@@ -137,11 +135,9 @@ export async function POST(
                 console.log('Cancel request resent to provider successfully:', providerResult);
               }
             } catch (jsonError) {
-              // If response is not JSON, try to get text
               try {
                 const textResponse = await providerResponse.text();
                 console.log('Provider cancel response (non-JSON):', textResponse);
-                // If we got a 200 OK but non-JSON response, consider it success
                 providerCancelSubmitted = true;
               } catch (textError) {
                 providerCancelError = 'Provider returned non-JSON response and could not read text';
@@ -173,7 +169,6 @@ export async function POST(
         : `Resend failed: ${providerCancelError}`;
     }
 
-    // Update cancel request - don't include providerCancelError if field doesn't exist in schema
     const updateData: any = {
       status: updatedStatus,
       adminNotes: updatedNotes,

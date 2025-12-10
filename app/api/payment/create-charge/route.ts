@@ -60,21 +60,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000);
-    const sessionId = session?.user?.id || 'unknown';
-    let invoice_id = `INV-${timestamp}-${random}-${sessionId}`;
-    
-    const existingPayment = await db.addFunds.findUnique({
-      where: { invoiceId: invoice_id }
-    });
-    
-    if (existingPayment) {
-      console.error('Duplicate invoice_id detected:', invoice_id);
-      invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 10000)}-${sessionId}`;
-      console.log('Generated new invoice_id:', invoice_id);
-    }
-
     const { currencies } = await fetchCurrencyData();
 
     const amount = parseFloat(body.amount);
@@ -110,66 +95,6 @@ export async function POST(req: NextRequest) {
     });
 
     const gatewayName = await getPaymentGatewayName();
-
-    let payment;
-    try {
-      payment = await db.$transaction(async (prisma) => {
-        const tenSecondsAgo = new Date(Date.now() - 10000);
-        const recentPayment = await prisma.addFunds.findFirst({
-          where: {
-            userId: session.user.id,
-            usdAmount: amountUSD,
-            senderNumber: body.phone,
-            createdAt: {
-              gte: tenSecondsAgo,
-            },
-            status: 'Processing',
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-
-        if (recentPayment) {
-          console.log('Duplicate payment attempt detected within transaction:', {
-            userId: session.user.id,
-            amount: amountUSD,
-            existingInvoiceId: recentPayment.invoiceId,
-            newInvoiceId: invoice_id,
-            timeDiff: Date.now() - recentPayment.createdAt.getTime(),
-          });
-          throw new Error('DUPLICATE_PAYMENT');
-        }
-
-        return await prisma.addFunds.create({
-          data: {
-            invoiceId: invoice_id,
-            usdAmount: amountUSD,
-            amount: amountBDT,
-            email: session.user.email || '',
-            name: session.user.name || '',
-            status: 'Processing',
-            paymentGateway: gatewayName,
-            senderNumber: body.phone,
-            userId: session.user.id,
-            currency: currency,
-          },
-        });
-      });
-
-      console.log('Payment record created:', payment);
-    } catch (error: any) {
-      if (error?.message === 'DUPLICATE_PAYMENT') {
-        console.error('Duplicate payment prevented:', error);
-        return NextResponse.json(
-          { 
-            error: 'Duplicate payment request detected. Please wait a moment and try again.',
-          },
-          { status: 429, headers: corsHeaders }
-        );
-      }
-      throw error;
-    }
 
     try {
       const username =
@@ -212,12 +137,11 @@ export async function POST(req: NextRequest) {
         phone: body.phone,
         metadata: {
           user_id: session.user.id,
-          invoice_id: invoice_id,
           original_currency: currency,
           charged_amount: amountBDT,
           usd_amount: amountUSD,
         },
-        redirect_url: `${appUrl}/transactions?payment=success&invoice_id=${invoice_id}`,
+        redirect_url: `${appUrl}/transactions?payment=success`,
         cancel_url: `${appUrl}/transactions?payment=cancelled`,
         webhook_url: `${appUrl}/api/payment/webhook`,
       };
@@ -252,10 +176,10 @@ export async function POST(req: NextRequest) {
             amount: paymentData.amount,
             phone: paymentData.phone,
             metadata: paymentData.metadata,
-            redirect_url: `${appUrl}/transactions?payment=success&invoice_id=${invoice_id}`,
+            redirect_url: paymentData.redirect_url,
             return_type: 'GET',
-            cancel_url: `${appUrl}/transactions?payment=cancelled`,
-            webhook_url: `${appUrl}/api/payment/webhook`,
+            cancel_url: paymentData.cancel_url,
+            webhook_url: paymentData.webhook_url,
           }),
         });
 
@@ -276,18 +200,186 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('Parsed response data:', data);
+      console.log('Response status check:', {
+        hasStatus: !!data.status,
+        statusValue: data.status,
+        hasInvoiceId: !!(data.invoice_id || data.invoiceId),
+        invoiceId: data.invoice_id || data.invoiceId,
+        hasPaymentUrl: !!data.payment_url,
+        allKeys: Object.keys(data),
+      });
 
-        if (data.status) {
+        if (data.status || data.payment_url) {
+          let gatewayInvoiceId: string | null = null;
+          
+          if (data.payment_url) {
+            console.log('=== Extracting invoice_id from payment_url ===');
+            console.log('Payment URL:', data.payment_url);
+            try {
+              const url = new URL(data.payment_url);
+              console.log('Parsed URL components:', {
+                hostname: url.hostname,
+                pathname: url.pathname,
+                search: url.search,
+              });
+              
+              const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+              console.log('Path parts:', pathParts);
+              
+              const paymentIndex = pathParts.findIndex(part => part === 'payment');
+              console.log('Payment index in path:', paymentIndex);
+              
+              if (paymentIndex >= 0 && paymentIndex < pathParts.length - 1) {
+                gatewayInvoiceId = pathParts[paymentIndex + 1];
+                console.log(`✓ SUCCESS: Extracted invoice_id from payment_url path: ${gatewayInvoiceId}`);
+              } else {
+                if (pathParts.length > 0) {
+                  gatewayInvoiceId = pathParts[pathParts.length - 1];
+                  console.log(`✓ SUCCESS: Extracted invoice_id from payment_url (last segment): ${gatewayInvoiceId}`);
+                } else {
+                  console.warn('⚠ No path parts found in payment_url');
+                }
+              }
+              
+              if (!gatewayInvoiceId) {
+                gatewayInvoiceId = url.searchParams.get('invoice_id') || 
+                                   url.searchParams.get('invoiceId') ||
+                                   url.searchParams.get('invoice');
+                if (gatewayInvoiceId) {
+                  console.log(`✓ SUCCESS: Extracted invoice_id from query params: ${gatewayInvoiceId}`);
+                }
+              }
+            } catch (urlError) {
+              console.error('✗ ERROR: Failed to parse payment_url:', urlError);
+              console.error('Payment URL that failed:', data.payment_url);
+            }
+          } else {
+            console.warn('⚠ No payment_url in gateway response');
+          }
+          
+          console.log('Final extracted gatewayInvoiceId:', gatewayInvoiceId);
+          
+          if (!gatewayInvoiceId) {
+            gatewayInvoiceId = data.invoice_id || data.invoiceId || data.invoice || 
+                              data.id || data.payment_id || data.order_id || null;
+          }
+          
+          if (!gatewayInvoiceId) {
+            console.error('Could not extract invoice_id from payment_url:', {
+              paymentUrl: data.payment_url,
+              response: data,
+              allKeys: Object.keys(data),
+            });
+            return NextResponse.json(
+              {
+                error: 'Gateway did not return invoice_id in payment_url',
+                details: 'Unable to extract invoice_id from payment gateway response. Please try again.',
+                gatewayResponse: data
+              },
+              { status: 500, headers: corsHeaders }
+            );
+          }
+
+          try {
+            const tenSecondsAgo = new Date(Date.now() - 10000);
+            const recentPayment = await db.addFunds.findFirst({
+              where: {
+                userId: session.user.id,
+                usdAmount: amountUSD,
+                senderNumber: body.phone,
+                createdAt: {
+                  gte: tenSecondsAgo,
+                },
+                status: 'Processing',
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+            });
+
+            if (recentPayment) {
+              console.log('Duplicate payment attempt detected:', {
+                userId: session.user.id,
+                amount: amountUSD,
+                existingInvoiceId: recentPayment.invoiceId,
+                timeDiff: Date.now() - recentPayment.createdAt.getTime(),
+              });
+              return NextResponse.json(
+                { 
+                  error: 'Duplicate payment request detected. Please wait a moment and try again.',
+                },
+                { status: 429, headers: corsHeaders }
+              );
+            }
+
+            const payment = await db.addFunds.create({
+              data: {
+                invoiceId: gatewayInvoiceId,
+                usdAmount: amountUSD,
+                amount: amountBDT,
+                email: session.user.email || '',
+                name: session.user.name || '',
+                status: 'Processing',
+                paymentGateway: gatewayName,
+                senderNumber: body.phone,
+                userId: session.user.id,
+                currency: currency,
+              },
+            });
+
+            console.log(`✓ Payment record created with gateway invoice_id: ${gatewayInvoiceId}`);
+            
+            try {
+              const username =
+                session.user.username ||
+                session.user.email?.split('@')[0] ||
+                `user${session.user.id}`;
+              await ActivityLogger.fundAdded(
+                session.user.id,
+                username,
+                amountUSD,
+                'USD',
+                gatewayName
+              );
+            } catch (error) {
+              console.error('Failed to log payment creation activity:', error);
+            }
+          } catch (createError: any) {
+            console.error('Error creating payment record:', createError);
+            
+            if (createError.code === 'P2002') {
+              return NextResponse.json(
+                { error: 'Invoice ID already exists. Please try again.' },
+                { status: 409, headers: corsHeaders }
+              );
+            }
+            
+            return NextResponse.json(
+              { error: 'Failed to create payment record', details: String(createError) },
+              { status: 500, headers: corsHeaders }
+            );
+          }
+          
           return NextResponse.json(
             {
               payment_url: data.payment_url,
-              invoice_id: invoice_id,
+              invoice_id: gatewayInvoiceId,
             },
             { status: 200, headers: corsHeaders }
           );
         } else {
+          console.error('Gateway returned error or missing status:', {
+            status: data.status,
+            message: data.message,
+            error: data.error,
+            fullResponse: data,
+          });
           return NextResponse.json(
-            { error: data.message || 'Payment initialization failed' },
+            { 
+              error: data.message || data.error || 'Payment initialization failed',
+              details: 'The payment gateway rejected the request. Please check your payment details and try again.',
+              gatewayResponse: data
+            },
             { status: 400, headers: corsHeaders }
           );
         }

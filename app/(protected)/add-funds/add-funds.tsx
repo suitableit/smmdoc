@@ -387,12 +387,13 @@ export function AddFundForm() {
 
         if (res.data?.error) {
           console.error('Payment API error:', res.data);
-          showToast('Payment processing failed. Please try again.', 'error');
+          const errorMessage = res.data.error || 'Payment processing failed. Please try again.';
+          showToast(errorMessage, 'error');
+          setIsSubmitting(false);
           return;
         }
 
         if (res.data && res.data.payment_url) {
-
           if (res.data.invoice_id) {
             const paymentSession = {
               invoice_id: res.data.invoice_id,
@@ -414,12 +415,12 @@ export function AddFundForm() {
           showToast('Redirecting to payment page...', 'success');
 
           setTimeout(() => {
-            const paymentUrl = new URL(res.data.payment_url);
-            paymentUrl.searchParams.set('invoice_id', res.data.invoice_id);
-            window.location.href = paymentUrl.toString();
+            window.location.href = res.data.payment_url;
           }, 500);
         } else {
-          showToast('Payment processing failed. Please try again.', 'error');
+          const errorMessage = res.data?.error || res.data?.message || 'Payment processing failed. Please try again.';
+          console.error('Payment response missing payment_url:', res.data);
+          showToast(errorMessage, 'error');
           setIsSubmitting(false);
         }
       } catch (error: any) {
@@ -427,8 +428,13 @@ export function AddFundForm() {
           message: error?.message,
           response: error?.response?.data,
           status: error?.response?.status,
+          error: error,
         });
-        showToast('Payment processing failed. Please try again.', 'error');
+        const errorMessage = error?.response?.data?.error || 
+                            error?.response?.data?.message || 
+                            error?.message || 
+                            'Payment processing failed. Please try again.';
+        showToast(errorMessage, 'error');
         setIsSubmitting(false);
       }
     });

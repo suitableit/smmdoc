@@ -21,81 +21,220 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const invoice_id = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const amountUSD = parseFloat(body.amount);
+    const currency = body.currency || 'USD';
+
+    if (isNaN(amountUSD) || amountUSD <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid amount' },
+        { status: 400 }
+      );
+    }
 
     const { currencies } = await fetchCurrencyData();
-    const amountBDT = convertCurrency(amountUSD, 'USD', 'BDT', currencies);
+    const { convertToUSD } = await import('@/lib/currency-utils');
+    const amountUSDConverted = convertToUSD(amountUSD, currency, currencies);
+    const amountBDT = currency === 'BDT' 
+      ? amountUSD 
+      : convertCurrency(amountUSDConverted, 'USD', 'BDT', currencies);
 
     const gatewayName = await getPaymentGatewayName();
 
-    console.log('Creating payment record with:', {
-      invoice_id,
-      amount: amountUSD,
-      email: session.user.email,
-      name: session.user.name,
-      status: 'Processing',
-      gatewayName: gatewayName,
-      userId: session.user.id,
-    });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
+    
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required' },
+        { status: 500 }
+      );
+    }
+    
+    console.log('App URL determined:', appUrl);
 
+    const { getPaymentGatewayApiKey, getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
+    const apiKey = await getPaymentGatewayApiKey();
+    const checkoutUrl = await getPaymentGatewayCheckoutUrl();
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Payment gateway API key not configured. Please configure it in admin settings.' },
+        { status: 500 }
+      );
+    }
+
+    const paymentAmount = convertCurrency(amountUSDConverted, 'USD', 'BDT', currencies);
+    
     try {
-      const payment = await db.addFunds.create({
-        data: {
-          invoiceId: invoice_id,
-          usdAmount: amountUSD,
-          amount: amountBDT,
-          email: session.user.email || '',
-          name: session.user.name || '',
-          status: 'Processing',
-          paymentGateway: gatewayName,
-          userId: session.user.id,
-          currency: 'USD',
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      const response = await fetch(checkoutUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'RT-UDDOKTAPAY-API-KEY': apiKey,
         },
+        signal: controller.signal,
+        body: JSON.stringify({
+          full_name: session.user.name || 'User',
+          email: session.user.email || 'user@example.com',
+          amount: Math.round(paymentAmount).toString(),
+          phone: body.phone,
+          metadata: {
+            user_id: session.user.id,
+            original_currency: currency,
+            charged_amount: amountBDT,
+            usd_amount: amountUSDConverted,
+          },
+          redirect_url: `${appUrl}/transactions?payment=success`,
+          return_type: 'GET',
+          cancel_url: `${appUrl}/transactions?payment=cancelled`,
+          webhook_url: `${appUrl}/api/payment/webhook`,
+        }),
       });
 
-      console.log('Payment record created:', payment);
+      clearTimeout(timeoutId);
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
-      
-      if (!appUrl) {
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', e);
         return NextResponse.json(
-          { error: 'NEXT_PUBLIC_APP_URL or NEXTAUTH_URL environment variable is required' },
+          { error: 'Invalid response from payment gateway' },
           { status: 500 }
         );
       }
-      
-      console.log('App URL determined:', appUrl);
 
-      const success_url = body.success_url || `${appUrl}/transactions?payment=success&invoice_id=${invoice_id}`;
-      const cancel_url =
-        body.cancel_url || `${appUrl}/transactions?payment=cancelled`;
+      console.log('Parsed response data:', data);
 
-      const { getPaymentGatewayCheckoutUrl } = await import('@/lib/payment-gateway-config');
-      const checkoutUrl = await getPaymentGatewayCheckoutUrl();
+      if (data.status || data.payment_url) {
+        let gatewayInvoiceId: string | null = null;
+        
+        if (data.payment_url) {
+          try {
+            const url = new URL(data.payment_url);
+            const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+            const paymentIndex = pathParts.findIndex(part => part === 'payment');
+            
+            if (paymentIndex >= 0 && paymentIndex < pathParts.length - 1) {
+              gatewayInvoiceId = pathParts[paymentIndex + 1];
+            } else if (pathParts.length > 0) {
+              gatewayInvoiceId = pathParts[pathParts.length - 1];
+            }
+            
+            if (!gatewayInvoiceId) {
+              gatewayInvoiceId = url.searchParams.get('invoice_id') || 
+                                 url.searchParams.get('invoiceId') ||
+                                 url.searchParams.get('invoice');
+            }
+          } catch (urlError) {
+            console.error('Error parsing payment_url:', urlError);
+          }
+        }
+        
+        if (!gatewayInvoiceId) {
+          gatewayInvoiceId = data.invoice_id || data.invoiceId || data.invoice || 
+                            data.id || data.payment_id || data.order_id || null;
+        }
+        
+        if (!gatewayInvoiceId) {
+          return NextResponse.json(
+            { 
+              error: 'Gateway did not return invoice_id in payment_url',
+              details: 'Unable to extract invoice_id from payment gateway response.',
+              gatewayResponse: data
+            },
+            { status: 500 }
+          );
+        }
 
-      const payment_url = `${checkoutUrl}?invoice_id=${invoice_id}&amount=${
-        body.amount
-      }&full_name=${encodeURIComponent(
-        session.user.name || 'User'
-      )}&email=${encodeURIComponent(
-        session.user.email || 'user@example.com'
-      )}&metadata=${encodeURIComponent(
-        JSON.stringify({ invoice_id })
-      )}&redirect_url=${encodeURIComponent(success_url)}`;
+        try {
+          const tenSecondsAgo = new Date(Date.now() - 10000);
+          const recentPayment = await db.addFunds.findFirst({
+            where: {
+              userId: session.user.id,
+              usdAmount: amountUSDConverted,
+              senderNumber: body.phone,
+              createdAt: {
+                gte: tenSecondsAgo,
+              },
+              status: 'Processing',
+            },
+            orderBy: {
+              createdAt: 'desc',
+            },
+          });
 
-      console.log('Payment URLs:', { success_url, cancel_url, payment_url });
+          if (recentPayment) {
+            return NextResponse.json(
+              { 
+                error: 'Duplicate payment request detected. Please wait a moment and try again.',
+              },
+              { status: 429 }
+            );
+          }
 
-      return NextResponse.json({
-        invoice_id: payment.invoiceId,
-        payment_url,
-        success_url,
-        cancel_url,
-      });
-    } catch (dbError) {
-      console.error('Database error:', dbError);
+          const payment = await db.addFunds.create({
+            data: {
+              invoiceId: gatewayInvoiceId,
+              usdAmount: amountUSDConverted,
+              amount: amountBDT,
+              email: session.user.email || '',
+              name: session.user.name || '',
+              status: 'Processing',
+              paymentGateway: gatewayName,
+              senderNumber: body.phone,
+              userId: session.user.id,
+              currency: currency,
+            },
+          });
+
+          console.log(`✓ Payment record created with gateway invoice_id: ${gatewayInvoiceId}`);
+        } catch (createError: any) {
+          console.error('Error creating payment record:', createError);
+          
+          if (createError.code === 'P2002') {
+            return NextResponse.json(
+              { error: 'Invoice ID already exists. Please try again.' },
+              { status: 409 }
+            );
+          }
+          
+          return NextResponse.json(
+            { error: 'Failed to create payment record', details: String(createError) },
+            { status: 500 }
+          );
+        }
+        
+        return NextResponse.json({
+          invoice_id: gatewayInvoiceId,
+          payment_url: data.payment_url,
+          success_url: `${appUrl}/transactions?payment=success`,
+          cancel_url: `${appUrl}/transactions?payment=cancelled`,
+        });
+      } else {
+        return NextResponse.json(
+          { error: data.message || 'Payment initialization failed' },
+          { status: 400 }
+        );
+      }
+    } catch (fetchError) {
+      console.error('Fetch error:', fetchError);
+
+      if ((fetchError as any)?.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Payment gateway timeout. Please try again.' },
+          { status: 408 }
+        );
+      }
+
       return NextResponse.json(
-        { error: 'Database operation failed', details: String(dbError) },
+        { error: 'Network error when connecting to payment gateway' },
         { status: 500 }
       );
     }

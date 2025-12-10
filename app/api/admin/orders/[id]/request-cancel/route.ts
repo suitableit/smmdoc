@@ -67,7 +67,6 @@ export async function POST(
       );
     }
 
-    // Check order status first - if already cancelled, don't allow
     const orderStatus = order.status?.toLowerCase();
     if (['cancelled', 'canceled'].includes(orderStatus)) {
       return NextResponse.json(
@@ -91,9 +90,6 @@ export async function POST(
       );
     }
 
-    // Check for existing cancel request
-    // If there's a pending one, block it
-    // If there's a failed/declined one, we'll update it instead of creating a new one
     const existingRequest = await db.cancelRequests.findFirst({
       where: {
         orderId: orderId
@@ -126,8 +122,6 @@ export async function POST(
         );
       }
       
-      // If there's a failed or declined request, we'll update it instead of creating a new one
-      // This will be handled after the provider call
     }
 
     if (!order.providerOrderId) {
@@ -202,15 +196,12 @@ export async function POST(
     let providerError: string | null = null;
 
     try {
-      // buildRequest returns data as string (JSON) or FormData, so use it directly
-      // But ensure we don't pass undefined - only pass body if data exists
       const fetchOptions: RequestInit = {
         method: cancelRequestConfig.method,
         headers: cancelRequestConfig.headers || {},
         signal: AbortSignal.timeout((apiSpec.timeoutSeconds || 30) * 1000)
       };
 
-      // Only add body if data exists and method is not GET
       if (cancelRequestConfig.data && cancelRequestConfig.method !== 'GET') {
         fetchOptions.body = cancelRequestConfig.data;
       }
@@ -243,7 +234,6 @@ export async function POST(
       console.error('Error submitting cancel request to provider:', error);
     }
 
-    // Create or update cancel request record
     const refundAmount = order.price || 0;
     const finalStatus = providerError ? 'failed' : 'pending';
     const adminReason = `Admin requested cancellation (Admin: ${session.user.email || session.user.id})`;
@@ -253,7 +243,6 @@ export async function POST(
 
     let cancelRequest;
     
-    // If there's an existing failed/declined request, update it instead of creating a new one
     if (existingRequest && (existingRequest.status === 'failed' || existingRequest.status === 'declined')) {
       cancelRequest = await db.cancelRequests.update({
         where: { id: existingRequest.id },
@@ -268,7 +257,6 @@ export async function POST(
         }
       });
     } else {
-      // Create new cancel request
       cancelRequest = await db.cancelRequests.create({
         data: {
           orderId: order.id,
@@ -283,7 +271,6 @@ export async function POST(
       });
     }
 
-    // Log provider action
     await db.providerOrderLogs.create({
       data: {
         orderId: order.id,

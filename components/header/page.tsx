@@ -78,7 +78,6 @@ const ThemeToggle = ({
         try {
           overlayRef.current.remove();
         } catch (error) {
-          // Element may have already been removed
         }
       }
     };
@@ -93,7 +92,6 @@ const ThemeToggle = ({
       try {
         overlayRef.current.parentNode.removeChild(overlayRef.current);
       } catch (error) {
-        // Element may have already been removed
       }
     }
 
@@ -150,7 +148,6 @@ const ThemeToggle = ({
           overlayRef.current.parentNode.removeChild(overlayRef.current);
           overlayRef.current = null;
         } catch (error) {
-          // Element may have already been removed
         }
       }
       overlayTimeoutRef.current = null;

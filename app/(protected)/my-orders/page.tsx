@@ -1012,7 +1012,7 @@ export default function OrdersList() {
                               title={order.link}
                             >
                               <span className="truncate mr-1">
-                                {order.link?.replace(/^https?:\/\//, '') ||
+                                {order.link?.replace(/^https?:\/\
                                   'N/A'}
                               </span>
                               <FaExternalLinkAlt className="w-3 h-3 flex-shrink-0" />

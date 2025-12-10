@@ -175,7 +175,6 @@ const Header: React.FC<HeaderProps> = ({
           try {
             overlayRef.current.remove();
           } catch (error) {
-            // Element may have already been removed
           }
         }
       };
@@ -190,7 +189,6 @@ const Header: React.FC<HeaderProps> = ({
         try {
           overlayRef.current.parentNode.removeChild(overlayRef.current);
         } catch (error) {
-          // Element may have already been removed
         }
       }
 
@@ -247,7 +245,6 @@ const Header: React.FC<HeaderProps> = ({
             overlayRef.current.parentNode.removeChild(overlayRef.current);
             overlayRef.current = null;
           } catch (error) {
-            // Element may have already been removed
           }
         }
         overlayTimeoutRef.current = null;
