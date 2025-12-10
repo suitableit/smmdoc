@@ -171,10 +171,11 @@ const Header: React.FC<HeaderProps> = ({
         if (overlayTimeoutRef.current) {
           clearTimeout(overlayTimeoutRef.current);
         }
-        if (overlayRef.current && document.body.contains(overlayRef.current)) {
+        if (overlayRef.current && overlayRef.current.parentNode) {
           try {
-            document.body.removeChild(overlayRef.current);
+            overlayRef.current.remove();
           } catch (error) {
+            // Element may have already been removed
           }
         }
       };
@@ -185,10 +186,11 @@ const Header: React.FC<HeaderProps> = ({
         clearTimeout(overlayTimeoutRef.current);
       }
 
-      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+      if (overlayRef.current && overlayRef.current.parentNode) {
         try {
-          document.body.removeChild(overlayRef.current);
+          overlayRef.current.parentNode.removeChild(overlayRef.current);
         } catch (error) {
+          // Element may have already been removed
         }
       }
 
@@ -240,11 +242,12 @@ const Header: React.FC<HeaderProps> = ({
       document.body.appendChild(overlay);
 
       overlayTimeoutRef.current = setTimeout(() => {
-        if (overlayRef.current && document.body.contains(overlayRef.current)) {
+        if (overlayRef.current && overlayRef.current.parentNode) {
           try {
-            document.body.removeChild(overlayRef.current);
+            overlayRef.current.parentNode.removeChild(overlayRef.current);
             overlayRef.current = null;
           } catch (error) {
+            // Element may have already been removed
           }
         }
         overlayTimeoutRef.current = null;

@@ -74,10 +74,11 @@ const ThemeToggle = ({
       if (overlayTimeoutRef.current) {
         clearTimeout(overlayTimeoutRef.current);
       }
-      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+      if (overlayRef.current && overlayRef.current.parentNode) {
         try {
-          document.body.removeChild(overlayRef.current);
+          overlayRef.current.remove();
         } catch (error) {
+          // Element may have already been removed
         }
       }
     };
@@ -88,10 +89,11 @@ const ThemeToggle = ({
       clearTimeout(overlayTimeoutRef.current);
     }
 
-    if (overlayRef.current && document.body.contains(overlayRef.current)) {
+    if (overlayRef.current && overlayRef.current.parentNode) {
       try {
-        document.body.removeChild(overlayRef.current);
+        overlayRef.current.parentNode.removeChild(overlayRef.current);
       } catch (error) {
+        // Element may have already been removed
       }
     }
 
@@ -143,11 +145,12 @@ const ThemeToggle = ({
     document.body.appendChild(overlay);
 
     overlayTimeoutRef.current = setTimeout(() => {
-      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+      if (overlayRef.current && overlayRef.current.parentNode) {
         try {
-          document.body.removeChild(overlayRef.current);
+          overlayRef.current.parentNode.removeChild(overlayRef.current);
           overlayRef.current = null;
         } catch (error) {
+          // Element may have already been removed
         }
       }
       overlayTimeoutRef.current = null;
