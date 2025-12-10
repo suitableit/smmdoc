@@ -38,7 +38,6 @@ export default function ProtectedLayout({
     '/api',
     '/mass-orders',
     '/contact-support',
-    '/verify-payment',
   ];
 
   const isUserPage = userPages.some(page => 

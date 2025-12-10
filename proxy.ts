@@ -378,7 +378,6 @@ export default auth(async (req) => {
     '/api',
     '/mass-orders',
     '/contact-support',
-    '/verify-payment',
   ];
 
   const isUserPage = userPages.some(page => 
