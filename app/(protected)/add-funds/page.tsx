@@ -12,7 +12,7 @@ import {
     AddFundSchema,
 } from '@/lib/validators/user/add-fund-validator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState, useTransition, useRef, useCallback } from 'react';
+import { useEffect, useState, useTransition, useRef, useCallback, useMemo } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
     FaCalculator,
@@ -148,7 +148,7 @@ export default function AddFundsPage() {
       const currentRate = rate || 120;
       const minAmountBDT = minAmountUSD * currentRate;
       
-      const currentUSD = form.watch('amountUSD');
+      const currentUSD = form.getValues('amountUSD');
       if (!currentUSD || parseFloat(currentUSD) === 0) {
         form.setValue('amountUSD', minAmountUSD.toFixed(2), { shouldValidate: true });
         form.setValue('amountBDT', minAmountBDT.toFixed(2), { shouldValidate: true });
@@ -160,7 +160,8 @@ export default function AddFundsPage() {
         });
       }
     }
-  }, [userSettings, activeCurrency, rate, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userSettings?.minimumFundsToAddUSD, activeCurrency, rate]);
 
   useEffect(() => {
     const newCurrency = (globalCurrency === 'USD' || globalCurrency === 'BDT') ? globalCurrency : 'BDT';
@@ -189,7 +190,8 @@ export default function AddFundsPage() {
         currency: newCurrency,
       });
     }
-  }, [globalCurrency, form, user, userSettings, rate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globalCurrency, userSettings?.minimumFundsToAddUSD, rate]);
 
   const amountUSDValue = form.watch('amountUSD');
   const amountBDTValue = form.watch('amountBDT');
@@ -299,7 +301,7 @@ export default function AddFundsPage() {
     validateConvertedAmount(usdValue);
   };
 
-  const onSubmit: SubmitHandler<AddFundSchema> = async (values) => {
+  const onSubmit: SubmitHandler<AddFundSchema> = useCallback(async (values) => {
     // Synchronous check with ref to prevent race conditions
     if (isSubmittingRef.current) {
       console.log('Submission already in progress (ref check), ignoring duplicate request');
@@ -460,7 +462,12 @@ export default function AddFundsPage() {
         setIsSubmitting(false);
       }
     })();
-  };
+  }, [user, activeCurrency, rate, userSettings]);
+
+  // Memoize the submit handler to prevent multiple submissions
+  const handleFormSubmit = useMemo(() => {
+    return form.handleSubmit(onSubmit);
+  }, [onSubmit, form]);
 
   if (isLoading) {
     return (
@@ -745,7 +752,7 @@ export default function AddFundsPage() {
                   e.stopPropagation();
                   // Double-check before calling handleSubmit
                   if (!isSubmittingRef.current && !isSubmitting) {
-                    form.handleSubmit(onSubmit)(e);
+                    handleFormSubmit(e);
                   } else {
                     console.log('Button click ignored - already submitting');
                   }
